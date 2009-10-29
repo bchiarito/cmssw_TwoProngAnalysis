@@ -26,7 +26,7 @@ process.TFileService = cms.Service("TFileService",
 )
 
 #load photon analyzer
-process.load("PhotonAnalysis.PhotonAnalyzer.photonanalyzer_cfi")
+process.load("DiPhotonAnalysis.PhotonAnalyzer.photonanalyzer_cfi")
 process.photonAnalyzer.photonCollection = "photons"
 process.photonAnalyzer.ptMin = 10.0;
 
