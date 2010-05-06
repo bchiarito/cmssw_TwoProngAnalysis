@@ -1,0 +1,20 @@
+<use name=FWCore/Framework>
+<use name=FWCore/PluginManager>
+<use name=FWCore/ParameterSet>
+<use name=DataFormats/EgammaCandidates>
+<use name=DataFormats/Math>
+<use name=CommonTools/UtilAlgos>
+<use name=DataFormats/VertexReco>
+<use name=DataFormats/BeamSpot>
+<flags EDM_PLUGIN=1>
+<export>
+   <lib name=DiPhotonAnalysisExoDiPhotonAnalyzer>
+   <use name=FWCore/Framework>
+   <use name=FWCore/PluginManager>
+   <use name=FWCore/ParameterSet>
+   <use name=DataFormats/EgammaCandidates>
+   <use name=DataFormats/Math>
+   <use name=CommonTools/UtilAlgos>
+   <use name=DataFormats/VertexReco>
+   <use name=DataFormats/BeamSpot>
+</export>
