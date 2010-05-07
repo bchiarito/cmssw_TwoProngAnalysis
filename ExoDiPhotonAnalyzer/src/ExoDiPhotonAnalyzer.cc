@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id$
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.1 2010/05/06 15:51:24 chenders Exp $
 //
 //
 
@@ -29,6 +29,9 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+
+#include "FWCore/Framework/interface/ESHandle.h"
+
 
 // to use TfileService for histograms and trees
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -50,6 +53,17 @@
 #include "DataFormats/Candidate/interface/LeafCandidate.h"
 #include "DataFormats/Math/interface/deltaPhi.h"
 #include "TMath.h"
+
+//for trigger
+#include "DataFormats/Common/interface/TriggerResults.h"
+#include "FWCore/Framework/interface/TriggerNames.h"
+#include "CondFormats/L1TObjects/interface/L1GtTriggerMenuFwd.h"
+#include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutRecord.h" 
+#include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerRecord.h" 
+#include "CondFormats/L1TObjects/interface/L1GtTriggerMenu.h"
+#include "CondFormats/DataRecord/interface/L1GtTriggerMenuRcd.h"
+#include "L1Trigger/GlobalTrigger/interface/L1GlobalTrigger.h"
+
 
 using namespace std;
 
@@ -102,8 +116,30 @@ struct eventInfo_t{
 
 // trigger info - MinBias trigger?  Definitely photon triggers!
 struct trigInfo_t{
-  bool HLT_Photon10; // for example
-  bool L1_EG2; // also L1 bits
+  bool L1_EG2; // also L1 bits ?
+   bool HLT_Jet15U;
+   bool HLT_Jet30U;
+   bool HLT_Jet50U;
+   bool HLT_L1SingleEG2;
+   bool HLT_L1SingleEG2_NoBPTX;
+   bool HLT_L1SingleEG5;
+   bool HLT_L1SingleEG5_NoBPTX;
+   bool HLT_L1SingleEG8;
+   bool HLT_L1SingleEG20_NoBPTX;
+   bool HLT_L1DoubleEG5;
+   bool HLT_EgammaSuperClusterOnly_L1R;
+   bool HLT_Photon10_L1R;
+   bool HLT_Photon15_L1R;
+   bool HLT_Photon15_TrackIso_L1R;
+   bool HLT_Photon15_LooseEcalIso_L1R;
+   bool HLT_Photon20_L1R;
+   bool HLT_Photon30_L1R_8E29;
+   bool HLT_DoublePhoton5_L1R;
+   bool HLT_DoublePhoton10_L1R;
+   bool HLT_MinBiasBSC;
+   bool HLT_MinBiasBSC_NoBPTX;
+   bool HLT_MinBiasBSC_OR;
+
 };
 
 // single photon info
@@ -222,6 +258,8 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       // ----------member data ---------------------------
       edm::InputTag      fPhotonTag;       //select photon collection 
       double             fMin_pt;          // min pt cut (photons)
+      edm::InputTag      fHltInputTag;     // hltResults
+      edm::InputTag      fL1InputTag;      // L1 results
 
       // my Tree
       TTree *fTree;
@@ -249,7 +287,9 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
 //
 ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   : fPhotonTag(iConfig.getUntrackedParameter<edm::InputTag>("photonCollection")),
-    fMin_pt(iConfig.getUntrackedParameter<double>("ptMin"))
+    fMin_pt(iConfig.getUntrackedParameter<double>("ptMin")),
+    fHltInputTag(iConfig.getUntrackedParameter<edm::InputTag>("hltResults")),
+    fL1InputTag(iConfig.getUntrackedParameter<edm::InputTag>("L1Results"))
 {
    //now do what ever initialization is needed
 
@@ -258,7 +298,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("Event",&fEventInfo,"run/I:LS:evnum");
   fTree->Branch("Vtx",&fVtxInfo,"Nvtx/I:vx/D:vy:vz:isFake/I:Ntracks/I:sumPtTracks/D:ndof:d0");
   fTree->Branch("BeamSpot",&fBeamSpotInfo,"x0/D:y0:z0:sigmaZ:x0error:y0error:z0error:sigmaZ0error");
-  fTree->Branch("Trg",&fTrigInfo,"HLT_Photon10/O:L1_EG2");
+  
+  fTree->Branch("Trg",&fTrigInfo,"L1_EG2/O:HLT_Jet15U/O:HLT_Jet30U:HLT_Jet50U:HLT_L1SingleEG2:HLT_L1SingleEG2_NoBPTX:HLT_L1SingleEG5:HLT_L1SingleEG5_NoBPTX:HLT_L1SingleEG8:HLT_L1SingleEG20_NoBPTX:HLT_L1DoubleEG5:HLT_EgammaSuperClusterOnly_L1R:HLT_Photon10_L1R:HLT_Photon15_L1R:HLT_Photon15_TrackIso_L1R:HLT_Photon15_LooseEcalIso_L1R:HLT_Photon20_L1R:HLT_Photon30_L1R_8E29:HLT_DoublePhoton5_L1R:HLT_DoublePhoton10_L1R:HLT_MinBiasBSC:HLT_MinBiasBSC_NoBPTX:HLT_MinBiasBSC_OR");
   
 
   //try pixel seed at end
@@ -408,9 +449,113 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
 
    // get the trig info
-   fTrigInfo.HLT_Photon10 = false;
+   fTrigInfo.HLT_Jet15U = false;
+   fTrigInfo.HLT_Jet30U = false;
+   fTrigInfo.HLT_Jet50U = false;
+   fTrigInfo.HLT_L1SingleEG2 = false;
+   fTrigInfo.HLT_L1SingleEG2_NoBPTX = false;
+   fTrigInfo.HLT_L1SingleEG5 = false;
+   fTrigInfo.HLT_L1SingleEG5_NoBPTX = false;
+   fTrigInfo.HLT_L1SingleEG8 = false;
+   fTrigInfo.HLT_L1SingleEG20_NoBPTX = false;
+   fTrigInfo.HLT_L1DoubleEG5 = false;
+   fTrigInfo.HLT_EgammaSuperClusterOnly_L1R = false;
+   fTrigInfo.HLT_Photon10_L1R = false;
+   fTrigInfo.HLT_Photon15_L1R = false;
+   fTrigInfo.HLT_Photon15_TrackIso_L1R = false;
+   fTrigInfo.HLT_Photon15_LooseEcalIso_L1R = false;
+   fTrigInfo.HLT_Photon20_L1R = false;
+   fTrigInfo.HLT_Photon30_L1R_8E29 = false;
+   fTrigInfo.HLT_DoublePhoton5_L1R = false;
+   fTrigInfo.HLT_DoublePhoton10_L1R = false;
+   fTrigInfo.HLT_MinBiasBSC = false;
+   fTrigInfo.HLT_MinBiasBSC_NoBPTX = false;
+   fTrigInfo.HLT_MinBiasBSC_OR = false;
+
+
+
    fTrigInfo.L1_EG2 = false;
 
+   //trig results
+   Handle<TriggerResults> hltResultsHandle;
+   iEvent.getByLabel(fHltInputTag,hltResultsHandle);
+   
+   if(!hltResultsHandle.isValid()) {
+     cout << "HLT results not valid!" <<endl;
+     return;
+   }
+
+   const TriggerResults *hltResults = hltResultsHandle.product();
+   //   cout << *hltResults <<endl;
+   const TriggerNames & hltNames = iEvent.triggerNames(*hltResults);
+   //   TriggerNames hltNames;
+   //   hltNames.init(*hltResults);
+   //   cout << "HLT Results" <<endl;
+   for(int itrig=0;itrig<hltResults->size();itrig++) {
+     //     cout << "Path "<<itrig<<" ";
+     //print only the accepted paths?
+     //     if(hltResults->accept(itrig)) {
+     //       cout <<hltNames.triggerName(itrig)<<" ";
+     //       cout << hltResults->accept(itrig)<< endl;
+       //     }
+
+       // I think there is not a much better way than simply itemising each trigger here
+
+     // accessing trigger by name is supposed to be robust across runs, 
+     // even if the HLT menu changes
+     // (unless the trigger name itself changes of course...)
+       if(hltNames.triggerName(itrig)=="HLT_Jet15U")
+	 fTrigInfo.HLT_Jet15U = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_Jet30U")
+	 fTrigInfo.HLT_Jet30U = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_Jet50U")
+	 fTrigInfo.HLT_Jet50U = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_L1SingleEG2")
+	 fTrigInfo.HLT_L1SingleEG2 = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_L1SingleEG2_NoBPTX")
+	 fTrigInfo.HLT_L1SingleEG2_NoBPTX = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_L1SingleEG5")
+	 fTrigInfo.HLT_L1SingleEG5 = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_L1SingleEG5_NoBPTX")
+	 fTrigInfo.HLT_L1SingleEG5_NoBPTX = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_L1SingleEG8")
+	 fTrigInfo.HLT_L1SingleEG8 = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_L1SingleEG20_NoBPTX")
+	 fTrigInfo.HLT_L1SingleEG20_NoBPTX = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_L1DoubleEG5")
+	 fTrigInfo.HLT_L1DoubleEG5 = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_EgammaSuperClusterOnly_L1R")
+	 fTrigInfo.HLT_EgammaSuperClusterOnly_L1R = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_Photon10_L1R")
+	 fTrigInfo.HLT_Photon10_L1R = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_Photon15_L1R")
+	 fTrigInfo.HLT_Photon15_L1R = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_Photon15_TrackIso_L1R")
+	 fTrigInfo.HLT_Photon15_TrackIso_L1R = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_Photon15_LooseEcalIso_L1R")
+	 fTrigInfo.HLT_Photon15_LooseEcalIso_L1R = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_Photon20_L1R")
+	 fTrigInfo.HLT_Photon20_L1R = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_Photon30_L1R_8E29")
+	 fTrigInfo.HLT_Photon30_L1R_8E29 = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton5_L1R")
+	 fTrigInfo.HLT_DoublePhoton5_L1R = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton10_L1R")
+	 fTrigInfo.HLT_DoublePhoton10_L1R = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_MinBiasBSC")
+	 fTrigInfo.HLT_MinBiasBSC = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_MinBiasBSC_NoBPTX")
+	 fTrigInfo.HLT_MinBiasBSC_NoBPTX = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_MinBiasBSC_OR")
+	 fTrigInfo.HLT_MinBiasBSC_OR = hltResults->accept(itrig);
+       
+       
+
+   } //end loop over HLT results
+
+
+   // L1 results
+   
 
 
    // get the photon collection
