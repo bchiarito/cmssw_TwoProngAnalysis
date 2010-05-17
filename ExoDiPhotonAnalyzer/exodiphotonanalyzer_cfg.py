@@ -11,6 +11,9 @@ process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
 #        'file:myfile.root',
     'file:/tmp/chenders/02071949-FA40-DF11-9990-001A64789DEC.root',
+        #direct from castor
+    #    '/store/data/Commissioning10/MinimumBias/RAW-RECO/v8/000/132/601/02071949-FA40-DF11-9990-001A64789DEC.root'
+
     )
 )
 
@@ -24,5 +27,12 @@ process.load("DiPhotonAnalysis.ExoDiPhotonAnalyzer.exodiphotonanalyzer_cfi")
 #process.photonAnalyzer.photonCollection = "photons"
 process.diphotonAnalyzer.ptMin = 0.0 # jsut to get some entries
 
-process.path  = cms.Path(process.diphotonAnalyzer)
+
+# precede with a diphoton filter, to speed things up
+process.load("DiPhotonAnalysis.DiPhotonFilter.diphotonfilter_cfi")
+
+process.diphotonFilter.ptMin_photon1 = 5.0 
+process.diphotonFilter.ptMin_photon2 = 2.0 
+
+process.path  = cms.Path(process.diphotonFilter+process.diphotonAnalyzer)
 
