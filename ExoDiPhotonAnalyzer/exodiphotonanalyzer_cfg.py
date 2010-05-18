@@ -17,10 +17,45 @@ process.source = cms.Source("PoolSource",
     )
 )
 
+# need to introduce the global tag now
+# because the L1GtUtils method needs to fetch records...
+process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
+# this is the tag claimed for data reprocessing with 35X
+process.GlobalTag.globaltag = 'GR_R_35X_V8::All'
+# and this is the tag for prompt reco with 35X
+#process.GlobalTag.globaltag = 'GR10_P_V5::All'
+
+
 # file for all histograms for all modules
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string('diphoton_tree.root')
 )
+
+# filter on good vertex
+# based on example in CMSSW/HeavyFlavorAnalysis/Onia2MuMu/test/onia2MuMuPATData_cfg.py
+process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
+                                           vertexCollection = cms.InputTag('offlinePrimaryVertices'),
+                                           minimumNDOF = cms.uint32(4),
+                                           maxAbsZ = cms.double(15),	
+                                           maxd0 = cms.double(2)	
+)
+#process.primaryVertexPath = cms.Path(process.primaryVertexFilter)
+
+
+# filter out scraping
+# based on Onia example, and CMSSW/DPGAnalysis/Skims/python/MinBiasPDSkim_cfg.py for the GOODCOLL skim defn
+# this requires that if there is >10 tracks,
+# then at least 0.25 fraction of them must be 'high purity'
+
+process.noScraping = cms.EDFilter("FilterOutScraping",
+                                  applyfilter = cms.untracked.bool(True),
+                                  debugOn = cms.untracked.bool(False),
+                                  numtrack = cms.untracked.uint32(10),
+                                  thresh = cms.untracked.double(0.25)
+)
+
+
+
 
 #load diphoton analyzer
 process.load("DiPhotonAnalysis.ExoDiPhotonAnalyzer.exodiphotonanalyzer_cfi")
@@ -28,11 +63,13 @@ process.load("DiPhotonAnalysis.ExoDiPhotonAnalyzer.exodiphotonanalyzer_cfi")
 process.diphotonAnalyzer.ptMin = 0.0 # jsut to get some entries
 
 
+
 # precede with a diphoton filter, to speed things up
 process.load("DiPhotonAnalysis.DiPhotonFilter.diphotonfilter_cfi")
 
 process.diphotonFilter.ptMin_photon1 = 5.0 
-process.diphotonFilter.ptMin_photon2 = 2.0 
+process.diphotonFilter.ptMin_photon2 = 5.0 
 
-process.path  = cms.Path(process.diphotonFilter+process.diphotonAnalyzer)
+# include all the filters as well as the analyzer
+process.path  = cms.Path(process.primaryVertexFilter+process.noScraping+process.diphotonFilter+process.diphotonAnalyzer)
 
