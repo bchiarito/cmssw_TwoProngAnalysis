@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.1 2010/05/06 15:51:24 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.2 2010/05/07 14:01:36 chenders Exp $
 //
 //
 
@@ -63,6 +63,7 @@
 #include "CondFormats/L1TObjects/interface/L1GtTriggerMenu.h"
 #include "CondFormats/DataRecord/interface/L1GtTriggerMenuRcd.h"
 #include "L1Trigger/GlobalTrigger/interface/L1GlobalTrigger.h"
+#include "L1Trigger/GlobalTriggerAnalyzer/interface/L1GtUtils.h"
 
 
 using namespace std;
@@ -113,10 +114,25 @@ struct eventInfo_t{
   int evnum;
 };
 
+struct l1trigInfo_t{
+
+  // the following L1 tech bits are usually selected upon in GOODCOLL skim
+  // so store the info here for later
+  bool L1_Tech0; // BPTX AND
+  bool L1_Tech36;  //L1Tech_BSC_halo_beam2_inner.v0
+  bool L1_Tech37; //L1Tech_BSC_halo_beam2_outer.v0
+  bool L1_Tech38; //L1Tech_BSC_halo_beam1_inner.v0
+  bool L1_Tech39; //L1Tech_BSC_halo_beam1_outer.v0
+  bool L1_Tech40; //L1Tech_BSC_minBias_threshold1.v0
+  bool L1_Tech41; //L1Tech_BSC_minBias_threshold2.v0
+  bool L1_Tech42; // L1Tech_BSC_splash_beam1.v0
+  bool L1_Tech43; // L1Tech_BSC_splash_beam2.v0
+  bool L1_EG2; // also L1 EG bits ?
+};
 
 // trigger info - MinBias trigger?  Definitely photon triggers!
+// now this is only HLT bits - L1 moved to separate branch
 struct trigInfo_t{
-  bool L1_EG2; // also L1 bits ?
    bool HLT_Jet15U;
    bool HLT_Jet30U;
    bool HLT_Jet50U;
@@ -261,12 +277,17 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       edm::InputTag      fHltInputTag;     // hltResults
       edm::InputTag      fL1InputTag;      // L1 results
 
+      // to get L1 info, the L1 guide recommends to make this a member
+      // this allows the event setup parts to be cached, rather than refetched every event
+      L1GtUtils m_l1GtUtils;
+
       // my Tree
       TTree *fTree;
       vtxInfo_t fVtxInfo;
       beamSpotInfo_t fBeamSpotInfo;
       eventInfo_t fEventInfo;
-      trigInfo_t fTrigInfo;
+      l1trigInfo_t fL1TrigInfo;  //L1 now done separately
+      trigInfo_t fTrigInfo; // now this is only HLT
       recoPhotonInfo_t fRecoPhotonInfo1; // leading photon 
       recoPhotonInfo_t fRecoPhotonInfo2; // second photon
       diphotonInfo_t fDiphotonInfo;
@@ -298,11 +319,13 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("Event",&fEventInfo,"run/I:LS:evnum");
   fTree->Branch("Vtx",&fVtxInfo,"Nvtx/I:vx/D:vy:vz:isFake/I:Ntracks/I:sumPtTracks/D:ndof:d0");
   fTree->Branch("BeamSpot",&fBeamSpotInfo,"x0/D:y0:z0:sigmaZ:x0error:y0error:z0error:sigmaZ0error");
+
+  fTree->Branch("L1trg",&fL1TrigInfo,"L1_Tech0/O:L1_Tech36:L1_Tech37:L1_Tech38:L1_Tech39:L1_Tech40:L1_Tech41:L1_Tech42:L1_Tech43:L1_EG2");
   
-  fTree->Branch("Trg",&fTrigInfo,"L1_EG2/O:HLT_Jet15U/O:HLT_Jet30U:HLT_Jet50U:HLT_L1SingleEG2:HLT_L1SingleEG2_NoBPTX:HLT_L1SingleEG5:HLT_L1SingleEG5_NoBPTX:HLT_L1SingleEG8:HLT_L1SingleEG20_NoBPTX:HLT_L1DoubleEG5:HLT_EgammaSuperClusterOnly_L1R:HLT_Photon10_L1R:HLT_Photon15_L1R:HLT_Photon15_TrackIso_L1R:HLT_Photon15_LooseEcalIso_L1R:HLT_Photon20_L1R:HLT_Photon30_L1R_8E29:HLT_DoublePhoton5_L1R:HLT_DoublePhoton10_L1R:HLT_MinBiasBSC:HLT_MinBiasBSC_NoBPTX:HLT_MinBiasBSC_OR");
+  fTree->Branch("Trg",&fTrigInfo,"HLT_Jet15U/O:HLT_Jet30U:HLT_Jet50U:HLT_L1SingleEG2:HLT_L1SingleEG2_NoBPTX:HLT_L1SingleEG5:HLT_L1SingleEG5_NoBPTX:HLT_L1SingleEG8:HLT_L1SingleEG20_NoBPTX:HLT_L1DoubleEG5:HLT_EgammaSuperClusterOnly_L1R:HLT_Photon10_L1R:HLT_Photon15_L1R:HLT_Photon15_TrackIso_L1R:HLT_Photon15_LooseEcalIso_L1R:HLT_Photon20_L1R:HLT_Photon30_L1R_8E29:HLT_DoublePhoton5_L1R:HLT_DoublePhoton10_L1R:HLT_MinBiasBSC:HLT_MinBiasBSC_NoBPTX:HLT_MinBiasBSC_OR");
   
 
-  //try pixel seed at end
+  //try pixel seed at end -seems to work better with all booleans at end of branch!
   fTree->Branch("Photon1",&fRecoPhotonInfo1,"pt/D:eta:phi:detEta:detPhi:vx:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed");
 
   fTree->Branch("Photon2",&fRecoPhotonInfo2,"pt/D:eta:phi:detEta:detPhi:vx:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed");
@@ -472,10 +495,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    fTrigInfo.HLT_MinBiasBSC_NoBPTX = false;
    fTrigInfo.HLT_MinBiasBSC_OR = false;
 
-
-
-   fTrigInfo.L1_EG2 = false;
-
    //trig results
    Handle<TriggerResults> hltResultsHandle;
    iEvent.getByLabel(fHltInputTag,hltResultsHandle);
@@ -555,7 +574,57 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
 
    // L1 results
+   fL1TrigInfo.L1_Tech0 = false;
+   fL1TrigInfo.L1_Tech36 = false;
+   fL1TrigInfo.L1_Tech37 = false;
+   fL1TrigInfo.L1_Tech38 = false;
+   fL1TrigInfo.L1_Tech39 = false;
+   fL1TrigInfo.L1_Tech40 = false;
+   fL1TrigInfo.L1_Tech41 = false;
+   fL1TrigInfo.L1_Tech42 = false;
+   fL1TrigInfo.L1_Tech43 = false;
+   fL1TrigInfo.L1_EG2 = false;   
    
+   // use the L1GtUtils class, following instructions in 
+   // https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideL1TriggerL1GtUtils
+   
+   // before accessing any result from L1GtUtils, one must retrieve and cache
+   // the L1 trigger event setup
+   m_l1GtUtils.retrieveL1EventSetup(iSetup);
+
+   // access L1 trigger results using public methods from L1GtUtils
+    // always check on error code returned by that method
+   int iErrorCode = -1;
+   // error 0 is okay; 1 means trig not found; else some other error
+   // although I am probably just going to ignore it anyway...
+   
+   // since many of these L1 bits are actually masked, I think I should use the 
+   // decision word BEFORE the mask, to be useful for selection
+   
+   // the L1 bits/names association for the tech triggers of interest is:
+   // L1Tech_BPTX_plus_AND_minus.v0  	0
+   // L1Tech_BSC_halo_beam2_inner.v0  	36
+   // L1Tech_BSC_halo_beam2_outer.v0 	37
+   // L1Tech_BSC_halo_beam1_inner.v0 	38
+   // L1Tech_BSC_halo_beam1_outer.v0 	39
+   // L1Tech_BSC_minBias_threshold1.v0 	40
+   // L1Tech_BSC_minBias_threshold2.v0 	41
+   // L1Tech_BSC_splash_beam1.v0 	42
+   // L1Tech_BSC_splash_beam2.v0 	43 	
+  
+
+   
+   fL1TrigInfo.L1_Tech0 =    m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BPTX_plus_AND_minus.v0",iErrorCode);
+   fL1TrigInfo.L1_Tech36 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_halo_beam2_inner.v0",iErrorCode);
+   fL1TrigInfo.L1_Tech37 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_halo_beam2_outer.v0",iErrorCode);
+   fL1TrigInfo.L1_Tech38 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_halo_beam1_inner.v0",iErrorCode);
+   fL1TrigInfo.L1_Tech39 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_halo_beam1_outer.v0",iErrorCode);
+   fL1TrigInfo.L1_Tech40 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_minBias_threshold1.v0",iErrorCode);
+   fL1TrigInfo.L1_Tech41 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_minBias_threshold2.v0",iErrorCode);
+   fL1TrigInfo.L1_Tech42 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_splash_beam1.v0",iErrorCode);
+   fL1TrigInfo.L1_Tech43 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_splash_beam2.v0",iErrorCode);
+
+
 
 
    // get the photon collection
