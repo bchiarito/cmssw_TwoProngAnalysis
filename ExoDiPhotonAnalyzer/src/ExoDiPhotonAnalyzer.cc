@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.2 2010/05/07 14:01:36 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.3 2010/05/18 11:51:06 chenders Exp $
 //
 //
 
@@ -155,7 +155,7 @@ struct trigInfo_t{
    bool HLT_MinBiasBSC;
    bool HLT_MinBiasBSC_NoBPTX;
    bool HLT_MinBiasBSC_OR;
-
+   bool HLT_L1_BscMinBiasOR_BptxPlusORMinus;
 };
 
 // single photon info
@@ -269,13 +269,15 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
   // my functions
   bool isTightPhoton(const reco::Photon *photon);
   bool isLoosePhoton(const reco::Photon *photon);
-
+  bool isASpike(const reco::Photon *photon);
 
       // ----------member data ---------------------------
       edm::InputTag      fPhotonTag;       //select photon collection 
       double             fMin_pt;          // min pt cut (photons)
       edm::InputTag      fHltInputTag;     // hltResults
       edm::InputTag      fL1InputTag;      // L1 results
+      bool               fkRemoveSpikes;   // option to remove spikes before filling tree
+      bool               fkRequireTightPhotons;  // option to require tight photon id in tree
 
       // to get L1 info, the L1 guide recommends to make this a member
       // this allows the event setup parts to be cached, rather than refetched every event
@@ -310,7 +312,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   : fPhotonTag(iConfig.getUntrackedParameter<edm::InputTag>("photonCollection")),
     fMin_pt(iConfig.getUntrackedParameter<double>("ptMin")),
     fHltInputTag(iConfig.getUntrackedParameter<edm::InputTag>("hltResults")),
-    fL1InputTag(iConfig.getUntrackedParameter<edm::InputTag>("L1Results"))
+    fL1InputTag(iConfig.getUntrackedParameter<edm::InputTag>("L1Results")),
+    fkRemoveSpikes(iConfig.getUntrackedParameter<bool>("removeSpikes")),
+    fkRequireTightPhotons(iConfig.getUntrackedParameter<bool>("requireTightPhotons"))
 {
    //now do what ever initialization is needed
 
@@ -322,7 +326,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 
   fTree->Branch("L1trg",&fL1TrigInfo,"L1_Tech0/O:L1_Tech36:L1_Tech37:L1_Tech38:L1_Tech39:L1_Tech40:L1_Tech41:L1_Tech42:L1_Tech43:L1_EG2");
   
-  fTree->Branch("Trg",&fTrigInfo,"HLT_Jet15U/O:HLT_Jet30U:HLT_Jet50U:HLT_L1SingleEG2:HLT_L1SingleEG2_NoBPTX:HLT_L1SingleEG5:HLT_L1SingleEG5_NoBPTX:HLT_L1SingleEG8:HLT_L1SingleEG20_NoBPTX:HLT_L1DoubleEG5:HLT_EgammaSuperClusterOnly_L1R:HLT_Photon10_L1R:HLT_Photon15_L1R:HLT_Photon15_TrackIso_L1R:HLT_Photon15_LooseEcalIso_L1R:HLT_Photon20_L1R:HLT_Photon30_L1R_8E29:HLT_DoublePhoton5_L1R:HLT_DoublePhoton10_L1R:HLT_MinBiasBSC:HLT_MinBiasBSC_NoBPTX:HLT_MinBiasBSC_OR");
+  fTree->Branch("Trg",&fTrigInfo,"HLT_Jet15U/O:HLT_Jet30U:HLT_Jet50U:HLT_L1SingleEG2:HLT_L1SingleEG2_NoBPTX:HLT_L1SingleEG5:HLT_L1SingleEG5_NoBPTX:HLT_L1SingleEG8:HLT_L1SingleEG20_NoBPTX:HLT_L1DoubleEG5:HLT_EgammaSuperClusterOnly_L1R:HLT_Photon10_L1R:HLT_Photon15_L1R:HLT_Photon15_TrackIso_L1R:HLT_Photon15_LooseEcalIso_L1R:HLT_Photon20_L1R:HLT_Photon30_L1R_8E29:HLT_DoublePhoton5_L1R:HLT_DoublePhoton10_L1R:HLT_MinBiasBSC:HLT_MinBiasBSC_NoBPTX:HLT_MinBiasBSC_OR:HLT_L1_BscMinBiasOR_BptxPlusORMinus");
   
 
   //try pixel seed at end -seems to work better with all booleans at end of branch!
@@ -352,16 +356,64 @@ bool ExoDiPhotonAnalyzer::isTightPhoton(const reco::Photon *photon)
 {
   bool result = false;
 
-  return result;
+  // these cuts are just hardcoded for now ...
+
+  bool hadOverEmResult = false;
+  bool trkIsoResult =false;
+  bool hcalIsoResult = false;
+  bool ecalIsoResult = false;
+  bool noPixelSeedResult = false;
+  bool sigmaIetaIetaResult = false;
+  
+  if(photon->hadronicOverEm()<0.05)
+    hadOverEmResult = true;
+
+
+  double trkIsoCut = 2.0 + 0.001*photon->et();
+  if(photon->trkSumPtHollowConeDR04()<trkIsoCut)
+    trkIsoResult = true;
+
+  double hcalIsoCut = 2.2 + 0.001*photon->et();
+  if(photon->hcalTowerSumEtConeDR04()<hcalIsoCut) 
+    hcalIsoResult = true;
+
+  double ecalIsoCut = 4.2 + 0.003*photon->et();
+  if(photon->ecalRecHitSumEtConeDR04()<ecalIsoCut)
+    ecalIsoResult = true;
+
+  if(photon->hasPixelSeed()==false)
+    noPixelSeedResult = true; // ie it is true that it does NOT have a pixel seed!
+
+  // sigmaIetaIeta should be included in tight photon ID too soon ...
+
+  if(hadOverEmResult && trkIsoResult && ecalIsoResult && hcalIsoResult && noPixelSeedResult) 
+    result = true;
+
+  return result; 
 }
 
 
 bool ExoDiPhotonAnalyzer::isLoosePhoton(const reco::Photon *photon)
 {
-  bool result = false;
+  bool result = true; //temporarily decalre all recoPhotons as 'loose'
 
   return result;
 }
+
+bool ExoDiPhotonAnalyzer::isASpike(const reco::Photon *photon)
+{
+  bool thisPhotonIsASpike = false;
+
+  // for now, its simpler for me to use the older e1/e9 criteria to identify spikes
+  /// but we need to move to the swiss cross cut ASAP
+  
+  if(photon->maxEnergyXtal()/photon->e3x3()>0.95)
+    // then its a spike!
+    thisPhotonIsASpike = true;
+
+  return thisPhotonIsASpike;
+}
+
 
 
 // ------------ method called to for each event  ------------
@@ -494,6 +546,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    fTrigInfo.HLT_MinBiasBSC = false;
    fTrigInfo.HLT_MinBiasBSC_NoBPTX = false;
    fTrigInfo.HLT_MinBiasBSC_OR = false;
+   fTrigInfo.HLT_L1_BscMinBiasOR_BptxPlusORMinus  = false;
 
    //trig results
    Handle<TriggerResults> hltResultsHandle;
@@ -567,6 +620,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	 fTrigInfo.HLT_MinBiasBSC_NoBPTX = hltResults->accept(itrig);
        else if(hltNames.triggerName(itrig)=="HLT_MinBiasBSC_OR")
 	 fTrigInfo.HLT_MinBiasBSC_OR = hltResults->accept(itrig);
+       else if(hltNames.triggerName(itrig)=="HLT_L1_BscMinBiasOR_BptxPlusORMinus")
+	 fTrigInfo.HLT_L1_BscMinBiasOR_BptxPlusORMinus = hltResults->accept(itrig);
        
        
 
@@ -637,7 +692,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      return;
    }
    
-   //   cout << "N photons = " << photonColl->size() <<endl;
+   cout << "N photons = " << photonColl->size() <<endl;
 
    // we want the two highest Et photons for this analysis
    const reco::Photon *photon1 = NULL;
@@ -650,25 +705,45 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    // photon loop
    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
 
-     //     cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi()<<endl;
+     cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+     cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
+     cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
+     cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
+     cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
+     cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
+     cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
+     cout << endl;
 
 
-     if(recoPhoton->et() >= fMin_pt && recoPhoton->et()>highestEt1) {
-       // formerly highest is now second highest
-       photon2 = photon1; // this can still be NULL at this point ...
-       if(photon2)
-	 highestEt2 = photon2->et();
-       // and the new one is highest
-       photon1 =  &(*recoPhoton);
-       highestEt1 = photon1->et();
+     // option to remove spikes, so only consider pt-ordering of non-spike photons
+     // note that I have to do '&(*photon)' because I am using the iterator, 
+     // while my function needs a pointer to the object (obtained by dereffing the iter) ...
+     if(!fkRemoveSpikes || !isASpike(&(*recoPhoton))) {
+       // ie either we dont care about spikes OR this photon is not a spike anyway
+       // so in either case we continue to study this photon... 
+       
+       // similar logic for tight photon ID
+       if(!fkRequireTightPhotons || isTightPhoton(&(*recoPhoton))) {
+	 ///ie either we dont require tight photons OR this photon passes tight ID anyway
 
-     }
-     else if(recoPhoton->et() >= fMin_pt && recoPhoton->et()>highestEt2) {
-        photon2 =  &(*recoPhoton);
-	highestEt2 = photon2->et();
-     }
-
-
+	 if(recoPhoton->et() >= fMin_pt && recoPhoton->et()>highestEt1) {
+	   // formerly highest is now second highest
+	   photon2 = photon1; // this can still be NULL at this point ...
+	   if(photon2)
+	     highestEt2 = photon2->et();
+	   // and the new one is highest
+	   photon1 =  &(*recoPhoton);
+	   highestEt1 = photon1->et();
+	   
+	 }
+	 else if(recoPhoton->et() >= fMin_pt && recoPhoton->et()>highestEt2) {
+	   photon2 =  &(*recoPhoton);
+	   highestEt2 = photon2->et();
+	 }
+	 
+       } //ends tight photon ID check
+     }//ends spike criteria check
+       
    } //end reco photn loop
 
 //    // now we have the two highest photons
