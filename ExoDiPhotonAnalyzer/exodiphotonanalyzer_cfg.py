@@ -61,7 +61,8 @@ process.noScraping = cms.EDFilter("FilterOutScraping",
 process.load("DiPhotonAnalysis.ExoDiPhotonAnalyzer.exodiphotonanalyzer_cfi")
 #process.photonAnalyzer.photonCollection = "photons"
 process.diphotonAnalyzer.ptMin = 0.0 # jsut to get some entries
-
+process.diphotonAnalyzer.removeSpikes = True # ie spikes will be exlcuded from tree
+process.diphotonAnalyzer.requireTightPhotons = True # ie only tight photons will be written 
 
 
 # precede with a diphoton filter, to speed things up
