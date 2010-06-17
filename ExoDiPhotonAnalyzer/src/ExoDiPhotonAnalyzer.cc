@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.3 2010/05/18 11:51:06 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.4 2010/05/27 20:51:29 chenders Exp $
 //
 //
 
@@ -45,6 +45,13 @@
 
 // for beamspot
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
+
+// for ecal
+#include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
+#include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgo.h"
+#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 
 //for photons
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
@@ -279,6 +286,9 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       bool               fkRemoveSpikes;   // option to remove spikes before filling tree
       bool               fkRequireTightPhotons;  // option to require tight photon id in tree
 
+      // tools for clusters
+      std::auto_ptr<EcalClusterLazyTools> lazyTools_;
+
       // to get L1 info, the L1 guide recommends to make this a member
       // this allows the event setup parts to be cached, rather than refetched every event
       L1GtUtils m_l1GtUtils;
@@ -293,7 +303,6 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       recoPhotonInfo_t fRecoPhotonInfo1; // leading photon 
       recoPhotonInfo_t fRecoPhotonInfo2; // second photon
       diphotonInfo_t fDiphotonInfo;
-  
 
 };
 
@@ -363,7 +372,7 @@ bool ExoDiPhotonAnalyzer::isTightPhoton(const reco::Photon *photon)
   bool hcalIsoResult = false;
   bool ecalIsoResult = false;
   bool noPixelSeedResult = false;
-  bool sigmaIetaIetaResult = false;
+  //  bool sigmaIetaIetaResult = false;
   
   if(photon->hadronicOverEm()<0.05)
     hadOverEmResult = true;
@@ -427,8 +436,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    fEventInfo.run = iEvent.id().run();
    fEventInfo.LS = iEvent.id().luminosityBlock();
    fEventInfo.evnum = iEvent.id().event();
-
-
+   
    // get the vertex collection
    Handle<reco::VertexCollection> vertexColl;
    iEvent.getByLabel("offlinePrimaryVertices",vertexColl);
@@ -563,7 +571,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    //   TriggerNames hltNames;
    //   hltNames.init(*hltResults);
    //   cout << "HLT Results" <<endl;
-   for(int itrig=0;itrig<hltResults->size();itrig++) {
+   int trigSize = hltResults->size();
+   for(int itrig=0;itrig<trigSize;itrig++) {
      //     cout << "Path "<<itrig<<" ";
      //print only the accepted paths?
      //     if(hltResults->accept(itrig)) {
@@ -680,8 +689,20 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    fL1TrigInfo.L1_Tech43 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_splash_beam2.v0",iErrorCode);
 
 
+   // ecal information
+   
+   lazyTools_ = std::auto_ptr<EcalClusterLazyTools>( new EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("ecalRecHit:EcalRecHitsEB"),edm::InputTag("ecalRecHit:EcalRecHitsEE")) );
 
-
+   // get ecal barrel recHits for spike rejection
+   edm::Handle<EcalRecHitCollection> recHitsEB_h;
+   iEvent.getByLabel(edm::InputTag("ecalRecHit:EcalRecHitsEB"), recHitsEB_h );
+   const EcalRecHitCollection * recHitsEB = 0;
+   if ( ! recHitsEB_h.isValid() ) {
+     LogError("ExoDiPhotonAnalyzer") << " ECAL Barrel RecHit Collection not available !"; return;
+   } else {
+     recHitsEB = recHitsEB_h.product();
+   }
+   
    // get the photon collection
    Handle<reco::PhotonCollection> photonColl;
    iEvent.getByLabel(fPhotonTag,photonColl);
@@ -714,6 +735,13 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
      cout << endl;
 
+     // get swiss cross 
+     reco::SuperClusterRef sc = recoPhoton->superCluster();
+     std::pair<DetId,float> maxc = lazyTools_->getMaximum(*sc);
+     bool isEB = maxc.first.subdetId() == EcalBarrel; 
+     float scross = -999.99;
+     if (isEB) scross = EcalSeverityLevelAlgo::swissCross(maxc.first, (*recHitsEB), 0);
+     //     cout << "Toyoko: "  << maxc.second << " " << sc->rawEnergy() << " " << scross << endl;       
 
      // option to remove spikes, so only consider pt-ordering of non-spike photons
      // note that I have to do '&(*photon)' because I am using the iterator, 

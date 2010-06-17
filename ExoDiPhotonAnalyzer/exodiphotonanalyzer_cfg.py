@@ -10,10 +10,10 @@ process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
 #        'file:myfile.root',
-    'file:/tmp/chenders/02071949-FA40-DF11-9990-001A64789DEC.root',
+#    'file:/tmp/chenders/02071949-FA40-DF11-9990-001A64789DEC.root',
+#'file:/afs/cern.ch/cms/CAF/CMSCOMM/COMM_ECAL/torimoto/0065C919-F53B-DF11-8BF5-001D09F29146.root'
         #direct from castor
-    #    '/store/data/Commissioning10/MinimumBias/RAW-RECO/v8/000/132/601/02071949-FA40-DF11-9990-001A64789DEC.root'
-
+        '/store/data/Commissioning10/MinimumBias/RAW-RECO/v8/000/132/601/02071949-FA40-DF11-9990-001A64789DEC.root'
     )
 )
 
@@ -25,6 +25,8 @@ process.GlobalTag.globaltag = 'GR_R_35X_V8::All'
 # and this is the tag for prompt reco with 35X
 #process.GlobalTag.globaltag = 'GR10_P_V5::All'
 
+# geometry for ecal 
+process.load("Configuration.StandardSequences.Geometry_cff")
 
 # file for all histograms for all modules
 process.TFileService = cms.Service("TFileService",
