@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.4 2010/05/27 20:51:29 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.5 2010/06/17 15:46:21 torimoto Exp $
 //
 //
 
@@ -199,6 +199,10 @@ struct recoPhotonInfo_t {
   double r1x5;
   double r2x5;
   
+  // swiss cross and other spike-related flags, eg kOutOfTime
+  double swisscross;
+
+
   double hadOverEm; 
   // note also that two hadronic depths are available
   double hadDepth1OverEm; 
@@ -243,7 +247,7 @@ struct recoPhotonInfo_t {
   // pixel seed match?
   bool hasPixelSeed;
   // note to self: weird problems with this var in middle of struct - try at end
-  
+    
 };
 
 
@@ -339,10 +343,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   
 
   //try pixel seed at end -seems to work better with all booleans at end of branch!
-  fTree->Branch("Photon1",&fRecoPhotonInfo1,"pt/D:eta:phi:detEta:detPhi:vx:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed");
+  fTree->Branch("Photon1",&fRecoPhotonInfo1,"pt/D:eta:phi:detEta:detPhi:vx:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed");
 
-  fTree->Branch("Photon2",&fRecoPhotonInfo2,"pt/D:eta:phi:detEta:detPhi:vx:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed");
-
+  fTree->Branch("Photon2",&fRecoPhotonInfo2,"pt/D:eta:phi:detEta:detPhi:vx:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed");
 
   fTree->Branch("Diphoton",&fDiphotonInfo,"Minv/D:qt:deltaPhi:deltaEta:deltaR:cosThetaStar");
 
@@ -735,14 +738,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
      cout << endl;
 
-     // get swiss cross 
-     reco::SuperClusterRef sc = recoPhoton->superCluster();
-     std::pair<DetId,float> maxc = lazyTools_->getMaximum(*sc);
-     bool isEB = maxc.first.subdetId() == EcalBarrel; 
-     float scross = -999.99;
-     if (isEB) scross = EcalSeverityLevelAlgo::swissCross(maxc.first, (*recHitsEB), 0);
-     //     cout << "Toyoko: "  << maxc.second << " " << sc->rawEnergy() << " " << scross << endl;       
-
      // option to remove spikes, so only consider pt-ordering of non-spike photons
      // note that I have to do '&(*photon)' because I am using the iterator, 
      // while my function needs a pointer to the object (obtained by dereffing the iter) ...
@@ -777,6 +772,15 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 //    // now we have the two highest photons
     if(photon1) {
       cout << "Highest Et photon: et, eta, phi = " << photon1->et() <<", "<<photon1->eta()<< ", "<< photon1->phi()<<endl;
+
+     // get swiss cross 
+     reco::SuperClusterRef sc = photon1->superCluster();
+     std::pair<DetId,float> maxc = lazyTools_->getMaximum(*sc);
+     double scross = -999.99;
+     if (maxc.first.subdetId() == EcalBarrel) scross = EcalSeverityLevelAlgo::swissCross(maxc.first, (*recHitsEB), 0);
+     cout << "Toyoko Photon1 swiss cross" << scross << endl;
+
+     fRecoPhotonInfo1.swisscross = scross;
 
 // for photon tree
      fRecoPhotonInfo1.pt = photon1->et();
@@ -875,6 +879,14 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     if(photon2) {
       cout << "2nd Highest Et photon: et, eta, phi = " << photon2->et() <<", "<<photon2->eta()<< ", "<< photon2->phi()<<endl;
 
+     // get swiss cross 
+     reco::SuperClusterRef sc = photon2->superCluster();
+     std::pair<DetId,float> maxc = lazyTools_->getMaximum(*sc);
+     double scross = -999.99;
+     if (maxc.first.subdetId() == EcalBarrel) scross = EcalSeverityLevelAlgo::swissCross(maxc.first, (*recHitsEB), 0);
+     cout << "Toyoko Photon2" << scross << endl;
+
+     fRecoPhotonInfo2.swisscross = scross;
 
 // for photon tree
      fRecoPhotonInfo2.pt = photon2->et();
@@ -966,7 +978,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      fRecoPhotonInfo2.scNumBasicClusters = photon2->superCluster()->clustersSize();
 
      // also to add seed cluster info?
-     
+    
 
     }
 
