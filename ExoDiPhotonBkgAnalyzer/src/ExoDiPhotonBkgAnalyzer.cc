@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Mon Jun 28 12:37:19 CEST 2010
-// $Id$
+// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.1 2010/08/05 10:02:07 chenders Exp $
 //
 //
 
@@ -58,6 +58,7 @@
 #include "DiPhotonAnalysis/CommonClasses/interface/PhotonID.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/EventAndVertexInfo.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/DiphotonInfo.h"
+#include "DiPhotonAnalysis/CommonClasses/interface/TriggerInfo.h"
 
 using namespace std;
 
@@ -84,7 +85,7 @@ class ExoDiPhotonBkgAnalyzer : public edm::EDAnalyzer {
   // input tags and parameters
       edm::InputTag      fPhotonTag;       //select photon collection 
       double             fMin_pt;          // min pt cut (photons)
-
+      edm::InputTag      fHltInputTag;     // hltResults
 
       // my Tree
       TTree *fTree;
@@ -93,6 +94,7 @@ class ExoDiPhotonBkgAnalyzer : public edm::EDAnalyzer {
       ExoDiPhotons::vtxInfo_t fVtxInfo;
       ExoDiPhotons::beamSpotInfo_t fBeamSpotInfo;
 
+      ExoDiPhotons::hltTrigInfo_t fHLTInfo;
 
       ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo1; // leading photon 
       ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo2; // second photon
@@ -122,7 +124,11 @@ class ExoDiPhotonBkgAnalyzer : public edm::EDAnalyzer {
 //
 ExoDiPhotonBkgAnalyzer::ExoDiPhotonBkgAnalyzer(const edm::ParameterSet& iConfig)
   : fPhotonTag(iConfig.getUntrackedParameter<edm::InputTag>("photonCollection")),
-    fMin_pt(iConfig.getUntrackedParameter<double>("ptMin"))
+    fMin_pt(iConfig.getUntrackedParameter<double>("ptMin")),
+    // note that the HLT process name can vary for different MC samples
+    // so be sure to adjsut correctly in cfg
+    fHltInputTag(iConfig.getUntrackedParameter<edm::InputTag>("hltResults"))
+  
 {
    //now do what ever initialization is needed
 
@@ -134,7 +140,7 @@ ExoDiPhotonBkgAnalyzer::ExoDiPhotonBkgAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
   fTree->Branch("Vtx",&fVtxInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
   fTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
-
+  fTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
   fTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
 
   fTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
@@ -273,9 +279,28 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
    }
 
 
+   // L1 info
 
-   // trig info
-   // TBC
+   // HLT info
+
+   Handle<TriggerResults> hltResultsHandle;
+   iEvent.getByLabel(fHltInputTag,hltResultsHandle);
+
+   if(!hltResultsHandle.isValid()) {
+     cout << "HLT results not valid!" <<endl;
+     cout << "Couldnt find TriggerResults with input tag " << fHltInputTag << endl;
+     return;
+   }
+
+   const TriggerResults *hltResults = hltResultsHandle.product();
+   //   cout << *hltResults <<endl;
+   // this way of getting triggerNames should work, even when the 
+   // trigger menu changes from one run to the next
+   // alternatively, one could also use the HLTConfigPovider
+   const TriggerNames & hltNames = iEvent.triggerNames(*hltResults);
+
+   // now we just use the FillHLTInfo() function from TrigInfo.h:
+   ExoDiPhotons::FillHLTInfo(fHLTInfo,hltResults,hltNames);
 
 
 
