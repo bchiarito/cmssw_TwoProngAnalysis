@@ -88,7 +88,7 @@ namespace ExoDiPhotons
   // Fill() function for HLT info
   // needs both a TriggerResults and TriggerNames object
 
-  void FillHLTInfo(hltTrigInfo_t &hltInfo, const TriggerResults *hltResults, const TriggerNames &hltNames) {
+  void FillHLTInfo(hltTrigInfo_t &hltInfo, const edm::TriggerResults *hltResults, const edm::TriggerNames &hltNames) {
 
     // first set all the triggers to -1
     // then if the path is not even present in the menu for this event
