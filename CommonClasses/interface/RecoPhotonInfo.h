@@ -7,11 +7,19 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-// Conor, July 2010
+//  $Id$
 // 
 //********************************************************************
 
 #include <string>
+
+// for ecal
+#include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
+#include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgo.h"
+#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
+
 
 //for photons
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
@@ -29,7 +37,10 @@ namespace ExoDiPhotons
     double detEta;
     double detPhi; // clearly should be identical to phi, so am using as sort of cross-check 
     // which detector channel, specifically?
-    //useful to cross check channel masking and look for problem channels, etc, I think
+    //useful to cross check channel masking and look for problem channels, etc I expect
+    int detId;
+    int iEtaY; // iEta if EB, iY if EE
+    int iPhiX; // iPhi if EB, iX if EE
 
 
     //double check the vertex assigned to the photon candidate
@@ -53,13 +64,24 @@ namespace ExoDiPhotons
   
     // swiss cross and other spike-related flags, eg kOutOfTime
     double swisscross;
+    double eMax; // believe this is same as maxEnergyCrystal, but its a different getter, so let's just put it in to be on the safe side
+    double eLeft;
+    double eRight;
+    double eTop;
+    double eBottom;
+    double eSecond; // second highest rec hit in the cluster (not sure if required to be within 3x3 or not?)
 
+    // ecal severity level
+    int severityLevel;
 
-    double hadOverEm; 
+    // rec hit timing
+    double maxRecHitTime;
+
+    double hadOverEm;  
     // note also that two hadronic depths are available
     double hadDepth1OverEm; 
     double hadDepth2OverEm; 
-
+ 
 
     //isolation variables
     // these have different options: cone size, hollowness, etc
@@ -107,7 +129,7 @@ namespace ExoDiPhotons
   // obviously this needs to be kept up-to-date with the struct definition
   // but now at least this only needs to be done here in this file, 
   // rather than in each individual analyser 
-  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:vx:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed");
+  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:detId/I:iEtaY/I:iPhiX/I:vx/D:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:severityLevel/I:maxRecHitTime/D:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed");
 
   
 
@@ -122,12 +144,19 @@ namespace ExoDiPhotons
     
     recoPhotonInfo.detEta = photon->caloPosition().eta();
     recoPhotonInfo.detPhi = photon->caloPosition().phi();
+    
+    //   detId and crystal eta/phi
+    // these use lazyTools and so need to be filled inside the analyser itself still
+    recoPhotonInfo.detId = -99999;
+    recoPhotonInfo.iEtaY = -99999;
+    recoPhotonInfo.iPhiX = -99999;
 
-     // since photon inherits from LeafCandidate, we can get the vertex position
-     // that is associated with the photon:
-     recoPhotonInfo.vx = photon->vx();
-     recoPhotonInfo.vy = photon->vy();
-     recoPhotonInfo.vz = photon->vz();
+
+    // since photon inherits from LeafCandidate, we can get the vertex position
+    // that is associated with the photon:
+    recoPhotonInfo.vx = photon->vx();
+    recoPhotonInfo.vy = photon->vy();
+    recoPhotonInfo.vz = photon->vz();
 
 
      recoPhotonInfo.r9 = photon->r9();
@@ -141,6 +170,21 @@ namespace ExoDiPhotons
      recoPhotonInfo.e5x5 = photon->e5x5();
      recoPhotonInfo.r1x5 = photon->r1x5();
      recoPhotonInfo.r2x5 = photon->r2x5();
+
+     // swiss cross and related use lazyTools, so need to be filled in analyser itself
+     recoPhotonInfo.swisscross = -999999.99;
+     recoPhotonInfo.eMax = -999999.99; 
+     recoPhotonInfo.eLeft = -999999.99;
+     recoPhotonInfo.eRight = -999999.99;
+     recoPhotonInfo.eTop = -999999.99;
+     recoPhotonInfo.eBottom = -999999.99;
+     recoPhotonInfo.eSecond = -999999.99;
+
+     // official ecal rec hit severity level
+     recoPhotonInfo.severityLevel = -999;
+     // time of highest energy rec hit
+     recoPhotonInfo.maxRecHitTime = -9999999.99;
+
 
      recoPhotonInfo.hadOverEm = photon->hadronicOverEm();
      recoPhotonInfo.hadDepth1OverEm = photon->hadronicDepth1OverEm();
