@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Mon Jun 28 12:37:19 CEST 2010
-// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.1 2010/08/05 10:02:07 chenders Exp $
+// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.2 2010/08/11 10:18:11 chenders Exp $
 //
 //
 
@@ -35,6 +35,15 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TH1.h"
 #include "TTree.h"
+
+// for ecal
+#include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/EcalDetId/interface/EBDetId.h"
+#include "DataFormats/EcalDetId/interface/EEDetId.h"
+#include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
+#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
+#include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgo.h"
+#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 
 
 //for photons
@@ -86,6 +95,9 @@ class ExoDiPhotonBkgAnalyzer : public edm::EDAnalyzer {
       edm::InputTag      fPhotonTag;       //select photon collection 
       double             fMin_pt;          // min pt cut (photons)
       edm::InputTag      fHltInputTag;     // hltResults
+
+      // tools for clusters
+      std::auto_ptr<EcalClusterLazyTools> lazyTools_;
 
       // my Tree
       TTree *fTree;
@@ -304,6 +316,27 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
 
 
+   // ecal information
+
+   lazyTools_ = std::auto_ptr<EcalClusterLazyTools>( new EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("ecalRecHit:EcalRecHitsEB"),edm::InputTag("ecalRecHit:EcalRecHitsEE")) );
+   
+   // get ecal barrel recHits for spike rejection
+   edm::Handle<EcalRecHitCollection> recHitsEB_h;
+   iEvent.getByLabel(edm::InputTag("ecalRecHit:EcalRecHitsEB"), recHitsEB_h );
+   const EcalRecHitCollection * recHitsEB = 0;
+   if ( ! recHitsEB_h.isValid() ) {
+     LogError("ExoDiPhotonAnalyzer") << " ECAL Barrel RecHit Collection not available !"; return;
+   } else {
+     recHitsEB = recHitsEB_h.product();
+   }
+
+
+   // get swiss cross and related
+   //   reco::SuperClusterRef sc = recoPhoton->superCluster();
+   //   std::pair<DetId,float> maxc = lazyTools_->getMaximum(*sc);
+
+
+
    // get the photon collection
    Handle<reco::PhotonCollection> photonColl;
    iEvent.getByLabel(fPhotonTag,photonColl);
@@ -365,17 +398,87 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
    
    if(photon1) {
 
-     // need to fill swiss cross info by hand still
-
-     // but for all other variables, 
      // can now use the Fill function specific to this recoPhoton struct
      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,photon1);
 
+     // anything using lazy tools still needs to be filled here though,
+     // cause I had trouble getting it to work inside the Fill function
+
+     reco::SuperClusterRef sc1 = photon1->superCluster();
+     std::pair<DetId,float> maxc1 = lazyTools_->getMaximum(*sc1);
+
+     //detId and ieta/iphi/iY/iX
+     fRecoPhotonInfo1.detId = maxc1.first.rawId();
+     
+     if(maxc1.first.subdetId() == EcalBarrel) {
+       EBDetId ebId( maxc1.first );
+       fRecoPhotonInfo1.iEtaY = ebId.ieta(); // iEta in EB
+       fRecoPhotonInfo1.iPhiX = ebId.iphi(); // iPhi in EB
+     }
+     else if (maxc1.first.subdetId() == EcalEndcap) {
+       EEDetId eeId( maxc1.first );
+       fRecoPhotonInfo1.iEtaY = eeId.iy(); // iY in EE
+       fRecoPhotonInfo1.iPhiX = eeId.ix(); // iX in EE       
+     }
+
+     // swiss cross and other spike-related info
+     if (maxc1.first.subdetId() == EcalBarrel) 
+       fRecoPhotonInfo1.swisscross = EcalSeverityLevelAlgo::swissCross(maxc1.first, (*recHitsEB), 0);
+     fRecoPhotonInfo1.eMax = lazyTools_->eMax(*sc1);
+     fRecoPhotonInfo1.eLeft = lazyTools_->eLeft(*sc1);
+     fRecoPhotonInfo1.eRight = lazyTools_->eRight(*sc1);
+     fRecoPhotonInfo1.eTop = lazyTools_->eTop(*sc1);
+     fRecoPhotonInfo1.eBottom = lazyTools_->eBottom(*sc1);
+     fRecoPhotonInfo1.eSecond = lazyTools_->e2nd(*sc1);
+
+     // FIXME: official ecal rec hit severity level 
+     fRecoPhotonInfo1.severityLevel = -999;
+     // FIXME: time of highest energy rec hit 
+     fRecoPhotonInfo1.maxRecHitTime = -9999999.99;
+
+     
 
    }
 
    if(photon2) {
      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,photon2);
+
+     // anything using lazy tools still needs to be filled here though,
+     // cause I had trouble getting it to work inside the Fill function
+
+     reco::SuperClusterRef sc2 = photon2->superCluster();
+     std::pair<DetId,float> maxc2 = lazyTools_->getMaximum(*sc2);
+
+     //detId and ieta/iphi/iY/iX
+     fRecoPhotonInfo2.detId = maxc2.first.rawId();
+     
+     if(maxc2.first.subdetId() == EcalBarrel) {
+       EBDetId ebId( maxc2.first );
+       fRecoPhotonInfo2.iEtaY = ebId.ieta(); // iEta in EB
+       fRecoPhotonInfo2.iPhiX = ebId.iphi(); // iPhi in EB
+     }
+     else if (maxc2.first.subdetId() == EcalEndcap) {
+       EEDetId eeId( maxc2.first );
+       fRecoPhotonInfo2.iEtaY = eeId.iy(); // iY in EE
+       fRecoPhotonInfo2.iPhiX = eeId.ix(); // iX in EE       
+     }
+
+     // swiss cross and other spike-related info
+     if (maxc2.first.subdetId() == EcalBarrel) 
+       fRecoPhotonInfo2.swisscross = EcalSeverityLevelAlgo::swissCross(maxc2.first, (*recHitsEB), 0);
+     fRecoPhotonInfo2.eMax = lazyTools_->eMax(*sc2);
+     fRecoPhotonInfo2.eLeft = lazyTools_->eLeft(*sc2);
+     fRecoPhotonInfo2.eRight = lazyTools_->eRight(*sc2);
+     fRecoPhotonInfo2.eTop = lazyTools_->eTop(*sc2);
+     fRecoPhotonInfo2.eBottom = lazyTools_->eBottom(*sc2);
+     fRecoPhotonInfo2.eSecond = lazyTools_->e2nd(*sc2);
+
+     // FIXME: official ecal rec hit severity level 
+     fRecoPhotonInfo2.severityLevel = -999;
+     // FIXME: time of highest energy rec hit 
+     fRecoPhotonInfo2.maxRecHitTime = -9999999.99;
+
+
    }
 
 
