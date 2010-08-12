@@ -8,6 +8,7 @@
 <use name=DataFormats/HepMCCandidate>
 <use name=DataFormats/VertexReco>
 <use name=DataFormats/BeamSpot>
+<use name=RecoEcal/EgammaCoreTools>
 <flags EDM_PLUGIN=1>
 <export>
    <lib name=DiPhotonAnalysisExoDiPhotonBkgAnalyzer>
@@ -21,4 +22,5 @@
    <use name=DataFormats/HepMCCandidate>
    <use name=DataFormats/VertexReco>
    <use name=DataFormats/BeamSpot>
+   <use name=RecoEcal/EgammaCoreTools>
 </export>
