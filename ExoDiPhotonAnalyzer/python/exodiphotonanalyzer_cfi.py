@@ -6,5 +6,5 @@ diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   hltResults = cms.untracked.InputTag("TriggerResults","","HLT"),
                                   L1Results = cms.untracked.InputTag("gtDigis"),
                                   removeSpikes = cms.untracked.bool(False),
-                                  requireTightPhotons = cms.untracked.bool(False)
+                                  requireTightPhotons = cms.untracked.bool(True)
 )
