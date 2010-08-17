@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.6 2010/07/14 09:19:29 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.7 2010/08/17 16:08:53 chenders Exp $
 //
 //
 
@@ -402,7 +402,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      return;
    }
    
-   cout << "N photons = " << photonColl->size() <<endl;
+   //   cout << "N photons = " << photonColl->size() <<endl;
 
    // we want the two highest Et photons for this analysis
    const reco::Photon *photon1 = NULL;
@@ -415,14 +415,14 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    // photon loop
    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
 
-     cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
-     cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
-     cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
-     cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
-     cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
-     cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
-     cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
-     cout << endl;
+//      cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+//      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
+//      cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
+//      cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
+//      cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
+//      cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
+//      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
+//      cout << endl;
 
      // option to remove spikes, so only consider pt-ordering of non-spike photons
      // note that I have to do '&(*photon)' because I am using the iterator, 
