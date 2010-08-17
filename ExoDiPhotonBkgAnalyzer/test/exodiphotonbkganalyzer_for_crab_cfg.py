@@ -16,6 +16,8 @@ process.source = cms.Source("PoolSource",
     )
 )
 
+process.load("Configuration.StandardSequences.Geometry_cff")
+
 # file for all histograms for all modules
 process.TFileService = cms.Service("TFileService",
     fileName = cms.string('diphoton_tree.root')
