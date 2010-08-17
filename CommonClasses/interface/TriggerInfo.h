@@ -62,29 +62,32 @@ namespace ExoDiPhotons
     int HLT_L1SingleEG5;
     int HLT_L1SingleEG8;
     int HLT_L1DoubleEG5;
+    int HLT_Photon10_L1R;
     int HLT_Photon10_Cleaned_L1R;
-    int HLT_Photon15_Cleaned_L1R;
     int HLT_Photon15_L1R;
+    int HLT_Photon15_Cleaned_L1R;
     int HLT_Photon15_LooseEcalIso_L1R;
+    int HLT_Photon15_LooseEcalIso_Cleaned_L1R;
     int HLT_Photon15_TrackIso_L1R;
-    int HLT_Photon20_Cleaned_L1R;
+    int HLT_Photon15_TrackIso_Cleaned_L1R;
     int HLT_Photon20_L1R;
+    int HLT_Photon20_Cleaned_L1R;
+    int HLT_Photon30_L1R;
     int HLT_Photon30_Cleaned_L1R;
     int HLT_Photon30_L1R_8E29;
-    int HLT_Photon50_Cleaned_L1R;
     int HLT_Photon50_L1R;
+    int HLT_Photon50_Cleaned_L1R;
     int HLT_DoublePhoton5_L1R;
     int HLT_DoublePhoton10_L1R;
     int HLT_DoublePhoton15_L1R;
     int HLT_DoublePhoton20_L1R;
-    int HLT_Photon10_L1R;
-    int HLT_Photon15_LooseEcalIso_Cleaned_L1R;
-    int HLT_Photon15_TrackIso_Cleaned_L1R;
-    int HLT_Photon30_L1R;
   };
 
   // string for defining a tree branch for this struct
-  std::string hltTrigBranchDefString("HLT_MinBiasBSC/I:HLT_MinBiasBSC_NoBPTX:HLT_MinBiasBSC_OR:HLT_L1_BscMinBiasOR_BptxPlusORMinus:HLT_L1SingleEG2:HLT_L1SingleEG5:HLT_L1SingleEG8:HLT_L1DoubleEG5:HLT_Photon10_Cleaned_L1R:HLT_Photon15_Cleaned_L1R:HLT_Photon15_L1R:HLT_Photon15_LooseEcalIso_L1R:HLT_Photon15_TrackIso_L1R:HLT_Photon20_Cleaned_L1R:HLT_Photon20_L1R:HLT_Photon30_Cleaned_L1R:HLT_Photon30_L1R_8E29:HLT_Photon50_Cleaned_L1R:HLT_Photon50_L1R:HLT_DoublePhoton5_L1R:HLT_DoublePhoton10_L1R:HLT_DoublePhoton15_L1R:HLT_DoublePhoton20_L1R:HLT_Photon10_L1R:HLT_Photon15_LooseEcalIso_Cleaned_L1R:HLT_Photon15_TrackIso_Cleaned_L1R:HLT_Photon30_L1R");
+  std::string hltTrigBranchDefString("HLT_MinBiasBSC/I:
+HLT_MinBiasBSC_NoBPTX:HLT_MinBiasBSC_OR:HLT_L1_BscMinBiasOR_BptxPlusORMinus:HLT_L1SingleEG2:HLT_L1SingleEG5:HLT_L1SingleEG8:HLT_L1DoubleEG5:HLT_Photon10_L1R:HLT_Photon10_Cleaned_L1R:HLT_Photon15_L1R:HLT_Photon15_Cleaned_L1R:HLT_Photon15_LooseEcalIso_L1R:HLT_Photon15_LooseEcalIso_Cleaned_L1R:HLT_Photon15_TrackIso_L1R:HLT_Photon15_TrackIso_Cleaned_L1R:HLT_Photon20_L1R:HLT_Photon20_Cleaned_L1R:HLT_Photon30_L1R:HLT_Photon30_Cleaned_L1R:HLT_Photon30_L1R_8E29:HLT_Photon50_L1R:HLT_Photon50_Cleaned_L1R:HLT_DoublePhoton5_L1R:HLT_DoublePhoton10_L1R:HLT_DoublePhoton15_L1R:HLT_DoublePhoton20_L1R");
+
+
   
   // need also to have an Initialise() function?
   // No, we can do this inside the Fill function ...
