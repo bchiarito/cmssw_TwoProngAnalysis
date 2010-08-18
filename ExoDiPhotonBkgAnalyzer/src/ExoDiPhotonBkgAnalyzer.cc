@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Mon Jun 28 12:37:19 CEST 2010
-// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.3 2010/08/12 13:34:12 chenders Exp $
+// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.4 2010/08/18 10:58:04 torimoto Exp $
 //
 //
 
@@ -472,6 +472,7 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
      //     cout << "Photon1 time chStatus flags severity: " << time << " " << mystatus << " " << flags << " " << severity << endl;
 
      fRecoPhotonInfo1.severityLevel = severity;
+     fRecoPhotonInfo1.recHitFlag = flags;
      fRecoPhotonInfo1.maxRecHitTime = time;
      
    }
@@ -539,6 +540,7 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
      //     cout << "Photon2 time chStatus flags severity: " << time << " " << mystatus << " " << flags << " " << severity << endl;
 
      fRecoPhotonInfo2.severityLevel = severity;
+     fRecoPhotonInfo2.recHitFlag = flags;
      fRecoPhotonInfo2.maxRecHitTime = time;
 
    }
