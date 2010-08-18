@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Mon Jun 28 12:37:19 CEST 2010
-// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.4 2010/08/18 10:58:04 torimoto Exp $
+// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.5 2010/08/18 11:18:46 torimoto Exp $
 //
 //
 
@@ -40,6 +40,15 @@
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TH1.h"
 #include "TTree.h"
+
+// geometry
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+//#include "Geometry/Records/interface/IdealGeometryRecord.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+//#include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
+//#include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
+//#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
+#include "Geometry/EcalAlgo/interface/EcalPreshowerGeometry.h"
 
 // for ecal
 #include "DataFormats/DetId/interface/DetId.h"
@@ -96,6 +105,7 @@ class ExoDiPhotonBkgAnalyzer : public edm::EDAnalyzer {
       virtual void beginJob() ;
       virtual void analyze(const edm::Event&, const edm::EventSetup&);
       virtual void endJob() ;
+      Float_t getESRatio(const reco::Photon *photon, const edm::Event& e, const edm::EventSetup& iSetup);
 
       // ----------member data ---------------------------
   // input tags and parameters
@@ -368,7 +378,6 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
    double highestEt2 = fMin_pt;
 
 
-
    // photon loop
    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
 
@@ -474,7 +483,9 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
      fRecoPhotonInfo1.severityLevel = severity;
      fRecoPhotonInfo1.recHitFlag = flags;
      fRecoPhotonInfo1.maxRecHitTime = time;
-     
+
+     fRecoPhotonInfo1.esRatio = getESRatio(photon1, iEvent, iSetup);
+
    }
 
    if(photon2) {
@@ -542,6 +553,8 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
      fRecoPhotonInfo2.severityLevel = severity;
      fRecoPhotonInfo2.recHitFlag = flags;
      fRecoPhotonInfo2.maxRecHitTime = time;
+
+     fRecoPhotonInfo2.esRatio = getESRatio(photon2, iEvent, iSetup);
 
    }
 
@@ -747,6 +760,90 @@ ExoDiPhotonBkgAnalyzer::beginJob()
 void 
 ExoDiPhotonBkgAnalyzer::endJob() {
 }
+
+// ------------ method called once each job just after ending the event loop  ------------
+Float_t 
+ExoDiPhotonBkgAnalyzer::getESRatio(const reco::Photon *photon, const edm::Event& e, const edm::EventSetup& iSetup){
+
+  //get Geometry
+  edm::ESHandle<CaloGeometry> caloGeometry;
+  iSetup.get<CaloGeometryRecord>().get(caloGeometry);
+  const CaloSubdetectorGeometry *geometry = caloGeometry->getSubdetectorGeometry(DetId::Ecal, EcalPreshower);
+  const CaloSubdetectorGeometry *& geometry_p = geometry;
+
+  // Get ES rechits
+  edm::Handle<EcalRecHitCollection> PreshowerRecHits;
+  e.getByLabel(edm::InputTag("ecalPreshowerRecHit","EcalRecHitsES"), PreshowerRecHits);
+  if( PreshowerRecHits.isValid() ) EcalRecHitCollection preshowerHits(*PreshowerRecHits);
+
+  Float_t esratio=1.;
+
+  if (fabs(photon->eta())>1.62) {
+
+    const reco::CaloClusterPtr seed = (*photon).superCluster()->seed();    
+    reco::CaloCluster cluster = (*seed);
+    const GlobalPoint phopoint(cluster.x(), cluster.y(), cluster.z());
+  
+    DetId photmp1 = (dynamic_cast<const EcalPreshowerGeometry*>(geometry_p))->getClosestCellInPlane(phopoint, 1);
+    DetId photmp2 = (dynamic_cast<const EcalPreshowerGeometry*>(geometry_p))->getClosestCellInPlane(phopoint, 2);
+    ESDetId esfid = (photmp1 == DetId(0)) ? ESDetId(0) : ESDetId(photmp1);
+    ESDetId esrid = (photmp2 == DetId(0)) ? ESDetId(0) : ESDetId(photmp2);
+
+    int gs_esfid = -99;
+    int gs_esrid = -99;
+    gs_esfid = esfid.six()*32+esfid.strip();
+    gs_esrid = esrid.siy()*32+esrid.strip();
+
+    float esfe3 = 0.; 
+    float esfe21 = 0.; 
+    float esre3 = 0.; 
+    float esre21 = 0.;
+
+    const ESRecHitCollection *ESRH = PreshowerRecHits.product();
+    EcalRecHitCollection::const_iterator esrh_it;
+    for ( esrh_it = ESRH->begin(); esrh_it != ESRH->end(); esrh_it++) {
+      ESDetId esdetid = ESDetId(esrh_it->id());
+      if ( esdetid.plane()==1 ) {
+	if ( esdetid.zside() == esfid.zside() &&
+	     esdetid.siy() == esfid.siy() ) {
+	  int gs_esid = esdetid.six()*32+esdetid.strip();
+	  int ss = gs_esid-gs_esfid;
+	  if ( TMath::Abs(ss)<=10) {
+	    esfe21 += esrh_it->energy();
+	  } 
+	  if ( TMath::Abs(ss)<=1) {
+	    esfe3 += esrh_it->energy();
+	  } 
+	}
+      }
+      if (esdetid.plane()==2 ){
+	if ( esdetid.zside() == esrid.zside() &&
+	     esdetid.six() == esrid.six() ) {
+	  int gs_esid = esdetid.siy()*32+esdetid.strip();
+	  int ss = gs_esid-gs_esrid;
+	  if ( TMath::Abs(ss)<=10) {
+	    esre21 += esrh_it->energy();
+	  } 
+	  if ( TMath::Abs(ss)<=1) {
+	    esre3 += esrh_it->energy();
+	  } 
+	}
+      }
+    }
+  
+    if( (esfe21+esre21) == 0.) {
+      esratio = 1.;
+    }else{
+      esratio = (esfe3+esre3) / (esfe21+esre21);
+    }
+    
+  }
+  return esratio;
+  
+}
+
+
+
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(ExoDiPhotonBkgAnalyzer);

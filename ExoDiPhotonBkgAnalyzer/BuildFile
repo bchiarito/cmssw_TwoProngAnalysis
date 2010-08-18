@@ -11,6 +11,8 @@
 <use name=RecoEcal/EgammaCoreTools>
 <use name=CondFormats/EcalObjects>
 <use name=CondFormats/DataRecord>
+<use name=Geometry/CaloGeometry>
+<use name=Geometry/EcalAlgo>
 <flags EDM_PLUGIN=1>
 <export>
    <lib name=DiPhotonAnalysisExoDiPhotonBkgAnalyzer>
