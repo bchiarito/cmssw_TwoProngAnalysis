@@ -9,6 +9,8 @@
 <use name=DataFormats/VertexReco>
 <use name=DataFormats/BeamSpot>
 <use name=RecoEcal/EgammaCoreTools>
+<use name=CondFormats/EcalObjects>
+<use name=CondFormats/DataRecord>
 <flags EDM_PLUGIN=1>
 <export>
    <lib name=DiPhotonAnalysisExoDiPhotonBkgAnalyzer>
