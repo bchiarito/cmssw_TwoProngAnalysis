@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Mon Jun 28 12:37:19 CEST 2010
-// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.2 2010/08/11 10:18:11 chenders Exp $
+// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.3 2010/08/12 13:34:12 chenders Exp $
 //
 //
 
@@ -30,6 +30,11 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
+#include "FWCore/Framework/interface/ESHandle.h"
+
+#include "FWCore/ParameterSet/interface/InputTag.h"
+
+
 // to use TfileService for histograms and trees
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
@@ -44,7 +49,8 @@
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 #include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgo.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
-
+#include "CondFormats/DataRecord/interface/EcalChannelStatusRcd.h"
+#include "CondFormats/EcalObjects/interface/EcalChannelStatus.h"
 
 //for photons
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
@@ -68,6 +74,7 @@
 #include "DiPhotonAnalysis/CommonClasses/interface/EventAndVertexInfo.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/DiphotonInfo.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/TriggerInfo.h"
+
 
 using namespace std;
 
@@ -330,12 +337,17 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
      recHitsEB = recHitsEB_h.product();
    }
 
+   edm::Handle<EcalRecHitCollection> recHitsEE_h;
+   iEvent.getByLabel(edm::InputTag("ecalRecHit:EcalRecHitsEE"), recHitsEE_h );
+   const EcalRecHitCollection * recHitsEE = 0;
+   if ( ! recHitsEE_h.isValid() ) {
+     LogError("ExoDiPhotonAnalyzer") << " ECAL Endcap RecHit Collection not available !"; return;
+   } else {
+     recHitsEE = recHitsEE_h.product();
+   }
 
-   // get swiss cross and related
-   //   reco::SuperClusterRef sc = recoPhoton->superCluster();
-   //   std::pair<DetId,float> maxc = lazyTools_->getMaximum(*sc);
-
-
+   edm::ESHandle<EcalChannelStatus> chStatus;
+   iSetup.get<EcalChannelStatusRcd>().get(chStatus);
 
    // get the photon collection
    Handle<reco::PhotonCollection> photonColl;
@@ -431,13 +443,37 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
      fRecoPhotonInfo1.eBottom = lazyTools_->eBottom(*sc1);
      fRecoPhotonInfo1.eSecond = lazyTools_->e2nd(*sc1);
 
-     // FIXME: official ecal rec hit severity level 
-     fRecoPhotonInfo1.severityLevel = -999;
-     // FIXME: time of highest energy rec hit 
-     fRecoPhotonInfo1.maxRecHitTime = -9999999.99;
+     const reco::CaloClusterPtr  seed = sc1->seed();
 
+     DetId id = lazyTools_->getMaximum(*seed).first; 
+     float time  = -999., outOfTimeChi2 = -999., chi2 = -999.;
+     int   flags=-1, severity = -1; 
+
+     const EcalRecHitCollection & rechits = ( photon1->isEB() ? *recHitsEB : *recHitsEE); 
+     EcalRecHitCollection::const_iterator it = rechits.find( id );
+     if( it != rechits.end() ) { 
+       time = it->time(); 
+       outOfTimeChi2 = it->outOfTimeChi2();
+       chi2 = it->chi2();
+       flags = it->recoFlag();
+       severity = EcalSeverityLevelAlgo::severityLevel( id, rechits, *chStatus );
+     }
+
+     const EcalChannelStatus *ch_status = chStatus.product(); 
+     EcalChannelStatusMap::const_iterator chit;
+     chit = ch_status->getMap().find(id.rawId());
+     int mystatus = -99;
+     if( chit != ch_status->getMap().end() ){
+       EcalChannelStatusCode ch_code = (*chit);
+       mystatus = ch_code.getStatusCode();
+     }
+
+     //     cout << "Photon1 seed " << lazyTools_->getMaximum(*seed).second << " " << maxc1.second << " " << lazyTools_->getMaximum(*seed).second -  maxc1.second << endl;     
+     //     cout << "Photon1 time chStatus flags severity: " << time << " " << mystatus << " " << flags << " " << severity << endl;
+
+     fRecoPhotonInfo1.severityLevel = severity;
+     fRecoPhotonInfo1.maxRecHitTime = time;
      
-
    }
 
    if(photon2) {
@@ -473,11 +509,37 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
      fRecoPhotonInfo2.eBottom = lazyTools_->eBottom(*sc2);
      fRecoPhotonInfo2.eSecond = lazyTools_->e2nd(*sc2);
 
-     // FIXME: official ecal rec hit severity level 
-     fRecoPhotonInfo2.severityLevel = -999;
-     // FIXME: time of highest energy rec hit 
-     fRecoPhotonInfo2.maxRecHitTime = -9999999.99;
 
+     const reco::CaloClusterPtr  seed = sc2->seed();
+
+     DetId id = lazyTools_->getMaximum(*seed).first;
+     float time  = -999., outOfTimeChi2 = -999., chi2 = -999.;
+     int   flags=-1, severity = -1;
+
+     const EcalRecHitCollection & rechits = ( photon2->isEB() ? *recHitsEB : *recHitsEE);
+     EcalRecHitCollection::const_iterator it = rechits.find( id );
+     if( it != rechits.end() ) {
+       time = it->time();
+       outOfTimeChi2 = it->outOfTimeChi2();
+       chi2 = it->chi2();
+       flags = it->recoFlag();
+       severity = EcalSeverityLevelAlgo::severityLevel( id, rechits, *chStatus );
+     }
+
+     const EcalChannelStatus *ch_status = chStatus.product();
+     EcalChannelStatusMap::const_iterator chit;
+     chit = ch_status->getMap().find(id.rawId());
+     int mystatus = -99;
+     if( chit != ch_status->getMap().end() ){
+       EcalChannelStatusCode ch_code = (*chit);
+       mystatus = ch_code.getStatusCode();
+     }
+
+     //     cout << "Photon2 seed " << lazyTools_->getMaximum(*seed).second << " " << maxc2.second << " " << lazyTools_->getMaximum(*seed).second -  maxc2.second << endl;
+     //     cout << "Photon2 time chStatus flags severity: " << time << " " << mystatus << " " << flags << " " << severity << endl;
+
+     fRecoPhotonInfo2.severityLevel = severity;
+     fRecoPhotonInfo2.maxRecHitTime = time;
 
    }
 
