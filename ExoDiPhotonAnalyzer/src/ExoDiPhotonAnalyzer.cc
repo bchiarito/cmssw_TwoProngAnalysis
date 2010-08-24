@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.7 2010/08/17 16:08:53 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.8 2010/08/17 16:11:36 chenders Exp $
 //
 //
 
@@ -65,7 +65,7 @@
 
 //for trigger
 #include "DataFormats/Common/interface/TriggerResults.h"
-#include "FWCore/Framework/interface/TriggerNames.h"
+#include "FWCore/Common/interface/TriggerNames.h"
 #include "CondFormats/L1TObjects/interface/L1GtTriggerMenuFwd.h"
 #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutRecord.h" 
 #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerRecord.h" 

@@ -7,14 +7,14 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-// Conor, July 2010
+// $Id$ 
 // 
 //********************************************************************
 
 #include <string>
 
 #include "DataFormats/Common/interface/TriggerResults.h"
-#include "FWCore/Framework/interface/TriggerNames.h"
+#include "FWCore/Common/interface/TriggerNames.h"
 
 namespace ExoDiPhotons
 {
@@ -131,7 +131,7 @@ namespace ExoDiPhotons
     // we'll just loop over all triggers in the current event
     // and check one-by-one the result for the triggers we are interested in
 
-    for(int itrig=0;itrig<hltResults->size();itrig++) {
+    for(int itrig=0;itrig<(int)hltNames.size();itrig++) {
 
       if(hltNames.triggerName(itrig)=="HLT_MinBiasBSC")
 	hltInfo.HLT_MinBiasBSC = (int) hltResults->accept(itrig);
