@@ -17,6 +17,8 @@ process.source = cms.Source("PoolSource",
 )
 
 process.load("Configuration.StandardSequences.Geometry_cff")
+process.load("Configuration.StandardSequences.FrontierConditions_GlobalTag_cff")
+process.GlobalTag.globaltag = 'START3X_V26::All'
 
 # file for all histograms for all modules
 process.TFileService = cms.Service("TFileService",
