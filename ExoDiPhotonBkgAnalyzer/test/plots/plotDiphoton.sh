@@ -43,6 +43,11 @@ cat > ${WEBDIR}/index.html <<EOF
 <img height="600" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/mc/${SAMPLE}/trackIso_photon1_${SAMPLE}.png">
 </A>
 
+<h2> Photon1 Spike Rejection</h2>
+<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/mc/${SAMPLE}/spike_photon1_${SAMPLE}.png>
+<img height="600" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/mc/${SAMPLE}/spike_photon1_${SAMPLE}.png">
+</A>
+
 <h2> Photon2 Kinematics </h2>
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/mc/${SAMPLE}/kinematics_photon2_${SAMPLE}.png>
 <img height="600" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/mc/${SAMPLE}/kinematics_photon2_${SAMPLE}.png">
@@ -56,6 +61,11 @@ cat > ${WEBDIR}/index.html <<EOF
 <h2> Photon2 Track Isolation</h2>
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/mc/${SAMPLE}/trackIso_photon2_${SAMPLE}.png>
 <img height="600" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/mc/${SAMPLE}/trackIso_photon2_${SAMPLE}.png">
+</A>
+
+<h2> Photon2 Spike Rejection</h2>
+<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/mc/${SAMPLE}/spike_photon2_${SAMPLE}.png>
+<img height="600" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/mc/${SAMPLE}/spike_photon2_${SAMPLE}.png">
 </A>
 
 </FONT>
