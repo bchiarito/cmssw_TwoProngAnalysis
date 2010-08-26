@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.8 2010/08/17 16:11:36 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.9 2010/08/24 20:29:13 chenders Exp $
 //
 //
 
@@ -39,6 +39,16 @@
 #include "TH1.h"
 #include "TTree.h"
 
+// geometry
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+//#include "Geometry/Records/interface/IdealGeometryRecord.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+//#include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
+//#include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
+//#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
+#include "Geometry/EcalAlgo/interface/EcalPreshowerGeometry.h"
+
+
 //for vertex
 #include "DataFormats/VertexReco/interface/Vertex.h"
 #include "DataFormats/VertexReco/interface/VertexFwd.h"
@@ -54,6 +64,9 @@
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 #include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgo.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
+#include "CondFormats/DataRecord/interface/EcalChannelStatusRcd.h"
+#include "CondFormats/EcalObjects/interface/EcalChannelStatus.h"
+
 
 //for photons
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
@@ -391,6 +404,20 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    } else {
      recHitsEB = recHitsEB_h.product();
    }
+
+   edm::Handle<EcalRecHitCollection> recHitsEE_h;
+   iEvent.getByLabel(edm::InputTag("ecalRecHit:EcalRecHitsEE"), recHitsEE_h );
+   const EcalRecHitCollection * recHitsEE = 0;
+   if ( ! recHitsEE_h.isValid() ) {
+     LogError("ExoDiPhotonAnalyzer") << " ECAL Endcap RecHit Collection not available !"; return;
+   } else {
+     recHitsEE = recHitsEE_h.product();
+   }
+
+   edm::ESHandle<EcalChannelStatus> chStatus;
+   iSetup.get<EcalChannelStatusRcd>().get(chStatus);
+   const EcalChannelStatus *ch_status = chStatus.product(); 
+
    
    // get the photon collection
    Handle<reco::PhotonCollection> photonColl;
@@ -461,97 +488,18 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
 
      // can now use the Fill function specific to this recoPhoton struct
-     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,photon1);
-
-     // anything using lazy tools still needs to be filled here though,
-     // cause I had trouble getting it to work inside the Fill function
-
-     // get swiss cross 
-     reco::SuperClusterRef sc = photon1->superCluster();
-     std::pair<DetId,float> maxc = lazyTools_->getMaximum(*sc);
-     double scross = -999.99;
-     if (maxc.first.subdetId() == EcalBarrel) scross = EcalSeverityLevelAlgo::swissCross(maxc.first, (*recHitsEB), 0);
-     //     cout << "Toyoko Photon1 swiss cross" << scross << endl;
-
-     // currently have to fill swiss cross by hand here
-     fRecoPhotonInfo1.swisscross = scross;
-
-     //detId and ieta/iphi/iY/iX
-     fRecoPhotonInfo1.detId = maxc.first.rawId();
-     
-     if(maxc.first.subdetId() == EcalBarrel) {
-       EBDetId ebId( maxc.first );
-       fRecoPhotonInfo1.iEtaY = ebId.ieta(); // iEta in EB
-       fRecoPhotonInfo1.iPhiX = ebId.iphi(); // iPhi in EB
-     }
-     else if (maxc.first.subdetId() == EcalEndcap) {
-       EEDetId eeId( maxc.first );
-       fRecoPhotonInfo1.iEtaY = eeId.iy(); // iY in EE
-       fRecoPhotonInfo1.iPhiX = eeId.ix(); // iX in EE       
-     }
-
-     fRecoPhotonInfo1.eMax = lazyTools_->eMax(*sc);
-     fRecoPhotonInfo1.eLeft = lazyTools_->eLeft(*sc);
-     fRecoPhotonInfo1.eRight = lazyTools_->eRight(*sc);
-     fRecoPhotonInfo1.eTop = lazyTools_->eTop(*sc);
-     fRecoPhotonInfo1.eBottom = lazyTools_->eBottom(*sc);
-     fRecoPhotonInfo1.eSecond = lazyTools_->e2nd(*sc);
-
-     // FIXME: official ecal rec hit severity level 
-     fRecoPhotonInfo1.severityLevel = -999;
-     // FIXME: time of highest energy rec hit 
-     fRecoPhotonInfo1.maxRecHitTime = -9999999.99;
+      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,photon1,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
 
 
     }
     if(photon2) {
 
-      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,photon2);
+      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,photon2,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
       
       //      cout << "2nd Highest Et photon: et, eta, phi = " << photon2->et() <<", "<<photon2->eta()<< ", "<< photon2->phi()<<endl;
 
-     // get swiss cross 
-     reco::SuperClusterRef sc = photon2->superCluster();
-     std::pair<DetId,float> maxc = lazyTools_->getMaximum(*sc);
-     double scross = -999.99;
-     if (maxc.first.subdetId() == EcalBarrel) scross = EcalSeverityLevelAlgo::swissCross(maxc.first, (*recHitsEB), 0);
-     //     cout << "Toyoko Photon2" << scross << endl;
-
-     // currently have to fill swiss cross by hand here
-     fRecoPhotonInfo2.swisscross = scross;
-
-
-     //detId and ieta/iphi/iY/iX
-     fRecoPhotonInfo2.detId = maxc.first.rawId();
-     
-     if(maxc.first.subdetId() == EcalBarrel) {
-       EBDetId ebId( maxc.first );
-       fRecoPhotonInfo2.iEtaY = ebId.ieta(); // iEta in EB
-       fRecoPhotonInfo2.iPhiX = ebId.iphi(); // iPhi in EB
-     }
-     else if (maxc.first.subdetId() == EcalEndcap) {
-       EEDetId eeId( maxc.first );
-       fRecoPhotonInfo2.iEtaY = eeId.iy(); // iY in EE
-       fRecoPhotonInfo2.iPhiX = eeId.ix(); // iX in EE       
-     }
-
-     fRecoPhotonInfo2.eMax = lazyTools_->eMax(*sc);
-     fRecoPhotonInfo2.eLeft = lazyTools_->eLeft(*sc);
-     fRecoPhotonInfo2.eRight = lazyTools_->eRight(*sc);
-     fRecoPhotonInfo2.eTop = lazyTools_->eTop(*sc);
-     fRecoPhotonInfo2.eBottom = lazyTools_->eBottom(*sc);
-     fRecoPhotonInfo2.eSecond = lazyTools_->e2nd(*sc);
-
-     // FIXME: official ecal rec hit severity level 
-     fRecoPhotonInfo2.severityLevel = -999;
-     // FIXME: time of highest energy rec hit 
-     fRecoPhotonInfo2.maxRecHitTime = -9999999.99;
-
-
 
     }
-
-
 
 
     if(photon1&&photon2) {
