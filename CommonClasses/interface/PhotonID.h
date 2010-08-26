@@ -49,6 +49,21 @@ namespace ExoDiPhotons{
 
   }
 
+  // for offline spike flagging in our analysers
+
+  bool isASpike(const reco::Photon *photon) {
+
+    bool thisPhotonIsASpike = false;
+
+    // can do spike identification based on regular swiss cross
+    // or on out-of-time
+    // even add double-spike determination in here too
+
+    // can be used on MC also
+    
+    return thisPhotonIsASpike;
+  }
+
 }
 
 
