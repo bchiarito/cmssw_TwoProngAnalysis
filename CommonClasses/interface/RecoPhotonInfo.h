@@ -7,7 +7,7 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-//  $Id: RecoPhotonInfo.h,v 1.3 2010/08/18 12:06:16 torimoto Exp $
+//  $Id: RecoPhotonInfo.h,v 1.4 2010/08/18 12:20:06 torimoto Exp $
 // 
 //********************************************************************
 
@@ -15,10 +15,14 @@
 
 // for ecal
 #include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/EcalDetId/interface/EBDetId.h"
+#include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 #include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgo.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
+#include "CondFormats/DataRecord/interface/EcalChannelStatusRcd.h"
+#include "CondFormats/EcalObjects/interface/EcalChannelStatus.h"
 
 
 //for photons
@@ -135,13 +139,106 @@ namespace ExoDiPhotons
   // rather than in each individual analyser 
   std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:detId/I:iEtaY/I:iPhiX/I:vx/D:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:severityLevel/I:recHitFlag/I:maxRecHitTime/D:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:esRatio/f:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed");
 
+
+  // useful function for ESratio
+  // was originally in BkgAnalyser - now move to here
+  double getESRatio(const reco::Photon *photon, const edm::Event& e, const edm::EventSetup& iSetup) {
+
+    //get Geometry
+    edm::ESHandle<CaloGeometry> caloGeometry;
+    iSetup.get<CaloGeometryRecord>().get(caloGeometry);
+    const CaloSubdetectorGeometry *geometry = caloGeometry->getSubdetectorGeometry(DetId::Ecal, EcalPreshower);
+    const CaloSubdetectorGeometry *& geometry_p = geometry;
+
+    // Get ES rechits
+    edm::Handle<EcalRecHitCollection> PreshowerRecHits;
+    e.getByLabel(edm::InputTag("ecalPreshowerRecHit","EcalRecHitsES"), PreshowerRecHits);
+    if( PreshowerRecHits.isValid() ) EcalRecHitCollection preshowerHits(*PreshowerRecHits);
+
+    Float_t esratio=1.;
+
+    if (fabs(photon->eta())>1.62) {
+
+      const reco::CaloClusterPtr seed = (*photon).superCluster()->seed();    
+      reco::CaloCluster cluster = (*seed);
+      const GlobalPoint phopoint(cluster.x(), cluster.y(), cluster.z());
+  
+      DetId photmp1 = (dynamic_cast<const EcalPreshowerGeometry*>(geometry_p))->getClosestCellInPlane(phopoint, 1);
+      DetId photmp2 = (dynamic_cast<const EcalPreshowerGeometry*>(geometry_p))->getClosestCellInPlane(phopoint, 2);
+      ESDetId esfid = (photmp1 == DetId(0)) ? ESDetId(0) : ESDetId(photmp1);
+      ESDetId esrid = (photmp2 == DetId(0)) ? ESDetId(0) : ESDetId(photmp2);
+
+      int gs_esfid = -99;
+      int gs_esrid = -99;
+      gs_esfid = esfid.six()*32+esfid.strip();
+      gs_esrid = esrid.siy()*32+esrid.strip();
+
+      float esfe3 = 0.; 
+      float esfe21 = 0.; 
+      float esre3 = 0.; 
+      float esre21 = 0.;
+
+      const ESRecHitCollection *ESRH = PreshowerRecHits.product();
+      EcalRecHitCollection::const_iterator esrh_it;
+      for ( esrh_it = ESRH->begin(); esrh_it != ESRH->end(); esrh_it++) {
+	ESDetId esdetid = ESDetId(esrh_it->id());
+	if ( esdetid.plane()==1 ) {
+	  if ( esdetid.zside() == esfid.zside() &&
+	       esdetid.siy() == esfid.siy() ) {
+	    int gs_esid = esdetid.six()*32+esdetid.strip();
+	    int ss = gs_esid-gs_esfid;
+	    if ( TMath::Abs(ss)<=10) {
+	      esfe21 += esrh_it->energy();
+	    } 
+	    if ( TMath::Abs(ss)<=1) {
+	      esfe3 += esrh_it->energy();
+	    } 
+	  }
+	}
+	if (esdetid.plane()==2 ){
+	  if ( esdetid.zside() == esrid.zside() &&
+	       esdetid.six() == esrid.six() ) {
+	    int gs_esid = esdetid.siy()*32+esdetid.strip();
+	    int ss = gs_esid-gs_esrid;
+	    if ( TMath::Abs(ss)<=10) {
+	      esre21 += esrh_it->energy();
+	    } 
+	    if ( TMath::Abs(ss)<=1) {
+	      esre3 += esrh_it->energy();
+	    } 
+	  }
+	}
+      }
+  
+      if( (esfe21+esre21) == 0.) {
+	esratio = 1.;
+      }else{
+	esratio = (esfe3+esre3) / (esfe21+esre21);
+      }
+    
+    }
+    return esratio;
+    
+  }
+
   
 
   // also want a Fill function, that can fill the struct values from the appropriate objects
   // again, so that all editing only needs to be done here in this file
 
-  void FillRecoPhotonInfo(recoPhotonInfo_t &recoPhotonInfo, const reco::Photon *photon) {
+  // now trying with LazyTools etc...
+  // lazyTools_ is a std::auto_ptr<EcalClusterLazyTools> in our analysers 
+  // but you cannot declare std::auto_ptr in this fucntion arguments
+  // because then calling the function transfers ownership of the auto_ptr
+  // which then gets deleted when the function exits
+  // and seg vios result
+  // My solution: make the func prototype just EcalClusterLazyTools* 
+  // and in the analyser, pass just the underlying pointer via lazyTools.get()
+  // This seems to work, miraculously enough
+
+  void FillRecoPhotonInfo(recoPhotonInfo_t &recoPhotonInfo, const reco::Photon *photon, EcalClusterLazyTools* lazyTools_,const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE, const EcalChannelStatus *ch_status,const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     
+
     recoPhotonInfo.pt = photon->et();
     recoPhotonInfo.eta = photon->eta();
     recoPhotonInfo.phi = photon->phi();
@@ -150,10 +247,86 @@ namespace ExoDiPhotons
     recoPhotonInfo.detPhi = photon->caloPosition().phi();
     
     //   detId and crystal eta/phi
-    // these use lazyTools and so need to be filled inside the analyser itself still
-    recoPhotonInfo.detId = -99999;
+
+    reco::SuperClusterRef sc1 = photon->superCluster();
+    std::pair<DetId,float> maxc1 = lazyTools_->getMaximum(*sc1);
+
+    recoPhotonInfo.detId = maxc1.first.rawId();
+
     recoPhotonInfo.iEtaY = -99999;
     recoPhotonInfo.iPhiX = -99999;
+
+     if(maxc1.first.subdetId() == EcalBarrel) {
+       EBDetId ebId( maxc1.first );
+       recoPhotonInfo.iEtaY = ebId.ieta(); // iEta in EB
+       recoPhotonInfo.iPhiX = ebId.iphi(); // iPhi in EB
+     }
+     else if (maxc1.first.subdetId() == EcalEndcap) {
+       EEDetId eeId( maxc1.first );
+       recoPhotonInfo.iEtaY = eeId.iy(); // iY in EE
+       recoPhotonInfo.iPhiX = eeId.ix(); // iX in EE       
+     }
+
+
+     // swiss cross and other spike-related info
+     // we also need EB and EE rechits for some of this
+
+     if (maxc1.first.subdetId() == EcalBarrel) {
+       recoPhotonInfo.swisscross = EcalSeverityLevelAlgo::swissCross(maxc1.first, (*recHitsEB), 0);
+     }
+     else {
+       recoPhotonInfo.swisscross = -999.99;
+     }
+     //     cout << "(Internal) Swiss Cross = "<< recoPhotonInfo.swisscross <<endl;
+     
+     recoPhotonInfo.eMax = lazyTools_->eMax(*sc1);
+     recoPhotonInfo.eLeft = lazyTools_->eLeft(*sc1);
+     recoPhotonInfo.eRight = lazyTools_->eRight(*sc1);
+     recoPhotonInfo.eTop = lazyTools_->eTop(*sc1);
+     recoPhotonInfo.eBottom = lazyTools_->eBottom(*sc1);
+     recoPhotonInfo.eSecond = lazyTools_->e2nd(*sc1);
+
+     //     cout << "(Internal) eMax = "<< recoPhotonInfo.eMax <<endl;
+     //     cout << "(Internal) eSecond = "<< recoPhotonInfo.eSecond <<endl;
+     
+     // official ecal rec hit severity level & rec hit flag
+     // also, time of highest energy rec hit
+
+     const reco::CaloClusterPtr  seed = sc1->seed();
+
+     DetId id = lazyTools_->getMaximum(*seed).first; 
+     float time  = -999., outOfTimeChi2 = -999., chi2 = -999.;
+     int   flags=-1, severity = -1; 
+
+     const EcalRecHitCollection & rechits = ( photon->isEB() ? *recHitsEB : *recHitsEE); 
+     EcalRecHitCollection::const_iterator it = rechits.find( id );
+     if( it != rechits.end() ) { 
+       time = it->time(); 
+       outOfTimeChi2 = it->outOfTimeChi2();
+       chi2 = it->chi2();
+       flags = it->recoFlag();
+       severity = EcalSeverityLevelAlgo::severityLevel( id, rechits, (*ch_status) );
+     }
+
+     
+     EcalChannelStatusMap::const_iterator chit;
+     chit = ch_status->getMap().find(id.rawId());
+     int mystatus = -99;
+     if( chit != ch_status->getMap().end() ){
+       EcalChannelStatusCode ch_code = (*chit);
+       mystatus = ch_code.getStatusCode();
+     }
+
+     recoPhotonInfo.severityLevel = severity;
+     recoPhotonInfo.recHitFlag = flags;
+     recoPhotonInfo.maxRecHitTime = time;
+
+     //     cout << "(Internal) severity = " <<      recoPhotonInfo.severityLevel<<endl;
+     //     cout << "(Internal) rechit flag = " << recoPhotonInfo.recHitFlag <<endl;
+     //     cout << "(Internal)  rechit time = " << recoPhotonInfo.maxRecHitTime <<endl;
+
+     //ES ratio - use the helper function
+     recoPhotonInfo.esRatio = getESRatio(photon, iEvent, iSetup);
 
 
     // since photon inherits from LeafCandidate, we can get the vertex position
@@ -175,20 +348,6 @@ namespace ExoDiPhotons
      recoPhotonInfo.r1x5 = photon->r1x5();
      recoPhotonInfo.r2x5 = photon->r2x5();
 
-     // swiss cross and related use lazyTools, so need to be filled in analyser itself
-     recoPhotonInfo.swisscross = -999999.99;
-     recoPhotonInfo.eMax = -999999.99; 
-     recoPhotonInfo.eLeft = -999999.99;
-     recoPhotonInfo.eRight = -999999.99;
-     recoPhotonInfo.eTop = -999999.99;
-     recoPhotonInfo.eBottom = -999999.99;
-     recoPhotonInfo.eSecond = -999999.99;
-
-     // official ecal rec hit severity level
-     recoPhotonInfo.severityLevel = -999;
-     recoPhotonInfo.recHitFlag = -999;
-     // time of highest energy rec hit
-     recoPhotonInfo.maxRecHitTime = -9999999.99;
 
 
      recoPhotonInfo.hadOverEm = photon->hadronicOverEm();
@@ -211,7 +370,6 @@ namespace ExoDiPhotons
      recoPhotonInfo.trkIsoNtrksHollow03 = photon->nTrkHollowConeDR03();
      recoPhotonInfo.trkIsoNtrksSolid03 = photon->nTrkSolidConeDR03();
 
-     recoPhotonInfo.esRatio = -999.;
 
      recoPhotonInfo.hasPixelSeed = photon->hasPixelSeed();
 
@@ -231,15 +389,8 @@ namespace ExoDiPhotons
      recoPhotonInfo.scNumBasicClusters = photon->superCluster()->clustersSize();
 
 
-     // FIXME: swiss cross info too!
-
-     // FIXME: ecal cell id of seed crystal?
-
-
-
-
-
   }// end of fill reco photon info
+
 
   
 
