@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.9 2010/08/24 20:29:13 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.10 2010/08/26 12:42:17 chenders Exp $
 //
 //
 
@@ -118,7 +118,7 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       virtual void endJob() ;
 
   // my functions
-  bool isASpike(const reco::Photon *photon);
+
 
       // ----------member data ---------------------------
       edm::InputTag      fPhotonTag;       //select photon collection 
@@ -206,20 +206,6 @@ ExoDiPhotonAnalyzer::~ExoDiPhotonAnalyzer()
 //
 // member functions
 //
-
-bool ExoDiPhotonAnalyzer::isASpike(const reco::Photon *photon)
-{
-  bool thisPhotonIsASpike = false;
-
-  // for now, its simpler for me to use the older e1/e9 criteria to identify spikes
-  /// but we need to move to the swiss cross cut ASAP
-  
-  if(photon->maxEnergyXtal()/photon->e3x3()>0.95)
-    // then its a spike!
-    thisPhotonIsASpike = true;
-
-  return thisPhotonIsASpike;
-}
 
 
 
@@ -454,7 +440,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      // option to remove spikes, so only consider pt-ordering of non-spike photons
      // note that I have to do '&(*photon)' because I am using the iterator, 
      // while my function needs a pointer to the object (obtained by dereffing the iter) ...
-     if(!fkRemoveSpikes || !isASpike(&(*recoPhoton))) {
+     if(!fkRemoveSpikes || !ExoDiPhotons::isASpike(&(*recoPhoton))) {
        // ie either we dont care about spikes OR this photon is not a spike anyway
        // so in either case we continue to study this photon... 
        
