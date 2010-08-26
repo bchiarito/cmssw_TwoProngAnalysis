@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Mon Jun 28 12:37:19 CEST 2010
-// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.5 2010/08/18 11:18:46 torimoto Exp $
+// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.6 2010/08/18 12:20:06 torimoto Exp $
 //
 //
 
@@ -74,6 +74,7 @@
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
+using namespace std;
 
 // new CommonClasses approach
 // these objects all in the namespace 'ExoDiPhotons'
@@ -85,7 +86,7 @@
 #include "DiPhotonAnalysis/CommonClasses/interface/TriggerInfo.h"
 
 
-using namespace std;
+
 
 
 //
@@ -105,7 +106,7 @@ class ExoDiPhotonBkgAnalyzer : public edm::EDAnalyzer {
       virtual void beginJob() ;
       virtual void analyze(const edm::Event&, const edm::EventSetup&);
       virtual void endJob() ;
-      Float_t getESRatio(const reco::Photon *photon, const edm::Event& e, const edm::EventSetup& iSetup);
+  //      Float_t getESRatio(const reco::Photon *photon, const edm::Event& e, const edm::EventSetup& iSetup);
 
       // ----------member data ---------------------------
   // input tags and parameters
@@ -358,6 +359,7 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
    edm::ESHandle<EcalChannelStatus> chStatus;
    iSetup.get<EcalChannelStatusRcd>().get(chStatus);
+   const EcalChannelStatus *ch_status = chStatus.product(); 
 
    // get the photon collection
    Handle<reco::PhotonCollection> photonColl;
@@ -420,141 +422,148 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
    if(photon1) {
 
      // can now use the Fill function specific to this recoPhoton struct
-     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,photon1);
+     // everything should now be done inside this function
+     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,photon1,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
 
-     // anything using lazy tools still needs to be filled here though,
-     // cause I had trouble getting it to work inside the Fill function
+     
 
-     reco::SuperClusterRef sc1 = photon1->superCluster();
-     std::pair<DetId,float> maxc1 = lazyTools_->getMaximum(*sc1);
+     //     reco::SuperClusterRef sc1 = photon1->superCluster();
+     //     std::pair<DetId,float> maxc1 = lazyTools_->getMaximum(*sc1);
 
      //detId and ieta/iphi/iY/iX
-     fRecoPhotonInfo1.detId = maxc1.first.rawId();
+     //     fRecoPhotonInfo1.detId = maxc1.first.rawId();
      
-     if(maxc1.first.subdetId() == EcalBarrel) {
-       EBDetId ebId( maxc1.first );
-       fRecoPhotonInfo1.iEtaY = ebId.ieta(); // iEta in EB
-       fRecoPhotonInfo1.iPhiX = ebId.iphi(); // iPhi in EB
-     }
-     else if (maxc1.first.subdetId() == EcalEndcap) {
-       EEDetId eeId( maxc1.first );
-       fRecoPhotonInfo1.iEtaY = eeId.iy(); // iY in EE
-       fRecoPhotonInfo1.iPhiX = eeId.ix(); // iX in EE       
-     }
+     //     cout << "DetId = " << fRecoPhotonInfo1.detId <<endl;
+
+//      if(maxc1.first.subdetId() == EcalBarrel) {
+//        EBDetId ebId( maxc1.first );
+//        fRecoPhotonInfo1.iEtaY = ebId.ieta(); // iEta in EB
+//        fRecoPhotonInfo1.iPhiX = ebId.iphi(); // iPhi in EB
+//      }
+//      else if (maxc1.first.subdetId() == EcalEndcap) {
+//        EEDetId eeId( maxc1.first );
+//        fRecoPhotonInfo1.iEtaY = eeId.iy(); // iY in EE
+//        fRecoPhotonInfo1.iPhiX = eeId.ix(); // iX in EE       
+//      }
+
+//     cout << "iEtaY = "<<fRecoPhotonInfo1.iEtaY <<endl;
+//     cout << "iPhiX = "<<fRecoPhotonInfo1.iPhiX <<endl;
 
      // swiss cross and other spike-related info
-     if (maxc1.first.subdetId() == EcalBarrel) 
-       fRecoPhotonInfo1.swisscross = EcalSeverityLevelAlgo::swissCross(maxc1.first, (*recHitsEB), 0);
-     fRecoPhotonInfo1.eMax = lazyTools_->eMax(*sc1);
-     fRecoPhotonInfo1.eLeft = lazyTools_->eLeft(*sc1);
-     fRecoPhotonInfo1.eRight = lazyTools_->eRight(*sc1);
-     fRecoPhotonInfo1.eTop = lazyTools_->eTop(*sc1);
-     fRecoPhotonInfo1.eBottom = lazyTools_->eBottom(*sc1);
-     fRecoPhotonInfo1.eSecond = lazyTools_->e2nd(*sc1);
+     //     if (maxc1.first.subdetId() == EcalBarrel) 
+     //       fRecoPhotonInfo1.swisscross = EcalSeverityLevelAlgo::swissCross(maxc1.first, (*recHitsEB), 0);
+     //     fRecoPhotonInfo1.eMax = lazyTools_->eMax(*sc1);
+     //     fRecoPhotonInfo1.eLeft = lazyTools_->eLeft(*sc1);
+     //     fRecoPhotonInfo1.eRight = lazyTools_->eRight(*sc1);
+     //     fRecoPhotonInfo1.eTop = lazyTools_->eTop(*sc1);
+     //     fRecoPhotonInfo1.eBottom = lazyTools_->eBottom(*sc1);
+     //     fRecoPhotonInfo1.eSecond = lazyTools_->e2nd(*sc1);
 
-     const reco::CaloClusterPtr  seed = sc1->seed();
+     //     cout << "Swiss Cross = "<< fRecoPhotonInfo1.swisscross;
+     //     cout << "; eMax = " << fRecoPhotonInfo1.eMax;
+     //     cout << "; eSecond = " << fRecoPhotonInfo1.eSecond<<endl;
 
-     DetId id = lazyTools_->getMaximum(*seed).first; 
-     float time  = -999., outOfTimeChi2 = -999., chi2 = -999.;
-     int   flags=-1, severity = -1; 
+//      const reco::CaloClusterPtr  seed = sc1->seed();
 
-     const EcalRecHitCollection & rechits = ( photon1->isEB() ? *recHitsEB : *recHitsEE); 
-     EcalRecHitCollection::const_iterator it = rechits.find( id );
-     if( it != rechits.end() ) { 
-       time = it->time(); 
-       outOfTimeChi2 = it->outOfTimeChi2();
-       chi2 = it->chi2();
-       flags = it->recoFlag();
-       severity = EcalSeverityLevelAlgo::severityLevel( id, rechits, *chStatus );
-     }
+//      DetId id = lazyTools_->getMaximum(*seed).first; 
+//      float time  = -999., outOfTimeChi2 = -999., chi2 = -999.;
+//      int   flags=-1, severity = -1; 
 
-     const EcalChannelStatus *ch_status = chStatus.product(); 
-     EcalChannelStatusMap::const_iterator chit;
-     chit = ch_status->getMap().find(id.rawId());
-     int mystatus = -99;
-     if( chit != ch_status->getMap().end() ){
-       EcalChannelStatusCode ch_code = (*chit);
-       mystatus = ch_code.getStatusCode();
-     }
+//      const EcalRecHitCollection & rechits = ( photon1->isEB() ? *recHitsEB : *recHitsEE); 
+//      EcalRecHitCollection::const_iterator it = rechits.find( id );
+//      if( it != rechits.end() ) { 
+//        time = it->time(); 
+//        outOfTimeChi2 = it->outOfTimeChi2();
+//        chi2 = it->chi2();
+//        flags = it->recoFlag();
+//        severity = EcalSeverityLevelAlgo::severityLevel( id, rechits, *chStatus );
+//      }
+
+//      const EcalChannelStatus *ch_status = chStatus.product(); 
+//      EcalChannelStatusMap::const_iterator chit;
+//      chit = ch_status->getMap().find(id.rawId());
+//      int mystatus = -99;
+//      if( chit != ch_status->getMap().end() ){
+//        EcalChannelStatusCode ch_code = (*chit);
+//        mystatus = ch_code.getStatusCode();
+//      }
 
      //     cout << "Photon1 seed " << lazyTools_->getMaximum(*seed).second << " " << maxc1.second << " " << lazyTools_->getMaximum(*seed).second -  maxc1.second << endl;     
      //     cout << "Photon1 time chStatus flags severity: " << time << " " << mystatus << " " << flags << " " << severity << endl;
 
-     fRecoPhotonInfo1.severityLevel = severity;
-     fRecoPhotonInfo1.recHitFlag = flags;
-     fRecoPhotonInfo1.maxRecHitTime = time;
+     //     fRecoPhotonInfo1.severityLevel = severity;
+     //     fRecoPhotonInfo1.recHitFlag = flags;
+     //     fRecoPhotonInfo1.maxRecHitTime = time;
 
-     fRecoPhotonInfo1.esRatio = getESRatio(photon1, iEvent, iSetup);
+     //     fRecoPhotonInfo1.esRatio = getESRatio(photon1, iEvent, iSetup);
+     //     cout << "Es ratio = " << fRecoPhotonInfo1.esRatio <<endl;
 
    }
 
    if(photon2) {
-     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,photon2);
+     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,photon2,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
 
-     // anything using lazy tools still needs to be filled here though,
-     // cause I had trouble getting it to work inside the Fill function
+//      reco::SuperClusterRef sc2 = photon2->superCluster();
+//      std::pair<DetId,float> maxc2 = lazyTools_->getMaximum(*sc2);
 
-     reco::SuperClusterRef sc2 = photon2->superCluster();
-     std::pair<DetId,float> maxc2 = lazyTools_->getMaximum(*sc2);
-
-     //detId and ieta/iphi/iY/iX
-     fRecoPhotonInfo2.detId = maxc2.first.rawId();
+//      //detId and ieta/iphi/iY/iX
+//      fRecoPhotonInfo2.detId = maxc2.first.rawId();
      
-     if(maxc2.first.subdetId() == EcalBarrel) {
-       EBDetId ebId( maxc2.first );
-       fRecoPhotonInfo2.iEtaY = ebId.ieta(); // iEta in EB
-       fRecoPhotonInfo2.iPhiX = ebId.iphi(); // iPhi in EB
-     }
-     else if (maxc2.first.subdetId() == EcalEndcap) {
-       EEDetId eeId( maxc2.first );
-       fRecoPhotonInfo2.iEtaY = eeId.iy(); // iY in EE
-       fRecoPhotonInfo2.iPhiX = eeId.ix(); // iX in EE       
-     }
+//      if(maxc2.first.subdetId() == EcalBarrel) {
+//        EBDetId ebId( maxc2.first );
+//        fRecoPhotonInfo2.iEtaY = ebId.ieta(); // iEta in EB
+//        fRecoPhotonInfo2.iPhiX = ebId.iphi(); // iPhi in EB
+//      }
+//      else if (maxc2.first.subdetId() == EcalEndcap) {
+//        EEDetId eeId( maxc2.first );
+//        fRecoPhotonInfo2.iEtaY = eeId.iy(); // iY in EE
+//        fRecoPhotonInfo2.iPhiX = eeId.ix(); // iX in EE       
+//      }
 
-     // swiss cross and other spike-related info
-     if (maxc2.first.subdetId() == EcalBarrel) 
-       fRecoPhotonInfo2.swisscross = EcalSeverityLevelAlgo::swissCross(maxc2.first, (*recHitsEB), 0);
-     fRecoPhotonInfo2.eMax = lazyTools_->eMax(*sc2);
-     fRecoPhotonInfo2.eLeft = lazyTools_->eLeft(*sc2);
-     fRecoPhotonInfo2.eRight = lazyTools_->eRight(*sc2);
-     fRecoPhotonInfo2.eTop = lazyTools_->eTop(*sc2);
-     fRecoPhotonInfo2.eBottom = lazyTools_->eBottom(*sc2);
-     fRecoPhotonInfo2.eSecond = lazyTools_->e2nd(*sc2);
+//      // swiss cross and other spike-related info
+//      if (maxc2.first.subdetId() == EcalBarrel) 
+//        fRecoPhotonInfo2.swisscross = EcalSeverityLevelAlgo::swissCross(maxc2.first, (*recHitsEB), 0);
+//      fRecoPhotonInfo2.eMax = lazyTools_->eMax(*sc2);
+//      fRecoPhotonInfo2.eLeft = lazyTools_->eLeft(*sc2);
+//      fRecoPhotonInfo2.eRight = lazyTools_->eRight(*sc2);
+//      fRecoPhotonInfo2.eTop = lazyTools_->eTop(*sc2);
+//      fRecoPhotonInfo2.eBottom = lazyTools_->eBottom(*sc2);
+//      fRecoPhotonInfo2.eSecond = lazyTools_->e2nd(*sc2);
 
 
-     const reco::CaloClusterPtr  seed = sc2->seed();
+//      const reco::CaloClusterPtr  seed = sc2->seed();
 
-     DetId id = lazyTools_->getMaximum(*seed).first;
-     float time  = -999., outOfTimeChi2 = -999., chi2 = -999.;
-     int   flags=-1, severity = -1;
+//      DetId id = lazyTools_->getMaximum(*seed).first;
+//      float time  = -999., outOfTimeChi2 = -999., chi2 = -999.;
+//      int   flags=-1, severity = -1;
 
-     const EcalRecHitCollection & rechits = ( photon2->isEB() ? *recHitsEB : *recHitsEE);
-     EcalRecHitCollection::const_iterator it = rechits.find( id );
-     if( it != rechits.end() ) {
-       time = it->time();
-       outOfTimeChi2 = it->outOfTimeChi2();
-       chi2 = it->chi2();
-       flags = it->recoFlag();
-       severity = EcalSeverityLevelAlgo::severityLevel( id, rechits, *chStatus );
-     }
+//      const EcalRecHitCollection & rechits = ( photon2->isEB() ? *recHitsEB : *recHitsEE);
+//      EcalRecHitCollection::const_iterator it = rechits.find( id );
+//      if( it != rechits.end() ) {
+//        time = it->time();
+//        outOfTimeChi2 = it->outOfTimeChi2();
+//        chi2 = it->chi2();
+//        flags = it->recoFlag();
+//        severity = EcalSeverityLevelAlgo::severityLevel( id, rechits, *chStatus );
+//      }
 
-     const EcalChannelStatus *ch_status = chStatus.product();
-     EcalChannelStatusMap::const_iterator chit;
-     chit = ch_status->getMap().find(id.rawId());
-     int mystatus = -99;
-     if( chit != ch_status->getMap().end() ){
-       EcalChannelStatusCode ch_code = (*chit);
-       mystatus = ch_code.getStatusCode();
-     }
+//      const EcalChannelStatus *ch_status = chStatus.product();
+//      EcalChannelStatusMap::const_iterator chit;
+//      chit = ch_status->getMap().find(id.rawId());
+//      int mystatus = -99;
+//      if( chit != ch_status->getMap().end() ){
+//        EcalChannelStatusCode ch_code = (*chit);
+//        mystatus = ch_code.getStatusCode();
+//      }
 
-     //     cout << "Photon2 seed " << lazyTools_->getMaximum(*seed).second << " " << maxc2.second << " " << lazyTools_->getMaximum(*seed).second -  maxc2.second << endl;
-     //     cout << "Photon2 time chStatus flags severity: " << time << " " << mystatus << " " << flags << " " << severity << endl;
+//      //     cout << "Photon2 seed " << lazyTools_->getMaximum(*seed).second << " " << maxc2.second << " " << lazyTools_->getMaximum(*seed).second -  maxc2.second << endl;
+//      //     cout << "Photon2 time chStatus flags severity: " << time << " " << mystatus << " " << flags << " " << severity << endl;
 
-     fRecoPhotonInfo2.severityLevel = severity;
-     fRecoPhotonInfo2.recHitFlag = flags;
-     fRecoPhotonInfo2.maxRecHitTime = time;
+//      fRecoPhotonInfo2.severityLevel = severity;
+//      fRecoPhotonInfo2.recHitFlag = flags;
+//      fRecoPhotonInfo2.maxRecHitTime = time;
 
-     fRecoPhotonInfo2.esRatio = getESRatio(photon2, iEvent, iSetup);
+//      fRecoPhotonInfo2.esRatio = ExoDiPhotons::getESRatio(photon2, iEvent, iSetup);
 
    }
 
@@ -762,85 +771,85 @@ ExoDiPhotonBkgAnalyzer::endJob() {
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
-Float_t 
-ExoDiPhotonBkgAnalyzer::getESRatio(const reco::Photon *photon, const edm::Event& e, const edm::EventSetup& iSetup){
+// Float_t 
+// ExoDiPhotonBkgAnalyzer::getESRatio(const reco::Photon *photon, const edm::Event& e, const edm::EventSetup& iSetup){
 
-  //get Geometry
-  edm::ESHandle<CaloGeometry> caloGeometry;
-  iSetup.get<CaloGeometryRecord>().get(caloGeometry);
-  const CaloSubdetectorGeometry *geometry = caloGeometry->getSubdetectorGeometry(DetId::Ecal, EcalPreshower);
-  const CaloSubdetectorGeometry *& geometry_p = geometry;
+//   //get Geometry
+//   edm::ESHandle<CaloGeometry> caloGeometry;
+//   iSetup.get<CaloGeometryRecord>().get(caloGeometry);
+//   const CaloSubdetectorGeometry *geometry = caloGeometry->getSubdetectorGeometry(DetId::Ecal, EcalPreshower);
+//   const CaloSubdetectorGeometry *& geometry_p = geometry;
 
-  // Get ES rechits
-  edm::Handle<EcalRecHitCollection> PreshowerRecHits;
-  e.getByLabel(edm::InputTag("ecalPreshowerRecHit","EcalRecHitsES"), PreshowerRecHits);
-  if( PreshowerRecHits.isValid() ) EcalRecHitCollection preshowerHits(*PreshowerRecHits);
+//   // Get ES rechits
+//   edm::Handle<EcalRecHitCollection> PreshowerRecHits;
+//   e.getByLabel(edm::InputTag("ecalPreshowerRecHit","EcalRecHitsES"), PreshowerRecHits);
+//   if( PreshowerRecHits.isValid() ) EcalRecHitCollection preshowerHits(*PreshowerRecHits);
 
-  Float_t esratio=1.;
+//   Float_t esratio=1.;
 
-  if (fabs(photon->eta())>1.62) {
+//   if (fabs(photon->eta())>1.62) {
 
-    const reco::CaloClusterPtr seed = (*photon).superCluster()->seed();    
-    reco::CaloCluster cluster = (*seed);
-    const GlobalPoint phopoint(cluster.x(), cluster.y(), cluster.z());
+//     const reco::CaloClusterPtr seed = (*photon).superCluster()->seed();    
+//     reco::CaloCluster cluster = (*seed);
+//     const GlobalPoint phopoint(cluster.x(), cluster.y(), cluster.z());
   
-    DetId photmp1 = (dynamic_cast<const EcalPreshowerGeometry*>(geometry_p))->getClosestCellInPlane(phopoint, 1);
-    DetId photmp2 = (dynamic_cast<const EcalPreshowerGeometry*>(geometry_p))->getClosestCellInPlane(phopoint, 2);
-    ESDetId esfid = (photmp1 == DetId(0)) ? ESDetId(0) : ESDetId(photmp1);
-    ESDetId esrid = (photmp2 == DetId(0)) ? ESDetId(0) : ESDetId(photmp2);
+//     DetId photmp1 = (dynamic_cast<const EcalPreshowerGeometry*>(geometry_p))->getClosestCellInPlane(phopoint, 1);
+//     DetId photmp2 = (dynamic_cast<const EcalPreshowerGeometry*>(geometry_p))->getClosestCellInPlane(phopoint, 2);
+//     ESDetId esfid = (photmp1 == DetId(0)) ? ESDetId(0) : ESDetId(photmp1);
+//     ESDetId esrid = (photmp2 == DetId(0)) ? ESDetId(0) : ESDetId(photmp2);
 
-    int gs_esfid = -99;
-    int gs_esrid = -99;
-    gs_esfid = esfid.six()*32+esfid.strip();
-    gs_esrid = esrid.siy()*32+esrid.strip();
+//     int gs_esfid = -99;
+//     int gs_esrid = -99;
+//     gs_esfid = esfid.six()*32+esfid.strip();
+//     gs_esrid = esrid.siy()*32+esrid.strip();
 
-    float esfe3 = 0.; 
-    float esfe21 = 0.; 
-    float esre3 = 0.; 
-    float esre21 = 0.;
+//     float esfe3 = 0.; 
+//     float esfe21 = 0.; 
+//     float esre3 = 0.; 
+//     float esre21 = 0.;
 
-    const ESRecHitCollection *ESRH = PreshowerRecHits.product();
-    EcalRecHitCollection::const_iterator esrh_it;
-    for ( esrh_it = ESRH->begin(); esrh_it != ESRH->end(); esrh_it++) {
-      ESDetId esdetid = ESDetId(esrh_it->id());
-      if ( esdetid.plane()==1 ) {
-	if ( esdetid.zside() == esfid.zside() &&
-	     esdetid.siy() == esfid.siy() ) {
-	  int gs_esid = esdetid.six()*32+esdetid.strip();
-	  int ss = gs_esid-gs_esfid;
-	  if ( TMath::Abs(ss)<=10) {
-	    esfe21 += esrh_it->energy();
-	  } 
-	  if ( TMath::Abs(ss)<=1) {
-	    esfe3 += esrh_it->energy();
-	  } 
-	}
-      }
-      if (esdetid.plane()==2 ){
-	if ( esdetid.zside() == esrid.zside() &&
-	     esdetid.six() == esrid.six() ) {
-	  int gs_esid = esdetid.siy()*32+esdetid.strip();
-	  int ss = gs_esid-gs_esrid;
-	  if ( TMath::Abs(ss)<=10) {
-	    esre21 += esrh_it->energy();
-	  } 
-	  if ( TMath::Abs(ss)<=1) {
-	    esre3 += esrh_it->energy();
-	  } 
-	}
-      }
-    }
+//     const ESRecHitCollection *ESRH = PreshowerRecHits.product();
+//     EcalRecHitCollection::const_iterator esrh_it;
+//     for ( esrh_it = ESRH->begin(); esrh_it != ESRH->end(); esrh_it++) {
+//       ESDetId esdetid = ESDetId(esrh_it->id());
+//       if ( esdetid.plane()==1 ) {
+// 	if ( esdetid.zside() == esfid.zside() &&
+// 	     esdetid.siy() == esfid.siy() ) {
+// 	  int gs_esid = esdetid.six()*32+esdetid.strip();
+// 	  int ss = gs_esid-gs_esfid;
+// 	  if ( TMath::Abs(ss)<=10) {
+// 	    esfe21 += esrh_it->energy();
+// 	  } 
+// 	  if ( TMath::Abs(ss)<=1) {
+// 	    esfe3 += esrh_it->energy();
+// 	  } 
+// 	}
+//       }
+//       if (esdetid.plane()==2 ){
+// 	if ( esdetid.zside() == esrid.zside() &&
+// 	     esdetid.six() == esrid.six() ) {
+// 	  int gs_esid = esdetid.siy()*32+esdetid.strip();
+// 	  int ss = gs_esid-gs_esrid;
+// 	  if ( TMath::Abs(ss)<=10) {
+// 	    esre21 += esrh_it->energy();
+// 	  } 
+// 	  if ( TMath::Abs(ss)<=1) {
+// 	    esre3 += esrh_it->energy();
+// 	  } 
+// 	}
+//       }
+//     }
   
-    if( (esfe21+esre21) == 0.) {
-      esratio = 1.;
-    }else{
-      esratio = (esfe3+esre3) / (esfe21+esre21);
-    }
+//     if( (esfe21+esre21) == 0.) {
+//       esratio = 1.;
+//     }else{
+//       esratio = (esfe3+esre3) / (esfe21+esre21);
+//     }
     
-  }
-  return esratio;
+//   }
+//   return esratio;
   
-}
+// }
 
 
 
