@@ -8,6 +8,10 @@ root -b <<!
 .q
 !
 
+rfcp histograms_${SAMPLE}.root  /castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/${SAMPLE};
+
+# now make webpge
+
 WEBDIR=/afs/cern.ch/user/t/torimoto/www/public_html/physics/diphoton/mc/$1;
 mkdir $WEBDIR;
 mv *$1*.png $WEBDIR;
@@ -66,6 +70,11 @@ cat > ${WEBDIR}/index.html <<EOF
 <h2> Photon2 Spike Rejection</h2>
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/mc/${SAMPLE}/spike_photon2_${SAMPLE}.png>
 <img height="600" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/mc/${SAMPLE}/spike_photon2_${SAMPLE}.png">
+</A>
+
+<h2> DiPhoton plots</h2>
+<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/mc/${SAMPLE}/diphoton_${SAMPLE}.png>
+<img height="600" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/mc/${SAMPLE}/diphoton_${SAMPLE}.png">
 </A>
 
 </FONT>
