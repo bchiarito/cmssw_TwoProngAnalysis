@@ -134,8 +134,72 @@ void fTree::Loop()
 
 // 	h_Photon2_esRatio->Fill(Photon2_esRatio);
 
+        h_Diphoton_Minv->Fill(Diphoton_Minv);
+        h_Diphoton_qt->Fill(Diphoton_qt);
+        h_Diphoton_deltaPhi->Fill(Diphoton_deltaPhi);
+        h_Diphoton_deltaEta->Fill(Diphoton_deltaEta);
+        h_Diphoton_deltaR->Fill(Diphoton_deltaR);
 
       }
 
    }
+
+   if ( _outF != 0 ) {
+     _outF->cd();
+     h_TrigHLT->Write();
+     h_Diphoton_Minv->Write();
+     h_Diphoton_qt->Write();
+     h_Diphoton_deltaPhi->Write();
+     h_Diphoton_deltaEta->Write();
+     h_Diphoton_deltaR->Write();
+     h_Photon1_pt->Write();
+     h_Photon1_eta->Write();
+     h_Photon1_phi->Write();
+     h_Photon1_r9->Write();
+     h_Photon1_sigmaIetaIeta->Write();
+     h_Photon1_sigmaEtaEta->Write();
+     h_Photon1_swisscross->Write();
+     h_Photon1_severityLevel->Write();
+     h_Photon1_recHitFlag->Write();
+     h_Photon1_maxRecHitTime->Write();
+     h_Photon1_hadOverEm->Write();
+     h_Photon1_hcalIso04->Write();
+     h_Photon1_hcalIso03->Write();
+     h_Photon1_ecalIso04->Write();
+     h_Photon1_ecalIso03->Write();
+     h_Photon1_trkIsoSumPtHollow04->Write();
+     h_Photon1_trkIsoSumPtSolid04->Write();
+     h_Photon1_trkIsoSumPtHollow03->Write();
+     h_Photon1_trkIsoSumPtSolid03->Write();
+     h_Photon1_trkIsoNtrksHollow04->Write();
+     h_Photon1_trkIsoNtrksSolid04->Write();
+     h_Photon1_trkIsoNtrksHollow03->Write();
+     h_Photon1_trkIsoNtrksSolid03->Write();
+     h_Photon2_pt->Write();
+     h_Photon2_eta->Write();
+     h_Photon2_phi->Write();
+     h_Photon2_r9->Write();
+     h_Photon2_sigmaIetaIeta->Write();
+     h_Photon2_sigmaEtaEta->Write();
+     h_Photon2_swisscross->Write();
+     h_Photon2_severityLevel->Write();
+     h_Photon2_recHitFlag->Write();
+     h_Photon2_maxRecHitTime->Write();
+     h_Photon2_hadOverEm->Write();
+     h_Photon2_hcalIso04->Write();
+     h_Photon2_hcalIso03->Write();
+     h_Photon2_ecalIso04->Write();
+     h_Photon2_ecalIso03->Write();
+     h_Photon2_trkIsoSumPtHollow04->Write();
+     h_Photon2_trkIsoSumPtSolid04->Write();
+     h_Photon2_trkIsoSumPtHollow03->Write();
+     h_Photon2_trkIsoSumPtSolid03->Write();
+     h_Photon2_trkIsoNtrksHollow04->Write();
+     h_Photon2_trkIsoNtrksSolid04->Write();
+     h_Photon2_trkIsoNtrksHollow03->Write();
+     h_Photon2_trkIsoNtrksSolid03->Write();
+     _outF->Write();
+     _outF->Close();
+   }
+   return;
 }
