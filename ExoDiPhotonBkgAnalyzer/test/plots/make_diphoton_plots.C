@@ -1,24 +1,42 @@
 
-void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50", Bool_t kPrint=kTRUE) {
+void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50", Bool_t kPrint=kTRUE, Bool_t isData=kFALSE) {
 
-  TString infile = "rfio:/castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/"+sample+"/diphotonTree_"+sample+".root";
-  
+  TString infile;
+  if (isData) {
+    TString infile = "rfio:/castor/cern.ch/user/y/yma/RSGravitons/Aug2010/diphoton_tree_132440-141961.root";
+  } else {
+    TString infile = "rfio:/castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/"+sample+"/diphotonTree_"+sample+".root";
+  }
   cout << "Making quick check plots for: " << infile << endl;
 
-  gSystem->Load("fTree_C.so");
+  if (isData) {
+    gSystem->Load("fTreeData_C.so");
+  } else {
+    gSystem->Load("fTree_C.so");
+  }
 
   // input file
   TFile* f = TFile::Open(infile.Data());
-  TTree* fChain = (TTree*)f->Get("diphotonBkgAnalyzer/fTree");
+  
+  TString tempName;
+  if (isData) { tempName = "diphotonAnalyzer/fTree";  } 
+  else        { tempName = "diphotonBkgAnalyzer/fTree"; }
+  TTree* fChain = (TTree*)f->Get(tempName.Data());
 
   // set up output
   TString outName = TString::Format("histograms_%s.root",sample.Data());
   TFile* outF = new TFile(outName.Data(),"RECREATE");
 
   // loop
-  fTree* reader = new fTree(fChain);
-  reader->_outF = outF;
-  reader->Loop();
+  if (isData) {
+    fTreeData* reader = new fTreeData(fChain);
+    reader->_outF = outF;
+    reader->Loop();
+  } else {
+    fTree* reader = new fTree(fChain);
+    reader->_outF = outF;
+    reader->Loop();
+  }
 
   // now for making pretty plots
 
@@ -26,10 +44,13 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50", Bool_t kPrint=kT
   fhists->cd();
 
   // want to store the normalization histo
-  h_norm = (TH1F*) f->Get("diphotonBkgAnalyzer/fNorm_h");
-  cout << h_norm->GetEntries() << endl;
-  h_norm->Write();
-  fhists->Write();
+  if (!isData) {
+    tempName = "diphotonBkgAnalyzer/fNorm_h"; 
+    h_norm = (TH1F*) f->Get(tempName.Data());
+    cout << h_norm->GetEntries() << endl;
+    h_norm->Write();
+    fhists->Write();
+  }
 
   gROOT->SetStyle("Plain");
 
