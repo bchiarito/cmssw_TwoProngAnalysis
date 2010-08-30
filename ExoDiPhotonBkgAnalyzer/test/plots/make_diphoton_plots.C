@@ -1,30 +1,41 @@
 
-void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50") {
+void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50", Bool_t kPrint=kTRUE) {
 
   TString infile = "rfio:/castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/"+sample+"/diphotonTree_"+sample+".root";
   
-  //  if (!infile) {
-  //    cout << " No input file specified !" << endl;
-  //    return;
-  //  }
-
   cout << "Making quick check plots for: " << infile << endl;
 
   gSystem->Load("fTree_C.so");
 
+  // input file
   TFile* f = TFile::Open(infile.Data());
-
   TTree* fChain = (TTree*)f->Get("diphotonBkgAnalyzer/fTree");
 
-  fTree* reader = new fTree(fChain);
+  // set up output
+  TString outName = TString::Format("histograms_%s.root",sample.Data());
+  TFile* outF = new TFile(outName.Data(),"RECREATE");
 
+  // loop
+  fTree* reader = new fTree(fChain);
+  reader->_outF = outF;
   reader->Loop();
- 
+
+  // now for making pretty plots
+
+  TFile* fhists = new TFile(outName.Data(),"UPDATE");
+  fhists->cd();
+
+  // want to store the normalization histo
+  h_norm = (TH1F*) f->Get("diphotonBkgAnalyzer/fNorm_h");
+  cout << h_norm->GetEntries() << endl;
+  h_norm->Write();
+  fhists->Write();
+
   gROOT->SetStyle("Plain");
 
   gStyle->SetOptStat(10);
 
-  const int nHists=9;
+  const int nHists=10;
   TCanvas* c[nHists];
   char cname[100]; 
 
@@ -37,15 +48,17 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50") {
     if (i>0) c[i]->Divide(3,2);
   }
 
+
   char fname[100]; 
 
+  // trigger
   c[0]->cd();
   c0->SetBottomMargin(0.4);
   h_TrigHLT->GetXaxis()->SetTitleSize(0.01);
   h_TrigHLT->GetXaxis()->SetBit(TAxis::kLabelsVert);
   h_TrigHLT->Draw();
   sprintf(fname,"trigger_%s.png",sample.Data());  
-  c[0]->Print(fname);
+  if (kPrint) c[0]->Print(fname);
 
   // photon 1
   c[1]->cd(1);
@@ -61,7 +74,7 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50") {
   c[1]->cd(6);
   h_Photon1_sigmaEtaEta->Draw();
   sprintf(fname,"kinematics_photon1_%s.png",sample.Data());  
-  c[1]->Print(fname);
+  if (kPrint) c[1]->Print(fname);
 
   c[2]->cd(1);
   h_Photon1_swisscross->Draw();
@@ -72,7 +85,7 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50") {
   c[2]->cd(4);
   h_Photon1_maxRecHitTime->Draw();
   sprintf(fname,"spike_photon1_%s.png",sample.Data());  
-  c[2]->Print(fname);
+  if (kPrint) c[2]->Print(fname);
 
   c[3]->cd(1);	
   //  c[3]->GetPad(1)->SetLogy(1);
@@ -89,7 +102,7 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50") {
   c[3]->cd(5);	
   h_Photon1_ecalIso03->Draw();
   sprintf(fname,"caloIso_photon1_%s.png",sample.Data());  
-  c[3]->Print(fname);
+  if (kPrint) c[3]->Print(fname);
 
   c[4] = new TCanvas("c4", "c4",1200,600);
   c[4]->Divide(4,2);
@@ -114,7 +127,7 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50") {
   c[4]->cd(8);	
   h_Photon1_trkIsoNtrksSolid03->Draw();
   sprintf(fname,"trackIso_photon1_%s.png",sample.Data());  
-  c[4]->Print(fname);
+  if (kPrint) c[4]->Print(fname);
 
   // photon2
 
@@ -131,7 +144,7 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50") {
   c[5]->cd(6);
   h_Photon2_sigmaEtaEta->Draw();
   sprintf(fname,"kinematics_photon2_%s.png",sample.Data());  
-  c[5]->Print(fname);
+  if (kPrint) c[5]->Print(fname);
 
   c[6]->cd(1);
   h_Photon2_swisscross->Draw();
@@ -142,7 +155,7 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50") {
   c[6]->cd(4);
   h_Photon2_maxRecHitTime->Draw();
   sprintf(fname,"spike_photon2_%s.png",sample.Data());  
-  c[6]->Print(fname);
+  if (kPrint) c[6]->Print(fname);
 
   c[7]->cd(1);	
   //  c[3]->GetPad(1)->SetLogy(1);
@@ -159,8 +172,7 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50") {
   c[7]->cd(5);	
   h_Photon2_ecalIso03->Draw();
   sprintf(fname,"caloIso_photon2_%s.png",sample.Data());  
-  c[7]->Print(fname);
-
+  if (kPrint) c[7]->Print(fname);
 
   c[8] = new TCanvas("c8", "c8",1200,600);
   c[8]->Divide(4,2);
@@ -185,9 +197,78 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50") {
   c[8]->cd(8);	
   h_Photon2_trkIsoNtrksSolid03->Draw();
   sprintf(fname,"trackIso_photon2_%s.png",sample.Data());  
-  c[8]->Print(fname);
+  if (kPrint) c[8]->Print(fname);
+
+  // diphoton
+  c[9] = new TCanvas("c9", "c9",1200,600);
+  c[9]->Divide(4,2);
+  c[9]->cd(1);	
+  h_Diphoton_Minv->Draw();
+  c[9]->cd(2);	
+  h_Diphoton_qt->Draw();
+  c[9]->cd(3);	
+  h_Diphoton_deltaPhi->Draw();
+  c[9]->cd(4);	
+  h_Diphoton_deltaEta->Draw();
+  c[9]->cd(5);	
+  h_Diphoton_deltaR->Draw();
+  sprintf(fname,"diphoton_%s.png",sample.Data());  
+  if (kPrint) c[9]->Print(fname);
+
+//   // now write histograms to file
+
+//   // output file
+//   TString outFileName = TString::Format("hists_%s.root",sample.Data());
+//   TFile fout(outFileName.Data(),"RECREATE");
+  
+//   fout.cd();
+
+//   h_Photon1_ecalIso04->Write();
+//   h_Photon1_ecalIso03->Write();
+//   h_Photon1_trkIsoSumPtHollow04->Write();
+//   h_Photon1_trkIsoSumPtSolid04->Write();
+//   h_Photon1_trkIsoSumPtHollow03->Write();
+//   h_Photon1_trkIsoSumPtSolid03->Write();
+//   h_Photon1_trkIsoNtrksHollow04->Write();
+//   h_Photon1_trkIsoNtrksSolid04->Write();
+//   h_Photon1_trkIsoNtrksHollow03->Write();
+//   h_Photon1_trkIsoNtrksSolid03->Write();
+//   h_Photon2_pt->Write();
+//   h_Photon2_eta->Write();
+//   h_Photon2_phi->Write();
+//   h_Photon2_r9->Write();
+//   h_Photon2_sigmaIetaIeta->Write();
+//   h_Photon2_sigmaEtaEta->Write();
+//   h_Photon2_swisscross->Write();
+//   h_Photon2_severityLevel->Write();
+//   h_Photon2_recHitFlag->Write();
+//   h_Photon2_maxRecHitTime->Write();
+//   h_Photon2_hadOverEm->Write();
+//   h_Photon2_hcalIso04->Write();
+//   h_Photon2_hcalIso03->Write();
+//   h_Photon2_ecalIso04->Write();
+//   h_Photon2_ecalIso03->Write();
+//   h_Photon2_trkIsoSumPtHollow04->Write();
+//   h_Photon2_trkIsoSumPtSolid04->Write();
+//   h_Photon2_trkIsoSumPtHollow03->Write();
+//   h_Photon2_trkIsoSumPtSolid03->Write();
+//   h_Photon2_trkIsoNtrksHollow04->Write();
+//   h_Photon2_trkIsoNtrksSolid04->Write();
+//   h_Photon2_trkIsoNtrksHollow03->Write();
+//   h_Photon2_trkIsoNtrksSolid03->Write();
+
+//   h_norm = (TH1F*) f->Get("diphotonBkgAnalyzer/fNorm_h");
+//   h_norm->Write();
+
+//   for (int i=0; i<nHists; i++) {
+//     c[i]->Write();
+//   }
+//   //  fout.ls();
+//  fout.Close();
   
   //  delete reader;
+
+
   return;
 
 }
