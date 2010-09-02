@@ -1,8 +1,25 @@
 #!/bin/bash
 
 SAMPLE=$1;
-DATA="mc"; # data or mc ?
-MERGED=1; # (0) summed or individual (1) ?
+DATA=$2; #"data"; # data or mc ?
+MERGED=$3; #0; # (0) summed or individual (1) ?
+
+if [ "X"${SAMPLE} == "X" ]
+then
+    echo "Please specify sample";
+    exit;
+fi
+
+if [ "X"${DATA} == "X" ]
+then
+    echo "Please specify data or mc";
+    exit;
+fi
+
+if [ "X"${MERGED} == "X" ]
+then
+    MERGED=0;
+fi
 
 echo $SAMPLE $DATA $MERGED;
 
@@ -17,11 +34,29 @@ else
 fi
 
 if [ ${MERGED} -ne 0 ] ; then
+{
+if [ ${SAMPLE} == "allMC" ]; then
 root -b <<!
- .L make_diphoton_plots.C
- merge("${SAMPLE}");
+.L make_diphoton_plots.C
+ mergeAllMC();
  .q
 !
+elif [  ${SAMPLE} == "DataMC" ]; then
+echo "data MC comparison";
+root -b <<!
+.L make_diphoton_plots.C
+ overlayDataMC();
+ .q
+!
+else
+root -b <<!
+.L make_diphoton_plots.C
+ merge();
+ .q
+!
+SAMPLE=${SAMPLE}_all;
+fi
+}
 else
 root -b <<!
  .L make_diphoton_plots.C
@@ -29,9 +64,6 @@ root -b <<!
  .q
 !
 fi
-
-SAMPLE=${SAMPLE}_all;
-echo $SAMPLE;
 
 rfmkdir /castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/${DATA}/${SAMPLE};
 rfcp histograms_${SAMPLE}.root  /castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/${DATA}/${SAMPLE};

@@ -3,7 +3,10 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50", Bool_t kPrint=kT
 
   TString infile;
   if (isData) {
-    TString infile = "rfio:/castor/cern.ch/user/y/yma/RSGravitons/Aug2010/diphoton_tree_132440-141961.root";
+    //        TString infile = "rfio:/castor/cern.ch/user/y/yma/RSGravitons/Aug2010/diphoton_tree_132440-141961.root";
+    //    TString infile = "rfio:/castor/cern.ch/user/y/yma/RSGravitons/Aug2010/diphoton_treePartial_Aug.root";
+    //    TString infile = "diphoton_treePartial_Aug.root";   
+    TString infile = "diphoton_tree_EG_Aug_NEW.root";
   } else {
     TString infile = "rfio:/castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/"+sample+"/diphotonTree_"+sample+".root";
   }
@@ -72,6 +75,8 @@ void merge(TString sample = "PhotonJet"){
     temp_nfiles = 10; 
   } else if (sample=="DiPhoton") {
     temp_nfiles = 6; 
+  } else if (sample=="QCDDiJet") {
+    temp_nfiles = 20; 
   } else {
     cout << "Wrong sample name!" << endl;
     return;
@@ -131,12 +136,57 @@ void merge(TString sample = "PhotonJet"){
     xsecs[3] = 358.2 ;
     xsecs[4] = 12.37 ;
     xsecs[5] = 2.08e-04 ;
+
+  } else if (sample=="QCDDiJet") {
+
+    labels[0] = "Pt0to15";
+    labels[1] = "Pt15to20";
+    labels[2] = "Pt20to30";
+    labels[3] = "Pt30to50";
+    labels[4] = "Pt50to80";
+    labels[5] = "Pt80to120";
+    labels[6] = "Pt120to170";
+    labels[7] = "Pt170to230";
+    labels[8] = "Pt230to300";
+    labels[9] = "Pt300to380";
+    labels[10] = "Pt380to470";
+    labels[11] = "Pt470to600";
+    labels[12] = "Pt600to800";
+    labels[13] = "Pt800to1000";
+    labels[14] = "Pt1000to1400";
+    labels[15] = "Pt1400to1800";
+    labels[16] = "Pt1800to2200";
+    labels[17] = "Pt2200to2600";
+    labels[18] = "Pt2600to3000";
+    labels[19] = "Pt3000to3500";
+
+    xsecs[0] = 4.844e+10;
+    xsecs[1] = 5.794e+08;
+    xsecs[2] = 2.361e+08;
+    xsecs[3] = 5.311e+07;
+    xsecs[4] = 6.358e+06;
+    xsecs[5] = 7.849e+05;
+    xsecs[6] = 1.151e+05;
+    xsecs[7] = 2.014e+04;
+    xsecs[8] = 4.094e+03;
+    xsecs[9] = 9.346e+02;
+    xsecs[10] = 2.338e+02;
+    xsecs[11] = 7.021e+01;
+    xsecs[12] = 1.557e+01;
+    xsecs[13] = 1.843e+00;
+    xsecs[14] = 3.318e-01;
+    xsecs[15] = 1.086e-02;
+    xsecs[16] = 3.499e-04;
+    xsecs[17] = 7.549e-06;
+    xsecs[18] = 6.465e-08;
+    xsecs[19] = 6.295e-11;
+
   }
 
   TString fileNames[nfiles];
   
   for(int ifile=0;ifile<nfiles;ifile++) {
-    if (sample=="PhotonJet") {
+    if (sample=="PhotonJet" || sample=="QCDDiJet") {
       //    fileNames[ifile] = TString::Format("%s/%s_%s/histograms_%s_%s.root",ntupleDir.Data(),sample.Data(),labels[ifile].Data(),sample.Data(),labels[ifile].Data());
       fileNames[ifile] = TString::Format("%s/histograms_%s_%s.root",ntupleDir.Data(),sample.Data(),labels[ifile].Data(),sample.Data(),labels[ifile].Data());
     } else if (sample=="DiPhoton") {
@@ -398,7 +448,7 @@ void draw(TString sample, Bool_t kPrint=kTRUE) {
   h_Diphoton_Minv->Draw();
   c[9]->cd(2);	
   h_Diphoton_qt->Draw();
-  c[9]->cd(3);	
+  c[9]->cd(3);	 
   h_Diphoton_deltaPhi->Draw();
   c[9]->cd(4);	
   h_Diphoton_deltaEta->Draw();
@@ -460,3 +510,174 @@ void draw_individual_histos(TString sample, Bool_t kPrint=kTRUE) {
   return;
 
 }
+
+
+
+void mergeAllMC(double lumi = 1.0){
+
+  gROOT->SetStyle("Plain");
+  gStyle->SetOptStat("ourme");
+
+  //  TString ntupleDir = "rfio:/castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/";
+  TString ntupleDir = ".";
+  
+  const int nfiles = 3;
+  TString fileNames[nfiles];
+  TString labels[nfiles];
+  double xsecs[nfiles];  
+  
+  labels[0] = "DiPhoton";
+  labels[1] = "PhotonJet";
+  labels[2] = "QCDDiJet";
+
+  TFile *ftemp[nfiles];
+
+  for(int ifile=0;ifile<nfiles;ifile++) {    
+    fileNames[ifile] = TString::Format("histograms_%s_all.root",labels[ifile].Data());
+    ftemp[ifile] = TFile::Open(fileNames[ifile].Data());
+    cout << "File name = " << fileNames[ifile];
+  }
+  
+  const int nHists=52;
+  TString nameHists[nHists] = { "h_TrigHLT", "h_Diphoton_Minv", "h_Diphoton_qt", "h_Diphoton_deltaPhi", "h_Diphoton_deltaEta", "h_Diphoton_deltaR", "h_Photon1_pt", "h_Photon1_eta", "h_Photon1_phi", "h_Photon1_r9", "h_Photon1_sigmaIetaIeta", "h_Photon1_sigmaEtaEta", "h_Photon1_swisscross", "h_Photon1_severityLevel", "h_Photon1_recHitFlag", "h_Photon1_maxRecHitTime", "h_Photon1_hadOverEm", "h_Photon1_hcalIso04", "h_Photon1_hcalIso03", "h_Photon1_ecalIso04", "h_Photon1_ecalIso03", "h_Photon1_trkIsoSumPtHollow04", "h_Photon1_trkIsoSumPtSolid04", "h_Photon1_trkIsoNtrksHollow04", "h_Photon1_trkIsoNtrksSolid04", "h_Photon1_trkIsoSumPtHollow03", "h_Photon1_trkIsoSumPtSolid03", "h_Photon1_trkIsoNtrksHollow03", "h_Photon1_trkIsoNtrksSolid03", "h_Photon2_pt", "h_Photon2_eta", "h_Photon2_phi", "h_Photon2_r9", "h_Photon2_sigmaIetaIeta", "h_Photon2_sigmaEtaEta", "h_Photon2_swisscross", "h_Photon2_severityLevel", "h_Photon2_recHitFlag", "h_Photon2_maxRecHitTime", "h_Photon2_hadOverEm", "h_Photon2_hcalIso04", "h_Photon2_hcalIso03", "h_Photon2_ecalIso04", "h_Photon2_ecalIso03", "h_Photon2_trkIsoSumPtHollow04", "h_Photon2_trkIsoSumPtSolid04", "h_Photon2_trkIsoNtrksHollow04", "h_Photon2_trkIsoNtrksSolid04", "h_Photon2_trkIsoSumPtHollow03", "h_Photon2_trkIsoSumPtSolid03", "h_Photon2_trkIsoNtrksHollow03", "h_Photon2_trkIsoNtrksSolid03"  };
+
+  // each individual one
+  TH1F* indHistos[nHists][nfiles];
+
+  for(int ifile=0;ifile<nfiles;ifile++) { 
+    for (int i=0; i<nHists; i++) {
+      indHistos[i][ifile] = (TH1F*)ftemp[ifile]->Get(nameHists[i].Data());
+      indHistos[i][ifile]->Sumw2();
+    }
+  }
+
+  TH1F* allHistos[nHists];
+
+  // instantiate the sum histos with histo in first file
+  for (int i=0; i<nHists; i++) {
+    allHistos[i] = indHistos[i][0];
+  }
+  
+  for(int ifile=0;ifile<nfiles;ifile++) {  
+    for (int i=0; i<nHists; i++) {
+      if (ifile>0) allHistos[i]->Add(indHistos[i][ifile]); // note we exclude first file since we used it to instantiate the sum histo
+    }
+  }
+
+  TString sample = "allMC";
+
+  TString outFileName = TString::Format("histograms_%s.root",sample.Data());
+  TFile fout(outFileName.Data(),"RECREATE");
+  
+  for (int i=0; i<nHists; i++) {
+    allHistos[i]->Write();
+  }
+  //  fout.ls();
+  cout << "Results written to: " << outFileName.Data() << endl;
+  fout.Close();
+
+  draw(sample);
+  draw_individual_histos(sample);
+  
+  return;
+
+}
+
+void overlayDataMC(){
+  
+  gROOT->SetStyle("Plain");
+  gStyle->SetOptStat("ourme");
+
+  //  TString ntupleDir = "rfio:/castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/";
+  TString ntupleDir = ".";
+  
+  const int nfiles = 2;
+  TString fileNames[nfiles];
+
+  TString labels[nfiles];
+  labels[0] = "allMC";
+  labels[1] = "data_EG_Aug_NEW";
+
+  Float_t lumis[nfiles];
+  lumis[0] = 1.0; // 1/pb MC
+  lumis[1] = 0.145205753; // 145/nb DATA
+
+  TFile *ftemp[nfiles];
+
+  for(int ifile=0;ifile<nfiles;ifile++) {    
+    fileNames[ifile] = TString::Format("histograms_%s.root",labels[ifile].Data());
+    ftemp[ifile] = TFile::Open(fileNames[ifile].Data());
+    cout << "File name = " << fileNames[ifile] << endl;
+  }
+  
+  const int nHists=52;
+  TString nameHists[nHists] = { "h_TrigHLT", "h_Diphoton_Minv", "h_Diphoton_qt", "h_Diphoton_deltaPhi", "h_Diphoton_deltaEta", "h_Diphoton_deltaR", "h_Photon1_pt", "h_Photon1_eta", "h_Photon1_phi", "h_Photon1_r9", "h_Photon1_sigmaIetaIeta", "h_Photon1_sigmaEtaEta", "h_Photon1_swisscross", "h_Photon1_severityLevel", "h_Photon1_recHitFlag", "h_Photon1_maxRecHitTime", "h_Photon1_hadOverEm", "h_Photon1_hcalIso04", "h_Photon1_hcalIso03", "h_Photon1_ecalIso04", "h_Photon1_ecalIso03", "h_Photon1_trkIsoSumPtHollow04", "h_Photon1_trkIsoSumPtSolid04", "h_Photon1_trkIsoNtrksHollow04", "h_Photon1_trkIsoNtrksSolid04", "h_Photon1_trkIsoSumPtHollow03", "h_Photon1_trkIsoSumPtSolid03", "h_Photon1_trkIsoNtrksHollow03", "h_Photon1_trkIsoNtrksSolid03", "h_Photon2_pt", "h_Photon2_eta", "h_Photon2_phi", "h_Photon2_r9", "h_Photon2_sigmaIetaIeta", "h_Photon2_sigmaEtaEta", "h_Photon2_swisscross", "h_Photon2_severityLevel", "h_Photon2_recHitFlag", "h_Photon2_maxRecHitTime", "h_Photon2_hadOverEm", "h_Photon2_hcalIso04", "h_Photon2_hcalIso03", "h_Photon2_ecalIso04", "h_Photon2_ecalIso03", "h_Photon2_trkIsoSumPtHollow04", "h_Photon2_trkIsoSumPtSolid04", "h_Photon2_trkIsoNtrksHollow04", "h_Photon2_trkIsoNtrksSolid04", "h_Photon2_trkIsoSumPtHollow03", "h_Photon2_trkIsoSumPtSolid03", "h_Photon2_trkIsoNtrksHollow03", "h_Photon2_trkIsoNtrksSolid03"  };
+
+  TString sample = "DataMC";
+
+  TCanvas* c[nHists];
+  char cname[100];   
+
+  TH1F* histos[nHists][nfiles];
+
+
+  for(int ifile=0;ifile<nfiles;ifile++) { 
+    for (int i=0; i<nHists; i++) {
+      TString drawCommand = "";
+      histos[i][ifile] = (TH1F*)ftemp[ifile]->Get(nameHists[i].Data());      
+      
+      // scale MC plots to DATA
+      if (ifile==0) {
+	float scaleMC = lumis[1]/lumis[0];
+	histos[i][ifile]->Scale(scaleMC);
+      }
+
+      sprintf(cname,"c%i",i);
+      cout << i << " " << ifile << " " << cname << " " << nameHists[i].Data() << endl;
+      if (ifile==0) { // set title
+	TString histoTitle = histos[i][ifile]->GetTitle();
+	histoTitle = histoTitle + " (" + sample + ")";
+	histos[i][ifile]->SetTitle(histoTitle.Data());	       
+	if (i==0) {
+	  c[i] = new TCanvas(cname, nameHists[i].Data(), 1000, 600); 
+	  c[i]->SetBottomMargin(0.4);
+	  histos[i][ifile]->GetXaxis()->SetTitleSize(0.01);
+	  histos[i][ifile]->GetXaxis()->SetBit(TAxis::kLabelsVert);
+	} else {
+	  c[i] = new TCanvas(cname, nameHists[i].Data(), 600, 600);
+	}
+	c[i]->cd();
+	histos[i][ifile]->Draw();
+      } else {
+	c[i]->cd();
+	histos[i][ifile]->Draw("same");     
+      }
+
+      if (
+	  (nameHists[i]=="h_Photon1_hadOverEm")||(nameHists[i]=="h_Photon1_hcalIso04")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon1_pt")
+	  ||
+	  (nameHists[i]=="h_Photon2_hadOverEm")||(nameHists[i]=="h_Photon2_hcalIso04")||(nameHists[i]=="h_Photon2_hcalIso03")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon2_pt")
+	  ) { 
+	c[i]->SetLogy();   
+      }
+
+      char fname[100];     
+      sprintf(fname,"%s_%s.png",nameHists[i].Data(),sample.Data());  
+      c[i]->Print(fname);
+    }
+  }
+
+  TString outFileName = TString::Format("histograms_%s.root",sample.Data());
+  TFile fout(outFileName.Data(),"RECREATE");
+  //  
+  for (int i=0; i<nHists; i++) {
+    c[i]->Write();
+  }
+  //  //  fout.ls();
+  cout << "Results written to: " << outFileName.Data() << endl;
+  fout.Close();
+
+  return;
+
+}
+
