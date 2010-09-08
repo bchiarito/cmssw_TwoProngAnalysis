@@ -6,7 +6,9 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50", Bool_t kPrint=kT
     //        TString infile = "rfio:/castor/cern.ch/user/y/yma/RSGravitons/Aug2010/diphoton_tree_132440-141961.root";
     //    TString infile = "rfio:/castor/cern.ch/user/y/yma/RSGravitons/Aug2010/diphoton_treePartial_Aug.root";
     //    TString infile = "diphoton_treePartial_Aug.root";   
-    TString infile = "diphoton_tree_EG_Aug_NEW.root";
+    //    TString infile = "diphoton_tree_EG_Aug_NEW.root";
+    TString infile = "diphoton_tree_"+sample+".root";
+
   } else {
     TString infile = "rfio:/castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/"+sample+"/diphotonTree_"+sample+".root";
   }
@@ -33,13 +35,16 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50", Bool_t kPrint=kT
   // loop
   if (isData) {
     fTreeData* reader = new fTreeData(fChain);
-    reader->_outF = outF;
-    reader->Loop();
   } else {
     fTree* reader = new fTree(fChain);
-    reader->_outF = outF;
-    reader->Loop();
   }
+
+  reader->_outF = outF;
+
+  reader->_cutPhoton1Pt = 30;
+  reader->_cutPhoton2Pt = 30;
+
+  reader->Loop();
 
   // now for making pretty plots
 
@@ -89,8 +94,10 @@ void merge(TString sample = "PhotonJet"){
   
   const int nfiles = temp_nfiles;
   TString labels[nfiles];
-  double xsecs[nfiles];  
 
+  //cross-sections (units of pb)
+  // from  https://twiki.cern.ch/twiki/bin/viewauth/CMS/ProductionReProcessingSpring10
+  double xsecs[nfiles];  
 
   // handy labels for each file, and for the overall set
   if (sample=="PhotonJet") {
@@ -106,8 +113,6 @@ void merge(TString sample = "PhotonJet"){
     labels[8] = "Pt300to500";
     labels[9] = "Pt500toInf";
 
-    //cross-sections (units of pb)
-    // from  https://twiki.cern.ch/twiki/bin/viewauth/CMS/ProductionReProcessingSpring10
     xsecs[0] = 8.446e+07;
     xsecs[1] = 1.147e+05 ;
     xsecs[2] = 5.718e+04 ;
@@ -273,7 +278,8 @@ void merge(TString sample = "PhotonJet"){
 void draw(TString sample, Bool_t kPrint=kTRUE) {
 
   gROOT->SetStyle("Plain");
-  gStyle->SetOptStat(10);
+  gStyle->SetOptStat("ourme");
+  //  gStyle->SetOptStat(10);
   
   TString outName = TString::Format("histograms_%s.root",sample.Data());
   TFile* fhists = new TFile(outName.Data());
@@ -465,7 +471,8 @@ void draw(TString sample, Bool_t kPrint=kTRUE) {
 void draw_individual_histos(TString sample, Bool_t kPrint=kTRUE) {
 
   gROOT->SetStyle("Plain");
-  gStyle->SetOptStat(10);
+  gStyle->SetOptStat("ourme");
+  //  gStyle->SetOptStat(10);
   
   TString outName = TString::Format("histograms_%s.root",sample.Data());
   TFile* fhists = new TFile(outName.Data());
@@ -596,11 +603,12 @@ void overlayDataMC(){
 
   TString labels[nfiles];
   labels[0] = "allMC";
-  labels[1] = "data_EG_Aug_NEW";
+  //  labels[1] = "data_EG_Aug_NEW";
+  labels[1] = "allData_383nb";
 
   Float_t lumis[nfiles];
   lumis[0] = 1.0; // 1/pb MC
-  lumis[1] = 0.145205753; // 145/nb DATA
+  lumis[1] = 0.3831; // 145/nb DATA
 
   TFile *ftemp[nfiles];
 
