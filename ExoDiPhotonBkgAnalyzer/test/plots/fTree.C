@@ -40,36 +40,39 @@ void fTree::Loop()
       if (ientry < 0) break;
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
+      if (ientry==0) {
+	std::cout << "Photon pT cuts: " << _cutPhoton1Pt << " " << _cutPhoton2Pt << std::endl;
+      }
 
       if ( Photon1_pt>_cutPhoton1Pt && Photon2_pt>_cutPhoton2Pt ) {
 
-	//	if (TrigHLT_HLT_MinBiasBSC) h_TrigHLT->Fill(0);
-	//	if (TrigHLT_HLT_MinBiasBSC_NoBPTX) h_TrigHLT->Fill(1);
-	//	if (TrigHLT_HLT_MinBiasBSC_OR) h_TrigHLT->Fill(2);
-	//	if (TrigHLT_HLT_L1_BscMinBiasOR_BptxPlusORMinus) h_TrigHLT->Fill(3);
-	if (TrigHLT_HLT_L1SingleEG2) h_TrigHLT->Fill(0);
-	if (TrigHLT_HLT_L1SingleEG5) h_TrigHLT->Fill(1);
-	if (TrigHLT_HLT_L1SingleEG8) h_TrigHLT->Fill(2);
-	if (TrigHLT_HLT_L1DoubleEG5) h_TrigHLT->Fill(3);
-	if (TrigHLT_HLT_Photon10_L1R) h_TrigHLT->Fill(4);
-	if (TrigHLT_HLT_Photon10_Cleaned_L1R) h_TrigHLT->Fill(5);
-	if (TrigHLT_HLT_Photon15_L1R) h_TrigHLT->Fill(6);
-	if (TrigHLT_HLT_Photon15_Cleaned_L1R) h_TrigHLT->Fill(7);
-	if (TrigHLT_HLT_Photon15_LooseEcalIso_L1R) h_TrigHLT->Fill(8);
-	if (TrigHLT_HLT_Photon15_LooseEcalIso_Cleaned_L1R) h_TrigHLT->Fill(9);
-	if (TrigHLT_HLT_Photon15_TrackIso_L1R) h_TrigHLT->Fill(10);
-	if (TrigHLT_HLT_Photon15_TrackIso_Cleaned_L1R) h_TrigHLT->Fill(11);
-	if (TrigHLT_HLT_Photon20_L1R) h_TrigHLT->Fill(12);
-	if (TrigHLT_HLT_Photon20_Cleaned_L1R) h_TrigHLT->Fill(13);
-	if (TrigHLT_HLT_Photon30_L1R) h_TrigHLT->Fill(14);
-	if (TrigHLT_HLT_Photon30_Cleaned_L1R) h_TrigHLT->Fill(15);
-	if (TrigHLT_HLT_Photon30_L1R_8E29) h_TrigHLT->Fill(16);
-	if (TrigHLT_HLT_Photon50_L1R) h_TrigHLT->Fill(17);
-	if (TrigHLT_HLT_Photon50_Cleaned_L1R) h_TrigHLT->Fill(18);
-	if (TrigHLT_HLT_DoublePhoton5_L1R) h_TrigHLT->Fill(19);
-	if (TrigHLT_HLT_DoublePhoton10_L1R) h_TrigHLT->Fill(20);
-	if (TrigHLT_HLT_DoublePhoton15_L1R) h_TrigHLT->Fill(21);
-	if (TrigHLT_HLT_DoublePhoton20_L1R) h_TrigHLT->Fill(22);
+	//	if (TrigHLT_HLT_MinBiasBSC>0) h_TrigHLT->Fill(0);
+	//	if (TrigHLT_HLT_MinBiasBSC_NoBPTX>0) h_TrigHLT->Fill(1);
+	//	if (TrigHLT_HLT_MinBiasBSC_OR>0) h_TrigHLT->Fill(2);
+	//	if (TrigHLT_HLT_L1_BscMinBiasOR_BptxPlusORMinus>0) h_TrigHLT->Fill(3);
+	if (TrigHLT_HLT_L1SingleEG2>0) h_TrigHLT->Fill(0);
+	if (TrigHLT_HLT_L1SingleEG5>0) h_TrigHLT->Fill(1);
+	if (TrigHLT_HLT_L1SingleEG8>0) h_TrigHLT->Fill(2);
+	if (TrigHLT_HLT_L1DoubleEG5>0) h_TrigHLT->Fill(3);
+	if (TrigHLT_HLT_Photon10_L1R>0) h_TrigHLT->Fill(4);
+	if (TrigHLT_HLT_Photon10_Cleaned_L1R>0) h_TrigHLT->Fill(5);
+	if (TrigHLT_HLT_Photon15_L1R>0) h_TrigHLT->Fill(6);
+	if (TrigHLT_HLT_Photon15_Cleaned_L1R>0) h_TrigHLT->Fill(7);
+	if (TrigHLT_HLT_Photon15_LooseEcalIso_L1R>0) h_TrigHLT->Fill(8);
+	if (TrigHLT_HLT_Photon15_LooseEcalIso_Cleaned_L1R>0) h_TrigHLT->Fill(9);
+	if (TrigHLT_HLT_Photon15_TrackIso_L1R>0) h_TrigHLT->Fill(10);
+	if (TrigHLT_HLT_Photon15_TrackIso_Cleaned_L1R>0) h_TrigHLT->Fill(11);
+	if (TrigHLT_HLT_Photon20_L1R>0) h_TrigHLT->Fill(12);
+	if (TrigHLT_HLT_Photon20_Cleaned_L1R>0) h_TrigHLT->Fill(13);
+	if (TrigHLT_HLT_Photon30_L1R>0) h_TrigHLT->Fill(14);
+	if (TrigHLT_HLT_Photon30_Cleaned_L1R>0) h_TrigHLT->Fill(15);
+	if (TrigHLT_HLT_Photon30_L1R_8E29>0) h_TrigHLT->Fill(16);
+	if (TrigHLT_HLT_Photon50_L1R>0) h_TrigHLT->Fill(17);
+	if (TrigHLT_HLT_Photon50_Cleaned_L1R>0) h_TrigHLT->Fill(18);
+	if (TrigHLT_HLT_DoublePhoton5_L1R>0) h_TrigHLT->Fill(19);
+	if (TrigHLT_HLT_DoublePhoton10_L1R>0) h_TrigHLT->Fill(20);
+	if (TrigHLT_HLT_DoublePhoton15_L1R>0) h_TrigHLT->Fill(21);
+	if (TrigHLT_HLT_DoublePhoton20_L1R>0) h_TrigHLT->Fill(22);
 
 
 	h_Photon1_pt->Fill(Photon1_pt);
