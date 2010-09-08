@@ -51,7 +51,7 @@ root -b <<!
 else
 root -b <<!
 .L make_diphoton_plots.C
- merge();
+ merge("${SAMPLE}");
  .q
 !
 SAMPLE=${SAMPLE}_all;
