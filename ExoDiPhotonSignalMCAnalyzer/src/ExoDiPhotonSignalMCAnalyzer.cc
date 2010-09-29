@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Wed Jun 16 17:06:28 CEST 2010
-// $Id: ExoDiPhotonSignalMCAnalyzer.cc,v 1.1 2010/09/29 09:09:40 chenders Exp $
+// $Id: ExoDiPhotonSignalMCAnalyzer.cc,v 1.2 2010/09/29 09:20:50 chenders Exp $
 //
 //
 
@@ -78,142 +78,21 @@
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 
+// new CommonClasses approach
+// these objects are all in the namespace 'ExoDiPhotons'
+#include "DiPhotonAnalysis/CommonClasses/interface/RecoPhotonInfo.h"
+#include "DiPhotonAnalysis/CommonClasses/interface/MCTrueObjectInfo.h"
+#include "DiPhotonAnalysis/CommonClasses/interface/TriggerInfo.h"
+#include "DiPhotonAnalysis/CommonClasses/interface/PhotonID.h"
+#include "DiPhotonAnalysis/CommonClasses/interface/EventAndVertexInfo.h"
+#include "DiPhotonAnalysis/CommonClasses/interface/DiphotonInfo.h"
+
+
 using namespace std;
 
 //
 // class declaration
 //
-
-//structs for my output tree info
-
-
-struct eventInfo_t{
-  int run;
-  int LS;
-  int evnum;
-};
-
-
-
-struct vtxInfo_t{
-  int Nvtx; // number of reco vertices in event
-  // but I will only keep the info of the best two, I think
-  double vx;
-  double vy;
-  double vz;
-  int isFake;
-  int Ntracks;
-  double sumPtTracks;
-  // ************* chi2 or some other quality criteria *****************
-  // these are the two vars used in GoodVertexFilter module
-  double ndof;
-  double d0; 
-
-};
-
-// for mc truth info, want to match to both status 3 and status 1 objects
-
-// what if there is more than one status 1 object in a reasonable dR cone?
-
-struct mcTrueObjectInfo_t {
-  int status; // will be 3 or 1 
-  int PdgId;
-  int MotherPdgId;
-  int GrandmotherPdgId; 
-  double pt;
-  double eta;
-  double phi;
-  //store deltaR of the match?
-};
-
-struct recoPhotonInfo_t {
-  double pt;
-  double eta;
-  double phi;
-  // position in ECAL  - caloPosition;
-  double detEta;
-  double detPhi; // clearly should be identical to phi, so am using as sort of cross-check 
-  // which detector channel, specifically?
-  //useful to cross check channel masking and look for problem channels, etc, I think
-
-
-  //double check the vertex assigned to the photon candidate
-  double vx;
-  double vy;
-  double vz;
-  
-
-  //shower shape variables
-  double r9;
-  double sigmaIetaIeta;
-  double sigmaEtaEta;
-  double maxEnergyXtal;
-  // eNxN ...
-  double e1x5;
-  double e2x5;
-  double e3x3;
-  double e5x5;
-  double r1x5;
-  double r2x5;
-
-  // swiss-cross style info
-  double eLeft;
-  double eRight;
-  double eBottom;
-  double eTop;
-  double eSwissCross;
-  double eTwo; // this is eMax + highest of {eLeft,eRight,eBottom,eTop}
-  
-  double hadOverEm; 
-  // note also that two hadronic depths are available
-  double hadDepth1OverEm; 
-  double hadDepth2OverEm; 
-
-
-  //isolation variables
-  // these have different options: cone size, hollowness, etc
-  // must include them all!
-  float hcalIso04;
-  float hcalIso03;
-  float ecalIso04;
-  float ecalIso03;
-  float trkIsoSumPtHollow04;
-  float trkIsoSumPtSolid04;
-  int trkIsoNtrksHollow04;
-  int trkIsoNtrksSolid04;
-  float trkIsoSumPtHollow03;
-  float trkIsoSumPtSolid03;
-  int trkIsoNtrksHollow03;
-  int trkIsoNtrksSolid03;
-
-  // supercluster info
-  double scRawEnergy;
-  double scPreshowerEnergy;
-  double scPhiWidth;
-  double scEtaWidth;
-  int scNumBasicClusters; // number of basic clusters comprising superCluster
-
-  // seed cluster info
-  
-  
-  //fiducial flags
-  bool isEB;//Photon is in EB
-  bool isEE;//Photon is in EE
-  bool isEBEtaGap;//Photon is in supermodule/supercrystal eta gap in EB
-  bool isEBPhiGap;//Photon is in supermodule/supercrystal phi gap in EB
-  bool isEERingGap;//Photon is in crystal ring gap in EE
-  bool isEEDeeGap;//Photon is in crystal dee gap in EE
-  bool isEBEEGap;//Photon is in border between EB and EE.
-
-  // pixel seed match?
-  bool hasPixelSeed;
-  // note to self: weird problems with this var in middle of struct - try at end
-
-  bool isTight; // convenient to evaluate this here, and store result in tree
-  // clearly the tightID needs to be hardcoded here, in that case
-  
-};
-
 
 
 class ExoDiPhotonSignalMCAnalyzer : public edm::EDAnalyzer {
@@ -227,15 +106,12 @@ class ExoDiPhotonSignalMCAnalyzer : public edm::EDAnalyzer {
       virtual void analyze(const edm::Event&, const edm::EventSetup&);
       virtual void endJob() ;
 
-  // my functions
-  bool isTightPhoton(const reco::Photon *photon); // handy way to add tightID as bool in tree
-
-
       // ----------member data ---------------------------
   
   // input tags and parameters
       edm::InputTag      fPhotonTag;       //select photon collection 
       double             fMin_pt;          // min pt cut (photons)
+      edm::InputTag      fHltInputTag;     // hltResults
 
       // tools for clusters
       std::auto_ptr<EcalClusterLazyTools> lazyTools_;
@@ -244,12 +120,19 @@ class ExoDiPhotonSignalMCAnalyzer : public edm::EDAnalyzer {
       // my Tree
       TTree *fTree;
 
-      eventInfo_t fEventInfo;
-      vtxInfo_t fVtxInfo;
-      mcTrueObjectInfo_t fSignalPhoton1Info; // leading signal photon
-      mcTrueObjectInfo_t fSignalPhoton2Info;
-      recoPhotonInfo_t fRecoPhotonInfo1; // leading matched reco photon 
-      recoPhotonInfo_t fRecoPhotonInfo2; // second photon
+      ExoDiPhotons::eventInfo_t fEventInfo;
+      ExoDiPhotons::vtxInfo_t fVtxInfo;
+      ExoDiPhotons::beamSpotInfo_t fBeamSpotInfo;
+
+      ExoDiPhotons::hltTrigInfo_t fHLTInfo;
+
+      ExoDiPhotons::mcTrueObjectInfo_t fSignalPhoton1Info; // leading signal photon
+      ExoDiPhotons::mcTrueObjectInfo_t fSignalPhoton2Info;
+      ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo1; // leading matched reco photon 
+      ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo2; // second photon
+
+      ExoDiPhotons::diphotonInfo_t fDiphotonSignalInfo;
+      ExoDiPhotons::diphotonInfo_t fDiphotonRecoInfo;
 };
 
 //
@@ -265,27 +148,40 @@ class ExoDiPhotonSignalMCAnalyzer : public edm::EDAnalyzer {
 //
 ExoDiPhotonSignalMCAnalyzer::ExoDiPhotonSignalMCAnalyzer(const edm::ParameterSet& iConfig)
   : fPhotonTag(iConfig.getUntrackedParameter<edm::InputTag>("photonCollection")),
-    fMin_pt(iConfig.getUntrackedParameter<double>("ptMin"))
+    fMin_pt(iConfig.getUntrackedParameter<double>("ptMin")),
+    // note that the HLT process name can vary for different MC samples
+    // so be sure to adjsut correctly in cfg
+    fHltInputTag(iConfig.getUntrackedParameter<edm::InputTag>("hltResults"))
+
 {
    //now do what ever initialization is needed
 
   edm::Service<TFileService> fs;
   fTree = fs->make<TTree>("fTree","PhotonTree");
 
-  fTree->Branch("Event",&fEventInfo,"run/I:LS:evnum");
-  fTree->Branch("Vtx",&fVtxInfo,"Nvtx/I:vx/D:vy:vz:isFake/I:Ntracks/I:sumPtTracks/D:ndof:d0");
-  fTree->Branch("SignalPhoton1",&fSignalPhoton1Info,"status/I:PdgId:MotherPdgId:GrandmotherPdgId:pt/D:eta/D:phi/D");
-  fTree->Branch("SignalPhoton2",&fSignalPhoton2Info,"status/I:PdgId:MotherPdgId:GrandmotherPdgId:pt/D:eta/D:phi/D");
+  // now with CommonClasses, use the string defined in the header
 
-  //try pixel seed at end -seems to work better with all booleans at end of branch!
-  fTree->Branch("MatchRecoPhoton1",&fRecoPhotonInfo1,"pt/D:eta:phi:detEta:detPhi:vx:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:eLeft:eRight:eBottom:eTop:eSwissCross:eTwo:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:isTight");
+  fTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
+  fTree->Branch("Vtx",&fVtxInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
+  fTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
+  fTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
 
-  fTree->Branch("MatchRecoPhoton2",&fRecoPhotonInfo2,"pt/D:eta:phi:detEta:detPhi:vx:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:eLeft:eRight:eBottom:eTop:eSwissCross:eTwo:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:isTight");
+
+  fTree->Branch("SignalPhoton1",&fSignalPhoton1Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
+  fTree->Branch("SignalPhoton2",&fSignalPhoton2Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
+
+
+  fTree->Branch("MatchRecoPhoton1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+
+  fTree->Branch("MatchRecoPhoton2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
 
   // signal diphoton info? eg to probe true MC width?
   // reco diphoton info?
 
- 
+   fTree->Branch("DiphotonSignal",&fDiphotonSignalInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+   fTree->Branch("DiphotonReco",&fDiphotonRecoInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+
+
 
 }
 
@@ -302,45 +198,6 @@ ExoDiPhotonSignalMCAnalyzer::~ExoDiPhotonSignalMCAnalyzer()
 //
 // member functions
 //
-bool ExoDiPhotonSignalMCAnalyzer::isTightPhoton(const reco::Photon *photon)
-{
-  bool result = false;
-
-  // these cuts are just hardcoded for now ...
-
-  bool hadOverEmResult = false;
-  bool trkIsoResult =false;
-  bool hcalIsoResult = false;
-  bool ecalIsoResult = false;
-  bool noPixelSeedResult = false;
-  bool sigmaIetaIetaResult = false;
-  
-  if(photon->hadronicOverEm()<0.05)
-    hadOverEmResult = true;
-
-
-  double trkIsoCut = 2.0 + 0.001*photon->et();
-  if(photon->trkSumPtHollowConeDR04()<trkIsoCut)
-    trkIsoResult = true;
-
-  double hcalIsoCut = 2.2 + 0.001*photon->et();
-  if(photon->hcalTowerSumEtConeDR04()<hcalIsoCut) 
-    hcalIsoResult = true;
-
-  double ecalIsoCut = 4.2 + 0.003*photon->et();
-  if(photon->ecalRecHitSumEtConeDR04()<ecalIsoCut)
-    ecalIsoResult = true;
-
-  if(photon->hasPixelSeed()==false)
-    noPixelSeedResult = true; // ie it is true that it does NOT have a pixel seed!
-
-  // sigmaIetaIeta should be included in tight photon ID too soon ...
-
-  if(hadOverEmResult && trkIsoResult && ecalIsoResult && hcalIsoResult && noPixelSeedResult) 
-    result = true;
-
-  return result; 
-}
 
 
 
@@ -352,9 +209,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    using namespace edm;
 
    // basic event info
-   fEventInfo.run = iEvent.id().run();
-   fEventInfo.LS = iEvent.id().luminosityBlock();
-   fEventInfo.evnum = iEvent.id().event();
+   ExoDiPhotons::FillEventInfo(fEventInfo,iEvent);
 
    // get the vertex collection
    Handle<reco::VertexCollection> vertexColl;
@@ -409,16 +264,58 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    }// end vertex loop
 
    if(vertex1) {
-     fVtxInfo.vx = vertex1->x();
-     fVtxInfo.vy = vertex1->y();
-     fVtxInfo.vz = vertex1->z();
-     fVtxInfo.isFake = vertex1->isFake(); 
-     fVtxInfo.Ntracks = vertex1->tracksSize();
+
+     ExoDiPhotons::FillVertexInfo(fVtxInfo,vertex1);
+     // fill the SumPt Tracks separately for now
      fVtxInfo.sumPtTracks = highestSumPtTracks1;
-     fVtxInfo.ndof = vertex1->ndof();
-     fVtxInfo.d0 = vertex1->position().rho();
      
    }
+
+   //beam spot
+
+   reco::BeamSpot beamSpot;
+   edm::Handle<reco::BeamSpot> beamSpotHandle;
+   iEvent.getByLabel("offlineBeamSpot", beamSpotHandle);
+
+   fBeamSpotInfo.x0 = -99999999.99;
+   fBeamSpotInfo.y0 = -99999999.99;
+   fBeamSpotInfo.z0 = -99999999.99;
+   fBeamSpotInfo.sigmaZ = -99999999.99;
+   fBeamSpotInfo.x0error = -99999999.99;
+   fBeamSpotInfo.y0error = -99999999.99;
+   fBeamSpotInfo.z0error = -99999999.99;
+   fBeamSpotInfo.sigmaZ0error = -99999999.99;
+
+   if(beamSpotHandle.isValid()) {
+     beamSpot = *beamSpotHandle;
+     ExoDiPhotons::FillBeamSpotInfo(fBeamSpotInfo,beamSpot);
+   }
+
+
+   // L1 info
+
+   // HLT info
+
+   Handle<TriggerResults> hltResultsHandle;
+   iEvent.getByLabel(fHltInputTag,hltResultsHandle);
+
+   if(!hltResultsHandle.isValid()) {
+     cout << "HLT results not valid!" <<endl;
+     cout << "Couldnt find TriggerResults with input tag " << fHltInputTag << endl;
+     return;
+   }
+
+   const TriggerResults *hltResults = hltResultsHandle.product();
+   //   cout << *hltResults <<endl;
+   // this way of getting triggerNames should work, even when the 
+   // trigger menu changes from one run to the next
+   // alternatively, one could also use the HLTConfigPovider
+   const TriggerNames & hltNames = iEvent.triggerNames(*hltResults);
+
+   // now we just use the FillHLTInfo() function from TrigInfo.h:
+   ExoDiPhotons::FillHLTInfo(fHLTInfo,hltResults,hltNames);
+
+
 
 
    // ecal information
@@ -434,6 +331,20 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    } else {
      recHitsEB = recHitsEB_h.product();
    }
+
+
+   edm::Handle<EcalRecHitCollection> recHitsEE_h;
+   iEvent.getByLabel(edm::InputTag("ecalRecHit:EcalRecHitsEE"), recHitsEE_h );
+   const EcalRecHitCollection * recHitsEE = 0;
+   if ( ! recHitsEE_h.isValid() ) {
+     LogError("ExoDiPhotonAnalyzer") << " ECAL Endcap RecHit Collection not available !"; return;
+   } else {
+     recHitsEE = recHitsEE_h.product();
+   }
+
+   edm::ESHandle<EcalChannelStatus> chStatus;
+   iSetup.get<EcalChannelStatusRcd>().get(chStatus);
+   const EcalChannelStatus *ch_status = chStatus.product(); 
 
 
 
@@ -627,23 +538,25 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    }
    
    if(signalPhoton1) {
-     fSignalPhoton1Info.status = signalPhoton1->status();
-     fSignalPhoton1Info.PdgId = signalPhoton1->pdgId();
-     fSignalPhoton1Info.MotherPdgId = signalPhoton1->mother()->pdgId();
-     fSignalPhoton1Info.GrandmotherPdgId = signalPhoton1->mother()->mother()->pdgId();
-     fSignalPhoton1Info.pt = signalPhoton1->pt();
-     fSignalPhoton1Info.eta = signalPhoton1->eta();
-     fSignalPhoton1Info.phi = signalPhoton1->phi();
+     ExoDiPhotons::FillMCTrueObjectInfo(fSignalPhoton1Info,signalPhoton1);
+//      fSignalPhoton1Info.status = signalPhoton1->status();
+//      fSignalPhoton1Info.PdgId = signalPhoton1->pdgId();
+//      fSignalPhoton1Info.MotherPdgId = signalPhoton1->mother()->pdgId();
+//      fSignalPhoton1Info.GrandmotherPdgId = signalPhoton1->mother()->mother()->pdgId();
+//      fSignalPhoton1Info.pt = signalPhoton1->pt();
+//      fSignalPhoton1Info.eta = signalPhoton1->eta();
+//      fSignalPhoton1Info.phi = signalPhoton1->phi();
    }
 
    if(signalPhoton2) {
-     fSignalPhoton2Info.status = signalPhoton2->status();
-     fSignalPhoton2Info.PdgId = signalPhoton2->pdgId();
-     fSignalPhoton2Info.MotherPdgId = signalPhoton2->mother()->pdgId();
-     fSignalPhoton2Info.GrandmotherPdgId = signalPhoton2->mother()->mother()->pdgId();
-     fSignalPhoton2Info.pt = signalPhoton2->pt();
-     fSignalPhoton2Info.eta = signalPhoton2->eta();
-     fSignalPhoton2Info.phi = signalPhoton2->phi();		 
+     ExoDiPhotons::FillMCTrueObjectInfo(fSignalPhoton2Info,signalPhoton2);
+//      fSignalPhoton2Info.status = signalPhoton2->status();
+//      fSignalPhoton2Info.PdgId = signalPhoton2->pdgId();
+//      fSignalPhoton2Info.MotherPdgId = signalPhoton2->mother()->pdgId();
+//      fSignalPhoton2Info.GrandmotherPdgId = signalPhoton2->mother()->mother()->pdgId();
+//      fSignalPhoton2Info.pt = signalPhoton2->pt();
+//      fSignalPhoton2Info.eta = signalPhoton2->eta();
+//      fSignalPhoton2Info.phi = signalPhoton2->phi();		 
    }
    
       // if no match found, then the match photon pointers are certainly NULL
@@ -659,96 +572,9 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 //      cout << endl;
 
      // fill info into tree
-     fRecoPhotonInfo1.pt = matchPhoton1->et();
-     fRecoPhotonInfo1.eta = matchPhoton1->eta();
-     fRecoPhotonInfo1.phi = matchPhoton1->phi();
-
-     fRecoPhotonInfo1.detEta = matchPhoton1->caloPosition().eta();
-     fRecoPhotonInfo1.detPhi = matchPhoton1->caloPosition().phi();     
-
-     fRecoPhotonInfo1.vx = matchPhoton1->vx();
-     fRecoPhotonInfo1.vy = matchPhoton1->vy();
-     fRecoPhotonInfo1.vz = matchPhoton1->vz();
-
-
-     fRecoPhotonInfo1.r9 = matchPhoton1->r9();
-     fRecoPhotonInfo1.sigmaIetaIeta = matchPhoton1->sigmaIetaIeta();
-     fRecoPhotonInfo1.sigmaEtaEta = matchPhoton1->sigmaEtaEta();
-     fRecoPhotonInfo1.maxEnergyXtal = matchPhoton1->maxEnergyXtal();
-
-     fRecoPhotonInfo1.e1x5 = matchPhoton1->e1x5();
-     fRecoPhotonInfo1.e2x5 = matchPhoton1->e2x5();
-     fRecoPhotonInfo1.e3x3 = matchPhoton1->e3x3();
-     fRecoPhotonInfo1.e5x5 = matchPhoton1->e5x5();
-     fRecoPhotonInfo1.r1x5 = matchPhoton1->r1x5();
-     fRecoPhotonInfo1.r2x5 = matchPhoton1->r2x5();
-
-     // swiss cross related
-     reco::SuperClusterRef sc = matchPhoton1->superCluster();
-     std::pair<DetId,float> maxc = lazyTools_->getMaximum(*sc);
-     double scross = -999.99;
-     if (maxc.first.subdetId() == EcalBarrel) 
-       scross = EcalSeverityLevelAlgo::swissCross(maxc.first, (*recHitsEB), 0);
-     fRecoPhotonInfo1.eSwissCross = scross;
-     fRecoPhotonInfo1.eLeft = lazyTools_->eLeft(*sc);
-     fRecoPhotonInfo1.eRight = lazyTools_->eRight(*sc);
-     fRecoPhotonInfo1.eBottom = lazyTools_->eBottom(*sc);
-     fRecoPhotonInfo1.eTop = lazyTools_->eTop(*sc);
      
-     // sum of the max + highest of the {left,right,bottom,top}
-     std::vector<double> eAround;
-     eAround.push_back(lazyTools_->eLeft(*sc));
-     eAround.push_back(lazyTools_->eRight(*sc));
-     eAround.push_back(lazyTools_->eBottom(*sc));
-     eAround.push_back(lazyTools_->eTop(*sc));
-     sort(eAround.begin(),eAround.end());
-     reverse(eAround.begin(),eAround.end());
-     fRecoPhotonInfo1.eTwo = lazyTools_->eMax(*sc)+eAround[0];
+     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,matchPhoton1,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
 
-     cout << "Swiss cross = " << fRecoPhotonInfo1.eSwissCross;
-     cout << "; eTwo/e5x5 = " << fRecoPhotonInfo1.eTwo/fRecoPhotonInfo1.e5x5;
-     cout<< endl;
-
-     fRecoPhotonInfo1.hadOverEm = matchPhoton1->hadronicOverEm();
-     fRecoPhotonInfo1.hadDepth1OverEm = matchPhoton1->hadronicDepth1OverEm();
-     fRecoPhotonInfo1.hadDepth2OverEm = matchPhoton1->hadronicDepth2OverEm();
-     
-     fRecoPhotonInfo1.ecalIso04 = matchPhoton1->ecalRecHitSumEtConeDR04();
-     fRecoPhotonInfo1.ecalIso03 = matchPhoton1->ecalRecHitSumEtConeDR03();
-     fRecoPhotonInfo1.hcalIso04 = matchPhoton1->hcalTowerSumEtConeDR04();
-     fRecoPhotonInfo1.hcalIso03 = matchPhoton1->hcalTowerSumEtConeDR03();
-
-     fRecoPhotonInfo1.trkIsoSumPtHollow04 = matchPhoton1->trkSumPtHollowConeDR04();
-     fRecoPhotonInfo1.trkIsoSumPtSolid04 = matchPhoton1->trkSumPtSolidConeDR04();
-     fRecoPhotonInfo1.trkIsoNtrksHollow04 = matchPhoton1->nTrkHollowConeDR04();
-     fRecoPhotonInfo1.trkIsoNtrksSolid04 = matchPhoton1->nTrkSolidConeDR04();
-     
-     fRecoPhotonInfo1.trkIsoSumPtHollow03 = matchPhoton1->trkSumPtHollowConeDR03();
-     fRecoPhotonInfo1.trkIsoSumPtSolid03 = matchPhoton1->trkSumPtSolidConeDR03();
-     fRecoPhotonInfo1.trkIsoNtrksHollow03 = matchPhoton1->nTrkHollowConeDR03();
-     fRecoPhotonInfo1.trkIsoNtrksSolid03 = matchPhoton1->nTrkSolidConeDR03();
-
-     fRecoPhotonInfo1.hasPixelSeed = matchPhoton1->hasPixelSeed();
-
-     fRecoPhotonInfo1.isEB        = matchPhoton1->isEB();        
-     fRecoPhotonInfo1.isEE	 = matchPhoton1->isEE();	 
-     fRecoPhotonInfo1.isEBEtaGap	 = matchPhoton1->isEBEtaGap();	 
-     fRecoPhotonInfo1.isEBPhiGap	 = matchPhoton1->isEBPhiGap();	 
-     fRecoPhotonInfo1.isEERingGap = matchPhoton1->isEERingGap(); 
-     fRecoPhotonInfo1.isEEDeeGap	 = matchPhoton1->isEEDeeGap();	 
-     fRecoPhotonInfo1.isEBEEGap   = matchPhoton1->isEBEEGap();
-     
-     fRecoPhotonInfo1.scRawEnergy = matchPhoton1->superCluster()->rawEnergy();
-     fRecoPhotonInfo1.scPreshowerEnergy = matchPhoton1->superCluster()->preshowerEnergy();
-     fRecoPhotonInfo1.scPhiWidth = matchPhoton1->superCluster()->phiWidth();
-     fRecoPhotonInfo1.scEtaWidth = matchPhoton1->superCluster()->etaWidth();
-     fRecoPhotonInfo1.scNumBasicClusters = matchPhoton1->superCluster()->clustersSize();
-
-
-     // also to add seed cluster info
-     
-     // check tight ID
-     fRecoPhotonInfo1.isTight = isTightPhoton(matchPhoton1);
 
    }
    else {
@@ -770,93 +596,8 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 //      cout << endl;
 
      // fill info into tree
-     fRecoPhotonInfo2.pt = matchPhoton2->et();
-     fRecoPhotonInfo2.eta = matchPhoton2->eta();
-     fRecoPhotonInfo2.phi = matchPhoton2->phi();
+     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,matchPhoton2,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
 
-     fRecoPhotonInfo2.detEta = matchPhoton2->caloPosition().eta();
-     fRecoPhotonInfo2.detPhi = matchPhoton2->caloPosition().phi();     
-
-     fRecoPhotonInfo2.vx = matchPhoton2->vx();
-     fRecoPhotonInfo2.vy = matchPhoton2->vy();
-     fRecoPhotonInfo2.vz = matchPhoton2->vz();
-
-
-     fRecoPhotonInfo2.r9 = matchPhoton2->r9();
-     fRecoPhotonInfo2.sigmaIetaIeta = matchPhoton2->sigmaIetaIeta();
-     fRecoPhotonInfo2.sigmaEtaEta = matchPhoton2->sigmaEtaEta();
-     fRecoPhotonInfo2.maxEnergyXtal = matchPhoton2->maxEnergyXtal();
-
-     fRecoPhotonInfo2.e1x5 = matchPhoton2->e1x5();
-     fRecoPhotonInfo2.e2x5 = matchPhoton2->e2x5();
-     fRecoPhotonInfo2.e3x3 = matchPhoton2->e3x3();
-     fRecoPhotonInfo2.e5x5 = matchPhoton2->e5x5();
-     fRecoPhotonInfo2.r1x5 = matchPhoton2->r1x5();
-     fRecoPhotonInfo2.r2x5 = matchPhoton2->r2x5();
-
-     // swiss cross related
-     reco::SuperClusterRef sc = matchPhoton2->superCluster();
-     std::pair<DetId,float> maxc = lazyTools_->getMaximum(*sc);
-     double scross = -999.99;
-     if (maxc.first.subdetId() == EcalBarrel) 
-       scross = EcalSeverityLevelAlgo::swissCross(maxc.first, (*recHitsEB), 0);
-     fRecoPhotonInfo2.eSwissCross = scross;
-     fRecoPhotonInfo2.eLeft = lazyTools_->eLeft(*sc);
-     fRecoPhotonInfo2.eRight = lazyTools_->eRight(*sc);
-     fRecoPhotonInfo2.eBottom = lazyTools_->eBottom(*sc);
-     fRecoPhotonInfo2.eTop = lazyTools_->eTop(*sc);
-     
-     // sum of the max + highest of the {left,right,bottom,top}
-     std::vector<double> eAround;
-     eAround.push_back(lazyTools_->eLeft(*sc));
-     eAround.push_back(lazyTools_->eRight(*sc));
-     eAround.push_back(lazyTools_->eBottom(*sc));
-     eAround.push_back(lazyTools_->eTop(*sc));
-     sort(eAround.begin(),eAround.end());
-     reverse(eAround.begin(),eAround.end());
-     fRecoPhotonInfo2.eTwo = lazyTools_->eMax(*sc)+eAround[0];
-
-     cout << "Swiss cross = " << fRecoPhotonInfo2.eSwissCross;
-     cout << "; eTwo/e5x5 = " << fRecoPhotonInfo2.eTwo/fRecoPhotonInfo2.e5x5;
-     cout<< endl;
-
-     fRecoPhotonInfo2.hadOverEm = matchPhoton2->hadronicOverEm();
-     fRecoPhotonInfo2.hadDepth1OverEm = matchPhoton2->hadronicDepth1OverEm();
-     fRecoPhotonInfo2.hadDepth2OverEm = matchPhoton2->hadronicDepth2OverEm();
-     
-     fRecoPhotonInfo2.ecalIso04 = matchPhoton2->ecalRecHitSumEtConeDR04();
-     fRecoPhotonInfo2.ecalIso03 = matchPhoton2->ecalRecHitSumEtConeDR03();
-     fRecoPhotonInfo2.hcalIso04 = matchPhoton2->hcalTowerSumEtConeDR04();
-     fRecoPhotonInfo2.hcalIso03 = matchPhoton2->hcalTowerSumEtConeDR03();
-
-     fRecoPhotonInfo2.trkIsoSumPtHollow04 = matchPhoton2->trkSumPtHollowConeDR04();
-     fRecoPhotonInfo2.trkIsoSumPtSolid04 = matchPhoton2->trkSumPtSolidConeDR04();
-     fRecoPhotonInfo2.trkIsoNtrksHollow04 = matchPhoton2->nTrkHollowConeDR04();
-     fRecoPhotonInfo2.trkIsoNtrksSolid04 = matchPhoton2->nTrkSolidConeDR04();
-     
-     fRecoPhotonInfo2.trkIsoSumPtHollow03 = matchPhoton2->trkSumPtHollowConeDR03();
-     fRecoPhotonInfo2.trkIsoSumPtSolid03 = matchPhoton2->trkSumPtSolidConeDR03();
-     fRecoPhotonInfo2.trkIsoNtrksHollow03 = matchPhoton2->nTrkHollowConeDR03();
-     fRecoPhotonInfo2.trkIsoNtrksSolid03 = matchPhoton2->nTrkSolidConeDR03();
-
-     fRecoPhotonInfo2.hasPixelSeed = matchPhoton2->hasPixelSeed();
-
-     fRecoPhotonInfo2.isEB        = matchPhoton2->isEB();        
-     fRecoPhotonInfo2.isEE	 = matchPhoton2->isEE();	 
-     fRecoPhotonInfo2.isEBEtaGap	 = matchPhoton2->isEBEtaGap();	 
-     fRecoPhotonInfo2.isEBPhiGap	 = matchPhoton2->isEBPhiGap();	 
-     fRecoPhotonInfo2.isEERingGap = matchPhoton2->isEERingGap(); 
-     fRecoPhotonInfo2.isEEDeeGap	 = matchPhoton2->isEEDeeGap();	 
-     fRecoPhotonInfo2.isEBEEGap   = matchPhoton2->isEBEEGap();
-     
-     fRecoPhotonInfo2.scRawEnergy = matchPhoton2->superCluster()->rawEnergy();
-     fRecoPhotonInfo2.scPreshowerEnergy = matchPhoton2->superCluster()->preshowerEnergy();
-     fRecoPhotonInfo2.scPhiWidth = matchPhoton2->superCluster()->phiWidth();
-     fRecoPhotonInfo2.scEtaWidth = matchPhoton2->superCluster()->etaWidth();
-     fRecoPhotonInfo2.scNumBasicClusters = matchPhoton2->superCluster()->clustersSize();
-
-     // check tight ID
-     fRecoPhotonInfo2.isTight = isTightPhoton(matchPhoton2);
    }
    else {
      //     cout << "No match to signal photon2!" <<endl;
@@ -868,6 +609,24 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 
    //   cout << endl;
    //   cout << endl;
+
+
+   // put in diphoton info?
+   // (both for signal and reco photons?)
+
+   // fill diphoton info
+
+   // start with silly values
+   fDiphotonSignalInfo.Minv = -9999.99;
+   fDiphotonRecoInfo.Minv = -9999.99;
+
+   if(signalPhoton1&&signalPhoton2) {
+     ExoDiPhotons::FillDiphotonInfo(fDiphotonSignalInfo,signalPhoton1,signalPhoton2);
+   }
+
+   if(matchPhoton1&&matchPhoton2) {
+     ExoDiPhotons::FillDiphotonInfo(fDiphotonRecoInfo,matchPhoton1,matchPhoton2);
+   }
 
 
 

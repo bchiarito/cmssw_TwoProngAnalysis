@@ -10,7 +10,7 @@ process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
 #        'file:myfile.root'
-    'file:RSGravToGG_kMpl001_M-1000_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO_50events.root'
+    'rfio:/castor/cern.ch/user/c/chenders/DiPhotons/RSGravitons/RSGravToGG_kMpl001_M-1000_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO_50events.root'
     )
 )
 
