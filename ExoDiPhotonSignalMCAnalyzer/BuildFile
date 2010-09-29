@@ -1,0 +1,28 @@
+<use name=FWCore/Framework>
+<use name=FWCore/PluginManager>
+<use name=FWCore/ParameterSet>
+<use name=DataFormats/EgammaCandidates>
+<use name=DataFormats/Math>
+<use name=CommonTools/UtilAlgos>
+<use name=DataFormats/VertexReco>
+<use name=DataFormats/BeamSpot>
+<use name=L1Trigger/GlobalTriggerAnalyzer>
+<use name=SimDataFormats/GeneratorProducts>
+<use name=DataFormats/HepMCCandidate>
+<use name=RecoEcal/EgammaCoreTools>
+<flags EDM_PLUGIN=1>
+<export>
+   <lib name=DiPhotonAnalysisExoDiPhotonSignalMCAnalyzer>
+   <use name=FWCore/Framework>
+   <use name=FWCore/PluginManager>
+   <use name=FWCore/ParameterSet>
+   <use name=DataFormats/EgammaCandidates>
+   <use name=DataFormats/Math>
+   <use name=CommonTools/UtilAlgos>
+   <use name=DataFormats/VertexReco>
+   <use name=DataFormats/BeamSpot>
+   <use name=L1Trigger/GlobalTriggerAnalyzer>
+   <use name=SimDataFormats/GeneratorProducts>
+   <use name=DataFormats/HepMCCandidate>
+   <use name=RecoEcal/EgammaCoreTools>
+</export>
