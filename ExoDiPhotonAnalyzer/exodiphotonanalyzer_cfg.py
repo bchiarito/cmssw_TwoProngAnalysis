@@ -13,15 +13,20 @@ process.source = cms.Source("PoolSource",
 #    'file:/tmp/chenders/02071949-FA40-DF11-9990-001A64789DEC.root',
 #'file:/afs/cern.ch/cms/CAF/CMSCOMM/COMM_ECAL/torimoto/0065C919-F53B-DF11-8BF5-001D09F29146.root'
         #direct from castor
-        '/store/data/Commissioning10/MinimumBias/RAW-RECO/v8/000/132/601/02071949-FA40-DF11-9990-001A64789DEC.root'
+#        '/store/data/Commissioning10/MinimumBias/RAW-RECO/v8/000/132/601/02071949-FA40-DF11-9990-001A64789DEC.root'
+    '/store/data/Run2010A/EG/RECO/v4/000/142/040/FE902386-B79C-DF11-88BF-00304879FC6C.root'
     )
 )
 
 # need to introduce the global tag now
 # because the L1GtUtils method needs to fetch records...
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
+
+#use the right global tag!
+# this is global tag for PromptReco with 36X
+process.GlobalTag.globaltag = 'GR10_P_V7::All'
 # this is the tag claimed for data reprocessing with 35X
-process.GlobalTag.globaltag = 'GR_R_35X_V8::All'
+#process.GlobalTag.globaltag = 'GR_R_35X_V8::All'
 # and this is the tag for prompt reco with 35X
 #process.GlobalTag.globaltag = 'GR10_P_V5::All'
 
@@ -38,7 +43,7 @@ process.TFileService = cms.Service("TFileService",
 process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
                                            vertexCollection = cms.InputTag('offlinePrimaryVertices'),
                                            minimumNDOF = cms.uint32(4),
-                                           maxAbsZ = cms.double(15),	
+                                           maxAbsZ = cms.double(24),	
                                            maxd0 = cms.double(2)	
 )
 #process.primaryVertexPath = cms.Path(process.primaryVertexFilter)
