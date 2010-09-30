@@ -8,41 +8,95 @@
 
 namespace ExoDiPhotons{
 
+
+  // now can apply each variable cut separately
+
+  bool passesHadOverEmCut(const reco::Photon *photon) {
+    
+    bool result = false;
+
+    if(photon->hadronicOverEm()<0.05)
+      result = true;
+
+    return result;
+  }
+
+
+  bool passesTrkIsoCut(const reco::Photon *photon) {
+    
+    bool result = false;
+
+    double trkIsoCut = 3.5 + 0.001*photon->et();
+    if(photon->trkSumPtHollowConeDR04()<trkIsoCut)
+      result = true;
+
+    return result;
+  }
+
+
+  bool passesEcalIsoCut(const reco::Photon *photon) {
+    
+    bool result = false;
+
+    double ecalIsoCut = 4.2 + 0.006*photon->et();
+    if(photon->ecalRecHitSumEtConeDR04()<ecalIsoCut)
+      result = true;
+
+    return result;
+  }
+
+
+  bool passesHcalIsoCut(const reco::Photon *photon) {
+    
+    bool result = false;
+
+    double hcalIsoCut = 2.2 + 0.0025*photon->et();
+    if(photon->hcalTowerSumEtConeDR04()<hcalIsoCut) 
+      result = true;
+
+    return result;
+  }
+
+
+  bool passesSigmaIetaIetaCut(const reco::Photon *photon) {
+    
+    bool result = false;
+
+    // sigma ieta ieta cuts different in barrel and endcap
+    if(photon->isEB()) {
+      if(photon->sigmaIetaIeta()< 0.013)
+	result = true;
+      else
+	result = false;
+    }
+    else if(photon->isEE()) {
+      if(photon->sigmaIetaIeta()< 0.030)
+	result = true;
+      else
+	result = false;
+    }
+
+    return result;
+  }
+
+
+  bool passesNoPixelSeedCut(const reco::Photon *photon) {
+    
+    bool result = false;
+
+    if(photon->hasPixelSeed()==false)
+      result = true;
+
+    return result;
+  }
+
+
+
   bool isTightPhoton(const reco::Photon *photon) {
 
     bool result = false;
 
-    // these cuts are just hardcoded for now ...
-
-    bool hadOverEmResult = false;
-    bool trkIsoResult =false;
-    bool hcalIsoResult = false;
-    bool ecalIsoResult = false;
-    bool noPixelSeedResult = false;
-    bool sigmaIetaIetaResult = false;
-  
-    if(photon->hadronicOverEm()<0.05)
-      hadOverEmResult = true;
-
-
-    double trkIsoCut = 2.0 + 0.001*photon->et();
-    if(photon->trkSumPtHollowConeDR04()<trkIsoCut)
-      trkIsoResult = true;
-
-    double hcalIsoCut = 2.2 + 0.001*photon->et();
-    if(photon->hcalTowerSumEtConeDR04()<hcalIsoCut) 
-      hcalIsoResult = true;
-
-    double ecalIsoCut = 4.2 + 0.003*photon->et();
-    if(photon->ecalRecHitSumEtConeDR04()<ecalIsoCut)
-      ecalIsoResult = true;
-
-    if(photon->hasPixelSeed()==false)
-      noPixelSeedResult = true; // ie it is true that it does NOT have a pixel seed!
-
-    // sigmaIetaIeta should be included in tight photon ID too soon ...
-
-    if(hadOverEmResult && trkIsoResult && ecalIsoResult && hcalIsoResult && noPixelSeedResult) 
+    if(passesHadOverEmCut(photon) && passesTrkIsoCut(photon) && passesEcalIsoCut(photon) && passesHcalIsoCut(photon) && passesSigmaIetaIetaCut(photon) && passesNoPixelSeedCut(photon))
       result = true;
 
     return result; 
