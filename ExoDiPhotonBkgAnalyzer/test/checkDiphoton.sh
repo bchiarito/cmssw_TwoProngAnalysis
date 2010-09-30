@@ -13,6 +13,7 @@ njobs=`crab -status | grep "Total Jobs" | awk '{print $2}'`
 
 nsubmitted=`crab -status | grep -vi job | grep -c Submitted `;
 nscheduled=`crab -status | grep -vi job | grep -c Scheduled `;
+nready=`crab -status | grep -vi job | grep -c Ready `;
 nrunning=`crab -status | grep -vi job | grep -c Running `;
 ndone=`crab -status | grep -vi job | grep -ic Done `;
 
@@ -21,7 +22,7 @@ then
     echo $SAMPLE " is done..." $ndone
     crab -get;
 else
-    echo $SAMPLE "NOT yet done..." "done:" $ndone "run:" $nrunning "scheduled:" $nscheduled "submitted:" $nsubmitted "...TOTAL:" $njobs
+    echo $SAMPLE "NOT yet done..." "done:" $ndone "run:" $nrunning "ready:" $nready "scheduled:" $nscheduled "submitted:" $nsubmitted "...TOTAL:" $njobs
 fi
 
 #cd -;
