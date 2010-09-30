@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Mon May 10 17:55:50 CEST 2010
-// $Id$
+// $Id: DiPhotonFilter.cc,v 1.1 2010/05/17 13:25:52 chenders Exp $
 //
 //
 
@@ -198,9 +198,9 @@ DiPhotonFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
       
       // Anyway, if this is true, then we have passed this event
       
-      cout << "Highest Et photon: et, eta, phi = " << photon1->et() <<", "<<photon1->eta()<< ", "<< photon1->phi()<<endl;
-      cout << "2nd Highest Et photon: et, eta, phi = " << photon2->et() <<", "<<photon2->eta()<< ", "<< photon2->phi()<<endl;      
-      cout << "This event passed" <<endl;
+      //      cout << "Highest Et photon: et, eta, phi = " << photon1->et() <<", "<<photon1->eta()<< ", "<< photon1->phi()<<endl;
+      //      cout << "2nd Highest Et photon: et, eta, phi = " << photon2->et() <<", "<<photon2->eta()<< ", "<< photon2->phi()<<endl;      
+      //      cout << "This event passed" <<endl;
 
       passEvent = true;
     }
