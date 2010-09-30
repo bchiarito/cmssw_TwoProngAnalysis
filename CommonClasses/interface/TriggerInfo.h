@@ -7,7 +7,7 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-// $Id: TriggerInfo.h,v 1.7 2010/08/24 20:29:12 chenders Exp $ 
+// $Id: TriggerInfo.h,v 1.8 2010/09/30 11:49:38 torimoto Exp $ 
 // 
 //********************************************************************
 
@@ -190,11 +190,11 @@ namespace ExoDiPhotons
       else if(hltNames.triggerName(itrig)=="HLT_Photon50_Cleaned_L1R")
 	hltInfo.HLT_Photon50_Cleaned_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_Photon50_L1R")
+	hltInfo.HLT_Photon50_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_Photon50_NoHE_L1R")
         hltInfo.HLT_Photon50_NoHE_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_Photon50_NoHE_Cleaned_L1R")
         hltInfo.HLT_Photon50_NoHE_Cleaned_L1R = (int) hltResults->accept(itrig);
-	hltInfo.HLT_Photon50_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton5_L1R")
 	hltInfo.HLT_DoublePhoton5_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton5_CEP_L1R")
