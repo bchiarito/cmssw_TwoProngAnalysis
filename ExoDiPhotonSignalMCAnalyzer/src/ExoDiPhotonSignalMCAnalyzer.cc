@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Wed Jun 16 17:06:28 CEST 2010
-// $Id: ExoDiPhotonSignalMCAnalyzer.cc,v 1.2 2010/09/29 09:20:50 chenders Exp $
+// $Id: ExoDiPhotonSignalMCAnalyzer.cc,v 1.3 2010/09/29 17:08:12 chenders Exp $
 //
 //
 
@@ -31,6 +31,8 @@
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 
+#include "FWCore/Framework/interface/ESHandle.h"
+
 // to use TfileService for histograms and trees
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
@@ -46,10 +48,24 @@
 
 // for ecal
 #include "DataFormats/DetId/interface/DetId.h"
+#include "DataFormats/EcalDetId/interface/EBDetId.h"
+#include "DataFormats/EcalDetId/interface/EEDetId.h"
 #include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
 #include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
 #include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgo.h"
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
+#include "CondFormats/DataRecord/interface/EcalChannelStatusRcd.h"
+#include "CondFormats/EcalObjects/interface/EcalChannelStatus.h"
+
+
+// geometry
+#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
+//#include "Geometry/Records/interface/IdealGeometryRecord.h"
+#include "Geometry/Records/interface/CaloGeometryRecord.h"
+//#include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
+//#include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
+//#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
+#include "Geometry/EcalAlgo/interface/EcalPreshowerGeometry.h"
 
 
 //for photons
