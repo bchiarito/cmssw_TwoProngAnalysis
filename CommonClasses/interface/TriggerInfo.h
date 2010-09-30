@@ -7,7 +7,7 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-// $Id$ 
+// $Id: TriggerInfo.h,v 1.7 2010/08/24 20:29:12 chenders Exp $ 
 // 
 //********************************************************************
 
@@ -72,19 +72,27 @@ namespace ExoDiPhotons
     int HLT_Photon15_TrackIso_Cleaned_L1R;
     int HLT_Photon20_L1R;
     int HLT_Photon20_Cleaned_L1R;
+    int HLT_Photon20_NoHE_L1R;
+    int HLT_Photon25_Cleaned_L1R;
     int HLT_Photon30_L1R;
     int HLT_Photon30_Cleaned_L1R;
     int HLT_Photon30_L1R_8E29;
     int HLT_Photon50_L1R;
     int HLT_Photon50_Cleaned_L1R;
+    int HLT_Photon50_NoHE_L1R;
+    int HLT_Photon50_NoHE_Cleaned_L1R;
     int HLT_DoublePhoton5_L1R;
+    int HLT_DoublePhoton5_CEP_L1R;
+    int HLT_DoublePhoton5_Jpsi_L1R;
+    int HLT_DoublePhoton5_Upsilon_L1R;
     int HLT_DoublePhoton10_L1R;
     int HLT_DoublePhoton15_L1R;
+    int HLT_DoublePhoton17_L1R;
     int HLT_DoublePhoton20_L1R;
   };
 
   // string for defining a tree branch for this struct
-  std::string hltTrigBranchDefString("HLT_MinBiasBSC/I:HLT_MinBiasBSC_NoBPTX:HLT_MinBiasBSC_OR:HLT_L1_BscMinBiasOR_BptxPlusORMinus:HLT_L1SingleEG2:HLT_L1SingleEG5:HLT_L1SingleEG8:HLT_L1DoubleEG5:HLT_Photon10_L1R:HLT_Photon10_Cleaned_L1R:HLT_Photon15_L1R:HLT_Photon15_Cleaned_L1R:HLT_Photon15_LooseEcalIso_L1R:HLT_Photon15_LooseEcalIso_Cleaned_L1R:HLT_Photon15_TrackIso_L1R:HLT_Photon15_TrackIso_Cleaned_L1R:HLT_Photon20_L1R:HLT_Photon20_Cleaned_L1R:HLT_Photon30_L1R:HLT_Photon30_Cleaned_L1R:HLT_Photon30_L1R_8E29:HLT_Photon50_L1R:HLT_Photon50_Cleaned_L1R:HLT_DoublePhoton5_L1R:HLT_DoublePhoton10_L1R:HLT_DoublePhoton15_L1R:HLT_DoublePhoton20_L1R");
+  std::string hltTrigBranchDefString("HLT_MinBiasBSC/I:HLT_MinBiasBSC_NoBPTX:HLT_MinBiasBSC_OR:HLT_L1_BscMinBiasOR_BptxPlusORMinus:HLT_L1SingleEG2:HLT_L1SingleEG5:HLT_L1SingleEG8:HLT_L1DoubleEG5:HLT_Photon10_L1R:HLT_Photon10_Cleaned_L1R:HLT_Photon15_L1R:HLT_Photon15_Cleaned_L1R:HLT_Photon15_LooseEcalIso_L1R:HLT_Photon15_LooseEcalIso_Cleaned_L1R:HLT_Photon15_TrackIso_L1R:HLT_Photon15_TrackIso_Cleaned_L1R:HLT_Photon20_L1R:HLT_Photon20_Cleaned_L1R:HLT_Photon20_NoHE_L1R:HLT_Photon25_Cleaned_L1R:HLT_Photon30_L1R:HLT_Photon30_Cleaned_L1R:HLT_Photon30_L1R_8E29:HLT_Photon50_L1R:HLT_Photon50_Cleaned_L1R:HLT_Photon50_NoHE_L1R:HLT_Photon50_NoHE_Cleaned_L1R:HLT_DoublePhoton5_L1R:HLT_DoublePhoton5_CEP_L1R:HLT_DoublePhoton5_Jpsi_L1R:HLT_DoublePhoton5_Upsilon_L1R:HLT_DoublePhoton10_L1R:HLT_DoublePhoton15_L1R:HLT_DoublePhoton17_L1R:HLT_DoublePhoton20_L1R");
 
 
   
@@ -115,13 +123,21 @@ namespace ExoDiPhotons
     hltInfo.HLT_Photon15_TrackIso_L1R = -1;
     hltInfo.HLT_Photon20_Cleaned_L1R = -1;
     hltInfo.HLT_Photon20_L1R = -1;
+    hltInfo.HLT_Photon20_NoHE_L1R = -1;
+    hltInfo.HLT_Photon25_Cleaned_L1R = -1;
     hltInfo.HLT_Photon30_Cleaned_L1R = -1;
     hltInfo.HLT_Photon30_L1R_8E29 = -1;
     hltInfo.HLT_Photon50_Cleaned_L1R = -1;
     hltInfo.HLT_Photon50_L1R = -1;
+    hltInfo.HLT_Photon50_NoHE_L1R = -1;
+    hltInfo.HLT_Photon50_NoHE_Cleaned_L1R = -1;
     hltInfo.HLT_DoublePhoton5_L1R = -1;
+    hltInfo.HLT_DoublePhoton5_CEP_L1R = -1;
+    hltInfo.HLT_DoublePhoton5_Jpsi_L1R = -1;
+    hltInfo.HLT_DoublePhoton5_Upsilon_L1R = -1;
     hltInfo.HLT_DoublePhoton10_L1R = -1;
     hltInfo.HLT_DoublePhoton15_L1R = -1;
+    hltInfo.HLT_DoublePhoton17_L1R = -1;
     hltInfo.HLT_DoublePhoton20_L1R = -1;
     hltInfo.HLT_Photon10_L1R = -1;
     hltInfo.HLT_Photon15_LooseEcalIso_Cleaned_L1R = -1;
@@ -163,6 +179,10 @@ namespace ExoDiPhotons
 	hltInfo.HLT_Photon20_Cleaned_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_Photon20_L1R")
 	hltInfo.HLT_Photon20_L1R = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon20_NoHE_L1R")
+        hltInfo.HLT_Photon20_NoHE_L1R = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon25_Cleaned_L1R")
+        hltInfo.HLT_Photon25_Cleaned_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_Photon30_Cleaned_L1R")
 	hltInfo.HLT_Photon30_Cleaned_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_Photon30_L1R_8E29")
@@ -170,13 +190,25 @@ namespace ExoDiPhotons
       else if(hltNames.triggerName(itrig)=="HLT_Photon50_Cleaned_L1R")
 	hltInfo.HLT_Photon50_Cleaned_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_Photon50_L1R")
+      else if(hltNames.triggerName(itrig)=="HLT_Photon50_NoHE_L1R")
+        hltInfo.HLT_Photon50_NoHE_L1R = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon50_NoHE_Cleaned_L1R")
+        hltInfo.HLT_Photon50_NoHE_Cleaned_L1R = (int) hltResults->accept(itrig);
 	hltInfo.HLT_Photon50_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton5_L1R")
 	hltInfo.HLT_DoublePhoton5_L1R = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton5_CEP_L1R")
+        hltInfo.HLT_DoublePhoton5_CEP_L1R = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton5_Jpsi_L1R")
+        hltInfo.HLT_DoublePhoton5_Jpsi_L1R = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton5_Upsilon_L1R")
+        hltInfo.HLT_DoublePhoton5_Upsilon_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton10_L1R")
 	hltInfo.HLT_DoublePhoton10_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton15_L1R")
 	hltInfo.HLT_DoublePhoton15_L1R = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton17_L1R")
+        hltInfo.HLT_DoublePhoton17_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton20_L1R")
 	hltInfo.HLT_DoublePhoton20_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_Photon10_L1R")
@@ -188,7 +220,6 @@ namespace ExoDiPhotons
       else if(hltNames.triggerName(itrig)=="HLT_Photon30_L1R")
 	hltInfo.HLT_Photon30_L1R = (int) hltResults->accept(itrig);
     }
-
 
   }
 
