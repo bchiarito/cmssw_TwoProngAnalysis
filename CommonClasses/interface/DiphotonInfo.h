@@ -16,6 +16,7 @@
 
 #include "DataFormats/Candidate/interface/LeafCandidate.h"
 
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 namespace ExoDiPhotons{
 
