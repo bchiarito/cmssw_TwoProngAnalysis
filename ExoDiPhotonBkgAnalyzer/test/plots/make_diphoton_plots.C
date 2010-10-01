@@ -61,7 +61,7 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50", Bool_t kPrint=kT
   }
   fhists->Close();
 
-  draw(sample,kPrint);
+  //  draw(sample,kPrint);
   draw_individual_histos(sample,kPrint);
 
   return;
@@ -267,7 +267,7 @@ void merge(TString sample = "PhotonJet"){
 
   TString printLabel =  sample + "_all";
 
-  draw(printLabel);
+  //  draw(printLabel);
   draw_individual_histos(printLabel);
   
   return;
@@ -468,13 +468,14 @@ void draw(TString sample, Bool_t kPrint=kTRUE) {
 
 
 // prints histos on individual canvases
-void draw_individual_histos(TString sample, Bool_t kPrint=kTRUE) {
-
+void draw_individual_histos(TString sample, Bool_t kPrint=kTRUE, Bool_t kStacked=kFALSE) {
+  
   gROOT->SetStyle("Plain");
   gStyle->SetOptStat("ourme");
   //  gStyle->SetOptStat(10);
   
   TString outName = TString::Format("histograms_%s.root",sample.Data());
+
   TFile* fhists = new TFile(outName.Data());
 
   const int nHists=52;
@@ -489,21 +490,18 @@ void draw_individual_histos(TString sample, Bool_t kPrint=kTRUE) {
     sprintf(cname,"c%i",i);
     histos[i] = (TH1F*)fhists->Get(nameHists[i].Data());
     TString histoTitle = histos[i]->GetTitle();
-    histoTitle = histoTitle + " (" + sample + ")";
+    histoTitle = "(" + sample + ") " + histoTitle;
     histos[i]->SetTitle(histoTitle.Data());
-    //    cout << histoTitle << endl;
 
     if (i==0) { 
       c[i] = new TCanvas(cname, nameHists[i].Data(), 1000, 600); 
       c[i]->cd();
       c[i]->SetBottomMargin(0.4);
-      histos[i]->Draw();
-      histos[i]->GetXaxis()->SetTitleSize(0.01);
-      histos[i]->GetXaxis()->SetBit(TAxis::kLabelsVert);
+      if (kStacked) { histos[i]->Draw("bar"); } else { histos[i]->Draw(); }
     } else { 
       c[i] = new TCanvas(cname, nameHists[i].Data(), 600, 600);
       c[i]->cd();
-      histos[i]->Draw();
+      if (kStacked) { histos[i]->Draw("bar"); } else { histos[i]->Draw(); }
       if ((nameHists[i]=="h_Photon1_hadOverEm")||(nameHists[i]=="h_Photon1_hcalIso04")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid03")) { 
 	c[i]->SetLogy();   
       }
@@ -513,6 +511,8 @@ void draw_individual_histos(TString sample, Bool_t kPrint=kTRUE) {
     sprintf(fname,"%s_%s.png",nameHists[i].Data(),sample.Data());  
     if (kPrint) c[i]->Print(fname);
   }
+
+
 
   return;
 
@@ -536,13 +536,18 @@ void mergeAllMC(double lumi = 1.0){
   labels[0] = "DiPhoton";
   labels[1] = "PhotonJet";
   labels[2] = "QCDDiJet";
+  
+  Color_t fillColors[nfiles];
+  fillColors[0] = kBlue; 
+  fillColors[1] = kGreen+2;
+  fillColors[2] = kRed+1;
 
   TFile *ftemp[nfiles];
 
   for(int ifile=0;ifile<nfiles;ifile++) {    
     fileNames[ifile] = TString::Format("histograms_%s_all.root",labels[ifile].Data());
     ftemp[ifile] = TFile::Open(fileNames[ifile].Data());
-    cout << "File name = " << fileNames[ifile];
+    cout << "File name = " << fileNames[ifile] << endl;
   }
   
   const int nHists=52;
@@ -555,19 +560,28 @@ void mergeAllMC(double lumi = 1.0){
     for (int i=0; i<nHists; i++) {
       indHistos[i][ifile] = (TH1F*)ftemp[ifile]->Get(nameHists[i].Data());
       indHistos[i][ifile]->Sumw2();
+      indHistos[i][ifile]->SetFillColor(fillColors[ifile]);
     }
   }
 
-  TH1F* allHistos[nHists];
+  //  TH1F* allHistos[nHists];
+
+  THStack *allHistos[nHists];
 
   // instantiate the sum histos with histo in first file
   for (int i=0; i<nHists; i++) {
-    allHistos[i] = indHistos[i][0];
+    //    allHistos[i] = indHistos[i][0];
+    //    indHistos[i][ifile] = (TH1F*)ftemp[ifile]->Get(nameHists[i].Data());    
+    TString hname1 = indHistos[i][0]->GetTitle();
+    TString hname2 = indHistos[i][0]->GetXaxis()->GetTitle();
+    TString hname = hname1 + ";" + hname2;
+    allHistos[i] = new THStack(nameHists[i].Data(),hname.Data());
   }
   
   for(int ifile=0;ifile<nfiles;ifile++) {  
     for (int i=0; i<nHists; i++) {
-      if (ifile>0) allHistos[i]->Add(indHistos[i][ifile]); // note we exclude first file since we used it to instantiate the sum histo
+      //      if (ifile>0) allHistos[i]->Add(indHistos[i][ifile]); // note we exclude first file since we used it to instantiate the sum histo
+      allHistos[i]->Add(indHistos[i][ifile]); 
     }
   }
 
@@ -583,8 +597,8 @@ void mergeAllMC(double lumi = 1.0){
   cout << "Results written to: " << outFileName.Data() << endl;
   fout.Close();
 
-  draw(sample);
-  draw_individual_histos(sample);
+  //  draw(sample);
+  draw_individual_histos(sample,kTRUE,kTRUE);
   
   return;
 
