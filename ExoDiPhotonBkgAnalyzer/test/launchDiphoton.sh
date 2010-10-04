@@ -17,7 +17,15 @@ server_name=slc5cern
 
 [CMSSW]
 
+# for DY samples
+#datasetpath=/${SAMPLE}/Spring10-START3X_V26-v2/GEN-SIM-RECO
+#
+# for DYToEE_M-20_7TeV-powheg-pythia6 sample
+#datasetpath=/${SAMPLE}/Spring10-START3X_V26-v1/GEN-SIM-RECO
+#
+# for everything else
 datasetpath=/${SAMPLE}/Spring10-START3X_V26_S09-v1/GEN-SIM-RECO
+
 pset=exodiphotonbkganalyzer_for_crab_cfg.py
 
 total_number_of_events=-1
