@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Wed Jun 16 17:06:28 CEST 2010
-// $Id: ExoDiPhotonSignalMCAnalyzer.cc,v 1.3 2010/09/29 17:08:12 chenders Exp $
+// $Id: ExoDiPhotonSignalMCAnalyzer.cc,v 1.4 2010/09/30 09:15:18 chenders Exp $
 //
 //
 
@@ -182,14 +182,11 @@ ExoDiPhotonSignalMCAnalyzer::ExoDiPhotonSignalMCAnalyzer(const edm::ParameterSet
   fTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
   fTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
 
+  fTree->Branch("GenPhoton1",&fSignalPhoton1Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
+  fTree->Branch("GenPhoton2",&fSignalPhoton2Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
 
-  fTree->Branch("SignalPhoton1",&fSignalPhoton1Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
-  fTree->Branch("SignalPhoton2",&fSignalPhoton2Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
-
-
-  fTree->Branch("MatchRecoPhoton1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
-
-  fTree->Branch("MatchRecoPhoton2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  fTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  fTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
 
   // signal diphoton info? eg to probe true MC width?
   // reco diphoton info?
