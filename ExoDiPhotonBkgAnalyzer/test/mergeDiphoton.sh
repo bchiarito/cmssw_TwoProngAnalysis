@@ -1,7 +1,7 @@
 #!/bin/bash                                                                                                
 
 SAMPLE=$1;
-
+VERSION=MC_36X_V2
 eval `scramv1 runtime -sh`;
 
 cd ${SAMPLE};
@@ -22,9 +22,9 @@ hadd -f diphotonTree_${SAMPLE}.root diphoton_tree_*root;
 cat CMSSW*stdout > diphotonTree_${SAMPLE}.log;
 gzip -f diphotonTree_${SAMPLE}.log;
 
-rfmkdir /castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/${SAMPLE};
-rfcp diphotonTree_${SAMPLE}.log.gz /castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/${SAMPLE};
-rfcp diphotonTree_${SAMPLE}.root  /castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/${SAMPLE};
+rfmkdir /castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/${VERSION}/${SAMPLE};
+rfcp diphotonTree_${SAMPLE}.log.gz /castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/${VERSION}/${SAMPLE};
+rfcp diphotonTree_${SAMPLE}.root  /castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/${VERSION}/${SAMPLE};
 
 
 #cd -;
