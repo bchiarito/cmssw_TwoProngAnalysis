@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Wed Jun 16 17:06:28 CEST 2010
-// $Id: ExoDiPhotonSignalMCAnalyzer.cc,v 1.4 2010/09/30 09:15:18 chenders Exp $
+// $Id: ExoDiPhotonSignalMCAnalyzer.cc,v 1.5 2010/10/04 13:57:17 torimoto Exp $
 //
 //
 
@@ -191,8 +191,8 @@ ExoDiPhotonSignalMCAnalyzer::ExoDiPhotonSignalMCAnalyzer(const edm::ParameterSet
   // signal diphoton info? eg to probe true MC width?
   // reco diphoton info?
 
-   fTree->Branch("DiphotonSignal",&fDiphotonSignalInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
-   fTree->Branch("DiphotonReco",&fDiphotonRecoInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+   fTree->Branch("DiphotonGen",&fDiphotonSignalInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+   fTree->Branch("Diphoton",&fDiphotonRecoInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
 
 
 
