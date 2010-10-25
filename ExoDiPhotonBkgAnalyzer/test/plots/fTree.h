@@ -64,15 +64,37 @@ public :
    Int_t           TrigHLT_HLT_Photon15_TrackIso_Cleaned_L1R;
    Int_t           TrigHLT_HLT_Photon20_L1R;
    Int_t           TrigHLT_HLT_Photon20_Cleaned_L1R;
+   Int_t           TrigHLT_HLT_Photon20_NoHE_L1R; // new
+   Int_t           TrigHLT_HLT_Photon25_Cleaned_L1R; // new
    Int_t           TrigHLT_HLT_Photon30_L1R;
    Int_t           TrigHLT_HLT_Photon30_Cleaned_L1R;
    Int_t           TrigHLT_HLT_Photon30_L1R_8E29;
    Int_t           TrigHLT_HLT_Photon50_L1R;
    Int_t           TrigHLT_HLT_Photon50_Cleaned_L1R;
+   Int_t           TrigHLT_HLT_Photon50_NoHE_L1R; // new
+   Int_t           TrigHLT_HLT_Photon50_NoHE_Cleaned_L1R; // new
    Int_t           TrigHLT_HLT_DoublePhoton5_L1R;
+   Int_t           TrigHLT_HLT_DoublePhoton5_CEP_L1R; // new
+   Int_t           TrigHLT_HLT_DoublePhoton5_Jpsi_L1R; // new
+   Int_t           TrigHLT_HLT_DoublePhoton5_Upsilon_L1R; // new
    Int_t           TrigHLT_HLT_DoublePhoton10_L1R;
    Int_t           TrigHLT_HLT_DoublePhoton15_L1R;
+   Int_t           TrigHLT_HLT_DoublePhoton17_L1R; // new
    Int_t           TrigHLT_HLT_DoublePhoton20_L1R;
+   Int_t           GenPhoton1_status;
+   Int_t           GenPhoton1_PdgId;
+   Int_t           GenPhoton1_MotherPdgId;
+   Int_t           GenPhoton1_GrandmotherPdgId;
+   Double_t        GenPhoton1_pt;
+   Double_t        GenPhoton1_eta;
+   Double_t        GenPhoton1_phi;
+   Int_t           GenPhoton2_status;
+   Int_t           GenPhoton2_PdgId;
+   Int_t           GenPhoton2_MotherPdgId;
+   Int_t           GenPhoton2_GrandmotherPdgId;
+   Double_t        GenPhoton2_pt;
+   Double_t        GenPhoton2_eta;
+   Double_t        GenPhoton2_phi;
    Double_t        Photon1_pt;
    Double_t        Photon1_eta;
    Double_t        Photon1_phi;
@@ -227,12 +249,20 @@ public :
    Double_t        Diphoton_deltaEta;
    Double_t        Diphoton_deltaR;
    Double_t        Diphoton_cosThetaStar;
+   Double_t        DiphotonGen_Minv;
+   Double_t        DiphotonGen_qt;
+   Double_t        DiphotonGen_deltaPhi;
+   Double_t        DiphotonGen_deltaEta;
+   Double_t        DiphotonGen_deltaR;
+   Double_t        DiphotonGen_cosThetaStar;
 
    // List of branches
    TBranch        *b_Event;   //!
    TBranch        *b_Vtx;   //!
    TBranch        *b_BeamSpot;   //!
    TBranch        *b_TrigHLT;   //!
+   TBranch        *b_GenPhoton1;   //!
+   TBranch        *b_GenPhoton2;   //!
    TBranch        *b_Photon1;   //!
    TBranch        *b_Photon2;   //!
    TBranch        *b_MCMatchPhoton1_Status3;   //!
@@ -240,10 +270,13 @@ public :
    TBranch        *b_MCMatchPhoton1_Status1;   //!
    TBranch        *b_MCMatchPhoton2_Status1;   //!
    TBranch        *b_Diphoton;   //!
+   TBranch        *b_DiphotonGen;   //!
+
 
    // diphoton analysis
    Float_t _cutPhoton1Pt;
    Float_t _cutPhoton2Pt;
+   Float_t _cutEta;
 
    TFile*  _outF;
    
@@ -344,6 +377,7 @@ public :
 fTree::fTree(TTree *tree)
   :_cutPhoton1Pt(10)
   , _cutPhoton2Pt(10)
+  , _cutEta(2.5)
   , _outF(0)
 	    //  , h_TrigHLT(0)
 {
@@ -404,6 +438,8 @@ void fTree::Init(TTree *tree)
    fChain->SetBranchAddress("Vtx", &Vtx_Nvtx, &b_Vtx);
    fChain->SetBranchAddress("BeamSpot", &BeamSpot_x0, &b_BeamSpot);
    fChain->SetBranchAddress("TrigHLT", &TrigHLT_HLT_MinBiasBSC, &b_TrigHLT);
+   fChain->SetBranchAddress("GenPhoton1", &GenPhoton1_pt, &b_GenPhoton1);
+   fChain->SetBranchAddress("GenPhoton2", &GenPhoton2_pt, &b_GenPhoton2);
    fChain->SetBranchAddress("Photon1", &Photon1_pt, &b_Photon1);
    fChain->SetBranchAddress("Photon2", &Photon2_pt, &b_Photon2);
    fChain->SetBranchAddress("MCMatchPhoton1_Status3", &MCMatchPhoton1_Status3_status, &b_MCMatchPhoton1_Status3);
@@ -411,9 +447,10 @@ void fTree::Init(TTree *tree)
    fChain->SetBranchAddress("MCMatchPhoton1_Status1", &MCMatchPhoton1_Status1_status, &b_MCMatchPhoton1_Status1);
    fChain->SetBranchAddress("MCMatchPhoton2_Status1", &MCMatchPhoton2_Status1_status, &b_MCMatchPhoton2_Status1);
    fChain->SetBranchAddress("Diphoton", &Diphoton_Minv, &b_Diphoton);
+   fChain->SetBranchAddress("DiphotonGen", &DiphotonGen_Minv, &b_DiphotonGen);
    Notify();
 
-   h_TrigHLT = new TH1F("h_TrigHLT","HLT Results" , 23, 0., 23);
+   h_TrigHLT = new TH1F("h_TrigHLT","HLT Results" , 31, 0., 31);
    //   h_TrigHLT->GetXaxis()->SetBinLabel(1,"HLT_MinBiasBSC");
    //   h_TrigHLT->GetXaxis()->SetBinLabel(2,"HLT_MinBiasBSC_NoBPTX");
    //   h_TrigHLT->GetXaxis()->SetBinLabel(3,"HLT_MinBiasBSC_OR");
@@ -432,31 +469,39 @@ void fTree::Init(TTree *tree)
    h_TrigHLT->GetXaxis()->SetBinLabel(12,"HLT_Photon15_TrackIso_Cleaned_L1R");
    h_TrigHLT->GetXaxis()->SetBinLabel(13,"HLT_Photon20_L1R");
    h_TrigHLT->GetXaxis()->SetBinLabel(14,"HLT_Photon20_Cleaned_L1R");
-   h_TrigHLT->GetXaxis()->SetBinLabel(15,"HLT_Photon30_L1R");
-   h_TrigHLT->GetXaxis()->SetBinLabel(16,"HLT_Photon30_Cleaned_L1R");
-   h_TrigHLT->GetXaxis()->SetBinLabel(17,"HLT_Photon30_L1R_8E29");
-   h_TrigHLT->GetXaxis()->SetBinLabel(18,"HLT_Photon50_L1R");
-   h_TrigHLT->GetXaxis()->SetBinLabel(19,"HLT_Photon50_Cleaned_L1R");
-   h_TrigHLT->GetXaxis()->SetBinLabel(20,"HLT_DoublePhoton5_L1R");
-   h_TrigHLT->GetXaxis()->SetBinLabel(21,"HLT_DoublePhoton10_L1R");
-   h_TrigHLT->GetXaxis()->SetBinLabel(22,"HLT_DoublePhoton15_L1R");
-   h_TrigHLT->GetXaxis()->SetBinLabel(23,"HLT_DoublePhoton20_L1R");   
+   h_TrigHLT->GetXaxis()->SetBinLabel(15,"HLT_Photon20_NoHE_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(16,"HLT_Photon25_Cleaned_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(17,"HLT_Photon30_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(18,"HLT_Photon30_Cleaned_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(19,"HLT_Photon30_L1R_8E29");
+   h_TrigHLT->GetXaxis()->SetBinLabel(20,"HLT_Photon50_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(21,"HLT_Photon50_Cleaned_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(22,"HLT_Photon50_NoHE_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(23,"HLT_Photon50_NoHE_Cleaned_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(24,"HLT_DoublePhoton5_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(25,"HLT_DoublePhoton5_CEP_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(26,"HLT_DoublePhoton5_Jpsi_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(27,"HLT_DoublePhoton5_Upsilon_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(28,"HLT_DoublePhoton10_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(29,"HLT_DoublePhoton15_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(30,"HLT_DoublePhoton17_L1R");
+   h_TrigHLT->GetXaxis()->SetBinLabel(31,"HLT_DoublePhoton20_L1R");   
 
-   h_Diphoton_Minv = new TH1F("h_Diphoton_Minv","Diphoton Invariant Mass;m(#gamma#gamma) [GeV]",100,0,500);
-   h_Diphoton_qt = new TH1F("h_Diphoton_qt","Diphoton qt;#gamma#gamma qt [GeV]",30,0,30);
-   h_Diphoton_deltaPhi = new TH1F("h_Diphoton_deltaPhi","Diphoton #Delta#phi;#gamma#gamma #Delta#phi",180,-3.14159,3.14159); 
-   h_Diphoton_deltaEta = new TH1F("h_Diphoton_deltaEta","Diphoton #Delta#eta;#gamma#gamma #Delta#eta",86,-6.,6.); 
+   h_Diphoton_Minv = new TH1F("h_Diphoton_Minv","Diphoton Invariant Mass;m(#gamma#gamma) [GeV]",50,0,500);
+   h_Diphoton_qt = new TH1F("h_Diphoton_qt","Diphoton qt;#gamma#gamma qt [GeV]",25,0,50);
+   h_Diphoton_deltaPhi = new TH1F("h_Diphoton_deltaPhi","Diphoton #Delta#phi;#gamma#gamma #Delta#phi",90,-3.14159,3.14159); 
+   h_Diphoton_deltaEta = new TH1F("h_Diphoton_deltaEta","Diphoton #Delta#eta;#gamma#gamma #Delta#eta",40,-6.,6.); 
    h_Diphoton_deltaR = new TH1F("h_Diphoton_deltaR","Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0,7.); 
 
-   h_Photon1_pt = new TH1F("h_Photon1_pt","Photon1 pt;#gamma_{1} p_{T} [GeV]",100,0,1000); 
-   h_Photon1_eta = new TH1F("h_Photon1_eta","Photon1 #eta;#gamma_{1} #eta",86,-1.5,1.5); 
-   h_Photon1_phi = new TH1F ("h_Photon1_phi","Photon1 #phi;#gamma_{1} #phi",180,-3.14159,3.14159); 
+   h_Photon1_pt = new TH1F("h_Photon1_pt","Photon1 pt;#gamma_{1} p_{T} [GeV]",100,0,500); 
+   h_Photon1_eta = new TH1F("h_Photon1_eta","Photon1 #eta;#gamma_{1} #eta",50,-2.5,2.5); 
+   h_Photon1_phi = new TH1F ("h_Photon1_phi","Photon1 #phi;#gamma_{1} #phi",45,-3.14159,3.14159); 
 
    h_Photon1_r9 = new TH1F("h_Photon1_r9","Photon1 R9;#gamma_{1} R9", 50, 0.1, 1.5);
-   h_Photon1_sigmaIetaIeta = new TH1F("h_Photon1_sigmaIetaIeta","Photon1 #sigma_{i#etai#eta};#gamma_{1} #sigma_{i#etai#eta}", 50, 0, 0.10);
-   h_Photon1_sigmaEtaEta = new TH1F("h_Photon1_sigmaEtaEta","Photon1 #sigma_{#eta#eta};#gamma_{1} #sigma_{#eta#eta}", 50, 0, 0.10);
+   h_Photon1_sigmaIetaIeta = new TH1F("h_Photon1_sigmaIetaIeta","Photon1 #sigma_{i#etai#eta};#gamma_{1} #sigma_{i#etai#eta}", 25, 0, 0.05);
+   h_Photon1_sigmaEtaEta = new TH1F("h_Photon1_sigmaEtaEta","Photon1 #sigma_{#eta#eta};#gamma_{1} #sigma_{#eta#eta}", 25, 0, 0.05);
 
-   h_Photon1_swisscross = new TH1F("h_Photon1_swisscross","Photon1 swisscross;#gamma_{1} 1-E_{4}/E_{1}", 60, 0, 1.2);
+   h_Photon1_swisscross = new TH1F("h_Photon1_swisscross","Photon1 swisscross;#gamma_{1} 1-E_{4}/E_{1}", 30, 0, 1.2);
    h_Photon1_severityLevel = new TH1F("h_Photon1_severityLevel","Photon1 severityLevel", 5, 0, 5);
    h_Photon1_severityLevel->GetXaxis()->SetBinLabel(1,"kGood");
    h_Photon1_severityLevel->GetXaxis()->SetBinLabel(2,"kProblematic");
@@ -506,16 +551,15 @@ void fTree::Init(TTree *tree)
 
 /*    h_Photon1_esRatio = new TH1F("h_Photon1_esRatio","Photon1_esRatio", , , ); */
 
-
-   h_Photon2_pt = new TH1F("h_Photon2_pt","Photon2 pt;#gamma_{2} p_{T} [GeV]",100,0,1000); 
-   h_Photon2_eta = new TH1F("h_Photon2_eta","Photon2 #eta;#gamma_{2} #eta",86,-1.5,1.5); 
-   h_Photon2_phi = new TH1F ("h_Photon2_phi","Photon2 #phi;#gamma_{2} #phi",180,-3.14159,3.14159); 
+   h_Photon2_pt = new TH1F("h_Photon2_pt","Photon2 pt;#gamma_{2} p_{T} [GeV]",100,0,500); 
+   h_Photon2_eta = new TH1F("h_Photon2_eta","Photon2 #eta;#gamma_{2} #eta",50,-2.5,2.5); 
+   h_Photon2_phi = new TH1F ("h_Photon2_phi","Photon2 #phi;#gamma_{2} #phi",45,-3.14159,3.14159); 
 
    h_Photon2_r9 = new TH1F("h_Photon2_r9","Photon2 R9;#gamma_{2} R9", 50, 0.1, 1.5);
-   h_Photon2_sigmaIetaIeta = new TH1F("h_Photon2_sigmaIetaIeta","Photon2 #sigma_{i#etai#eta};#gamma_{2} #sigma_{i#etai#eta}", 50, 0, 0.10);
-   h_Photon2_sigmaEtaEta = new TH1F("h_Photon2_sigmaEtaEta","Photon2 #sigma_{#eta#eta};#gamma_{2} #sigma_{#eta#eta}", 50, 0, 0.10);
+   h_Photon2_sigmaIetaIeta = new TH1F("h_Photon2_sigmaIetaIeta","Photon2 #sigma_{i#etai#eta};#gamma_{2} #sigma_{i#etai#eta}", 25, 0, 0.05);
+   h_Photon2_sigmaEtaEta = new TH1F("h_Photon2_sigmaEtaEta","Photon2 #sigma_{#eta#eta};#gamma_{2} #sigma_{#eta#eta}", 25, 0, 0.05);
 
-   h_Photon2_swisscross = new TH1F("h_Photon2_swisscross","Photon2 swisscross;#gamma_{2} 1-E_{4}/E_{1}", 60, 0, 1.2);
+   h_Photon2_swisscross = new TH1F("h_Photon2_swisscross","Photon2 swisscross;#gamma_{2} 1-E_{4}/E_{1}", 30, 0, 1.2);
    h_Photon2_severityLevel = new TH1F("h_Photon2_severityLevel","Photon2 severityLevel", 5, 0, 5);
    h_Photon2_severityLevel->GetXaxis()->SetBinLabel(1,"kGood");
    h_Photon2_severityLevel->GetXaxis()->SetBinLabel(2,"kProblematic");
