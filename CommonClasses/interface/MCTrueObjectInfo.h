@@ -12,6 +12,7 @@
 //********************************************************************
 
 #include <string>
+#include <vector>
 
 namespace ExoDiPhotons
 {
@@ -58,7 +59,29 @@ namespace ExoDiPhotons
 
   }
   
+  // also want to store MC truth event-level info
+  // like signalProcess ID, and pthat value
 
+  struct mcEventInfo_t {
+    int SignalProcessId;
+    double binningValue;
+  };
+
+  std::string mcEventInfoBranchDefString("signalProcessId/I:binningValue/D");
+
+  void FillMCEventInfo(mcEventInfo_t &mcEventInfo, const GenEventInfoProduct *genEventInfo) {
+    
+    mcEventInfo.SignalProcessId = genEventInfo->signalProcessID();
+
+    // get binning values 
+    // Fabian says it's an array because in principle 
+    // samples could be binned in more than 1 variable
+    // generally this should be pthat value
+    // for s^hat binned samples, will this be s^hat?
+    const std::vector<double> genBinningValues = genEventInfo->binningValues();
+    
+    mcEventInfo.binningValue = genBinningValues[0];
+  }
 
 
 
