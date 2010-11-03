@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Mon Jun 28 12:37:19 CEST 2010
-// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.6 2010/08/18 12:20:06 torimoto Exp $
+// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.7 2010/08/26 11:39:00 chenders Exp $
 //
 //
 
@@ -73,6 +73,8 @@
 // for MC
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+
 
 using namespace std;
 
@@ -129,6 +131,9 @@ class ExoDiPhotonBkgAnalyzer : public edm::EDAnalyzer {
       ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo1; // leading photon 
       ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo2; // second photon
 
+      // MC truth event-level info
+      ExoDiPhotons::mcEventInfo_t fMCEventInfo;
+
       ExoDiPhotons::mcTrueObjectInfo_t fMCTrueObjectInfo1_Status3; 
       ExoDiPhotons::mcTrueObjectInfo_t fMCTrueObjectInfo2_Status3; 
       ExoDiPhotons::mcTrueObjectInfo_t fMCTrueObjectInfo1_Status1; 
@@ -168,6 +173,10 @@ ExoDiPhotonBkgAnalyzer::ExoDiPhotonBkgAnalyzer(const edm::ParameterSet& iConfig)
   // now with CommonClasses, use the string defined in the header
 
   fTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
+  
+  // MC truth event info
+  fTree->Branch("GenEvent",&fMCEventInfo,ExoDiPhotons::mcEventInfoBranchDefString.c_str());
+
   fTree->Branch("Vtx",&fVtxInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
   fTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
   fTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
@@ -394,6 +403,8 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
      //     if(!fkRequireTightPhotons || isTightPhoton(&(*recoPhoton))) {
      if(ExoDiPhotons::isTightPhoton(&(*recoPhoton))) {
+     // fill all reco photons for bkg study
+     //if(true) {
 
 
 	 if(recoPhoton->et() >= fMin_pt && recoPhoton->et()>highestEt1) {
@@ -594,6 +605,23 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
 
      // now get MC truth info
+
+     // first start with MC event info
+     Handle<GenEventInfoProduct> genEventInfo;
+     iEvent.getByLabel("generator",genEventInfo);
+
+     if(!genEventInfo.isValid()) {
+       cout << "gen event info not valid!"<<endl;
+       return;
+     }
+     
+     ExoDiPhotons::FillMCEventInfo(fMCEventInfo,genEventInfo.product());
+     //     cout << "Process id = " << genEventInfo->signalProcessID() <<endl;
+     //     const std::vector<double> genBinningValues = genEventInfo->binningValues();
+     //     cout << "Binning value = " << genBinningValues[0] <<endl;
+
+     // now do gen particles
+
      Handle<reco::GenParticleCollection> genParticles;
      iEvent.getByLabel("genParticles",genParticles);
 
