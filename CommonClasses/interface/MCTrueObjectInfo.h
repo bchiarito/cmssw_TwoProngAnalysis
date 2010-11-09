@@ -14,6 +14,12 @@
 #include <string>
 #include <vector>
 
+// for MC
+#include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+
+
 namespace ExoDiPhotons
 {
   struct mcTrueObjectInfo_t {
