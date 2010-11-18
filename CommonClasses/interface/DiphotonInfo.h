@@ -46,8 +46,9 @@ namespace ExoDiPhotons{
     fDiphotonInfo.deltaPhi = reco::deltaPhi(photon_vector1.phi(),photon_vector2.phi());
     fDiphotonInfo.deltaEta = photon_vector1.eta()-photon_vector2.eta(); // always highest pt - second
     fDiphotonInfo.deltaR = TMath::Sqrt(fDiphotonInfo.deltaPhi*fDiphotonInfo.deltaPhi+fDiphotonInfo.deltaEta*fDiphotonInfo.deltaEta);
-    fDiphotonInfo.cosThetaStar = -999.99; // need to calculate this!
-
+    //    reco::LeafCandidate::LorentzVector diphoton = photon_vector1 + photon_vector2;
+    //    double mymom = diphoton.P();
+    fDiphotonInfo.cosThetaStar = fabs(photon_vector1.P() - photon_vector2.P())/(photon_vector1+photon_vector2).P();
 
     }
 
