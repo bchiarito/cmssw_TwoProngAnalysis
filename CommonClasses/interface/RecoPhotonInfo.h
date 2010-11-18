@@ -7,7 +7,7 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-//  $Id: RecoPhotonInfo.h,v 1.5 2010/08/26 11:38:19 chenders Exp $
+//  $Id: RecoPhotonInfo.h,v 1.6 2010/09/29 16:48:59 chenders Exp $
 // 
 //********************************************************************
 
@@ -95,6 +95,10 @@ namespace ExoDiPhotons
     double eBottom;
     double eSecond; // second highest rec hit in the cluster (not sure if required to be within 3x3 or not?)
 
+    double e2x2;
+    double e4x4;
+    double e2e9;
+
     // ecal severity level
     int severityLevel;
     int recHitFlag;
@@ -157,7 +161,7 @@ namespace ExoDiPhotons
   // obviously this needs to be kept up-to-date with the struct definition
   // but now at least this only needs to be done here in this file, 
   // rather than in each individual analyser 
-  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:detId/I:iEtaY/I:iPhiX/I:vx/D:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:severityLevel/I:recHitFlag/I:maxRecHitTime/D:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:esRatio/f:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed");
+  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:detId/I:iEtaY/I:iPhiX/I:vx/D:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:severityLevel/I:recHitFlag/I:maxRecHitTime/D:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:esRatio/f:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed");
 
 
   // useful function for ESratio
@@ -241,6 +245,182 @@ namespace ExoDiPhotons
     
   }
 
+  float recHitE( const DetId id, const EcalRecHitCollection &recHits )
+  {
+    if ( id == DetId(0) ) {
+      return 0;
+    } else {
+      EcalRecHitCollection::const_iterator it = recHits.find( id );
+      if ( it != recHits.end() ) return (*it).energy();
+    }
+    return 0;
+  }
+
+  float recHitE( const DetId id, const EcalRecHitCollection & recHits,
+					int di, int dj )
+  {
+    // in the barrel:   di = dEta   dj = dPhi
+    // in the endcap:   di = dX     dj = dY
+    
+    DetId nid;
+    if( id.subdetId() == EcalBarrel) nid = EBDetId::offsetBy( id, di, dj );
+    else if( id.subdetId() == EcalEndcap) nid = EEDetId::offsetBy( id, di, dj );
+
+    return ( nid == DetId(0) ? 0 : recHitE( nid, recHits ) );
+  }
+
+  float recHitApproxEt( const DetId id, const EcalRecHitCollection &recHits )
+  {
+    // for the time being works only for the barrel
+    if ( id.subdetId() == EcalBarrel ) {
+      return recHitE( id, recHits ) / cosh( EBDetId::approxEta( id ) );
+    }
+    return 0;
+  }
+
+
+
+  float E2overE9( const DetId id, const EcalRecHitCollection & recHits, float recHitEtThreshold = 10.0 , float recHitEtThreshold2 = 1.0 , bool avoidIeta85=false, bool KillSecondHit=true)
+  {
+    
+    // compute e2overe9
+    //  
+    //   | | | |
+    //   +-+-+-+
+    //   | |1|2|
+    //   +-+-+-+
+    //   | | | |
+    //
+    //   1 - input hit,  2 - highest energy hit in a 3x3 around 1
+    // 
+    //   rechit 1 must have E_t > recHitEtThreshold
+    //   rechit 2 must have E_t > recHitEtThreshold2
+    //
+    //   function returns value of E2/E9 centered around 1 (E2=energy of hits 1+2) if energy of 1>2
+    //
+    //   if energy of 2>1 and KillSecondHit is set to true, function returns value of E2/E9 centered around 2
+    //   *provided* that 1 is the highest energy hit in a 3x3 centered around 2, otherwise, function returns 0
+    
+    
+    if ( id.subdetId() == EcalBarrel ) {
+      
+      EBDetId ebId( id );
+      
+      // avoid recHits at |eta|=85 where one side of the neighbours is missing
+      if ( abs(ebId.ieta())==85 && avoidIeta85) return 0;
+      
+      // select recHits with Et above recHitEtThreshold      
+      float e1 = recHitE( id, recHits );
+      float ete1=recHitApproxEt( id, recHits );     
+      
+      // check that rechit E_t is above threshold      
+      if (ete1 < std::min(recHitEtThreshold,recHitEtThreshold2) ) return 0;      
+      if (ete1 < recHitEtThreshold && !KillSecondHit ) return 0;		
+
+      float e2=-1;
+      float ete2=0;
+      float s9 = 0;
+      
+      // coordinates of 2nd hit relative to central hit
+      int e2eta=0;
+      int e2phi=0;
+      
+      // LOOP OVER 3x3 ARRAY CENTERED AROUND HIT 1
+      
+      for ( int deta = -1; deta <= +1; ++deta ) {
+	for ( int dphi = -1; dphi <= +1; ++dphi ) {
+	  
+	  // compute 3x3 energy	  
+	  float etmp=recHitE( id, recHits, deta, dphi );
+	  s9 += etmp;
+	  
+	  EBDetId idtmp=EBDetId::offsetBy(id,deta,dphi);
+	  float eapproxet=recHitApproxEt( idtmp, recHits );
+	  
+	  // remember 2nd highest energy deposit (above threshold) in 3x3 array 
+	  if (etmp>e2 && eapproxet>recHitEtThreshold2 && !(deta==0 && dphi==0)) {
+	    e2=etmp;
+	    ete2=eapproxet;
+	    e2eta=deta;
+	    e2phi=dphi;	    
+	  }
+	}
+      }
+      
+      if ( e1 == 0 )  return 0;
+      
+      // return 0 if 2nd hit is below threshold
+      if ( e2 == -1 ) return 0;
+      
+      // compute e2/e9 centered around 1st hit      
+      float e2nd=e1+e2;
+      float e2e9=0;
+      
+      if (s9!=0) e2e9=e2nd/s9;
+      
+      // if central hit has higher energy than 2nd hit
+      //  return e2/e9 if 1st hit is above E_t threshold      
+      if (e1 > e2 && ete1>recHitEtThreshold) return e2e9;
+      
+      // if second hit has higher energy than 1st hit      
+      if ( e2 > e1 ) { 
+	
+	// return 0 if user does not want to flag 2nd hit, or
+	// hits are below E_t thresholds - note here we
+	// now assume the 2nd hit to be the leading hit.
+	
+	if (!KillSecondHit || ete2<recHitEtThreshold || ete1<recHitEtThreshold2) {
+	  return 0;
+	}	
+	else {
+	  
+	  // LOOP OVER 3x3 ARRAY CENTERED AROUND HIT 2
+	  
+	  float s92nd=0;
+          
+	  float e2nd_prime=0;
+	  int e2prime_eta=0;
+	  int e2prime_phi=0;
+	  
+	  EBDetId secondid=EBDetId::offsetBy(id,e2eta,e2phi);
+	  
+	  for ( int deta = -1; deta <= +1; ++deta ) {
+	    for ( int dphi = -1; dphi <= +1; ++dphi ) {
+	      
+	      // compute 3x3 energy
+	      float etmp=recHitE( secondid, recHits, deta, dphi );
+	      s92nd += etmp;
+	      
+	      if (etmp>e2nd_prime && !(deta==0 && dphi==0)) {
+		e2nd_prime=etmp;
+		e2prime_eta=deta;
+		e2prime_phi=dphi;
+	      }	      
+	    }
+	  }
+	  
+	  // if highest energy hit around E2 is not the same as the input hit, return 0;
+	  
+	  if (!(e2prime_eta==-e2eta && e2prime_phi==-e2phi)) 
+	    { 
+	      return 0;
+	    }
+	  
+	  // compute E2/E9 around second hit 
+	  float e2e9_2=0;
+	  if (s92nd!=0) e2e9_2=e2nd/s92nd;
+          
+	  //   return the value of E2/E9 calculated around 2nd hit          
+	  return e2e9_2;
+	  
+	}
+      }
+    } else if ( id.subdetId() == EcalEndcap ) {
+      // only used for EB at the moment
+      return 0;
+    }
+    return 0;
+  }
   
 
   // also want a Fill function, that can fill the struct values from the appropriate objects
@@ -305,6 +485,11 @@ namespace ExoDiPhotons
      recoPhotonInfo.eTop = lazyTools_->eTop(*sc1);
      recoPhotonInfo.eBottom = lazyTools_->eBottom(*sc1);
      recoPhotonInfo.eSecond = lazyTools_->e2nd(*sc1);
+
+     recoPhotonInfo.e2x2 = lazyTools_->e2x2(*sc1);
+     recoPhotonInfo.e4x4 = lazyTools_->e4x4(*sc1);
+
+     recoPhotonInfo.e2e9 = E2overE9(maxc1.first, (*recHitsEB));
 
      //     cout << "(Internal) eMax = "<< recoPhotonInfo.eMax <<endl;
      //     cout << "(Internal) eSecond = "<< recoPhotonInfo.eSecond <<endl;
@@ -410,7 +595,6 @@ namespace ExoDiPhotons
 
 
   }// end of fill reco photon info
-
 
   
 
