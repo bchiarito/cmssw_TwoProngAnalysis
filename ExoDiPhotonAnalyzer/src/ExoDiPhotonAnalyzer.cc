@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.10 2010/08/26 12:42:17 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.11 2010/08/26 12:45:33 chenders Exp $
 //
 //
 
@@ -445,7 +445,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
        // so in either case we continue to study this photon... 
        
        // similar logic for tight photon ID
-       if(!fkRequireTightPhotons || ExoDiPhotons::isTightPhoton(&(*recoPhoton))) {
+       if(!fkRequireTightPhotons || (ExoDiPhotons::isTightPhoton(&(*recoPhoton)) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)))) {
 	 ///ie either we dont require tight photons OR this photon passes tight ID anyway
 
 	 if(recoPhoton->et() >= fMin_pt && recoPhoton->et()>highestEt1) {

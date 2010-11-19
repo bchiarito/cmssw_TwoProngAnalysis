@@ -26,7 +26,8 @@ namespace ExoDiPhotons{
     
     bool result = false;
 
-    double trkIsoCut = 3.5 + 0.001*photon->et();
+    //    double trkIsoCut = 3.5 + 0.001*photon->et();
+    double trkIsoCut = 2.0 + 0.001*photon->et();
     if(photon->trkSumPtHollowConeDR04()<trkIsoCut)
       result = true;
 
@@ -116,6 +117,12 @@ namespace ExoDiPhotons{
     // can be used on MC also
     
     return thisPhotonIsASpike;
+  }
+
+  bool isGapPhoton(const reco::Photon *photon) {
+
+    if ( fabs(photon->caloPosition().eta())>1.4442 && fabs(photon->caloPosition().eta())<1.566 ) return true; 
+    else return false;
   }
 
 }

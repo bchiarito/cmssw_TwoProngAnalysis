@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Mon Jun 28 12:37:19 CEST 2010
-// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.7 2010/08/26 11:39:00 chenders Exp $
+// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.8 2010/11/03 16:45:11 chenders Exp $
 //
 //
 
@@ -32,8 +32,7 @@
 
 #include "FWCore/Framework/interface/ESHandle.h"
 
-#include "FWCore/ParameterSet/interface/InputTag.h"
-
+#include "FWCore/Utilities/interface/InputTag.h"
 
 // to use TfileService for histograms and trees
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -401,8 +400,8 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
 //      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
 //      cout << endl;
 
-     //     if(!fkRequireTightPhotons || isTightPhoton(&(*recoPhoton))) {
-     if(ExoDiPhotons::isTightPhoton(&(*recoPhoton))) {
+     if(ExoDiPhotons::isTightPhoton(&(*recoPhoton)) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton))) {
+
      // fill all reco photons for bkg study
      //if(true) {
 
