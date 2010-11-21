@@ -13,13 +13,17 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.11 2010/08/26 12:45:33 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.12 2010/11/19 10:09:03 torimoto Exp $
 //
 //
 
 
 // system include files
 #include <memory>
+
+#include <algorithm>
+#include <vector>
+
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -140,6 +144,9 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
 
       ExoDiPhotons::eventInfo_t fEventInfo;
       ExoDiPhotons::vtxInfo_t fVtxInfo;
+  // adding a second vertex
+      ExoDiPhotons::vtxInfo_t fVtx2Info;
+
       ExoDiPhotons::beamSpotInfo_t fBeamSpotInfo;
 
       ExoDiPhotons::l1TrigInfo_t fL1TrigInfo;  
@@ -178,6 +185,10 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 
   fTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
   fTree->Branch("Vtx",&fVtxInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
+
+  //adding a second vtx
+  fTree->Branch("Vtx2",&fVtx2Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
+
   fTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
 
 
@@ -228,7 +239,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      return;
    }
    //   cout << "N vertices = " << vertexColl->size() <<endl;
-   fVtxInfo.Nvtx = vertexColl->size();
+   //   fVtxInfo.Nvtx = vertexColl->size();
+   // this just counts the collection size
+   // may want to count N vtx with TrkPt> some cut ?
+
+   
 
    fVtxInfo.vx = -99999.99;
    fVtxInfo.vy = -99999.99;
@@ -239,43 +254,73 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    fVtxInfo.ndof = -99999.99;
    fVtxInfo.d0 = -99999.99;
 
-   const reco::Vertex *vertex1 = NULL; // best vertex (by trk SumPt)
+
+   fVtx2Info.vx = -99999.99;
+   fVtx2Info.vy = -99999.99;
+   fVtx2Info.vz = -99999.99;
+   fVtx2Info.isFake = -99;   
+   fVtx2Info.Ntracks = -99;
+   fVtx2Info.sumPtTracks = -99999.99;
+   fVtx2Info.ndof = -99999.99;
+   fVtx2Info.d0 = -99999.99;
+
    // note for higher lumi, may want to also store second vertex, for pileup studies
+   // to allow scalability for many vertices, use a vector and sort later
+   std::vector<reco::Vertex> myVertices;
    
-   // even if the vertex has sumpt=0, its still enough to be the 'highest'
-   double highestSumPtTracks1 = -1.0; 
-
    for(reco::VertexCollection::const_iterator vtx=vertexColl->begin(); vtx!=vertexColl->end(); vtx++) {
-
-     // loop over assoc tracks to get sum pt
-     //     fVtxInfo.sumPtTracks = 0.0;
-     double sumPtTracks = 0.0;
      
-     for(reco::Vertex::trackRef_iterator vtxTracks=vtx->tracks_begin(); vtxTracks!=vtx->tracks_end();vtxTracks++) {
-       //       fVtxInfo.sumPtTracks += (**vtxTracks).pt();
-       sumPtTracks += (**vtxTracks).pt();
-     }
+     // add to my vtx vector if not fake and ndof>4 and maxd0=2 and |vz|<24
+     // ie default criteria
+     if(!vtx->isFake() && vtx->ndof()>4 && fabs(vtx->position().rho())<=2.0 && fabs(vtx->z())<=24.0  ) {
+       myVertices.push_back(*vtx);
+     }      
 
-     //     cout << "Vtx x = "<< vtx->x()<<", y= "<< vtx->y()<<", z = " << vtx->z() << ";  N tracks = " << vtx->tracksSize() << "; isFake = " << vtx->isFake() <<", sumPt(tracks) = "<<sumPtTracks << "; ndof = " << vtx->ndof()<< "; d0 = " << vtx->position().rho() << endl;
+     //     cout << "Vtx x = "<< vtx->x()<<", y= "<< vtx->y()<<", z = " << vtx->z() << ";  N tracks = " << vtx->tracksSize() << "; isFake = " << vtx->isFake() <<", sumPt(tracks) = "<< ExoDiPhotons::calcVtxSumPtTracks(&(*vtx)) << "; ndof = " << vtx->ndof()<< "; d0 = " << vtx->position().rho() << endl;
      
      // and note that this vertex collection can contain vertices with Ntracks = 0
      // watch out for these!
-
-     if(sumPtTracks > highestSumPtTracks1) {
-       // then this new best
-       vertex1 = &(*vtx);
-       highestSumPtTracks1 = sumPtTracks;
-
-     }
-
    
    }// end vertex loop
 
-   if(vertex1) {
-     ExoDiPhotons::FillVertexInfo(fVtxInfo,vertex1);
-     // fill the SumPt Tracks separately for now
-     fVtxInfo.sumPtTracks = highestSumPtTracks1;     
+
+//    // loop over my selected vertices
+//    for(std::vector<reco::Vertex>::iterator myVtxIter=myVertices.begin();myVtxIter<myVertices.end();myVtxIter++) {
+
+//      cout << "MY MyVtxIter x = "<< myVtxIter->x()<<", y= "<< myVtxIter->y()<<", z = " << myVtxIter->z() << ";  N tracks = " << myVtxIter->tracksSize() << "; isFake = " << myVtxIter->isFake() <<", sumPt(tracks) = "<< ExoDiPhotons::calcVtxSumPtTracks(&(*myVtxIter))<< "; ndof = " << myVtxIter->ndof()<< "; d0 = " << myVtxIter->position().rho() << endl;
+
+//    }
+
+   // now sort the vertices after
+   // can be either by Ntracks or TrackSumPt, depending how I write the function
+   sort(myVertices.begin(),myVertices.end(),ExoDiPhotons::sortVertices) ;
+
+   //   cout << "After sorting" << endl;
+
+//    // check sorting
+//    for(std::vector<reco::Vertex>::iterator myVtxIter=myVertices.begin();myVtxIter<myVertices.end();myVtxIter++) {
+
+//      cout << "MY MyVtxIter x = "<< myVtxIter->x()<<", y= "<< myVtxIter->y()<<", z = " << myVtxIter->z() << ";  N tracks = " << myVtxIter->tracksSize() << "; isFake = " << myVtxIter->isFake() <<", sumPt(tracks) = "<< ExoDiPhotons::calcVtxSumPtTracks(&(*myVtxIter))<< "; ndof = " << myVtxIter->ndof()<< "; d0 = " << myVtxIter->position().rho() << endl;
+
+//    }
+
+
+   // first count the number of good vertices
+   fVtxInfo.Nvtx = myVertices.size();
+   fVtx2Info.Nvtx = myVertices.size();
+
+   // now we will fill the vertex info structs from the sorted list
+   if(myVertices.size()>=1) {
+     ExoDiPhotons::FillVertexInfo(fVtxInfo,&(*myVertices.begin()));
    }
+   if(myVertices.size()>=2) {
+     ExoDiPhotons::FillVertexInfo(fVtx2Info,&(*(myVertices.begin()+1)));
+   }
+
+   
+
+
+
 
    // get offline beam spot
 
@@ -428,7 +473,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    // photon loop
    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
 
-//      cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+     cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
 //      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
 //      cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
 //      cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
@@ -499,6 +544,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     }
 
 
+    // curios - can I sort the photon collection?
+    
+
+    //    cout << "After sprting photons" << endl;
+
 
 
 
@@ -524,6 +574,8 @@ ExoDiPhotonAnalyzer::beginJob()
 void 
 ExoDiPhotonAnalyzer::endJob() {
 }
+
+
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(ExoDiPhotonAnalyzer);
