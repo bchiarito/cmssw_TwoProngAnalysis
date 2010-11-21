@@ -57,6 +57,20 @@ namespace ExoDiPhotons
 
   std::string vtxInfoBranchDefString("Nvtx/I:vx/D:vy:vz:isFake/I:Ntracks/I:sumPtTracks/D:ndof:d0");
 
+
+  // simple function to get sumPtTracks for vtx
+  double calcVtxSumPtTracks(const reco::Vertex *vtx) {
+
+     // loop over assoc tracks to get sum pt
+    double sumPtTracks = 0.0;
+    for(reco::Vertex::trackRef_iterator vtxTracks=vtx->tracks_begin(); vtxTracks!=vtx->tracks_end();vtxTracks++) {
+
+      sumPtTracks += (**vtxTracks).pt();
+    }
+    return sumPtTracks;
+  }
+
+
   void FillVertexInfo(vtxInfo_t &vtxInfo, const reco::Vertex *vertex) {
 
      vtxInfo.vx = vertex->x();
@@ -67,14 +81,25 @@ namespace ExoDiPhotons
      vtxInfo.ndof = vertex->ndof();
      vtxInfo.d0 = vertex->position().rho();
 
-     // special note: SumPtTracks is not a member of vertex class
-     // so it needs to be calculated separately by looping over track collection
-     // for now, since this is already done in main analyser, just make
-     // sure to fill this in the analyser code 
-     vtxInfo.sumPtTracks = -9999.99;
+     // now I have a function to get sumPtTracks
+     vtxInfo.sumPtTracks = calcVtxSumPtTracks(vertex);
 
   }
-  
+
+
+  // I also use my own compare function for sorting vertices in the analyser
+  bool sortVertices(const reco::Vertex &vtx1, const reco::Vertex &vtx2) 
+  {
+    // sort by Ntracks, with highest first
+    //    return(vtx1.tracksSize()>=vtx2.tracksSize());
+    
+    // or by TrackSumPt
+    return(calcVtxSumPtTracks(&vtx1)>=calcVtxSumPtTracks(&vtx2));
+    
+  }
+
+
+
 
 
   // beam spot info
