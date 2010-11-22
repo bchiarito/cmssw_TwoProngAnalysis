@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.14 2010/11/22 10:48:36 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.15 2010/11/22 12:37:02 chenders Exp $
 //
 //
 
@@ -142,6 +142,10 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       // my Tree
       TTree *fTree;
 
+  // now also tight-fake and fake-fake trees
+      TTree *fTightFakeTree;
+      TTree *fFakeFakeTree;
+
       ExoDiPhotons::eventInfo_t fEventInfo;
       ExoDiPhotons::vtxInfo_t fVtxInfo;
   // adding a second vertex
@@ -152,7 +156,8 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       ExoDiPhotons::l1TrigInfo_t fL1TrigInfo;  
       ExoDiPhotons::hltTrigInfo_t fHLTInfo;
 
-      int fNCandPhotons; // number of candidate photons in event
+      int fNTightPhotons; // number of candidate photons in event (ie tight)
+      int fNFakeablePhotons;  // number of 'fakeable objects' in event
 
       ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo1; // leading photon 
       ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo2; // second photon
@@ -198,8 +203,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   
   fTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
 
-  // add a branch for number of candidate photons in the event
-  fTree->Branch("NCandPhotons",&fNCandPhotons,"NCandPhotons/I");
+  // add a branch for number of candidate photons in the event (tight and fakeable)
+  fTree->Branch("nTightPhotons",&fNTightPhotons,"nTightPhotons/I");
+  fTree->Branch("nFakeablePhotons",&fNFakeablePhotons,"nFakeablePhotons/I");
   
   // now with CommonClasses, use the string defined in the header
   fTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
@@ -207,6 +213,43 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
 
   fTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+
+  // repeating all this for each of tight-fake and fake-fake trees
+  // basically they'll all point to the same structs, but the structs will contain
+  // different values for the event, depending on the event category
+
+  fTightFakeTree = fs->make<TTree>("fTightFakeTree","PhotonTightFakeTree");
+  fTightFakeTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
+  fTightFakeTree->Branch("Vtx",&fVtxInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
+  fTightFakeTree->Branch("Vtx2",&fVtx2Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
+  fTightFakeTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
+  fTightFakeTree->Branch("L1trg",&fL1TrigInfo,ExoDiPhotons::l1TrigBranchDefString.c_str());
+  fTightFakeTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
+  fTightFakeTree->Branch("nTightPhotons",&fNTightPhotons,"nTightPhotons/I");
+  fTightFakeTree->Branch("nFakeablePhotons",&fNFakeablePhotons,"nFakeablePhotons/I");
+  fTightFakeTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  fTightFakeTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  fTightFakeTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+    
+
+  fFakeFakeTree = fs->make<TTree>("fFakeFakeTree","PhotonFakeFakeTree");
+  fFakeFakeTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
+  fFakeFakeTree->Branch("Vtx",&fVtxInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
+  fFakeFakeTree->Branch("Vtx2",&fVtx2Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
+  fFakeFakeTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
+  fFakeFakeTree->Branch("L1trg",&fL1TrigInfo,ExoDiPhotons::l1TrigBranchDefString.c_str());
+  fFakeFakeTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
+  fFakeFakeTree->Branch("nTightPhotons",&fNTightPhotons,"nTightPhotons/I");
+  fFakeFakeTree->Branch("nFakeablePhotons",&fNFakeablePhotons,"nFakeablePhotons/I");
+  fFakeFakeTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  fFakeFakeTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  fFakeFakeTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+  
+
+
+
+
+
 }
 
 
@@ -474,18 +517,23 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
    std::vector<reco::Photon> selectedPhotons; 
 
+   // do a similar thing for 'Fakeable objects', for data-based fake rate approach
+   std::vector<reco::Photon> fakeablePhotons; 
+
+
    // photon loop
    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
 
-     //     cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+          cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
      //     cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
 //      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
-//      cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
-//     cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
-//      cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
-//      cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
-//      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
-//     cout << endl;
+      cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
+     cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
+      cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
+      cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
+      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
+      cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();
+     cout << endl;
 
 
      // now add selected photons to vector if:
@@ -496,6 +544,25 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      if(ExoDiPhotons::isTightPhoton(&(*recoPhoton)) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && !ExoDiPhotons::isASpike(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt) ) {
        
        selectedPhotons.push_back(*recoPhoton);
+     }
+
+     // also check for fakeable objects
+     if(ExoDiPhotons::isFakeableObject(&(*recoPhoton))) {
+       
+       cout << "Fakeable photon! ";
+       cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+     //     cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
+//      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
+       cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
+       cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
+       cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
+       cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
+       //      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
+       cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();
+       cout << endl;
+
+
+       fakeablePhotons.push_back(*recoPhoton);
      }
     
        
@@ -513,7 +580,18 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
    // now count many candidate photons we have in this event
    //   cout << "N candidate photons = " << selectedPhotons.size() <<endl;
-   fNCandPhotons = selectedPhotons.size();
+   fNTightPhotons = selectedPhotons.size();
+
+
+   // now consider possible Fakeable objects
+
+   // first sort by pt
+   sort(fakeablePhotons.begin(),fakeablePhotons.end(),ExoDiPhotons::comparePhotonsByPt);
+
+   cout << "N fakeable = " << fakeablePhotons.size() <<endl;
+   fNFakeablePhotons = fakeablePhotons.size();
+
+
 
    if(selectedPhotons.size()>=2) {
      //     cout << "then we have two photons - fill them to tree, you fool, dont just hang around here doing nothing!" <<endl;
@@ -521,8 +599,13 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      // can now use the Fill function specific to this recoPhoton struct
      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&selectedPhotons[0],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
 
+     // specifically declare these photons NOT fake
+     fRecoPhotonInfo1.isFakeable = false;
+
      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,&selectedPhotons[1],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
       
+     fRecoPhotonInfo2.isFakeable = false;
+
      // fill diphoton info
      ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,&selectedPhotons[0],&selectedPhotons[1]);
      
@@ -532,6 +615,65 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
    }
 
+   else if(selectedPhotons.size()==1 && fakeablePhotons.size()>=1) {
+     
+     // then is tight+fake category
+     // will always take tight, + highest pt fake
+
+     //selectedPhotons[0]
+     // fakeablePhotons[0]
+     
+
+     // order Photon1,2 by pt, no matter which is tight and which is fake
+     // and then use isFakeable leaf to distinguish them
+     
+     if(selectedPhotons[0].pt()>=fakeablePhotons[0].pt()) {
+
+       // then higher pt photon is tight
+       ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&selectedPhotons[0],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+       ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,&fakeablePhotons[0],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+       ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,&selectedPhotons[0],&fakeablePhotons[0]);
+       
+       // specifically declare tight/fake nature
+       fRecoPhotonInfo1.isFakeable = false;
+       fRecoPhotonInfo2.isFakeable = true;
+       
+     }
+     else {
+
+       // then higher pt photon is fake
+       ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&fakeablePhotons[0],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+       ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,&selectedPhotons[0],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+
+       ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,&fakeablePhotons[0],&selectedPhotons[0]);
+       
+       // specifically declare tight/fake nature
+       fRecoPhotonInfo1.isFakeable = true;
+       fRecoPhotonInfo2.isFakeable = false;       
+       
+     }
+     
+     // and fill the tight-fake tree instead!
+     fTightFakeTree->Fill();
+
+   }
+   
+   else if(selectedPhotons.size()==0 && fakeablePhotons.size()>=2) {
+
+     // then this is fake-fake category
+
+     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&fakeablePhotons[0],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,&fakeablePhotons[1],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+     ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,&fakeablePhotons[0],&fakeablePhotons[1]);
+
+     // specifically need to declare these photons as fake
+     fRecoPhotonInfo1.isFakeable = true;
+     fRecoPhotonInfo2.isFakeable = true;
+
+     // and fill the fake-fake tree instead!
+     fFakeFakeTree->Fill();
+     
+   }
 
 
 
