@@ -5,6 +5,7 @@
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
 #include "DataFormats/EgammaCandidates/interface/PhotonFwd.h"
 
+#include "TMath.h"
 
 namespace ExoDiPhotons{
 
@@ -123,6 +124,50 @@ namespace ExoDiPhotons{
 
     if ( fabs(photon->caloPosition().eta())>1.4442 && fabs(photon->caloPosition().eta())<1.566 ) return true; 
     else return false;
+  }
+
+
+  bool isFakeableObject(const reco::Photon *photon) {
+
+    bool result = false;
+    
+    double pt = photon->pt();
+
+    double thisTrkIso = photon->trkSumPtHollowConeDR04();
+    double thisEcalIso = photon->ecalRecHitSumEtConeDR04();
+    double thisHcalIso = photon->hcalTowerSumEtConeDR04();
+
+    // define fakeable objects as denominator for fake rate studies
+
+    // we are defining them to be loose, but also exclude real photons (to large degree) 
+
+    // these 'swing values' determine both loose limit and exclusion veto
+    double trkIsoSwingValue = 3.5 + 0.001*pt;
+    double trkIsoLooseLimit = TMath::Min( 5.0*(trkIsoSwingValue), 0.2*pt );
+    double trkIsoExclusion = trkIsoSwingValue;
+    // for testing, to see if I can get a Fakeable event in small sample
+    //    double trkIsoExclusion = 2.0 + 0.001*pt;
+
+
+    double ecalIsoSwingValue = 4.2 + 0.006*pt;
+    double ecalIsoLooseLimit = TMath::Min( 5.0*(ecalIsoSwingValue), 0.2*pt );
+    double ecalIsoExclusion = ecalIsoSwingValue;
+
+    double hcalIsoSwingValue = 2.2 + 0.0025*pt;
+    double hcalIsoLooseLimit = TMath::Min( 5.0*(hcalIsoSwingValue), 0.2*pt );
+    double hcalIsoExclusion = hcalIsoSwingValue;
+    
+    if( photon->hadronicOverEm()<0.05 && 
+	thisTrkIso < trkIsoLooseLimit &&
+	thisEcalIso < ecalIsoLooseLimit &&
+	thisHcalIso < hcalIsoLooseLimit  && 
+	( thisTrkIso > trkIsoExclusion || thisEcalIso > ecalIsoExclusion || thisHcalIso > hcalIsoExclusion || !passesSigmaIetaIetaCut(photon) )
+	) {
+      // then this passes our fakeable definition
+      result = true;
+    }
+   
+    return result;
   }
 
 }
