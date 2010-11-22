@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.15 2010/11/22 12:37:02 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.16 2010/11/22 14:46:44 chenders Exp $
 //
 //
 
@@ -524,16 +524,16 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    // photon loop
    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
 
-          cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+     //          cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
      //     cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
 //      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
-      cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
-     cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
-      cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
-      cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
-      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
-      cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();
-     cout << endl;
+//       cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
+//      cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
+//       cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
+//       cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
+//       cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
+//       cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();
+//      cout << endl;
 
 
      // now add selected photons to vector if:
@@ -549,17 +549,17 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      // also check for fakeable objects
      if(ExoDiPhotons::isFakeableObject(&(*recoPhoton))) {
        
-       cout << "Fakeable photon! ";
-       cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
-     //     cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
-//      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
-       cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
-       cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
-       cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
-       cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
-       //      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
-       cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();
-       cout << endl;
+//        cout << "Fakeable photon! ";
+//        cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+//      //     cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
+// //      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
+//        cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
+//        cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
+//        cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
+//        cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
+//        //      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
+//        cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();
+//        cout << endl;
 
 
        fakeablePhotons.push_back(*recoPhoton);
@@ -588,7 +588,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    // first sort by pt
    sort(fakeablePhotons.begin(),fakeablePhotons.end(),ExoDiPhotons::comparePhotonsByPt);
 
-   cout << "N fakeable = " << fakeablePhotons.size() <<endl;
+   //   cout << "N fakeable = " << fakeablePhotons.size() <<endl;
    fNFakeablePhotons = fakeablePhotons.size();
 
 
