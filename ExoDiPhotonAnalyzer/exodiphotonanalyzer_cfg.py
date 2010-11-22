@@ -33,8 +33,10 @@ process.source = cms.Source("PoolSource",
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
 
 #use the right global tag!
+#global tag fro >382 data (Nov22)
+process.GlobalTag.globaltag = 'GR_R_38X_V14::All'
 # global tag for prompt reco with 38X (as of Sept30)
-process.GlobalTag.globaltag = 'GR10_P_V9::All'
+#process.GlobalTag.globaltag = 'GR10_P_V9::All'
 # this is global tag for PromptReco with 36X
 #process.GlobalTag.globaltag = 'GR10_P_V7::All'
 # this is the tag claimed for data reprocessing with 35X
