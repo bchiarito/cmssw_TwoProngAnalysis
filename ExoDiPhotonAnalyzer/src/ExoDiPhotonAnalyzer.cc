@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.16 2010/11/22 14:46:44 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.17 2010/11/22 14:48:08 chenders Exp $
 //
 //
 
@@ -547,7 +547,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      }
 
      // also check for fakeable objects
-     if(ExoDiPhotons::isFakeableObject(&(*recoPhoton))) {
+     if(ExoDiPhotons::isFakeableObject(&(*recoPhoton)) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt) ) {
        
 //        cout << "Fakeable photon! ";
 //        cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
