@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.12 2010/11/19 10:09:03 torimoto Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.13 2010/11/21 13:46:32 chenders Exp $
 //
 //
 
@@ -460,94 +460,71 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      return;
    }
    
-   //   cout << "N photons = " << photonColl->size() <<endl;
+   //   cout << "N reco photons = " << photonColl->size() <<endl;
 
-   // we want the two highest Et photons for this analysis
-   const reco::Photon *photon1 = NULL;
-   const reco::Photon *photon2 = NULL;
-   double highestEt1 = fMin_pt;
-   double highestEt2 = fMin_pt;
+   // new approach - 
+   // make vector of all selected Photons (tight ID, not spike, min pt, etc)
+   // then sort at end by pt
+   // also allows to count how often a third photon could be considered a candidate
 
-
+   std::vector<reco::Photon> selectedPhotons; 
 
    // photon loop
    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
 
-     cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+     //     cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+     //     cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
 //      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
 //      cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
-//      cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
+//     cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
 //      cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
 //      cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
 //      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
-//      cout << endl;
+//     cout << endl;
 
-     // option to remove spikes, so only consider pt-ordering of non-spike photons
-     // note that I have to do '&(*photon)' because I am using the iterator, 
-     // while my function needs a pointer to the object (obtained by dereffing the iter) ...
-     if(!fkRemoveSpikes || !ExoDiPhotons::isASpike(&(*recoPhoton))) {
-       // ie either we dont care about spikes OR this photon is not a spike anyway
-       // so in either case we continue to study this photon... 
+
+     // now add selected photons to vector if:
+     // tight ID
+     // not in gap
+     // not a spike
+     // min pt cut  (for all photons)
+     if(ExoDiPhotons::isTightPhoton(&(*recoPhoton)) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && !ExoDiPhotons::isASpike(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt) ) {
        
-       // similar logic for tight photon ID
-       if(!fkRequireTightPhotons || (ExoDiPhotons::isTightPhoton(&(*recoPhoton)) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)))) {
-	 ///ie either we dont require tight photons OR this photon passes tight ID anyway
-
-	 if(recoPhoton->et() >= fMin_pt && recoPhoton->et()>highestEt1) {
-	   // formerly highest is now second highest
-	   photon2 = photon1; // this can still be NULL at this point ...
-	   if(photon2)
-	     highestEt2 = photon2->et();
-	   // and the new one is highest
-	   photon1 =  &(*recoPhoton);
-	   highestEt1 = photon1->et();
-	   
-	 }
-	 else if(recoPhoton->et() >= fMin_pt && recoPhoton->et()>highestEt2) {
-	   photon2 =  &(*recoPhoton);
-	   highestEt2 = photon2->et();
-	 }
-	 
-       } //ends tight photon ID check
-     }//ends spike criteria check
+       selectedPhotons.push_back(*recoPhoton);
+     }
+    
        
-   } //end reco photn loop
+   } //end reco photon loop
 
-//    // now we have the two highest photons
-    if(photon1) {
-      //      cout << "Highest Et photon: et, eta, phi = " << photon1->et() <<", "<<photon1->eta()<< ", "<< photon1->phi()<<endl;
 
+   // now sort the vector of selected photons by pt
+   // (compare function is found in RecoPhotonInfo.h)
+   sort(selectedPhotons.begin(),selectedPhotons.end(),ExoDiPhotons::comparePhotonsByPt);
+   // check sorting
+   //   cout << "After sorting photons" <<endl;
+   //   for(std::vector<reco::Photon>::iterator myPhotonIter = selectedPhotons.begin();myPhotonIter<selectedPhotons.end();myPhotonIter++) {
+   //     cout << "Photon et, eta, phi = " << myPhotonIter->et() <<", "<<myPhotonIter->eta()<< ", "<< myPhotonIter->phi()<<endl;
+   //   }
+
+   // now count many candidate photons we have in this event
+   cout << "N candidate photons = " << selectedPhotons.size() <<endl;
+
+   if(selectedPhotons.size()>=2) {
+     //     cout << "then we have two photons - fill them to tree, you fool, dont just hang around here doing nothing!" <<endl;
 
      // can now use the Fill function specific to this recoPhoton struct
-      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,photon1,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&selectedPhotons[0],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
 
-
-    }
-    if(photon2) {
-
-      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,photon2,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,&selectedPhotons[1],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
       
-      //      cout << "2nd Highest Et photon: et, eta, phi = " << photon2->et() <<", "<<photon2->eta()<< ", "<< photon2->phi()<<endl;
+     // fill diphoton info
+     ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,&selectedPhotons[0],&selectedPhotons[1]);
+     
+     // only fill the tree if there are two photons!
+     fTree->Fill();
 
 
-    }
-
-
-    if(photon1&&photon2) {
-
-      // fill diphoton info
-      ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,photon1,photon2);
-
-      // only fill the tree if there are two photons!
-      fTree->Fill();
-      
-    }
-
-
-    // curios - can I sort the photon collection?
-    
-
-    //    cout << "After sprting photons" << endl;
+   }
 
 
 
