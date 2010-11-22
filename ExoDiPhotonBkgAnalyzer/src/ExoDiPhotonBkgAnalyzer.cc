@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Mon Jun 28 12:37:19 CEST 2010
-// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.8 2010/11/03 16:45:11 chenders Exp $
+// $Id: ExoDiPhotonBkgAnalyzer.cc,v 1.9 2010/11/19 10:09:03 torimoto Exp $
 //
 //
 
@@ -75,7 +75,7 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
 
-using namespace std;
+
 
 // new CommonClasses approach
 // these objects all in the namespace 'ExoDiPhotons'
@@ -87,6 +87,7 @@ using namespace std;
 #include "DiPhotonAnalysis/CommonClasses/interface/TriggerInfo.h"
 
 
+using namespace std;
 
 
 
@@ -126,6 +127,8 @@ class ExoDiPhotonBkgAnalyzer : public edm::EDAnalyzer {
       ExoDiPhotons::beamSpotInfo_t fBeamSpotInfo;
 
       ExoDiPhotons::hltTrigInfo_t fHLTInfo;
+
+      int fNTightPhotons; // number of candidate photons in event (ie tight)
 
       ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo1; // leading photon 
       ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo2; // second photon
@@ -179,6 +182,9 @@ ExoDiPhotonBkgAnalyzer::ExoDiPhotonBkgAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("Vtx",&fVtxInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
   fTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
   fTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
+
+  fTree->Branch("nTightPhotons",&fNTightPhotons,"nTightPhotons/I");
+
   fTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
 
   fTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
@@ -245,55 +251,28 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
    fVtxInfo.ndof = -99999.99;
    fVtxInfo.d0 = -99999.99;
 
-   const reco::Vertex *vertex1 = NULL; // best vertex (by trk SumPt)
+
    // note for higher lumi, may want to also store second vertex, for pileup studies
-   
-   // even if the vertex has sumpt=0, its still enough to be the 'highest'
-   double highestSumPtTracks1 = -1.0; 
+   // specially if we look at pileup MC
+
+   // to allow scalability for many vertices, use a vector and sort later
+   std::vector<reco::Vertex> myVertices;
 
    for(reco::VertexCollection::const_iterator vtx=vertexColl->begin(); vtx!=vertexColl->end(); vtx++) {
 
-     // loop over assoc tracks to get sum pt
-     //     fVtxInfo.sumPtTracks = 0.0;
-     double sumPtTracks = 0.0;
+     // push back all MC vertices for now
      
-     for(reco::Vertex::trackRef_iterator vtxTracks=vtx->tracks_begin(); vtxTracks!=vtx->tracks_end();vtxTracks++) {
-       //       fVtxInfo.sumPtTracks += (**vtxTracks).pt();
-       sumPtTracks += (**vtxTracks).pt();
-     }
+     myVertices.push_back(*vtx);
 
-     //     cout << "Vtx x = "<< vtx->x()<<", y= "<< vtx->y()<<", z = " << vtx->z() << ";  N tracks = " << vtx->tracksSize() << "; isFake = " << vtx->isFake() <<", sumPt(tracks) = "<<sumPtTracks << "; ndof = " << vtx->ndof()<< "; d0 = " << vtx->position().rho() << endl;
-     
-     // and note that this vertex collection can contain vertices with Ntracks = 0
-     // watch out for these!
-
-     if(sumPtTracks > highestSumPtTracks1) {
-       // then this new best
-       vertex1 = &(*vtx);
-       highestSumPtTracks1 = sumPtTracks;
-
-     }
-
-   
    }// end vertex loop
 
-   if(vertex1) {
-//      fVtxInfo.vx = vertex1->x();
-//      fVtxInfo.vy = vertex1->y();
-//      fVtxInfo.vz = vertex1->z();
-//      fVtxInfo.isFake = vertex1->isFake(); 
-//      fVtxInfo.Ntracks = vertex1->tracksSize();
+   // now sort the vertices after
+   // can be either by Ntracks or TrackSumPt, depending how I write the function
+   sort(myVertices.begin(),myVertices.end(),ExoDiPhotons::sortVertices) ;
 
-//      fVtxInfo.ndof = vertex1->ndof();
-//      fVtxInfo.d0 = vertex1->position().rho();
-
-
-     ExoDiPhotons::FillVertexInfo(fVtxInfo,vertex1);
-     // fill the SumPt Tracks separately for now
-     fVtxInfo.sumPtTracks = highestSumPtTracks1;
-     
-   }
-
+   fVtxInfo.Nvtx = myVertices.size();
+   // then fill vtx info
+   ExoDiPhotons::FillVertexInfo(fVtxInfo,&(*myVertices.begin()));
 
 
    //beam spot
@@ -381,12 +360,12 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
    
    //   cout << "N reco photons = " << photonColl->size() <<endl;
 
-   // we want the two highest Et photons for this analysis
-   const reco::Photon *photon1 = NULL;
-   const reco::Photon *photon2 = NULL;
-   double highestEt1 = fMin_pt;
-   double highestEt2 = fMin_pt;
+   // new approach - 
+   // make vector of all selected Photons (tight ID, not spike, min pt, etc)
+   // then sort at end by pt
+   // also allows to count how often a third photon could be considered a candidate
 
+   std::vector<reco::Photon> selectedPhotons; 
 
    // photon loop
    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
@@ -400,186 +379,42 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
 //      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
 //      cout << endl;
 
-     if(ExoDiPhotons::isTightPhoton(&(*recoPhoton)) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton))) {
+     // now add selected photons to vector if:
+     // tight ID
+     // not in gap
+     // not a spike
+     // min pt cut  (for all photons)
+     if(ExoDiPhotons::isTightPhoton(&(*recoPhoton)) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt) ) {
 
      // fill all reco photons for bkg study
      //if(true) {
 
-
-	 if(recoPhoton->et() >= fMin_pt && recoPhoton->et()>highestEt1) {
-	   // formerly highest is now second highest
-	   photon2 = photon1; // this can still be NULL at this point ...
-	   if(photon2)
-	     highestEt2 = photon2->et();
-	   // and the new one is highest
-	   photon1 =  &(*recoPhoton);
-	   highestEt1 = photon1->et();
-	   
-	 }
-	 else if(recoPhoton->et() >= fMin_pt && recoPhoton->et()>highestEt2) {
-	   photon2 =  &(*recoPhoton);
-	   highestEt2 = photon2->et();
-	 }
-
+       selectedPhotons.push_back(*recoPhoton);
        
      } // end if tight photon
      
    } //end of reco photon loop
 
+   
+   // now sort the vector of selected photons by pt
+   // (compare function is found in RecoPhotonInfo.h)
+   sort(selectedPhotons.begin(),selectedPhotons.end(),ExoDiPhotons::comparePhotonsByPt);
 
    // now we have the two highest recoPhotons which pass our cuts
-   
-   if(photon1) {
 
-     // can now use the Fill function specific to this recoPhoton struct
-     // everything should now be done inside this function
-     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,photon1,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
-
-     
-
-     //     reco::SuperClusterRef sc1 = photon1->superCluster();
-     //     std::pair<DetId,float> maxc1 = lazyTools_->getMaximum(*sc1);
-
-     //detId and ieta/iphi/iY/iX
-     //     fRecoPhotonInfo1.detId = maxc1.first.rawId();
-     
-     //     cout << "DetId = " << fRecoPhotonInfo1.detId <<endl;
-
-//      if(maxc1.first.subdetId() == EcalBarrel) {
-//        EBDetId ebId( maxc1.first );
-//        fRecoPhotonInfo1.iEtaY = ebId.ieta(); // iEta in EB
-//        fRecoPhotonInfo1.iPhiX = ebId.iphi(); // iPhi in EB
-//      }
-//      else if (maxc1.first.subdetId() == EcalEndcap) {
-//        EEDetId eeId( maxc1.first );
-//        fRecoPhotonInfo1.iEtaY = eeId.iy(); // iY in EE
-//        fRecoPhotonInfo1.iPhiX = eeId.ix(); // iX in EE       
-//      }
-
-//     cout << "iEtaY = "<<fRecoPhotonInfo1.iEtaY <<endl;
-//     cout << "iPhiX = "<<fRecoPhotonInfo1.iPhiX <<endl;
-
-     // swiss cross and other spike-related info
-     //     if (maxc1.first.subdetId() == EcalBarrel) 
-     //       fRecoPhotonInfo1.swisscross = EcalSeverityLevelAlgo::swissCross(maxc1.first, (*recHitsEB), 0);
-     //     fRecoPhotonInfo1.eMax = lazyTools_->eMax(*sc1);
-     //     fRecoPhotonInfo1.eLeft = lazyTools_->eLeft(*sc1);
-     //     fRecoPhotonInfo1.eRight = lazyTools_->eRight(*sc1);
-     //     fRecoPhotonInfo1.eTop = lazyTools_->eTop(*sc1);
-     //     fRecoPhotonInfo1.eBottom = lazyTools_->eBottom(*sc1);
-     //     fRecoPhotonInfo1.eSecond = lazyTools_->e2nd(*sc1);
-
-     //     cout << "Swiss Cross = "<< fRecoPhotonInfo1.swisscross;
-     //     cout << "; eMax = " << fRecoPhotonInfo1.eMax;
-     //     cout << "; eSecond = " << fRecoPhotonInfo1.eSecond<<endl;
-
-//      const reco::CaloClusterPtr  seed = sc1->seed();
-
-//      DetId id = lazyTools_->getMaximum(*seed).first; 
-//      float time  = -999., outOfTimeChi2 = -999., chi2 = -999.;
-//      int   flags=-1, severity = -1; 
-
-//      const EcalRecHitCollection & rechits = ( photon1->isEB() ? *recHitsEB : *recHitsEE); 
-//      EcalRecHitCollection::const_iterator it = rechits.find( id );
-//      if( it != rechits.end() ) { 
-//        time = it->time(); 
-//        outOfTimeChi2 = it->outOfTimeChi2();
-//        chi2 = it->chi2();
-//        flags = it->recoFlag();
-//        severity = EcalSeverityLevelAlgo::severityLevel( id, rechits, *chStatus );
-//      }
-
-//      const EcalChannelStatus *ch_status = chStatus.product(); 
-//      EcalChannelStatusMap::const_iterator chit;
-//      chit = ch_status->getMap().find(id.rawId());
-//      int mystatus = -99;
-//      if( chit != ch_status->getMap().end() ){
-//        EcalChannelStatusCode ch_code = (*chit);
-//        mystatus = ch_code.getStatusCode();
-//      }
-
-     //     cout << "Photon1 seed " << lazyTools_->getMaximum(*seed).second << " " << maxc1.second << " " << lazyTools_->getMaximum(*seed).second -  maxc1.second << endl;     
-     //     cout << "Photon1 time chStatus flags severity: " << time << " " << mystatus << " " << flags << " " << severity << endl;
-
-     //     fRecoPhotonInfo1.severityLevel = severity;
-     //     fRecoPhotonInfo1.recHitFlag = flags;
-     //     fRecoPhotonInfo1.maxRecHitTime = time;
-
-     //     fRecoPhotonInfo1.esRatio = getESRatio(photon1, iEvent, iSetup);
-     //     cout << "Es ratio = " << fRecoPhotonInfo1.esRatio <<endl;
-
-   }
-
-   if(photon2) {
-     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,photon2,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
-
-//      reco::SuperClusterRef sc2 = photon2->superCluster();
-//      std::pair<DetId,float> maxc2 = lazyTools_->getMaximum(*sc2);
-
-//      //detId and ieta/iphi/iY/iX
-//      fRecoPhotonInfo2.detId = maxc2.first.rawId();
-     
-//      if(maxc2.first.subdetId() == EcalBarrel) {
-//        EBDetId ebId( maxc2.first );
-//        fRecoPhotonInfo2.iEtaY = ebId.ieta(); // iEta in EB
-//        fRecoPhotonInfo2.iPhiX = ebId.iphi(); // iPhi in EB
-//      }
-//      else if (maxc2.first.subdetId() == EcalEndcap) {
-//        EEDetId eeId( maxc2.first );
-//        fRecoPhotonInfo2.iEtaY = eeId.iy(); // iY in EE
-//        fRecoPhotonInfo2.iPhiX = eeId.ix(); // iX in EE       
-//      }
-
-//      // swiss cross and other spike-related info
-//      if (maxc2.first.subdetId() == EcalBarrel) 
-//        fRecoPhotonInfo2.swisscross = EcalSeverityLevelAlgo::swissCross(maxc2.first, (*recHitsEB), 0);
-//      fRecoPhotonInfo2.eMax = lazyTools_->eMax(*sc2);
-//      fRecoPhotonInfo2.eLeft = lazyTools_->eLeft(*sc2);
-//      fRecoPhotonInfo2.eRight = lazyTools_->eRight(*sc2);
-//      fRecoPhotonInfo2.eTop = lazyTools_->eTop(*sc2);
-//      fRecoPhotonInfo2.eBottom = lazyTools_->eBottom(*sc2);
-//      fRecoPhotonInfo2.eSecond = lazyTools_->e2nd(*sc2);
-
-
-//      const reco::CaloClusterPtr  seed = sc2->seed();
-
-//      DetId id = lazyTools_->getMaximum(*seed).first;
-//      float time  = -999., outOfTimeChi2 = -999., chi2 = -999.;
-//      int   flags=-1, severity = -1;
-
-//      const EcalRecHitCollection & rechits = ( photon2->isEB() ? *recHitsEB : *recHitsEE);
-//      EcalRecHitCollection::const_iterator it = rechits.find( id );
-//      if( it != rechits.end() ) {
-//        time = it->time();
-//        outOfTimeChi2 = it->outOfTimeChi2();
-//        chi2 = it->chi2();
-//        flags = it->recoFlag();
-//        severity = EcalSeverityLevelAlgo::severityLevel( id, rechits, *chStatus );
-//      }
-
-//      const EcalChannelStatus *ch_status = chStatus.product();
-//      EcalChannelStatusMap::const_iterator chit;
-//      chit = ch_status->getMap().find(id.rawId());
-//      int mystatus = -99;
-//      if( chit != ch_status->getMap().end() ){
-//        EcalChannelStatusCode ch_code = (*chit);
-//        mystatus = ch_code.getStatusCode();
-//      }
-
-//      //     cout << "Photon2 seed " << lazyTools_->getMaximum(*seed).second << " " << maxc2.second << " " << lazyTools_->getMaximum(*seed).second -  maxc2.second << endl;
-//      //     cout << "Photon2 time chStatus flags severity: " << time << " " << mystatus << " " << flags << " " << severity << endl;
-
-//      fRecoPhotonInfo2.severityLevel = severity;
-//      fRecoPhotonInfo2.recHitFlag = flags;
-//      fRecoPhotonInfo2.maxRecHitTime = time;
-
-//      fRecoPhotonInfo2.esRatio = ExoDiPhotons::getESRatio(photon2, iEvent, iSetup);
-
-   }
-
+   // now count many candidate photons we have in this event
+   //   cout << "N candidate photons = " << selectedPhotons.size() <<endl;
+   fNTightPhotons = selectedPhotons.size();
 
    // require that we have two photons passing our cuts
-   if(photon1&&photon2) {
+   if(selectedPhotons.size()>=2) {
+
+     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&selectedPhotons[0],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+
+     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,&selectedPhotons[1],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+     
+     fRecoPhotonInfo1.isFakeable = false;
+     fRecoPhotonInfo2.isFakeable = false;
 
      // print both photons
 //      cout << "Reco photon 1:  et, eta, phi = " << photon1->et() <<", "<<photon1->eta()<< ", "<< photon1->phi();
@@ -657,12 +492,12 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
      
      
        // there's a CMS function for deltaPhi in DataFormats/Math
-       double deltaPhi1 = reco::deltaPhi(genParticle->phi(),photon1->phi());
-       double deltaEta1 = genParticle->eta()-photon1->eta();
+       double deltaPhi1 = reco::deltaPhi(genParticle->phi(),selectedPhotons[0].phi());
+       double deltaEta1 = genParticle->eta()-selectedPhotons[0].eta();
        double deltaR1 = TMath::Sqrt(deltaPhi1*deltaPhi1+deltaEta1*deltaEta1);
      
-       double deltaPhi2 = reco::deltaPhi(genParticle->phi(),photon2->phi());
-       double deltaEta2 = genParticle->eta()-photon2->eta();
+       double deltaPhi2 = reco::deltaPhi(genParticle->phi(),selectedPhotons[1].phi());
+       double deltaEta2 = genParticle->eta()-selectedPhotons[1].eta();
        double deltaR2 = TMath::Sqrt(deltaPhi2*deltaPhi2+deltaEta2*deltaEta2);
 
 
@@ -753,7 +588,7 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
 
 
      // fill diphoton info
-     ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,photon1,photon2);
+     ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,&selectedPhotons[0],&selectedPhotons[1]);
      
      // worthwhile to also consider 'truth' diphoton info from genParticles?
 
