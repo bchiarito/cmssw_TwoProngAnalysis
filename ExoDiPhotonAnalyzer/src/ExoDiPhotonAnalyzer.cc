@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.13 2010/11/21 13:46:32 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.14 2010/11/22 10:48:36 chenders Exp $
 //
 //
 
@@ -152,6 +152,8 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       ExoDiPhotons::l1TrigInfo_t fL1TrigInfo;  
       ExoDiPhotons::hltTrigInfo_t fHLTInfo;
 
+      int fNCandPhotons; // number of candidate photons in event
+
       ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo1; // leading photon 
       ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo2; // second photon
 
@@ -195,6 +197,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("L1trg",&fL1TrigInfo,ExoDiPhotons::l1TrigBranchDefString.c_str());
   
   fTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
+
+  // add a branch for number of candidate photons in the event
+  fTree->Branch("NCandPhotons",&fNCandPhotons,"NCandPhotons/I");
   
   // now with CommonClasses, use the string defined in the header
   fTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
@@ -507,7 +512,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    //   }
 
    // now count many candidate photons we have in this event
-   cout << "N candidate photons = " << selectedPhotons.size() <<endl;
+   //   cout << "N candidate photons = " << selectedPhotons.size() <<endl;
+   fNCandPhotons = selectedPhotons.size();
 
    if(selectedPhotons.size()>=2) {
      //     cout << "then we have two photons - fill them to tree, you fool, dont just hang around here doing nothing!" <<endl;
