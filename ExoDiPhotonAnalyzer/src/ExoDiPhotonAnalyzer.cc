@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.17 2010/11/22 14:48:08 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.18 2010/11/22 17:24:04 chenders Exp $
 //
 //
 
@@ -150,6 +150,8 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       ExoDiPhotons::vtxInfo_t fVtxInfo;
   // adding a second vertex
       ExoDiPhotons::vtxInfo_t fVtx2Info;
+  // now even adding a third vtx!
+      ExoDiPhotons::vtxInfo_t fVtx3Info;
 
       ExoDiPhotons::beamSpotInfo_t fBeamSpotInfo;
 
@@ -163,6 +165,10 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo2; // second photon
 
       ExoDiPhotons::diphotonInfo_t fDiphotonInfo;
+
+  // diphoton info based on using hte second or third vtx in event
+      ExoDiPhotons::diphotonInfo_t fDiphotonInfoVtx2; 
+      ExoDiPhotons::diphotonInfo_t fDiphotonInfoVtx3; 
 
 };
 
@@ -195,6 +201,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 
   //adding a second vtx
   fTree->Branch("Vtx2",&fVtx2Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
+  fTree->Branch("Vtx3",&fVtx3Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
 
   fTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
 
@@ -213,6 +220,11 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
 
   fTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+  // diphoton info for second or thrid best vertex
+  // only bothering to add this for tight-tight tree for now
+  fTree->Branch("DiphotonVtx2",&fDiphotonInfoVtx2,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+  fTree->Branch("DiphotonVtx3",&fDiphotonInfoVtx3,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+  
 
   // repeating all this for each of tight-fake and fake-fake trees
   // basically they'll all point to the same structs, but the structs will contain
@@ -312,6 +324,17 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    fVtx2Info.ndof = -99999.99;
    fVtx2Info.d0 = -99999.99;
 
+
+   fVtx3Info.vx = -99999.99;
+   fVtx3Info.vy = -99999.99;
+   fVtx3Info.vz = -99999.99;
+   fVtx3Info.isFake = -99;   
+   fVtx3Info.Ntracks = -99;
+   fVtx3Info.sumPtTracks = -99999.99;
+   fVtx3Info.ndof = -99999.99;
+   fVtx3Info.d0 = -99999.99;
+
+
    // note for higher lumi, may want to also store second vertex, for pileup studies
    // to allow scalability for many vertices, use a vector and sort later
    std::vector<reco::Vertex> myVertices;
@@ -365,6 +388,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      ExoDiPhotons::FillVertexInfo(fVtx2Info,&(*(myVertices.begin()+1)));
    }
 
+   if(myVertices.size()>=3) {
+     ExoDiPhotons::FillVertexInfo(fVtx3Info,&(*(myVertices.begin()+2)));
+   }
    
 
 
@@ -609,6 +635,38 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      // fill diphoton info
      ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,&selectedPhotons[0],&selectedPhotons[1]);
      
+     // for the pileup/vtx study.
+     // lets try setting these photons to different vertices
+     // and see how much these changes Mgg
+     
+     if(myVertices.size()>=2) {
+       reco::Photon photon1_vtx2(selectedPhotons[0]);
+       // keep calo poisiton same, but assign new vertex
+       // this func also recalcs 4-vector after changing vertex!
+       photon1_vtx2.setVertex(myVertices[1].position()); 
+
+       reco::Photon photon2_vtx2(selectedPhotons[1]);
+       photon2_vtx2.setVertex(myVertices[1].position()); 
+
+       ExoDiPhotons::FillDiphotonInfo(fDiphotonInfoVtx2,&photon1_vtx2,&photon2_vtx2);
+
+     }
+     
+     if(myVertices.size()>=3) {
+       reco::Photon photon1_vtx3(selectedPhotons[0]);
+       // keep calo poisiton same, but assign new vertex
+       // this func also recalcs 4-vector after changing vertex!
+       photon1_vtx3.setVertex(myVertices[2].position()); 
+
+       reco::Photon photon2_vtx3(selectedPhotons[1]);
+       photon2_vtx3.setVertex(myVertices[2].position()); 
+
+       ExoDiPhotons::FillDiphotonInfo(fDiphotonInfoVtx3,&photon1_vtx3,&photon2_vtx3);
+
+     }
+
+
+
      // only fill the tree if there are two photons!
      fTree->Fill();
 
