@@ -32,6 +32,7 @@ void fTree::Loop()
 //by  b_branchname->GetEntry(ientry); //read only this branch
    if (fChain == 0) return;
 
+   Int_t nPass=0;
    Long64_t nentries = fChain->GetEntriesFast();
 
    Long64_t nbytes = 0, nb = 0;
@@ -41,24 +42,66 @@ void fTree::Loop()
       nb = fChain->GetEntry(jentry);   nbytes += nb;
       // if (Cut(ientry) < 0) continue;
       if (ientry==0) {
-
+	std::cout << "TOTAL ENTRIES: " << nentries << std::endl;
 	std::cout << "Photon pT cuts: " << _cutPhoton1Pt << " " << _cutPhoton2Pt << " " << _cutEta << std::endl;
       }
 
-      if ( Photon1_pt>_cutPhoton1Pt && Photon2_pt>_cutPhoton2Pt && fabs(Photon1_eta)<_cutEta && fabs(Photon2_eta)<_cutEta 
-	   && !Photon1_isEBEEGap && !Photon2_isEBEEGap
-	   // tighter isolation
-	   //	   && (Photon1_ecalIso04 < 4.2+0.003*Photon1_pt) && (Photon2_ecalIso04 < 4.2+0.003*Photon2_pt) 	// ecal < 4.2 + 0.003pt
-	   //	   && (Photon1_trkIsoSumPtHollow04 < 2+0.001*Photon1_pt) && (Photon2_trkIsoSumPtHollow04 < 2+0.001*Photon2_pt) 	// trk < 2 + 0.001pt
-	   //	   && (Photon1_hcalIso04 < 2.2+0.001*Photon1_pt) && (Photon2_hcalIso04 < 2.2+0.001*Photon2_pt)  // hcal < 2.2 + 0.001pt
+      // filter out diphoton events if PhotonJet
+      if (_filterGen && (GenEvent_signalProcessId == 18)) continue;
+      
+      if ( Photon1_pt>_cutPhoton1Pt && Photon2_pt>_cutPhoton2Pt 
+	   && fabs(Photon1_detEta)<_cutEta && fabs(Photon2_detEta)<_cutEta 
+	   && (fabs(Photon1_detEta)<1.4442 || fabs(Photon1_detEta)>1.566)
+	   && (fabs(Photon2_detEta)<1.4442 || fabs(Photon2_detEta)>1.566)
 	   ) {
 
-	std::cout << "Run:Lumi:Event " 
-		  << Event_run << ":" << Event_LS << ":" << Event_evnum 
-		  << "                , Minv: " 
-		  << Diphoton_Minv
-		  << std::endl;
+	if (_onlyEB) {	  
+	  if (!Photon1_isEB || !Photon2_isEB) continue;
+	}
 
+	nPass++;
+
+	// 	if (Diphoton_Minv>200.0) {
+	// 	  std::cout << "High Mass Event: "
+	// 		    << Diphoton_Minv 
+	// 		    << " : " << Photon1_isEB << Photon1_isEE
+	// 		    << " : " << Photon2_isEB << Photon2_isEE
+	
+	// 	    << " : " << Event_run << ":" << Event_LS << ":" << Event_evnum 
+	// 	    << std::endl;
+	// 	}
+	
+	//	std::cout //<< "Run:Lumi:Event " 
+	//	  << Event_run << ":" << Event_LS << ":" << Event_evnum 
+	//	  << "GenSignalProcessID \t"  << GenEvent_signalProcessId 
+	//	  << std::endl;
+
+	// 	std::cout 
+	// 	  << "\tMinv:pT1:pT2:eta1:eta2           \t"
+	// 	  << Diphoton_Minv << ":"
+	// 	  << Photon1_pt << ":"
+	// 	  << Photon2_pt << ":"
+	// 	  << Photon1_detEta << ":"
+	// 	  << Photon2_detEta 
+	// 	  << std::endl; std::cout
+	// 	  << "\thoe1:hoe2:sieie1:sieie2          \t"
+	// 	  << Photon1_hadOverEm << ":"
+	// 	  << Photon2_hadOverEm << ":"
+	// 	  << Photon1_sigmaIetaIeta << ":"
+	// 	  << Photon2_sigmaIetaIeta 
+	// 	  << std::endl;	std::cout 
+	// 	  << "\tecal1:ecal2:hcal1:hcal2:trk1:trk2\t"
+	// 	  << Photon1_ecalIso04 << ":" 
+	// 	  << Photon2_ecalIso04 << ":" 
+	// 	  << Photon1_hcalIso04 << ":" 
+	// 	  << Photon2_hcalIso04 << ":" 
+	// 	  << Photon1_trkIsoSumPtHollow04 << ":" 
+	// 	  << Photon2_trkIsoSumPtHollow04  
+	// 	  << std::endl;	std::cout 
+	// 	  << "\tVtx_vz                           \t"
+	// 	  << Vtx_vz << ":"
+	// 	  << std::endl;
+	
 	//	if (TrigHLT_HLT_MinBiasBSC>0) h_TrigHLT->Fill(0);
 	//	if (TrigHLT_HLT_MinBiasBSC_NoBPTX>0) h_TrigHLT->Fill(1);
 	//	if (TrigHLT_HLT_MinBiasBSC_OR>0) h_TrigHLT->Fill(2);
@@ -75,25 +118,40 @@ void fTree::Loop()
         if (TrigHLT_HLT_Photon15_LooseEcalIso_Cleaned_L1R>0) h_TrigHLT->Fill(9);
         if (TrigHLT_HLT_Photon15_TrackIso_L1R>0) h_TrigHLT->Fill(10);
         if (TrigHLT_HLT_Photon15_TrackIso_Cleaned_L1R>0) h_TrigHLT->Fill(11);
-        if (TrigHLT_HLT_Photon20_L1R>0) h_TrigHLT->Fill(12);
-        if (TrigHLT_HLT_Photon20_Cleaned_L1R>0) h_TrigHLT->Fill(13);
-        if (TrigHLT_HLT_Photon20_NoHE_L1R>0) h_TrigHLT->Fill(14);
-        if (TrigHLT_HLT_Photon25_Cleaned_L1R>0) h_TrigHLT->Fill(15);
-        if (TrigHLT_HLT_Photon30_L1R>0) h_TrigHLT->Fill(16);
-        if (TrigHLT_HLT_Photon30_Cleaned_L1R>0) h_TrigHLT->Fill(17);
-        if (TrigHLT_HLT_Photon30_L1R_8E29>0) h_TrigHLT->Fill(18);
-        if (TrigHLT_HLT_Photon50_L1R>0) h_TrigHLT->Fill(19);
-        if (TrigHLT_HLT_Photon50_Cleaned_L1R>0) h_TrigHLT->Fill(20);
-        if (TrigHLT_HLT_Photon50_NoHE_L1R>0) h_TrigHLT->Fill(21);
-        if (TrigHLT_HLT_Photon50_NoHE_Cleaned_L1R>0) h_TrigHLT->Fill(22);
-        if (TrigHLT_HLT_DoublePhoton5_L1R>0) h_TrigHLT->Fill(23);
-        if (TrigHLT_HLT_DoublePhoton5_CEP_L1R>0) h_TrigHLT->Fill(24);
-        if (TrigHLT_HLT_DoublePhoton5_Jpsi_L1R>0) h_TrigHLT->Fill(25);
-        if (TrigHLT_HLT_DoublePhoton5_Upsilon_L1R>0) h_TrigHLT->Fill(26);
-        if (TrigHLT_HLT_DoublePhoton10_L1R>0) h_TrigHLT->Fill(27);
-        if (TrigHLT_HLT_DoublePhoton15_L1R>0) h_TrigHLT->Fill(28);
-        if (TrigHLT_HLT_DoublePhoton17_L1R>0) h_TrigHLT->Fill(29);
-        if (TrigHLT_HLT_DoublePhoton20_L1R>0) h_TrigHLT->Fill(30);
+        if (TrigHLT_HLT_Photon17_Isol_SC17HE_L1R_v1>0) h_TrigHLT->Fill(12);
+        if (TrigHLT_HLT_Photon17_SC17HE_L1R_v1>0) h_TrigHLT->Fill(13);
+        if (TrigHLT_HLT_Photon20_L1R>0) h_TrigHLT->Fill(14);
+        if (TrigHLT_HLT_Photon20_Cleaned_L1R>0) h_TrigHLT->Fill(15);
+        if (TrigHLT_HLT_Photon20_NoHE_L1R>0) h_TrigHLT->Fill(16);
+        if (TrigHLT_HLT_Photon22_SC22HE_L1R_v1>0) h_TrigHLT->Fill(17);
+        if (TrigHLT_HLT_Photon25_Cleaned_L1R>0) h_TrigHLT->Fill(18);
+        if (TrigHLT_HLT_Photon30_L1R>0) h_TrigHLT->Fill(19);
+        if (TrigHLT_HLT_Photon30_Cleaned_L1R>0) h_TrigHLT->Fill(20);
+        if (TrigHLT_HLT_Photon30_L1R_8E29>0) h_TrigHLT->Fill(21);
+        if (TrigHLT_HLT_Photon30_Isol_EBOnly_Cleaned_L1R_v1>0) h_TrigHLT->Fill(22);
+        if (TrigHLT_HLT_Photon35_Isol_Cleaned_L1R_v1>0) h_TrigHLT->Fill(23);
+        if (TrigHLT_HLT_Photon40_CaloId_Cleaned_L1R_v1>0) h_TrigHLT->Fill(24);
+        if (TrigHLT_HLT_Photon40_Isol_Cleaned_L1R_v1>0) h_TrigHLT->Fill(25);
+        if (TrigHLT_HLT_Photon50_L1R>0) h_TrigHLT->Fill(26);
+        if (TrigHLT_HLT_Photon50_Cleaned_L1R>0) h_TrigHLT->Fill(27);
+        if (TrigHLT_HLT_Photon50_Cleaned_L1R_v1>0) h_TrigHLT->Fill(28);
+        if (TrigHLT_HLT_Photon50_NoHE_L1R>0) h_TrigHLT->Fill(29);
+        if (TrigHLT_HLT_Photon50_NoHE_Cleaned_L1R>0) h_TrigHLT->Fill(30);
+        if (TrigHLT_HLT_Photon70_Cleaned_L1R_v1>0) h_TrigHLT->Fill(31);
+        if (TrigHLT_HLT_Photon70_NoHE_Cleaned_L1R_v1>0) h_TrigHLT->Fill(32);
+        if (TrigHLT_HLT_Photon100_NoHE_Cleaned_L1R_v1>0) h_TrigHLT->Fill(33);
+        if (TrigHLT_HLT_Photon110_NoHE_Cleaned_L1R_v1>0) h_TrigHLT->Fill(34);
+        if (TrigHLT_HLT_DoublePhoton5_L1R>0) h_TrigHLT->Fill(35);
+        if (TrigHLT_HLT_DoublePhoton5_CEP_L1R>0) h_TrigHLT->Fill(36);
+        if (TrigHLT_HLT_DoublePhoton5_CEP_L1R_v3>0) h_TrigHLT->Fill(37);
+        if (TrigHLT_HLT_DoublePhoton5_Jpsi_L1R>0) h_TrigHLT->Fill(38);
+        if (TrigHLT_HLT_DoublePhoton5_Upsilon_L1R>0) h_TrigHLT->Fill(39);
+        if (TrigHLT_HLT_DoublePhoton10_L1R>0) h_TrigHLT->Fill(40);
+        if (TrigHLT_HLT_DoublePhoton15_L1R>0) h_TrigHLT->Fill(41);
+        if (TrigHLT_HLT_DoublePhoton17_L1R>0) h_TrigHLT->Fill(42);
+        if (TrigHLT_HLT_DoublePhoton17_SingleIsol_L1R_v1>0) h_TrigHLT->Fill(43);
+        if (TrigHLT_HLT_DoublePhoton20_L1R>0) h_TrigHLT->Fill(44);
+        if (TrigHLT_HLT_DoublePhoton22_L1R_v1>0) h_TrigHLT->Fill(45);
 
 	h_Photon1_pt->Fill(Photon1_pt);
 	h_Photon1_eta->Fill(Photon1_eta);
@@ -104,9 +162,12 @@ void fTree::Loop()
  	h_Photon1_sigmaEtaEta->Fill(Photon1_sigmaEtaEta);
 
  	if (Photon1_swisscross>-100) h_Photon1_swisscross->Fill(Photon1_swisscross);
+	if (Photon1_e2e9>0) h_Photon1_e2e9->Fill(Photon1_e2e9);
+	if (Photon1_e4x4!=0 && Photon1_e4x4>-100 && Photon1_e2x2>-100) h_Photon1_e2x2e4x4->Fill(Photon1_e2x2/Photon1_e4x4);
  	h_Photon1_severityLevel->Fill(Photon1_severityLevel);
  	h_Photon1_recHitFlag->Fill(Photon1_recHitFlag);
  	h_Photon1_maxRecHitTime->Fill(Photon1_maxRecHitTime);
+ 	h_Photon1_maxRecHitTime_wide->Fill(Photon1_maxRecHitTime);
 	
  	h_Photon1_hadOverEm->Fill(Photon1_hadOverEm);
  	h_Photon1_hcalIso04->Fill(Photon1_hcalIso04);
@@ -135,9 +196,12 @@ void fTree::Loop()
  	h_Photon2_sigmaEtaEta->Fill(Photon2_sigmaEtaEta);
 
  	if (Photon2_swisscross>-100) h_Photon2_swisscross->Fill(Photon2_swisscross);
+	if (Photon2_e2e9>0) h_Photon2_e2e9->Fill(Photon2_e2e9);
+	if (Photon2_e4x4!=0 && Photon2_e4x4>-100 && Photon2_e2x2>-100) h_Photon2_e2x2e4x4->Fill(Photon2_e2x2/Photon2_e4x4);
  	h_Photon2_severityLevel->Fill(Photon2_severityLevel);
  	h_Photon2_recHitFlag->Fill(Photon2_recHitFlag);
  	h_Photon2_maxRecHitTime->Fill(Photon2_maxRecHitTime);
+ 	h_Photon2_maxRecHitTime_wide->Fill(Photon2_maxRecHitTime);
 	
  	h_Photon2_hadOverEm->Fill(Photon2_hadOverEm);
  	h_Photon2_hcalIso04->Fill(Photon2_hcalIso04);
@@ -158,6 +222,9 @@ void fTree::Loop()
 // 	h_Photon2_esRatio->Fill(Photon2_esRatio);
 
         h_Diphoton_Minv->Fill(Diphoton_Minv);
+
+        if (Diphoton_Minv>200) h_Diphoton_Minv_high->Fill(Diphoton_Minv);
+
         h_Diphoton_qt->Fill(Diphoton_qt);
         h_Diphoton_deltaPhi->Fill(Diphoton_deltaPhi);
         h_Diphoton_deltaEta->Fill(Diphoton_deltaEta);
@@ -171,6 +238,7 @@ void fTree::Loop()
      _outF->cd();
      h_TrigHLT->Write();
      h_Diphoton_Minv->Write();
+     h_Diphoton_Minv_high->Write();
      h_Diphoton_qt->Write();
      h_Diphoton_deltaPhi->Write();
      h_Diphoton_deltaEta->Write();
@@ -185,6 +253,7 @@ void fTree::Loop()
      h_Photon1_severityLevel->Write();
      h_Photon1_recHitFlag->Write();
      h_Photon1_maxRecHitTime->Write();
+     h_Photon1_maxRecHitTime_wide->Write();
      h_Photon1_hadOverEm->Write();
      h_Photon1_hcalIso04->Write();
      h_Photon1_hcalIso03->Write();
@@ -208,6 +277,7 @@ void fTree::Loop()
      h_Photon2_severityLevel->Write();
      h_Photon2_recHitFlag->Write();
      h_Photon2_maxRecHitTime->Write();
+     h_Photon2_maxRecHitTime_wide->Write();
      h_Photon2_hadOverEm->Write();
      h_Photon2_hcalIso04->Write();
      h_Photon2_hcalIso03->Write();
@@ -224,6 +294,6 @@ void fTree::Loop()
      _outF->Write();
      _outF->Close();
    }
-
+   std::cout << "PASSING " << nPass << std::endl;
    return;
 }
