@@ -4,8 +4,8 @@ SAMPLE=$1;
 DATA=$2; #"data"; # data or mc ?
 MERGED=$3; #0; # (0) summed or individual (1) ?
 LUMI=$4; #pb
-#VERSION=MC_35X_V1;
-VERSION=MC_36X_V2;
+#VERSION=MC_36X_V4;
+VERSION=TEST;
 SIGNAL=0;
 
 if [ "X"${SAMPLE} == "X" ]
@@ -58,11 +58,16 @@ root -b <<!
 SAMPLE=${SAMPLE}_${LUMI}pb;
 #SAMPLE=${SAMPLE}_${LUMI}pb_unstacked;
 elif [  ${SAMPLE} == "DataMC" ]; then
-echo "data MC comparison";
 root -b <<!
 .L make_diphoton_plots.C
  overlayDataMC();
 // overlayDataMC_ScaledEntries();
+ .q
+!
+elif [  ${SAMPLE} == "allData" ]; then
+root -b <<!
+.L make_diphoton_plots.C
+mergeAllData();
  .q
 !
 else
@@ -81,6 +86,15 @@ root -b <<!
  make_diphoton_plots("${SAMPLE}",kTRUE,${ISDATA},kTRUE);
  .q
 !
+#
+elif [  ${SAMPLE} == "PhotonJetCheckAll" ]; then
+echo "data MC comparison";
+root -b <<!
+.L make_diphoton_plots.C
+ overlayPhotonJet();
+ .q
+!
+#
 else
 root -b <<!
  .L make_diphoton_plots.C
@@ -91,7 +105,7 @@ fi
 fi
 
 if [ ${DATA} == "data" ]; then
-if [ ${SAMPLE} != "DataMC" ]; then
+if [[ "${SAMPLE}" != "DataMC" && "${SAMPLE}" != "allData" ]]; then
 SAMPLE=data_${SAMPLE}
 fi
 fi
@@ -106,6 +120,8 @@ rfcp histograms_${SAMPLE}.root  /castor/cern.ch/user/t/torimoto/physics/diphoton
 WEBDIR=/afs/cern.ch/user/t/torimoto/www/public_html/physics/diphoton/${DATA}/${VERSION}/${SAMPLE};
 mkdir $WEBDIR;
 mv *${SAMPLE}*.png $WEBDIR;
+mv *${SAMPLE}*.pdf $WEBDIR;
+mv *${SAMPLE}*.C $WEBDIR;
 
 cat > ${WEBDIR}/index.html <<EOF
 
@@ -136,20 +152,24 @@ cat > ${WEBDIR}/index.html <<EOF
 
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_hadOverEm_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_hadOverEm_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_hcalIso04_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_hcalIso04_${SAMPLE}.png">
-<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_hcalIso03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_hcalIso03_${SAMPLE}.png">
+<!--<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_hcalIso03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_hcalIso03_${SAMPLE}.png">-->
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_ecalIso04_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_ecalIso04_${SAMPLE}.png">
-<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_ecalIso03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_ecalIso03_${SAMPLE}.png">
+<!--<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_ecalIso03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_ecalIso03_${SAMPLE}.png">-->
 
 
 <h2> Photon1 Track Isolation</h2>
 
+<!--
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoSumPtHollow03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoSumPtHollow03_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoSumPtSolid03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoSumPtSolid03_${SAMPLE}.png">
+-->
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoSumPtHollow04_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoSumPtHollow04_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoSumPtSolid04_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoSumPtSolid04_${SAMPLE}.png">
 
+<!--
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoNtrksHollow03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoNtrksHollow03_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoNtrksSolid03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoNtrksSolid03_${SAMPLE}.png">
+-->
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoNtrksHollow04_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoNtrksHollow04_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoNtrksSolid04_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_trkIsoNtrksSolid04_${SAMPLE}.png">
 
@@ -158,9 +178,12 @@ cat > ${WEBDIR}/index.html <<EOF
 <h2> Photon1 Spike Rejection</h2>
 
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_swisscross_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_swisscross_${SAMPLE}.png">
+<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_e2e9_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_e2e9_${SAMPLE}.png">
+<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_e2x2e4x4_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_e2x2e4x4_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_severityLevel_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_severityLevel_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_recHitFlag_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_recHitFlag_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_maxRecHitTime_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_maxRecHitTime_${SAMPLE}.png">
+<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_maxRecHitTime_wide_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon1_maxRecHitTime_wide_${SAMPLE}.png">
 
 
 <h2> Photon2 Kinematics </h2>
@@ -177,20 +200,24 @@ cat > ${WEBDIR}/index.html <<EOF
 
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_hadOverEm_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_hadOverEm_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_hcalIso04_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_hcalIso04_${SAMPLE}.png">
-<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_hcalIso03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_hcalIso03_${SAMPLE}.png">
+<!--<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_hcalIso03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_hcalIso03_${SAMPLE}.png">-->
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_ecalIso04_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_ecalIso04_${SAMPLE}.png">
-<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_ecalIso03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_ecalIso03_${SAMPLE}.png">
+<!--<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_ecalIso03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_ecalIso03_${SAMPLE}.png">-->
 
 
 <h2> Photon2 Track Isolation</h2>
 
+<!--
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoSumPtHollow03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoSumPtHollow03_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoSumPtSolid03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoSumPtSolid03_${SAMPLE}.png">
+-->
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoSumPtHollow04_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoSumPtHollow04_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoSumPtSolid04_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoSumPtSolid04_${SAMPLE}.png">
 
+<!--
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoNtrksHollow03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoNtrksHollow03_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoNtrksSolid03_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoNtrksSolid03_${SAMPLE}.png">
+-->
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoNtrksHollow04_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoNtrksHollow04_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoNtrksSolid04_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_trkIsoNtrksSolid04_${SAMPLE}.png">
 
@@ -199,18 +226,23 @@ cat > ${WEBDIR}/index.html <<EOF
 <h2> Photon2 Spike Rejection</h2>
 
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_swisscross_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_swisscross_${SAMPLE}.png">
+<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_e2e9_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_e2e9_${SAMPLE}.png">
+<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_e2x2e4x4_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_e2x2e4x4_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_severityLevel_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_severityLevel_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_recHitFlag_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_recHitFlag_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_maxRecHitTime_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_maxRecHitTime_${SAMPLE}.png">
+<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_maxRecHitTime_wide_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Photon2_maxRecHitTime_wide_${SAMPLE}.png">
+
 
 <h2> DiPhoton plots</h2>
 
-
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_Minv_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_Minv_${SAMPLE}.png">
+<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_Minv_high_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_Minv_high_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_qt_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_qt_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_deltaPhi_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_deltaPhi_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_deltaEta_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_deltaEta_${SAMPLE}.png">
 <A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_deltaR_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_deltaR_${SAMPLE}.png">
+<A HREF=http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_cosThetaStar_${SAMPLE}.png><img height="300" src="http://torimoto.web.cern.ch/torimoto/physics/diphoton/${DATA}/${VERSION}/${SAMPLE}/h_Diphoton_cosThetaStar_${SAMPLE}.png">
 
 
 </FONT>

@@ -343,7 +343,7 @@ public :
    TH1* h_Diphoton_deltaPhi;
    TH1* h_Diphoton_deltaEta;
    TH1* h_Diphoton_deltaR;
-
+   TH1* h_Diphoton_cosThetaStar;
    TH1* h_Photon1_pt; 
    TH1* h_Photon1_eta; 
    TH1* h_Photon1_phi; 
@@ -577,6 +577,7 @@ void fTree::Init(TTree *tree)
    h_Diphoton_deltaPhi = new TH1F("h_Diphoton_deltaPhi","Diphoton #Delta#phi;#gamma#gamma #Delta#phi",90,-3.14159,3.14159); 
    h_Diphoton_deltaEta = new TH1F("h_Diphoton_deltaEta","Diphoton #Delta#eta;#gamma#gamma #Delta#eta",40,-6.,6.); 
    h_Diphoton_deltaR = new TH1F("h_Diphoton_deltaR","Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0,7.); 
+   h_Diphoton_cosThetaStar = new TH1F("h_Diphoton_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0,1); 
 
    h_Photon1_pt = new TH1F("h_Photon1_pt","Photon1 pt;#gamma_{1} p_{T} [GeV]",100,0,500); 
    h_Photon1_eta = new TH1F("h_Photon1_eta","Photon1 #eta;#gamma_{1} #eta",25,-2.5,2.5); 

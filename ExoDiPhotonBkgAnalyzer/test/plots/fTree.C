@@ -229,6 +229,7 @@ void fTree::Loop()
         h_Diphoton_deltaPhi->Fill(Diphoton_deltaPhi);
         h_Diphoton_deltaEta->Fill(Diphoton_deltaEta);
         h_Diphoton_deltaR->Fill(Diphoton_deltaR);
+        h_Diphoton_cosThetaStar->Fill(Diphoton_cosThetaStar);
 
       }
 

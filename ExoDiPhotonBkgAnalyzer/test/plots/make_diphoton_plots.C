@@ -1,4 +1,7 @@
 
+  const int nHists=60;
+TString nameHists[nHists] = { "h_TrigHLT", "h_Diphoton_Minv", "h_Diphoton_Minv_high", "h_Diphoton_qt", "h_Diphoton_deltaPhi", "h_Diphoton_deltaEta", "h_Diphoton_deltaR", "h_Diphoton_cosThetaStar", "h_Photon1_pt", "h_Photon1_eta", "h_Photon1_phi", "h_Photon1_r9", "h_Photon1_sigmaIetaIeta", "h_Photon1_sigmaEtaEta", "h_Photon1_e2x2e4x4", "h_Photon1_e2e9", "h_Photon1_swisscross", "h_Photon1_severityLevel", "h_Photon1_recHitFlag", "h_Photon1_maxRecHitTime", "h_Photon1_maxRecHitTime_wide", "h_Photon1_hadOverEm", "h_Photon1_hcalIso04", "h_Photon1_hcalIso03", "h_Photon1_ecalIso04", "h_Photon1_ecalIso03", "h_Photon1_trkIsoSumPtHollow04", "h_Photon1_trkIsoSumPtSolid04", "h_Photon1_trkIsoNtrksHollow04", "h_Photon1_trkIsoNtrksSolid04", "h_Photon1_trkIsoSumPtHollow03", "h_Photon1_trkIsoSumPtSolid03", "h_Photon1_trkIsoNtrksHollow03", "h_Photon1_trkIsoNtrksSolid03", "h_Photon2_pt", "h_Photon2_eta", "h_Photon2_phi", "h_Photon2_r9", "h_Photon2_sigmaIetaIeta", "h_Photon2_sigmaEtaEta", "h_Photon2_e2x2e4x4", "h_Photon2_e2e9", "h_Photon2_swisscross", "h_Photon2_severityLevel", "h_Photon2_recHitFlag", "h_Photon2_maxRecHitTime", "h_Photon2_maxRecHitTime_wide", "h_Photon2_hadOverEm", "h_Photon2_hcalIso04", "h_Photon2_hcalIso03", "h_Photon2_ecalIso04", "h_Photon2_ecalIso03", "h_Photon2_trkIsoSumPtHollow04", "h_Photon2_trkIsoSumPtSolid04", "h_Photon2_trkIsoNtrksHollow04", "h_Photon2_trkIsoNtrksSolid04", "h_Photon2_trkIsoSumPtHollow03", "h_Photon2_trkIsoSumPtSolid03", "h_Photon2_trkIsoNtrksHollow03", "h_Photon2_trkIsoNtrksSolid03"  };
+
 void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50", Bool_t kPrint=kTRUE, Bool_t isData=kFALSE, Bool_t isSignal=kFALSE, TString version="MC_36X_V2") {
 
   TString infile;
@@ -12,11 +15,11 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50", Bool_t kPrint=kT
     //    TString infile = "diphoton_tree_Photon_Run2010B_PromptReco_146428_146644_Oct4.root";
     //    TString infile = "diphoton_tree_EG_Run2010A_Sep17ReReco_Oct5update.root";
     //    TString infile = "diphoton_tree_Photon_Run2010B_146729_147116_Oct8th.root";
-
   } else {
+    //    TString infile = "new_photonjet/diphotonTree_"+sample+".root";
     //    TString infile = "rfio:/castor/cern.ch/user/t/torimoto/physics/diphoton/ntuples/mc/"+version+"/"+sample+"_Spring10/diphotonTree_"+sample+".root";
-    TString infile = "/afs/cern.ch/user/t/torimoto/scratch0/CMSSW/CMSSW_3_6_1_patch4/src/DiPhotonAnalysis/ExoDiPhotonBkgAnalyzer/test/plots/diphotonTree_"+sample+".root";
-    //    TString infile = "/data/torimoto/save/diphotonTree_"+sample+".root";
+    //    TString infile = "/afs/cern.ch/user/t/torimoto/scratch0/CMSSW/CMSSW_3_6_1_patch4/src/DiPhotonAnalysis/ExoDiPhotonBkgAnalyzer/test/plots/diphotonTree_"+sample+".root";
+    TString infile = "/data/torimoto/diphoton/save/diphotonTree_"+sample+".root";
   }
   cout << "Making quick check plots for: " << infile << endl;
 
@@ -57,10 +60,13 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50", Bool_t kPrint=kT
   reader->_cutPhoton1Pt = 30;
   reader->_cutPhoton2Pt = 30;
   reader->_cutEta = 2.5;
+  reader->_onlyEB = kFALSE;
 
-  //  reader->_cutPhoton1Pt = 0;
-  //  reader->_cutPhoton2Pt = 0;
-  //  reader->_cutEta = 9999999.9;
+  if ((sample=="PhotonJet_Pt0to15")||(sample=="PhotonJet_Pt15to20")||(sample=="PhotonJet_Pt20to30")||(sample=="PhotonJet_Pt30to50")||(sample=="PhotonJet_Pt50to80")||(sample=="PhotonJet_Pt80to120")||(sample=="PhotonJet_Pt120to170")||(sample=="PhotonJet_Pt170to300")||(sample=="PhotonJet_Pt300to500")||(sample=="PhotonJet_Pt500toInf")||(sample=="G_Pt_0to15_TuneZ2_7TeV_pythia6")||(sample=="G_Pt_15to30_TuneZ2_7TeV_pythia6")||(sample=="G_Pt_30to50_TuneZ2_7TeV_pythia6")||(sample=="G_Pt_50to80_TuneZ2_7TeV_pythia6")||(sample=="G_Pt_80to120_TuneZ2_7TeV_pythia6")||(sample=="G_Pt_120to170_TuneZ2_7TeV_pythia6")||(sample=="G_Pt_170to300_TuneZ2_7TeV_pythia6")||(sample=="G_Pt_300to470_TuneZ2_7TeV_pythia6")||(sample=="G_Pt_470to800_TuneZ2_7TeV_pythia6")||(sample=="G_Pt_800to1400_TuneZ2_7TeV_pythia6")||(sample=="G_Pt_1400to1800_TuneZ2_7TeV_pythia6")||(sample=="G_Pt_1800_TuneZ2_7TeV_pythia6")||(sample=="G_Pt_0to15")||(sample=="G_Pt_15to30")||(sample=="G_Pt_30to50")||(sample=="G_Pt_50to80")||(sample=="G_Pt_80to120")||(sample=="G_Pt_120to170")||(sample=="G_Pt_170to300")||(sample=="G_Pt_300to470")||(sample=="G_Pt_470to800")||(sample=="G_Pt_800to1400")||(sample=="G_Pt_1400to1800")||(sample=="G_Pt_1800"))
+    {
+      cout << "Filtering on GEN quantities" << endl;
+      reader->_filterGen = kTRUE;
+    }
 
   reader->Loop();
 
@@ -79,13 +85,11 @@ void make_diphoton_plots(TString sample = "PhotonJet_Pt30to50", Bool_t kPrint=kT
   }
   fhists->Close();
 
-  //  draw(sample,kPrint);
   draw_individual_histos(sample,kPrint);
 
   return;
 
 }
-
 
 void merge(TString sample = "PhotonJet"){
 
@@ -94,12 +98,16 @@ void merge(TString sample = "PhotonJet"){
 
   //number of files in this set
   int temp_nfiles = 0;
-  if (sample=="PhotonJet") {
+  if (sample=="PhotonJet_filtered" || sample=="PhotonJet") {
     temp_nfiles = 10; 
   } else if (sample=="DiPhoton") {
     temp_nfiles = 6; 
   } else if (sample=="QCDDiJet") {
     temp_nfiles = 20; 
+  } else if (sample=="QCDDiJet") {
+    temp_nfiles = 20; 
+  } else if (sample=="QCD_EMEnriched") {
+    temp_nfiles = 3; 
   } else {
     cout << "Wrong sample name!" << endl;
     return;
@@ -118,7 +126,7 @@ void merge(TString sample = "PhotonJet"){
   double xsecs[nfiles];  
 
   // handy labels for each file, and for the overall set
-  if (sample=="PhotonJet") {
+  if (sample=="PhotonJet_filtered" || sample=="PhotonJet") {
   
     labels[0] = "Pt0to15";
     labels[1] = "Pt15to20";
@@ -204,16 +212,28 @@ void merge(TString sample = "PhotonJet"){
     xsecs[18] = 6.465e-08;
     xsecs[19] = 6.295e-11;
 
+  } else if (sample=="QCD_EMEnriched") {
+
+    labels[0] = "Pt20to30";
+    labels[1] = "Pt30to80";
+    labels[2] = "Pt80to170";
+
+    xsecs[0] = 0.0073*(235.5e+06);
+    xsecs[1] = 0.059*(59.3e+06);
+    xsecs[2] = 0.148*(906000.0);
   }
+
 
   TString fileNames[nfiles];
   
   for(int ifile=0;ifile<nfiles;ifile++) {
-    if (sample=="PhotonJet" || sample=="QCDDiJet") {
+    if (sample=="PhotonJet" || sample=="QCDDiJet" || sample=="QCD_EMEnriched") {
       //    fileNames[ifile] = TString::Format("%s/%s_%s/histograms_%s_%s.root",ntupleDir.Data(),sample.Data(),labels[ifile].Data(),sample.Data(),labels[ifile].Data());
-      fileNames[ifile] = TString::Format("%s/histograms_%s_%s.root",ntupleDir.Data(),sample.Data(),labels[ifile].Data(),sample.Data(),labels[ifile].Data());
+      fileNames[ifile] = TString::Format("%s/histograms_%s_%s.root",ntupleDir.Data(),sample.Data(),labels[ifile].Data());
+    } else if (sample=="PhotonJet_filtered") {
+      fileNames[ifile] = TString::Format("%s/histograms_PhotonJet_%s_new_filtered.root",ntupleDir.Data(),labels[ifile].Data());
     } else if (sample=="DiPhoton") {
-      fileNames[ifile] = TString::Format("%s/histograms_%s%s.root",ntupleDir.Data(),sample.Data(),labels[ifile].Data(),sample.Data(),labels[ifile].Data());
+      fileNames[ifile] = TString::Format("%s/histograms_%s%s.root",ntupleDir.Data(),sample.Data(),labels[ifile].Data());
     }
         cout << "File name = " << fileNames[ifile] <<endl;
   }
@@ -231,16 +251,13 @@ void merge(TString sample = "PhotonJet"){
     orig_events[ifile] = norm_h[ifile]->GetEntries();
     npass[ifile] = norm_h[ifile]->GetBinContent(norm_h[ifile]->FindBin(1));
 
-    cout << "File name = " << fileNames[ifile];
-    cout << "; Orig = " << orig_events[ifile]<< "; npass = " <<npass[ifile] <<endl;
-    //    ftemp[ifile]->Close();
+    //    cout << "File name = " << fileNames[ifile];
+    //    cout << "; Orig = " << orig_events[ifile]<< "; npass = " <<npass[ifile] <<endl;
+    cout << fileNames[ifile] << " " << xsecs[ifile] << " " << orig_events[ifile] << " " << orig_events[ifile]/xsecs[ifile] << endl;
+    //    ftemp[ifile]->Close();  
+
   }
-
   
-  const int nHists=52;
-  TString nameHists[nHists] = { "h_TrigHLT", "h_Diphoton_Minv", "h_Diphoton_qt", "h_Diphoton_deltaPhi", "h_Diphoton_deltaEta", "h_Diphoton_deltaR", "h_Photon1_pt", "h_Photon1_eta", "h_Photon1_phi", "h_Photon1_r9", "h_Photon1_sigmaIetaIeta", "h_Photon1_sigmaEtaEta", "h_Photon1_swisscross", "h_Photon1_severityLevel", "h_Photon1_recHitFlag", "h_Photon1_maxRecHitTime", "h_Photon1_hadOverEm", "h_Photon1_hcalIso04", "h_Photon1_hcalIso03", "h_Photon1_ecalIso04", "h_Photon1_ecalIso03", "h_Photon1_trkIsoSumPtHollow04", "h_Photon1_trkIsoSumPtSolid04", "h_Photon1_trkIsoNtrksHollow04", "h_Photon1_trkIsoNtrksSolid04", "h_Photon1_trkIsoSumPtHollow03", "h_Photon1_trkIsoSumPtSolid03", "h_Photon1_trkIsoNtrksHollow03", "h_Photon1_trkIsoNtrksSolid03", "h_Photon2_pt", "h_Photon2_eta", "h_Photon2_phi", "h_Photon2_r9", "h_Photon2_sigmaIetaIeta", "h_Photon2_sigmaEtaEta", "h_Photon2_swisscross", "h_Photon2_severityLevel", "h_Photon2_recHitFlag", "h_Photon2_maxRecHitTime", "h_Photon2_hadOverEm", "h_Photon2_hcalIso04", "h_Photon2_hcalIso03", "h_Photon2_ecalIso04", "h_Photon2_ecalIso03", "h_Photon2_trkIsoSumPtHollow04", "h_Photon2_trkIsoSumPtSolid04", "h_Photon2_trkIsoNtrksHollow04", "h_Photon2_trkIsoNtrksSolid04", "h_Photon2_trkIsoSumPtHollow03", "h_Photon2_trkIsoSumPtSolid03", "h_Photon2_trkIsoNtrksHollow03", "h_Photon2_trkIsoNtrksSolid03"  };
-
-
   // instantiate the sum histos with histo in first file
   //  for (int i=0; i<nHists; i++) {
   //    allHistos[i] = (TH1F*)ftemp[0]->Get(nameHists[i].Data());
@@ -251,15 +268,28 @@ void merge(TString sample = "PhotonJet"){
   // each individual one
   TH1F* indHistos[nHists][nfiles];
 
+  Double_t totalError = 0;
+
   for(int ifile=0;ifile<nfiles;ifile++) { 
     for (int i=0; i<nHists; i++) {
       indHistos[i][ifile] = (TH1F*)ftemp[ifile]->Get(nameHists[i].Data());
+
+      if (i==1) {
+	//  error N_tot = sqrt(C1^2 * n1 + C2^2 * n2 + ...)        
+	Double_t ci = xsecs[ifile]/orig_events[ifile];
+	totalError = totalError + ci*ci*(indHistos[i][ifile]->Integral());
+	cout << sample.Data() << "_" << labels[ifile].Data() << " "  << ifile << " " << xsecs[ifile] << " " << orig_events[ifile] << " " 
+	     << indHistos[i][ifile]->Integral() << " => " << ci << " " << ci*ci << " " << ci*ci*indHistos[i][ifile]->Integral() << " " << totalError << endl;	
+      }
+
       indHistos[i][ifile]->Sumw2();
       indHistos[i][ifile]->Scale((1.0/orig_events[ifile])*xsecs[ifile]*lumi); 
       //      cout << indHistos[i][ifile]->GetEntries() << endl;
     }
   }
-
+  totalError = TMath::Sqrt(totalError);
+  cout << sample.Data() << " Total Error = " << totalError << endl;
+  
   TH1F* allHistos[nHists];
 
   // instantiate the sum histos with histo in first file
@@ -273,6 +303,12 @@ void merge(TString sample = "PhotonJet"){
     }
   }
 
+    for (int i=0; i<nHists; i++) {
+      if (i==1) {
+	cout <<  sample.Data() << " " << allHistos[i]->Integral()  << " +- " << totalError << endl ;
+      }
+    }
+
   TString outFileName = TString::Format("histograms_%s_all.root",sample.Data());
   TFile fout(outFileName.Data(),"RECREATE");
   
@@ -285,203 +321,10 @@ void merge(TString sample = "PhotonJet"){
 
   TString printLabel =  sample + "_all";
 
-  //  draw(printLabel);
-  draw_individual_histos(printLabel);
+  draw_individual_histos(printLabel,kTRUE);
   
   return;
 
-}
-
-// draws histograms organized into a few canvases
-void draw(TString sample, Bool_t kPrint=kTRUE) {
-
-  gROOT->SetStyle("Plain");
-  gStyle->SetOptStat("ourme");
-  //  gStyle->SetOptStat(10);
-  
-  TString outName = TString::Format("histograms_%s.root",sample.Data());
-  TFile* fhists = new TFile(outName.Data());
-
-  const int nHists=10;
-  TCanvas* c[nHists];
-  char cname[100]; 
-
-  for (int i=0; i<nHists; i++) {
-    sprintf(cname,"c%i",i);
-    //    int x = (i%3)*600;     //int x = (i%3)*600;
-    //    int y = (i/3)*100;     //int y = (i/3)*200;
-    //    c[i] =  new TCanvas(cname,cname,x,y,600,400);
-    c[i] = new TCanvas(cname, cname,1000,600);
-    if (i>0) c[i]->Divide(3,2);
-  }
-
-  char fname[100]; 
-
-  // trigger
-  c[0]->cd();
-  c0->SetBottomMargin(0.4);
-  h_TrigHLT->GetXaxis()->SetTitleSize(0.01);
-  h_TrigHLT->GetXaxis()->SetBit(TAxis::kLabelsVert);
-  h_TrigHLT->Draw();
-  sprintf(fname,"trigger_%s.png",sample.Data());  
-  if (kPrint) c[0]->Print(fname);
-
-  // photon 1
-  c[1]->cd(1);
-  h_Photon1_pt->Draw();
-  c[1]->cd(2);
-  h_Photon1_eta->Draw();
-  c[1]->cd(3);
-  h_Photon1_phi->Draw();
-  c[1]->cd(4);
-  h_Photon1_r9->Draw();
-  c[1]->cd(5);
-  h_Photon1_sigmaIetaIeta->Draw();
-  c[1]->cd(6);
-  h_Photon1_sigmaEtaEta->Draw();
-  sprintf(fname,"kinematics_photon1_%s.png",sample.Data());  
-  if (kPrint) c[1]->Print(fname);
-
-  c[2]->cd(1);
-  h_Photon1_swisscross->Draw();
-  c[2]->cd(2);
-  h_Photon1_severityLevel->Draw();
-  c[2]->cd(3);
-  h_Photon1_recHitFlag->Draw();
-  c[2]->cd(4);
-  h_Photon1_maxRecHitTime->Draw();
-  sprintf(fname,"spike_photon1_%s.png",sample.Data());  
-  if (kPrint) c[2]->Print(fname);
-
-  c[3]->cd(1);	
-  //  c[3]->GetPad(1)->SetLogy(1);
-  c3_1->SetLogy(1);
-  h_Photon1_hadOverEm->Draw();
-  c[3]->cd(2);	
-  c3_2->SetLogy(1);
-  h_Photon1_hcalIso04->Draw();
-  c[3]->cd(3);	
-  c3_3->SetLogy(1);
-  h_Photon1_hcalIso03->Draw();
-  c[3]->cd(4);	
-  h_Photon1_ecalIso04->Draw();
-  c[3]->cd(5);	
-  h_Photon1_ecalIso03->Draw();
-  sprintf(fname,"caloIso_photon1_%s.png",sample.Data());  
-  if (kPrint) c[3]->Print(fname);
-
-  c[4] = new TCanvas("c4", "c4",1200,600);
-  c[4]->Divide(4,2);
-  c[4]->cd(1);	
-  c4_1->SetLogy(1);
-  h_Photon1_trkIsoSumPtHollow04->Draw();
-  c[4]->cd(2);	
-  c4_2->SetLogy(1);
-  h_Photon1_trkIsoSumPtSolid04->Draw();
-  c[4]->cd(3);	
-  c4_3->SetLogy(1);
-  h_Photon1_trkIsoSumPtHollow03->Draw();
-  c[4]->cd(4);	
-  c4_4->SetLogy(1);
-  h_Photon1_trkIsoSumPtSolid03->Draw();
-  c[4]->cd(5);	
-  h_Photon1_trkIsoNtrksHollow04->Draw();
-  c[4]->cd(6);	
-  h_Photon1_trkIsoNtrksSolid04->Draw();
-  c[4]->cd(7);	
-  h_Photon1_trkIsoNtrksHollow03->Draw();
-  c[4]->cd(8);	
-  h_Photon1_trkIsoNtrksSolid03->Draw();
-  sprintf(fname,"trackIso_photon1_%s.png",sample.Data());  
-  if (kPrint) c[4]->Print(fname);
-
-  // photon2
-
-  c[5]->cd(1);
-  h_Photon2_pt->Draw();
-  c[5]->cd(2);
-  h_Photon2_eta->Draw();
-  c[5]->cd(3);
-  h_Photon2_phi->Draw();
-  c[5]->cd(4);
-  h_Photon2_r9->Draw();
-  c[5]->cd(5);
-  h_Photon2_sigmaIetaIeta->Draw();
-  c[5]->cd(6);
-  h_Photon2_sigmaEtaEta->Draw();
-  sprintf(fname,"kinematics_photon2_%s.png",sample.Data());  
-  if (kPrint) c[5]->Print(fname);
-
-  c[6]->cd(1);
-  h_Photon2_swisscross->Draw();
-  c[6]->cd(2);
-  h_Photon2_severityLevel->Draw();
-  c[6]->cd(3);
-  h_Photon2_recHitFlag->Draw();
-  c[6]->cd(4);
-  h_Photon2_maxRecHitTime->Draw();
-  sprintf(fname,"spike_photon2_%s.png",sample.Data());  
-  if (kPrint) c[6]->Print(fname);
-
-  c[7]->cd(1);	
-  //  c[3]->GetPad(1)->SetLogy(1);
-  c7_1->SetLogy(1);
-  h_Photon2_hadOverEm->Draw();
-  c[7]->cd(2);	
-  c7_2->SetLogy(1);
-  h_Photon2_hcalIso04->Draw();
-  c[7]->cd(3);	
-  c7_3->SetLogy(1);
-  h_Photon2_hcalIso03->Draw();
-  c[7]->cd(4);	
-  h_Photon2_ecalIso04->Draw();
-  c[7]->cd(5);	
-  h_Photon2_ecalIso03->Draw();
-  sprintf(fname,"caloIso_photon2_%s.png",sample.Data());  
-  if (kPrint) c[7]->Print(fname);
-
-  c[8] = new TCanvas("c8", "c8",1200,600);
-  c[8]->Divide(4,2);
-  c[8]->cd(1);	
-  c8_1->SetLogy(1);
-  h_Photon2_trkIsoSumPtHollow04->Draw();
-  c[8]->cd(2);	
-  c8_2->SetLogy(1);
-  h_Photon2_trkIsoSumPtSolid04->Draw();
-  c[8]->cd(3);	
-  c8_3->SetLogy(1);
-  h_Photon2_trkIsoSumPtHollow03->Draw();
-  c[8]->cd(4);	
-  c8_4->SetLogy(1);
-  h_Photon2_trkIsoSumPtSolid03->Draw();
-  c[8]->cd(5);	
-  h_Photon2_trkIsoNtrksHollow04->Draw();
-  c[8]->cd(6);	
-  h_Photon2_trkIsoNtrksSolid04->Draw();
-  c[8]->cd(7);	
-  h_Photon2_trkIsoNtrksHollow03->Draw();
-  c[8]->cd(8);	
-  h_Photon2_trkIsoNtrksSolid03->Draw();
-  sprintf(fname,"trackIso_photon2_%s.png",sample.Data());  
-  if (kPrint) c[8]->Print(fname);
-
-  // diphoton
-  c[9] = new TCanvas("c9", "c9",1200,600);
-  c[9]->Divide(4,2);
-  c[9]->cd(1);	
-  h_Diphoton_Minv->Draw();
-  c[9]->cd(2);	
-  h_Diphoton_qt->Draw();
-  c[9]->cd(3);	 
-  h_Diphoton_deltaPhi->Draw();
-  c[9]->cd(4);	
-  h_Diphoton_deltaEta->Draw();
-  c[9]->cd(5);	
-  h_Diphoton_deltaR->Draw();
-  sprintf(fname,"diphoton_%s.png",sample.Data());  
-  if (kPrint) c[9]->Print(fname);
-
-  return;
 }
 
 
@@ -495,10 +338,6 @@ void draw_individual_histos(TString sample, Bool_t kPrint=kTRUE, Bool_t kStacked
   TString outName = TString::Format("histograms_%s.root",sample.Data());
 
   TFile* fhists = new TFile(outName.Data());
-
-  const int nHists=52;
-  TString nameHists[nHists] = { "h_TrigHLT", "h_Diphoton_Minv", "h_Diphoton_qt", "h_Diphoton_deltaPhi", "h_Diphoton_deltaEta", "h_Diphoton_deltaR", "h_Photon1_pt", "h_Photon1_eta", "h_Photon1_phi", "h_Photon1_r9", "h_Photon1_sigmaIetaIeta", "h_Photon1_sigmaEtaEta", "h_Photon1_swisscross", "h_Photon1_severityLevel", "h_Photon1_recHitFlag", "h_Photon1_maxRecHitTime", "h_Photon1_hadOverEm", "h_Photon1_hcalIso04", "h_Photon1_hcalIso03", "h_Photon1_ecalIso04", "h_Photon1_ecalIso03", "h_Photon1_trkIsoSumPtHollow04", "h_Photon1_trkIsoSumPtSolid04", "h_Photon1_trkIsoNtrksHollow04", "h_Photon1_trkIsoNtrksSolid04", "h_Photon1_trkIsoSumPtHollow03", "h_Photon1_trkIsoSumPtSolid03", "h_Photon1_trkIsoNtrksHollow03", "h_Photon1_trkIsoNtrksSolid03", "h_Photon2_pt", "h_Photon2_eta", "h_Photon2_phi", "h_Photon2_r9", "h_Photon2_sigmaIetaIeta", "h_Photon2_sigmaEtaEta", "h_Photon2_swisscross", "h_Photon2_severityLevel", "h_Photon2_recHitFlag", "h_Photon2_maxRecHitTime", "h_Photon2_hadOverEm", "h_Photon2_hcalIso04", "h_Photon2_hcalIso03", "h_Photon2_ecalIso04", "h_Photon2_ecalIso03", "h_Photon2_trkIsoSumPtHollow04", "h_Photon2_trkIsoSumPtSolid04", "h_Photon2_trkIsoNtrksHollow04", "h_Photon2_trkIsoNtrksSolid04", "h_Photon2_trkIsoSumPtHollow03", "h_Photon2_trkIsoSumPtSolid03", "h_Photon2_trkIsoNtrksHollow03", "h_Photon2_trkIsoNtrksSolid03"  };
-
 
   TCanvas* c[nHists];
   TH1F* histos[nHists];
@@ -515,13 +354,15 @@ void draw_individual_histos(TString sample, Bool_t kPrint=kTRUE, Bool_t kStacked
       c[i] = new TCanvas(cname, nameHists[i].Data(), 1000, 600); 
       c[i]->cd();
       c[i]->SetBottomMargin(0.4);
-      if (kStacked) { histos[i]->Draw("bar"); } else { histos[i]->Draw("e"); }
+      histos[i]->GetXaxis()->SetTitleSize(0.01);
+      histos[i]->GetXaxis()->SetBit(TAxis::kLabelsVert);
+      if (kStacked) { histos[i]->Draw("hist"); } else { histos[i]->Draw(); }
     } else { 
       c[i] = new TCanvas(cname, nameHists[i].Data(), 600, 600);
       c[i]->cd();
-      if (kStacked) { histos[i]->Draw("bar"); } else { histos[i]->Draw("e"); }
-      //      if ((nameHists[i]=="h_Photon1_hadOverEm")||(nameHists[i]=="h_Photon1_hcalIso04")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid03")) { 
-      if ((nameHists[i]=="h_Photon1_hadOverEm")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon2_hadOverEm")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid03")) { 
+      if (kStacked) { histos[i]->Draw("hist"); } else { histos[i]->Draw(); }
+      //      if ((nameHists[i]=="h_Photon1_hadOverEm")||(nameHists[i]=="h_Photon1_hcalIso04")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid03")) { 
+      if ((nameHists[i]=="h_Photon1_hadOverEm")||(nameHists[i]=="h_Photon1_hcalIso04")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon1_maxRecHitTime_wide")||(nameHists[i]=="h_Photon2_hadOverEm")||(nameHists[i]=="h_Photon2_hcalIso04")||(nameHists[i]=="h_Photon2_hcalIso03")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon2_maxRecHitTime_wide")) { 
 	c[i]->SetLogy();   
       }
     }
@@ -529,8 +370,11 @@ void draw_individual_histos(TString sample, Bool_t kPrint=kTRUE, Bool_t kStacked
     char fname[100];     
     sprintf(fname,"%s_%s.png",nameHists[i].Data(),sample.Data());  
     if (kPrint) c[i]->Print(fname);
+    sprintf(fname,"%s_%s.pdf",nameHists[i].Data(),sample.Data());  
+    if (kPrint) c[i]->Print(fname);
+    sprintf(fname,"%s_%s.C",nameHists[i].Data(),sample.Data());  
+    if (kPrint) c[i]->Print(fname);
   }
-
 
 
   return;
@@ -550,16 +394,17 @@ void mergeAllMC( Float_t lumiScaleFactor=1.0 ) {
   const int nfiles = 3;
   TString fileNames[nfiles];
   TString labels[nfiles];
-  double xsecs[nfiles];  
 
   labels[0] = "DiPhoton";
   labels[1] = "PhotonJet";
-  labels[2] = "QCDDiJet";
+  //  labels[2] = "QCDDiJet";
+  labels[2] = "QCD_EMEnriched";
 
   Color_t fillColors[nfiles];
   fillColors[0] = kBlue; 
   fillColors[1] = kGreen+2;
-  fillColors[2] = kRed+1;
+  //  fillColors[2] = kRed+1;
+  fillColors[2] = 6;
 
   TFile *ftemp[nfiles];
 
@@ -569,9 +414,6 @@ void mergeAllMC( Float_t lumiScaleFactor=1.0 ) {
     ftemp[ifile] = TFile::Open(fileNames[ifile].Data());
     cout << "File name = " << fileNames[ifile] << endl;
   }
-
-  const int nHists=52;
-  TString nameHists[nHists] = { "h_TrigHLT", "h_Diphoton_Minv", "h_Diphoton_qt", "h_Diphoton_deltaPhi", "h_Diphoton_deltaEta", "h_Diphoton_deltaR", "h_Photon1_pt", "h_Photon1_eta", "h_Photon1_phi", "h_Photon1_r9", "h_Photon1_sigmaIetaIeta", "h_Photon1_sigmaEtaEta", "h_Photon1_swisscross", "h_Photon1_severityLevel", "h_Photon1_recHitFlag", "h_Photon1_maxRecHitTime", "h_Photon1_hadOverEm", "h_Photon1_hcalIso04", "h_Photon1_hcalIso03", "h_Photon1_ecalIso04", "h_Photon1_ecalIso03", "h_Photon1_trkIsoSumPtHollow04", "h_Photon1_trkIsoSumPtSolid04", "h_Photon1_trkIsoNtrksHollow04", "h_Photon1_trkIsoNtrksSolid04", "h_Photon1_trkIsoSumPtHollow03", "h_Photon1_trkIsoSumPtSolid03", "h_Photon1_trkIsoNtrksHollow03", "h_Photon1_trkIsoNtrksSolid03", "h_Photon2_pt", "h_Photon2_eta", "h_Photon2_phi", "h_Photon2_r9", "h_Photon2_sigmaIetaIeta", "h_Photon2_sigmaEtaEta", "h_Photon2_swisscross", "h_Photon2_severityLevel", "h_Photon2_recHitFlag", "h_Photon2_maxRecHitTime", "h_Photon2_hadOverEm", "h_Photon2_hcalIso04", "h_Photon2_hcalIso03", "h_Photon2_ecalIso04", "h_Photon2_ecalIso03", "h_Photon2_trkIsoSumPtHollow04", "h_Photon2_trkIsoSumPtSolid04", "h_Photon2_trkIsoNtrksHollow04", "h_Photon2_trkIsoNtrksSolid04", "h_Photon2_trkIsoSumPtHollow03", "h_Photon2_trkIsoSumPtSolid03", "h_Photon2_trkIsoNtrksHollow03", "h_Photon2_trkIsoNtrksSolid03"  };
 
   // each individual one
   TH1F* indHistos[nHists][nfiles];
@@ -603,6 +445,7 @@ void mergeAllMC( Float_t lumiScaleFactor=1.0 ) {
     for (int i=0; i<nHists; i++) {
       //      if (ifile>0) allHistos[i]->Add(indHistos[i][ifile]); // note we exclude first file since we used it to instantiate the sum histo
       allHistos[i]->Add(indHistos[i][ifile]); 
+      if (i==1) cout << ifile << " " << indHistos[i][ifile]->Integral() << endl;	
     }
   }
 
@@ -622,7 +465,6 @@ void mergeAllMC( Float_t lumiScaleFactor=1.0 ) {
   cout << "Results written to: " << outFileName.Data() << endl;
   fout.Close();
 
-  //  draw(sample);
   draw_individual_histos(sample,kTRUE,kTRUE);
 
   return;
@@ -643,16 +485,10 @@ void mergeAllMC_NotStacked( Float_t lumiScaleFactor=1.0 ) {
   const int nfiles = 3;
   TString fileNames[nfiles];
   TString labels[nfiles];
-  double xsecs[nfiles];  
 
   labels[0] = "DiPhoton";
   labels[1] = "PhotonJet";
   labels[2] = "QCDDiJet";
-
-  Color_t fillColors[nfiles];
-  fillColors[0] = kBlue; 
-  fillColors[1] = kGreen+2;
-  fillColors[2] = kRed+1;
 
   TFile *ftemp[nfiles];
 
@@ -662,9 +498,6 @@ void mergeAllMC_NotStacked( Float_t lumiScaleFactor=1.0 ) {
     ftemp[ifile] = TFile::Open(fileNames[ifile].Data());
     cout << "File name = " << fileNames[ifile] << endl;
   }
-
-  const int nHists=52;
-  TString nameHists[nHists] = { "h_TrigHLT", "h_Diphoton_Minv", "h_Diphoton_qt", "h_Diphoton_deltaPhi", "h_Diphoton_deltaEta", "h_Diphoton_deltaR", "h_Photon1_pt", "h_Photon1_eta", "h_Photon1_phi", "h_Photon1_r9", "h_Photon1_sigmaIetaIeta", "h_Photon1_sigmaEtaEta", "h_Photon1_swisscross", "h_Photon1_severityLevel", "h_Photon1_recHitFlag", "h_Photon1_maxRecHitTime", "h_Photon1_hadOverEm", "h_Photon1_hcalIso04", "h_Photon1_hcalIso03", "h_Photon1_ecalIso04", "h_Photon1_ecalIso03", "h_Photon1_trkIsoSumPtHollow04", "h_Photon1_trkIsoSumPtSolid04", "h_Photon1_trkIsoNtrksHollow04", "h_Photon1_trkIsoNtrksSolid04", "h_Photon1_trkIsoSumPtHollow03", "h_Photon1_trkIsoSumPtSolid03", "h_Photon1_trkIsoNtrksHollow03", "h_Photon1_trkIsoNtrksSolid03", "h_Photon2_pt", "h_Photon2_eta", "h_Photon2_phi", "h_Photon2_r9", "h_Photon2_sigmaIetaIeta", "h_Photon2_sigmaEtaEta", "h_Photon2_swisscross", "h_Photon2_severityLevel", "h_Photon2_recHitFlag", "h_Photon2_maxRecHitTime", "h_Photon2_hadOverEm", "h_Photon2_hcalIso04", "h_Photon2_hcalIso03", "h_Photon2_ecalIso04", "h_Photon2_ecalIso03", "h_Photon2_trkIsoSumPtHollow04", "h_Photon2_trkIsoSumPtSolid04", "h_Photon2_trkIsoNtrksHollow04", "h_Photon2_trkIsoNtrksSolid04", "h_Photon2_trkIsoSumPtHollow03", "h_Photon2_trkIsoSumPtSolid03", "h_Photon2_trkIsoNtrksHollow03", "h_Photon2_trkIsoNtrksSolid03"  };
 
   // each individual one
   TH1F* indHistos[nHists][nfiles];
@@ -714,7 +547,6 @@ void mergeAllMC_NotStacked( Float_t lumiScaleFactor=1.0 ) {
   cout << "Results written to: " << outFileName.Data() << endl;
   fout.Close();
 
-  //  draw(sample);
   draw_individual_histos(sample,kTRUE,kFALSE);
 
   return;
@@ -737,13 +569,20 @@ void overlayDataMC(){
   //  const int iData=0;
   //  const int iMC=1;
 
-  //  TString datalabel = "38X_sept17rereco"; labels[1] = "allMC_2.8pb";
+  //TString datalabel = "38X_sept17rereco"; labels[1] = "allMC_2.8pb";
   //TString datalabel = "EG_Run2010A_Sep17ReReco_Oct5update";   labels[1] = "allMC_0.3pb";
   //TString datalabel = "Photon_Run2010B_PromptReco_146428_146644_Oct4"; labels[1] = "allMC_1.4pb";    
   // TString datalabel = "Photon_Run2010B_146729_147116_Oct8th";  labels[1] = "allMC_2.5pb";  
-  //  //  TString datalabel = "7pb"; labels[1] = "allMC_7.0pb";  
   // TString datalabel =  "Photon_Run2010B_147115_147454_3978nb";  labels[1] = "allMC_4.0pb";
-  TString datalabel = "11pb";  labels[1] = "allMC_11.0pb";  
+  //  TString datalabel = "Photon_Run2010B_Oct22_4150nb";  labels[1] = "allMC_4.2pb"; 
+  //  TString datalabel = "Photon_Run2010B_promptreco_oct29_6807nb";  labels[1] = "allMC_6.8pb"; 
+  //  TString datalabel = "Nov5_12831nb";  labels[1] = "allMC_12.8pb";   
+  TString datalabel = "RunB_partial_17952nb";  labels[1] = "allMC_18.0pb";
+  //  //  TString datalabel = "7pb"; labels[1] = "allMC_7.0pb";  
+  //  //  TString datalabel = "11pb";  labels[1] = "allMC_11.0pb";  
+  //  //  TString datalabel = "15pb";  labels[1] = "allMC_15.2pb";  
+  //  //  TString datalabel = "22pb";  labels[1] = "allMC_21.8pb";  
+  //  TString datalabel = "35pb";  labels[1] = "allMC_34.7pb";  
 
   labels[0] = "data_"+datalabel;
 
@@ -760,9 +599,6 @@ void overlayDataMC(){
     cout << "File name = " << fileNames[ifile] << endl;
   }
   
-  const int nHists=52;
-  TString nameHists[nHists] = { "h_TrigHLT", "h_Diphoton_Minv", "h_Diphoton_qt", "h_Diphoton_deltaPhi", "h_Diphoton_deltaEta", "h_Diphoton_deltaR", "h_Photon1_pt", "h_Photon1_eta", "h_Photon1_phi", "h_Photon1_r9", "h_Photon1_sigmaIetaIeta", "h_Photon1_sigmaEtaEta", "h_Photon1_swisscross", "h_Photon1_severityLevel", "h_Photon1_recHitFlag", "h_Photon1_maxRecHitTime", "h_Photon1_hadOverEm", "h_Photon1_hcalIso04", "h_Photon1_hcalIso03", "h_Photon1_ecalIso04", "h_Photon1_ecalIso03", "h_Photon1_trkIsoSumPtHollow04", "h_Photon1_trkIsoSumPtSolid04", "h_Photon1_trkIsoNtrksHollow04", "h_Photon1_trkIsoNtrksSolid04", "h_Photon1_trkIsoSumPtHollow03", "h_Photon1_trkIsoSumPtSolid03", "h_Photon1_trkIsoNtrksHollow03", "h_Photon1_trkIsoNtrksSolid03", "h_Photon2_pt", "h_Photon2_eta", "h_Photon2_phi", "h_Photon2_r9", "h_Photon2_sigmaIetaIeta", "h_Photon2_sigmaEtaEta", "h_Photon2_swisscross", "h_Photon2_severityLevel", "h_Photon2_recHitFlag", "h_Photon2_maxRecHitTime", "h_Photon2_hadOverEm", "h_Photon2_hcalIso04", "h_Photon2_hcalIso03", "h_Photon2_ecalIso04", "h_Photon2_ecalIso03", "h_Photon2_trkIsoSumPtHollow04", "h_Photon2_trkIsoSumPtSolid04", "h_Photon2_trkIsoNtrksHollow04", "h_Photon2_trkIsoNtrksSolid04", "h_Photon2_trkIsoSumPtHollow03", "h_Photon2_trkIsoSumPtSolid03", "h_Photon2_trkIsoNtrksHollow03", "h_Photon2_trkIsoNtrksSolid03"  };
-
   TString sample = "DataMC";
 
   TCanvas* c[nHists];
@@ -777,11 +613,15 @@ void overlayDataMC(){
     // Data
     histosData[i] = (TH1F*)ftemp[0]->Get(nameHists[i].Data());      
     TString histoTitle = histosData[i]->GetTitle();
-    histoTitle = histoTitle + " (" + sample + ")";
-    histosData[i]->SetTitle(histoTitle.Data());	       
+    //    histoTitle = histoTitle + " (" + sample + ")";
+    //    histosData[i]->SetTitle(histoTitle.Data());	       
+    histosData[i]->SetTitle("");
+    histosData[i]->SetMarkerStyle(20);
+    histosData[i]->SetMarkerSize(1.0);
     maxData[i] = histosData[i]->GetMaximum();
     // MC
     histosMC[i] = (THStack*)ftemp[1]->Get(nameHists[i].Data());      
+    histosMC[i]->SetTitle("");
     maxMC[i] = histosMC[i]->GetMaximum();  
   }
   
@@ -804,16 +644,21 @@ void overlayDataMC(){
       histosMC[i]->Draw("hist");        
       histosData[i]->Draw("e same");              
     }    
-    if (
- 	(nameHists[i]=="h_Photon1_hadOverEm")||(nameHists[i]=="h_Photon1_hcalIso04")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon1_pt")
- 	||
- 	(nameHists[i]=="h_Photon2_hadOverEm")||(nameHists[i]=="h_Photon2_hcalIso04")||(nameHists[i]=="h_Photon2_hcalIso03")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon2_pt")
- 	) { 
+    //    if (
+	// 	(nameHists[i]=="h_Photon1_hadOverEm")||(nameHists[i]=="h_Photon1_hcalIso04")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon1_pt")
+	// 	||
+	// 	(nameHists[i]=="h_Photon2_hadOverEm")||(nameHists[i]=="h_Photon2_hcalIso04")||(nameHists[i]=="h_Photon2_hcalIso03")||(nameHists[i]=="h_Photon2_hcalIso03")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon2_pt")
+	// 	) { 
+    if ((nameHists[i]=="h_Photon1_hadOverEm")||(nameHists[i]=="h_Photon1_hcalIso04")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon1_maxRecHitTime_wide")||(nameHists[i]=="h_Photon2_hadOverEm")||(nameHists[i]=="h_Photon2_hcalIso04")||(nameHists[i]=="h_Photon2_hcalIso03")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon2_maxRecHitTime_wide")||(nameHists[i]=="h_Photon1_pt")||(nameHists[i]=="h_Photon2_pt")) { 
       c[i]->SetLogy();   
     }
     
     char fname[100];     
     sprintf(fname,"%s_%s.png",nameHists[i].Data(),sample.Data());  
+    c[i]->Print(fname);
+    sprintf(fname,"%s_%s.pdf",nameHists[i].Data(),sample.Data());  
+    c[i]->Print(fname);
+    sprintf(fname,"%s_%s.C",nameHists[i].Data(),sample.Data());  
     c[i]->Print(fname);
   }
 
@@ -830,7 +675,6 @@ void overlayDataMC(){
   return;
 
 }
-
 
 void overlayDataMC_ScaledEntries(){
   
@@ -858,9 +702,6 @@ void overlayDataMC_ScaledEntries(){
     cout << "File name = " << fileNames[ifile] << endl;
   }
   
-  const int nHists=52;
-  TString nameHists[nHists] = { "h_TrigHLT", "h_Diphoton_Minv", "h_Diphoton_qt", "h_Diphoton_deltaPhi", "h_Diphoton_deltaEta", "h_Diphoton_deltaR", "h_Photon1_pt", "h_Photon1_eta", "h_Photon1_phi", "h_Photon1_r9", "h_Photon1_sigmaIetaIeta", "h_Photon1_sigmaEtaEta", "h_Photon1_swisscross", "h_Photon1_severityLevel", "h_Photon1_recHitFlag", "h_Photon1_maxRecHitTime", "h_Photon1_hadOverEm", "h_Photon1_hcalIso04", "h_Photon1_hcalIso03", "h_Photon1_ecalIso04", "h_Photon1_ecalIso03", "h_Photon1_trkIsoSumPtHollow04", "h_Photon1_trkIsoSumPtSolid04", "h_Photon1_trkIsoNtrksHollow04", "h_Photon1_trkIsoNtrksSolid04", "h_Photon1_trkIsoSumPtHollow03", "h_Photon1_trkIsoSumPtSolid03", "h_Photon1_trkIsoNtrksHollow03", "h_Photon1_trkIsoNtrksSolid03", "h_Photon2_pt", "h_Photon2_eta", "h_Photon2_phi", "h_Photon2_r9", "h_Photon2_sigmaIetaIeta", "h_Photon2_sigmaEtaEta", "h_Photon2_swisscross", "h_Photon2_severityLevel", "h_Photon2_recHitFlag", "h_Photon2_maxRecHitTime", "h_Photon2_hadOverEm", "h_Photon2_hcalIso04", "h_Photon2_hcalIso03", "h_Photon2_ecalIso04", "h_Photon2_ecalIso03", "h_Photon2_trkIsoSumPtHollow04", "h_Photon2_trkIsoSumPtSolid04", "h_Photon2_trkIsoNtrksHollow04", "h_Photon2_trkIsoNtrksSolid04", "h_Photon2_trkIsoSumPtHollow03", "h_Photon2_trkIsoSumPtSolid03", "h_Photon2_trkIsoNtrksHollow03", "h_Photon2_trkIsoNtrksSolid03"  };
-
   TString sample = "DataMC";
 
   TCanvas* c[nHists];
@@ -937,11 +778,12 @@ void overlayDataMC_ScaledEntries(){
       histos[i][1]->Draw("hist");        
       histos[i][0]->Draw("e same");              
     }    
-      if (
-	  (nameHists[i]=="h_Photon1_hadOverEm")||(nameHists[i]=="h_Photon1_hcalIso04")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon1_pt")
-	  ||
-	  (nameHists[i]=="h_Photon2_hadOverEm")||(nameHists[i]=="h_Photon2_hcalIso04")||(nameHists[i]=="h_Photon2_hcalIso03")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon2_pt")
-	  ) { 
+    //      if (
+    //	  (nameHists[i]=="h_Photon1_hadOverEm")||(nameHists[i]=="h_Photon1_hcalIso04")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon1_pt")
+    //	  ||
+    //	  (nameHists[i]=="h_Photon2_hadOverEm")||(nameHists[i]=="h_Photon2_hcalIso04")||(nameHists[i]=="h_Photon2_hcalIso03")||(nameHists[i]=="h_Photon2_hcalIso03")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon2_pt")
+    //	  ) { 
+      if ((nameHists[i]=="h_Photon1_hadOverEm")||(nameHists[i]=="h_Photon1_hcalIso04")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon1_maxRecHitTime_wide")||(nameHists[i]=="h_Photon2_hadOverEm")||(nameHists[i]=="h_Photon2_hcalIso04")||(nameHists[i]=="h_Photon2_hcalIso03")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon2_maxRecHitTime_wide")) { 
 	c[i]->SetLogy();   
       }
 
@@ -959,6 +801,175 @@ void overlayDataMC_ScaledEntries(){
   //  //  fout.ls();
   cout << "Results written to: " << outFileName.Data() << endl;
   fout.Close();
+
+  return;
+
+}
+
+void overlayPhotonJet(){
+  
+  gROOT->SetStyle("Plain");
+  gStyle->SetOptStat("ourme");
+
+  TString ntupleDir = ".";
+  
+  const int nfiles = 2;
+  TString fileNames[nfiles];
+
+  TString labels[nfiles];
+  labels[0] = "PhotonJet_all";  labels[1] = "PhotonJet_filtered_all";  
+
+  TFile *ftemp[nfiles];
+
+  for(int ifile=0;ifile<nfiles;ifile++) {    
+    fileNames[ifile] = TString::Format("histograms_%s.root",labels[ifile].Data());
+    ftemp[ifile] = TFile::Open(fileNames[ifile].Data());
+    cout << "File name = " << fileNames[ifile] << endl;
+  }
+  
+  TString sample = "PhotonJetCheckAll";
+
+  TCanvas* c[nHists];
+  char cname[100];   
+
+  TH1F* histosData[nHists];
+  TH1F* histosMC[nHists];
+  //  float maxData[nHists];
+  //  float maxMC[nHists];
+
+  for (int i=0; i<nHists; i++) {
+    // Data
+    histosData[i] = (TH1F*)ftemp[0]->Get(nameHists[i].Data());      
+    TString histoTitle = histosData[i]->GetTitle();
+    histoTitle = histoTitle + " (" + sample + ")";
+    histosData[i]->SetTitle(histoTitle.Data());	       
+    //    maxData[i] = histosData[i]->GetMaximum();
+    // MC
+    histosMC[i] = (TH1F*)ftemp[1]->Get(nameHists[i].Data());      
+    //    maxMC[i] = histosMC[i]->GetMaximum();  
+  }
+  
+  for (int i=0; i<nHists; i++) {
+    sprintf(cname,"c%i",i);
+    // cout << i << " " << cname << endl;
+    if (i==0) {
+      c[i] = new TCanvas(cname, nameHists[i].Data(), 1000, 600); 
+      c[i]->SetBottomMargin(0.4);
+      histosData[i]->GetXaxis()->SetTitleSize(0.01);
+      histosData[i]->GetXaxis()->SetBit(TAxis::kLabelsVert);
+    } else {
+      c[i] = new TCanvas(cname, nameHists[i].Data(), 600, 600);
+    }
+    c[i]->cd();
+    histosData[i]->SetLineColor(kRed);
+    histosMC[i]->SetLineColor(kBlue);
+    histosData[i]->SetLineWidth(1);
+    histosMC[i]->SetLineWidth(1);
+
+    //    if (maxData[i] > maxMC[i] ) {
+      histosData[i]->Draw("hist");        
+      histosMC[i]->Draw("histsame");        
+      //    } else {
+      //      histosMC[i]->Draw();        
+      //      histosData[i]->Draw("same");              
+      //    }    
+      if ((nameHists[i]=="h_Photon1_hadOverEm")||(nameHists[i]=="h_Photon1_hcalIso04")||(nameHists[i]=="h_Photon1_hcalIso03")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon1_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon1_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon1_maxRecHitTime_wide")||(nameHists[i]=="h_Photon2_hadOverEm")||(nameHists[i]=="h_Photon2_hcalIso04")||(nameHists[i]=="h_Photon2_hcalIso03")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow04")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid04")||(nameHists[i]=="h_Photon2_trkIsoSumPtHollow03")||(nameHists[i]=="h_Photon2_trkIsoSumPtSolid03")||(nameHists[i]=="h_Photon2_maxRecHitTime_wide")) { 
+      c[i]->SetLogy();   
+    }
+    
+    char fname[100];     
+    sprintf(fname,"%s_%s.png",nameHists[i].Data(),sample.Data());  
+    c[i]->Print(fname);
+    sprintf(fname,"%s_%s.pdf",nameHists[i].Data(),sample.Data());  
+    c[i]->Print(fname);
+    sprintf(fname,"%s_%s.C",nameHists[i].Data(),sample.Data());  
+    c[i]->Print(fname);
+  }
+
+  TString outFileName = TString::Format("histograms_%s.root",sample.Data());
+  TFile fout(outFileName.Data(),"RECREATE");
+  
+  for (int i=0; i<nHists; i++) {
+    c[i]->Write();
+  }
+  //  fout.ls();
+  cout << "Results written to: " << outFileName.Data() << endl;
+  fout.Close();
+
+  return;
+
+}
+
+void mergeAllData() {
+
+  gROOT->SetStyle("Plain");
+  gStyle->SetOptStat("ourme");
+
+  TString ntupleDir = ".";
+
+  const int nfiles = 8;
+  TString fileNames[nfiles];
+  TString labels[nfiles];
+
+  labels[0] = "38X_sept17rereco";
+  labels[1] = "EG_Run2010A_Sep17ReReco_Oct5update";
+  labels[2] = "Photon_Run2010B_PromptReco_146428_146644_Oct4";
+  labels[3] = "Photon_Run2010B_146729_147116_Oct8th";
+
+  labels[4] = "Photon_Run2010B_147115_147454_3978nb";
+  labels[5] = "Photon_Run2010B_Oct22_4150nb";
+  labels[6] = "Photon_Run2010B_promptreco_oct29_6807nb";
+  labels[7] = "Nov5_12831nb";
+
+  TFile *ftemp[nfiles];
+
+  for(int ifile=0;ifile<nfiles;ifile++) {    
+    //    fileNames[ifile] = TString::Format("%s/%s_all/histograms_%s_all.root",ntupleDir.Data(),labels[ifile].Data(),labels[ifile].Data());
+    fileNames[ifile] = TString::Format("histograms_data_%s.root",labels[ifile].Data());
+    ftemp[ifile] = TFile::Open(fileNames[ifile].Data());
+    cout << "File name = " << fileNames[ifile] << endl;
+  }
+
+  // each individual one
+  TH1F* indHistos[nHists][nfiles];
+
+  for(int ifile=0;ifile<nfiles;ifile++) { 
+    for (int i=0; i<nHists; i++) {
+      indHistos[i][ifile] = (TH1F*)ftemp[ifile]->Get(nameHists[i].Data());
+    }
+  }
+
+  TH1F* allHistos[nHists];
+
+  // instantiate the sum histos with histo in first file
+  for (int i=0; i<nHists; i++) {
+    allHistos[i] = indHistos[i][0];
+  }
+
+  for(int ifile=0;ifile<nfiles;ifile++) {  
+    for (int i=0; i<nHists; i++) {
+      if (ifile>0) allHistos[i]->Add(indHistos[i][ifile]); // note we exclude first file since we used it to instantiate the sum histo
+    }
+  }
+
+  TString sample = TString::Format("allData");
+
+  cout << sample << endl;
+
+  TString outFileName = TString::Format("histograms_%s.root",sample.Data());
+  TFile fout(outFileName.Data(),"RECREATE");
+
+  cout << outFileName << endl;
+
+  for (int i=0; i<nHists; i++) {
+    allHistos[i]->Write();
+  }
+  //  fout.ls();
+  cout << "Results written to: " << outFileName.Data() << endl;
+  fout.Close();
+
+  //  draw(sample);
+  draw_individual_histos(sample,kTRUE,kFALSE);
 
   return;
 
