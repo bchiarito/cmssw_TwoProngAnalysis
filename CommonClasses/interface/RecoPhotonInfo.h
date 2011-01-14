@@ -7,7 +7,7 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-//  $Id: RecoPhotonInfo.h,v 1.8 2010/11/22 10:45:51 chenders Exp $
+//  $Id: RecoPhotonInfo.h,v 1.9 2010/11/22 14:44:27 chenders Exp $
 // 
 //********************************************************************
 
@@ -608,6 +608,13 @@ namespace ExoDiPhotons
 
     // sorts such that highest pt photon first
     return(photon1.pt()>=photon2.pt());
+  }
+
+  // and also for std::pairs of reco photon with an int for tight/fakeable status
+  bool comparePhotonPairsByPt(const std::pair<reco::Photon, bool> &pair1, const std::pair<reco::Photon, bool> &pair2) {
+
+    // sort so that highest pt photon first
+    return(pair1.first.pt()>=pair2.first.pt());
   }
 
   
