@@ -120,6 +120,16 @@ namespace ExoDiPhotons{
     return thisPhotonIsASpike;
   }
 
+  bool isBarrelPhoton(const reco::Photon *photon) {
+
+    if ( fabs(photon->caloPosition().eta())<=1.4442)
+      return true;
+    else
+      return false;
+
+  }
+
+
   bool isGapPhoton(const reco::Photon *photon) {
 
     if ( fabs(photon->caloPosition().eta())>1.4442 && fabs(photon->caloPosition().eta())<1.566 ) return true; 
@@ -131,6 +141,9 @@ namespace ExoDiPhotons{
 
     bool result = false;
     
+    // for testing purposes:
+    //    return true;
+
     double pt = photon->pt();
 
     double thisTrkIso = photon->trkSumPtHollowConeDR04();
