@@ -21,9 +21,9 @@ namespace ExoDiPhotons
   // event info 
 
   struct eventInfo_t{
-    int run;
-    int LS;
-    int evnum;
+    Int_t run;
+    Int_t LS;
+    Int_t evnum;
   };
 
   std::string eventInfoBranchDefString("run/I:LS:evnum");
@@ -40,22 +40,24 @@ namespace ExoDiPhotons
   // vertex info
 
   struct vtxInfo_t{
-    int Nvtx; // number of reco vertices in event
-    // but I will only keep the info of the best two, I think
-    double vx;
-    double vy;
-    double vz;
-    int isFake;
-    int Ntracks;
-    double sumPtTracks;
+    Double_t vx;
+    Double_t vy;
+    Double_t vz;
+
+    Double_t sumPtTracks;
     // ************* chi2 or some other quality criteria *****************
     // these are the two vars used in GoodVertexFilter module
-    double ndof;
-    double d0; 
+    Double_t ndof;
+    Double_t d0; 
+
+    Int_t Nvtx; // number of reco vertices in event
+    // but I will only keep the info of the best two, I think
+    Int_t Ntracks;
+    Bool_t isFake;
 
   };
 
-  std::string vtxInfoBranchDefString("Nvtx/I:vx/D:vy:vz:isFake/I:Ntracks/I:sumPtTracks/D:ndof:d0");
+  std::string vtxInfoBranchDefString("vx/D:vy:vz:sumPtTracks/D:ndof/D:d0/D:Nvtx/I:Ntracks/I:isFake/O");
 
 
   // simple function to get sumPtTracks for vtx
@@ -73,13 +75,13 @@ namespace ExoDiPhotons
 
   void FillVertexInfo(vtxInfo_t &vtxInfo, const reco::Vertex *vertex) {
 
-     vtxInfo.vx = vertex->x();
-     vtxInfo.vy = vertex->y();
-     vtxInfo.vz = vertex->z();
-     vtxInfo.isFake = vertex->isFake(); 
-     vtxInfo.Ntracks = vertex->tracksSize();
-     vtxInfo.ndof = vertex->ndof();
-     vtxInfo.d0 = vertex->position().rho();
+    vtxInfo.vx = (double) vertex->x();
+    vtxInfo.vy = (double)  vertex->y();
+    vtxInfo.vz = (double) vertex->z();
+    vtxInfo.isFake =  vertex->isFake(); 
+    vtxInfo.Ntracks =  vertex->tracksSize();
+     vtxInfo.ndof = (double) vertex->ndof();
+     vtxInfo.d0 = (double) vertex->position().rho();
 
      // now I have a function to get sumPtTracks
      vtxInfo.sumPtTracks = calcVtxSumPtTracks(vertex);

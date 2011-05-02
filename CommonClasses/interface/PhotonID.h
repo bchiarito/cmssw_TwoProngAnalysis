@@ -90,6 +90,8 @@ namespace ExoDiPhotons{
       result = true;
 
     return result;
+    //   return true;//keep Z->ee "photons" special
+
   }
 
 

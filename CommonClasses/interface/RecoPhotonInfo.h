@@ -7,7 +7,7 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-//  $Id: RecoPhotonInfo.h,v 1.9 2010/11/22 14:44:27 chenders Exp $
+//  $Id: RecoPhotonInfo.h,v 1.10 2011/01/14 18:55:35 chenders Exp $
 // 
 //********************************************************************
 
@@ -54,108 +54,113 @@ namespace ExoDiPhotons
 {
 
   struct recoPhotonInfo_t {
-    double pt;
-    double eta;
-    double phi;
+    Double_t pt;
+    Double_t eta;
+    Double_t phi;
     // position in ECAL  - caloPosition;
-    double detEta;
-    double detPhi; // clearly should be identical to phi, so am using as sort of cross-check 
+    Double_t detEta;
+    Double_t detPhi; // clearly should be identical to phi, so am using as sort of cross-check 
     // which detector channel, specifically?
     //useful to cross check channel masking and look for problem channels, etc I expect
-    int detId;
-    int iEtaY; // iEta if EB, iY if EE
-    int iPhiX; // iPhi if EB, iX if EE
 
 
     //double check the vertex assigned to the photon candidate
-    double vx;
-    double vy;
-    double vz;
+    //    double vx;
+    //    double vy;
+    //    double vz;
   
 
     //shower shape variables
-    double r9;
-    double sigmaIetaIeta;
-    double sigmaEtaEta;
-    double maxEnergyXtal;
+    Double_t r9;
+    Double_t sigmaIetaIeta;
+    Double_t sigmaEtaEta;
+    Double_t maxEnergyXtal;
     // eNxN ...
-    double e1x5;
-    double e2x5;
-    double e3x3;
-    double e5x5;
-    double r1x5;
-    double r2x5;
+    Double_t e1x5;
+    Double_t e2x5;
+    Double_t e3x3;
+    Double_t e5x5;
+    Double_t r1x5;
+    Double_t r2x5;
   
     // swiss cross and other spike-related flags, eg kOutOfTime
-    double swisscross;
-    double eMax; // believe this is same as maxEnergyCrystal, but its a different getter, so let's just put it in to be on the safe side
-    double eLeft;
-    double eRight;
-    double eTop;
-    double eBottom;
-    double eSecond; // second highest rec hit in the cluster (not sure if required to be within 3x3 or not?)
+    Double_t swisscross;
+    Double_t eMax; // believe this is same as maxEnergyCrystal, but its a different getter, so let's just put it in to be on the safe side
+    Double_t eLeft;
+    Double_t eRight;
+    Double_t eTop;
+    Double_t eBottom;
+    Double_t eSecond; // second highest rec hit in the cluster (not sure if required to be within 3x3 or not?)
 
-    double e2x2;
-    double e4x4;
-    double e2e9;
-
-    // ecal severity level
-    int severityLevel;
-    int recHitFlag;
+    Double_t e2x2;
+    Double_t e4x4;
+    Double_t e2e9;
 
     // rec hit timing
-    double maxRecHitTime;
+    Double_t maxRecHitTime;
 
-    double hadOverEm;  
+    Double_t hadOverEm;  
     // note also that two hadronic depths are available
-    double hadDepth1OverEm; 
-    double hadDepth2OverEm; 
+    Double_t hadDepth1OverEm; 
+    Double_t hadDepth2OverEm; 
  
-
     //isolation variables
     // these have different options: cone size, hollowness, etc
     // must include them all!
-    float hcalIso04;
-    float hcalIso03;
-    float ecalIso04;
-    float ecalIso03;
-    float trkIsoSumPtHollow04;
-    float trkIsoSumPtSolid04;
-    int trkIsoNtrksHollow04;
-    int trkIsoNtrksSolid04;
-    float trkIsoSumPtHollow03;
-    float trkIsoSumPtSolid03;
-    int trkIsoNtrksHollow03;
-    int trkIsoNtrksSolid03;
+    Double_t hcalIso04;
+    Double_t hcalIso03;
+    Double_t ecalIso04;
+    Double_t ecalIso03;
+    Double_t trkIsoSumPtHollow04;
+    Double_t trkIsoSumPtSolid04;
+    Double_t trkIsoSumPtHollow03;
+    Double_t trkIsoSumPtSolid03;
+
+
+
+
 
     // es ratio
-    float esRatio;
+    Double_t esRatio;
 
     // supercluster info
-    double scRawEnergy;
-    double scPreshowerEnergy;
-    double scPhiWidth;
-    double scEtaWidth;
-    int scNumBasicClusters; // number of basic clusters comprising superCluster
+    Double_t scRawEnergy;
+    Double_t scPreshowerEnergy;
+    Double_t scPhiWidth;
+    Double_t scEtaWidth;
+    Int_t scNumBasicClusters; // number of basic clusters comprising superCluster
+
+    Int_t trkIsoNtrksHollow03;
+    Int_t trkIsoNtrksSolid03;
+    Int_t trkIsoNtrksHollow04;
+    Int_t trkIsoNtrksSolid04;
+
+    // ecal severity level
+    Int_t severityLevel;
+    Int_t recHitFlag;
+    Int_t detId;
+    Int_t iEtaY; // iEta if EB, iY if EE
+    Int_t iPhiX; // iPhi if EB, iX if EE
+
 
     // seed cluster info
   
   
     //fiducial flags
-    bool isEB;//Photon is in EB
-    bool isEE;//Photon is in EE
-    bool isEBEtaGap;//Photon is in supermodule/supercrystal eta gap in EB
-    bool isEBPhiGap;//Photon is in supermodule/supercrystal phi gap in EB
-    bool isEERingGap;//Photon is in crystal ring gap in EE
-    bool isEEDeeGap;//Photon is in crystal dee gap in EE
-    bool isEBEEGap;//Photon is in border between EB and EE.
+    Bool_t isEB;//Photon is in EB
+    Bool_t isEE;//Photon is in EE
+    Bool_t isEBEtaGap;//Photon is in supermodule/supercrystal eta gap in EB
+    Bool_t isEBPhiGap;//Photon is in supermodule/supercrystal phi gap in EB
+    Bool_t isEERingGap;//Photon is in crystal ring gap in EE
+    Bool_t isEEDeeGap;//Photon is in crystal dee gap in EE
+    Bool_t isEBEEGap;//Photon is in border between EB and EE.
 
     // pixel seed match?
-    bool hasPixelSeed;
+    Bool_t hasPixelSeed;
     // note to self: weird problems with this var in middle of struct - try at end
 
     // since we will now store also 'Fakeable objects' from data
-    bool isFakeable;
+    Bool_t isFakeable;
   };
 
 
@@ -163,7 +168,7 @@ namespace ExoDiPhotons
   // obviously this needs to be kept up-to-date with the struct definition
   // but now at least this only needs to be done here in this file, 
   // rather than in each individual analyser 
-  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:detId/I:iEtaY/I:iPhiX/I:vx/D:vy:vz:r9:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:severityLevel/I:recHitFlag/I:maxRecHitTime/D:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04/f:hcalIso03/f:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoSumPtHollow03/f:trkIsoSumPtSolid03/f:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:esRatio/f:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:isFakeable");
+  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:r9/D:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:maxRecHitTime/D:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04:hcalIso03:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoSumPtHollow03:trkIsoSumPtSolid03:esRatio:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:severityLevel/I:recHitFlag/I:detId/I:iEtaY/I:iPhiX/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:isFakeable");
 
 
   // useful function for ESratio
@@ -444,6 +449,7 @@ namespace ExoDiPhotons
     recoPhotonInfo.pt = photon->et();
     recoPhotonInfo.eta = photon->eta();
     recoPhotonInfo.phi = photon->phi();
+    recoPhotonInfo.r9 = photon->r9();
     
     recoPhotonInfo.detEta = photon->caloPosition().eta();
     recoPhotonInfo.detPhi = photon->caloPosition().phi();
@@ -533,17 +539,18 @@ namespace ExoDiPhotons
      //     cout << "(Internal)  rechit time = " << recoPhotonInfo.maxRecHitTime <<endl;
 
      //ES ratio - use the helper function
-     recoPhotonInfo.esRatio = getESRatio(photon, iEvent, iSetup);
+     //     recoPhotonInfo.esRatio = getESRatio(photon, iEvent, iSetup); //broken in 311X MC samples
+     recoPhotonInfo.esRatio = -999.0;
 
 
     // since photon inherits from LeafCandidate, we can get the vertex position
     // that is associated with the photon:
-    recoPhotonInfo.vx = photon->vx();
-    recoPhotonInfo.vy = photon->vy();
-    recoPhotonInfo.vz = photon->vz();
+     //    recoPhotonInfo.vx = photon->vx();
+     //    recoPhotonInfo.vy = photon->vy();
+     //    recoPhotonInfo.vz = photon->vz();
 
 
-     recoPhotonInfo.r9 = photon->r9();
+
      recoPhotonInfo.sigmaIetaIeta = photon->sigmaIetaIeta();
      recoPhotonInfo.sigmaEtaEta = photon->sigmaEtaEta();
      recoPhotonInfo.maxEnergyXtal = photon->maxEnergyXtal();
