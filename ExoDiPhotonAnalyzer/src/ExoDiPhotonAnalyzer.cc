@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.19 2010/11/29 17:04:54 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.20 2011/01/14 18:57:32 chenders Exp $
 //
 //
 
@@ -144,6 +144,7 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
 
   // now also tight-fake and fake-fake trees
       TTree *fTightFakeTree;
+      TTree *fFakeTightTree;
       TTree *fFakeFakeTree;
 
       ExoDiPhotons::eventInfo_t fEventInfo;
@@ -199,27 +200,18 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 
   fTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
   fTree->Branch("Vtx",&fVtxInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
-
   //adding a second vtx
   fTree->Branch("Vtx2",&fVtx2Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
   fTree->Branch("Vtx3",&fVtx3Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
-
   fTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
-
-
   fTree->Branch("L1trg",&fL1TrigInfo,ExoDiPhotons::l1TrigBranchDefString.c_str());
-  
   fTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
-
   // add a branch for number of candidate photons in the event (tight and fakeable)
   fTree->Branch("nTightPhotons",&fNTightPhotons,"nTightPhotons/I");
   fTree->Branch("nFakeablePhotons",&fNFakeablePhotons,"nFakeablePhotons/I");
-  
   // now with CommonClasses, use the string defined in the header
   fTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
-
   fTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
-
   fTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
   // diphoton info for second or thrid best vertex
   // only bothering to add this for tight-tight tree for now
@@ -243,7 +235,26 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTightFakeTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTightFakeTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTightFakeTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
-    
+
+  fFakeTightTree = fs->make<TTree>("fFakeTightTree","PhotonFakeTightTree");
+
+  fFakeTightTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
+  fFakeTightTree->Branch("Vtx",&fVtxInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
+  //adding a second vtx                                                                                                                  
+  fFakeTightTree->Branch("Vtx2",&fVtx2Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
+  fFakeTightTree->Branch("Vtx3",&fVtx3Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
+  fFakeTightTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
+  fFakeTightTree->Branch("L1trg",&fL1TrigInfo,ExoDiPhotons::l1TrigBranchDefString.c_str());
+  fFakeTightTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
+  // add a branch for number of candidate photons in the event (tight and fakeable)                                                      
+  fFakeTightTree->Branch("nTightPhotons",&fNTightPhotons,"nTightPhotons/I");
+  fFakeTightTree->Branch("nFakeablePhotons",&fNFakeablePhotons,"nFakeablePhotons/I");
+  // now with CommonClasses, use the string defined in the header                                                                        
+  fFakeTightTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  fFakeTightTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  fFakeTightTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());    
+  fFakeTightTree->Branch("DiphotonVtx2",&fDiphotonInfoVtx2,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+  fFakeTightTree->Branch("DiphotonVtx3",&fDiphotonInfoVtx3,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
 
   fFakeFakeTree = fs->make<TTree>("fFakeFakeTree","PhotonFakeFakeTree");
   fFakeFakeTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
@@ -299,7 +310,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
      cout << "Vertex collection empty! Bailing out!" <<endl;
      return;
    }
-   //   cout << "N vertices = " << vertexColl->size() <<endl;
+   //    cout << "N vertices = " << vertexColl->size() <<endl;
    //   fVtxInfo.Nvtx = vertexColl->size();
    // this just counts the collection size
    // may want to count N vtx with TrkPt> some cut ?
@@ -309,7 +320,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    fVtxInfo.vx = -99999.99;
    fVtxInfo.vy = -99999.99;
    fVtxInfo.vz = -99999.99;
-   fVtxInfo.isFake = -99;   
+   fVtxInfo.isFake = true;   
    fVtxInfo.Ntracks = -99;
    fVtxInfo.sumPtTracks = -99999.99;
    fVtxInfo.ndof = -99999.99;
@@ -319,7 +330,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    fVtx2Info.vx = -99999.99;
    fVtx2Info.vy = -99999.99;
    fVtx2Info.vz = -99999.99;
-   fVtx2Info.isFake = -99;   
+   fVtx2Info.isFake = true;   
    fVtx2Info.Ntracks = -99;
    fVtx2Info.sumPtTracks = -99999.99;
    fVtx2Info.ndof = -99999.99;
@@ -329,7 +340,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    fVtx3Info.vx = -99999.99;
    fVtx3Info.vy = -99999.99;
    fVtx3Info.vz = -99999.99;
-   fVtx3Info.isFake = -99;   
+   fVtx3Info.isFake = true;   
    fVtx3Info.Ntracks = -99;
    fVtx3Info.sumPtTracks = -99999.99;
    fVtx3Info.ndof = -99999.99;
@@ -348,7 +359,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
        myVertices.push_back(*vtx);
      }      
 
-     //     cout << "Vtx x = "<< vtx->x()<<", y= "<< vtx->y()<<", z = " << vtx->z() << ";  N tracks = " << vtx->tracksSize() << "; isFake = " << vtx->isFake() <<", sumPt(tracks) = "<< ExoDiPhotons::calcVtxSumPtTracks(&(*vtx)) << "; ndof = " << vtx->ndof()<< "; d0 = " << vtx->position().rho() << endl;
+     //cout << "Vtx x = "<< vtx->x()<<", y= "<< vtx->y()<<", z = " << vtx->z() << ";  N tracks = " << vtx->tracksSize() << "; isFake = " << vtx->isFake() <<", sumPt(tracks) = "<< ExoDiPhotons::calcVtxSumPtTracks(&(*vtx)) << "; ndof = " << vtx->ndof()<< "; d0 = " << vtx->position().rho() << endl;
      
      // and note that this vertex collection can contain vertices with Ntracks = 0
      // watch out for these!
@@ -369,29 +380,32 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
    //   cout << "After sorting" << endl;
 
-//    // check sorting
-//    for(std::vector<reco::Vertex>::iterator myVtxIter=myVertices.begin();myVtxIter<myVertices.end();myVtxIter++) {
+   //    // check sorting
+   //    for(std::vector<reco::Vertex>::iterator myVtxIter=myVertices.begin();myVtxIter<myVertices.end();myVtxIter++) {
 
-//      cout << "MY MyVtxIter x = "<< myVtxIter->x()<<", y= "<< myVtxIter->y()<<", z = " << myVtxIter->z() << ";  N tracks = " << myVtxIter->tracksSize() << "; isFake = " << myVtxIter->isFake() <<", sumPt(tracks) = "<< ExoDiPhotons::calcVtxSumPtTracks(&(*myVtxIter))<< "; ndof = " << myVtxIter->ndof()<< "; d0 = " << myVtxIter->position().rho() << endl;
+   //      cout << "MY MyVtxIter x = "<< myVtxIter->x()<<", y= "<< myVtxIter->y()<<", z = " << myVtxIter->z() << ";  N tracks = " << myVtxIter->tracksSize() << "; isFake = " << myVtxIter->isFake() <<", sumPt(tracks) = "<< ExoDiPhotons::calcVtxSumPtTracks(&(*myVtxIter))<< "; ndof = " << myVtxIter->ndof()<< "; d0 = " << myVtxIter->position().rho() << endl;
 
-//    }
+   //    }
 
 
    // first count the number of good vertices
    fVtxInfo.Nvtx = myVertices.size();
    fVtx2Info.Nvtx = myVertices.size();
+   fVtx3Info.Nvtx = myVertices.size();
 
+
+   //temporary don't fill vertex info due to memory issue?
    // now we will fill the vertex info structs from the sorted list
-   if(myVertices.size()>=1) {
-     ExoDiPhotons::FillVertexInfo(fVtxInfo,&(*myVertices.begin()));
-   }
-   if(myVertices.size()>=2) {
-     ExoDiPhotons::FillVertexInfo(fVtx2Info,&(*(myVertices.begin()+1)));
-   }
+      if(myVertices.size()>=1) {
+        ExoDiPhotons::FillVertexInfo(fVtxInfo,&(*myVertices.begin()));
+      }
+      if(myVertices.size()>=2) {
+        ExoDiPhotons::FillVertexInfo(fVtx2Info,&(*(myVertices.begin()+1)));
+      }
 
-   if(myVertices.size()>=3) {
-     ExoDiPhotons::FillVertexInfo(fVtx3Info,&(*(myVertices.begin()+2)));
-   }
+      if(myVertices.size()>=3) {
+        ExoDiPhotons::FillVertexInfo(fVtx3Info,&(*(myVertices.begin()+2)));
+      }
    
 
 
@@ -499,11 +513,13 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
    // ecal information
    
-   lazyTools_ = std::auto_ptr<EcalClusterLazyTools>( new EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("ecalRecHit:EcalRecHitsEB"),edm::InputTag("ecalRecHit:EcalRecHitsEE")) );
+   lazyTools_ = std::auto_ptr<EcalClusterLazyTools>( new 
+EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::InputTag("reducedEcalRecHitsEE")) 
+);
 
    // get ecal barrel recHits for spike rejection
    edm::Handle<EcalRecHitCollection> recHitsEB_h;
-   iEvent.getByLabel(edm::InputTag("ecalRecHit:EcalRecHitsEB"), recHitsEB_h );
+   iEvent.getByLabel(edm::InputTag("reducedEcalRecHitsEB"), recHitsEB_h );
    const EcalRecHitCollection * recHitsEB = 0;
    if ( ! recHitsEB_h.isValid() ) {
      LogError("ExoDiPhotonAnalyzer") << " ECAL Barrel RecHit Collection not available !"; return;
@@ -512,7 +528,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    }
 
    edm::Handle<EcalRecHitCollection> recHitsEE_h;
-   iEvent.getByLabel(edm::InputTag("ecalRecHit:EcalRecHitsEE"), recHitsEE_h );
+   iEvent.getByLabel(edm::InputTag("reducedEcalRecHitsEE"), recHitsEE_h );
    const EcalRecHitCollection * recHitsEE = 0;
    if ( ! recHitsEE_h.isValid() ) {
      LogError("ExoDiPhotonAnalyzer") << " ECAL Endcap RecHit Collection not available !"; return;
@@ -572,12 +588,13 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
      // we will check both tight and fakeable photons
      // some cuts are common to both - EB and pt
+     //apr 2011, remove EB cut - what should we do about the increased combinatorics?
 
-     if(ExoDiPhotons::isBarrelPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt)) {
+     //          if(ExoDiPhotons::isBarrelPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt)) {
+          if( (recoPhoton->pt()>=fMin_pt)) {       
 
-
-       if(ExoDiPhotons::isTightPhoton(&(*recoPhoton)) && !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {
-	 
+	    if(ExoDiPhotons::isTightPhoton(&(*recoPhoton)) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {
+	    //	    if( !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {   
 	 selectedPhotons.push_back(*recoPhoton);
        }
        
@@ -600,7 +617,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	 fakeablePhotons.push_back(*recoPhoton);
        }
        
-     } //end first cuts on pt and EB-only
+     } //end first cuts on pt and (not applied, april2011) EB-only
        
    } //end reco photon loop
 
@@ -645,7 +662,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
    for(std::vector<reco::Photon>::iterator myPhotonIter = selectedPhotons.begin();myPhotonIter<selectedPhotons.end();myPhotonIter++) {
      //     cout << "Photon et, eta, phi = " << myPhotonIter->et() <<", "<<myPhotonIter->eta()<< ", "<< myPhotonIter->phi()<<endl;
-     std::pair<reco::Photon, int> myPair(*myPhotonIter,false); 
+     std::pair<reco::Photon, bool> myPair(*myPhotonIter,false); 
      // tight, so isFakeble=false
 
      allTightOrFakeableObjects.push_back(myPair);
@@ -653,7 +670,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    
    for(std::vector<reco::Photon>::iterator myPhotonIter = fakeablePhotons.begin();myPhotonIter<fakeablePhotons.end();myPhotonIter++) {
      //     cout << "Photon et, eta, phi = " << myPhotonIter->et() <<", "<<myPhotonIter->eta()<< ", "<< myPhotonIter->phi()<<endl;
-     std::pair<reco::Photon, int> myPair(*myPhotonIter,true);
+     std::pair<reco::Photon, bool> myPair(*myPhotonIter,true);
      // isFakeable = true
      allTightOrFakeableObjects.push_back(myPair);
    }
@@ -729,16 +746,23 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
        fTree->Fill();
        //       cout << "This event was TT" <<endl;
      }
-     else if(!allTightOrFakeableObjects[0].second || !allTightOrFakeableObjects[1].second) {
+     else if(!allTightOrFakeableObjects[0].second ) {
        // the BOTH tight option has been checked already
        // so now we just check the one-tight option
        // and fill the tight-fake tree instead
+	   
        fTightFakeTree->Fill();
        //       cout << "This event was TF (or FT)" <<endl;
+     }
+     else if(!allTightOrFakeableObjects[1].second ) {
+       fFakeTightTree->Fill();
      }
      else if(allTightOrFakeableObjects[0].second && allTightOrFakeableObjects[1].second) {
        // so if both isFakeable are true, then 
        // fill the fake-fake tree instead
+       fRecoPhotonInfo1.isFakeable = true;
+       fRecoPhotonInfo2.isFakeable = true;
+
        fFakeFakeTree->Fill();
        //       cout << "This event was FF" <<endl;
      }
