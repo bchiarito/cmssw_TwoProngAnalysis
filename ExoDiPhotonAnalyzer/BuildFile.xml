@@ -12,6 +12,7 @@
 <use   name="CondFormats/DataRecord"/>
 <use   name="Geometry/CaloGeometry"/>
 <use   name="Geometry/EcalAlgo"/>
+<use   name="SimDataFormats/PileupSummaryInfo"/>
 <flags   EDM_PLUGIN="1"/>
 <export>
   <lib   name="1"/>

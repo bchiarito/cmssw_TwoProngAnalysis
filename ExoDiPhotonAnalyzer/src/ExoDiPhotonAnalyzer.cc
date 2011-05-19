@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.20 2011/01/14 18:57:32 chenders Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.21 2011/05/02 17:06:44 yma Exp $
 //
 //
 
@@ -24,6 +24,8 @@
 #include <algorithm>
 #include <vector>
 #include <utility>  // for std::pair
+#include "TClonesArray.h"
+#include "TVector3.h"
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -100,6 +102,8 @@
 #include "DiPhotonAnalysis/CommonClasses/interface/DiphotonInfo.h"
 
 
+//new for PU gen
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
 
 using namespace std;
@@ -129,6 +133,9 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       double             fMin_pt;          // min pt cut (photons)
       edm::InputTag      fHltInputTag;     // hltResults
       edm::InputTag      fL1InputTag;      // L1 results
+  edm::InputTag     fRhoTag;
+  edm::InputTag     pileupCollectionTag;
+
       bool               fkRemoveSpikes;   // option to remove spikes before filling tree
       bool               fkRequireTightPhotons;  // option to require tight photon id in tree
 
@@ -153,6 +160,21 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       ExoDiPhotons::vtxInfo_t fVtx2Info;
   // now even adding a third vtx!
       ExoDiPhotons::vtxInfo_t fVtx3Info;
+
+  ExoDiPhotons::vtxInfo_t fVtxGENInfo;
+
+  double rho;
+  int pu_n;
+
+  Int_t gv_n;
+  
+  TClonesArray* gv_pos;
+  TClonesArray* gv_p3;
+  
+  Float_t gv_sumPtHi[100];
+  Float_t gv_sumPtLo[100];
+  Short_t gv_nTkHi[100];
+  Short_t gv_nTkLo[100];
 
       ExoDiPhotons::beamSpotInfo_t fBeamSpotInfo;
 
@@ -190,6 +212,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fMin_pt(iConfig.getUntrackedParameter<double>("ptMin")),
     fHltInputTag(iConfig.getUntrackedParameter<edm::InputTag>("hltResults")),
     fL1InputTag(iConfig.getUntrackedParameter<edm::InputTag>("L1Results")),
+    fRhoTag(iConfig.getParameter<edm::InputTag>("rhoCorrection")),
+    pileupCollectionTag(iConfig.getUntrackedParameter<edm::InputTag>("pileupCorrection")),
     fkRemoveSpikes(iConfig.getUntrackedParameter<bool>("removeSpikes")),
     fkRequireTightPhotons(iConfig.getUntrackedParameter<bool>("requireTightPhotons"))
 {
@@ -203,6 +227,11 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   //adding a second vtx
   fTree->Branch("Vtx2",&fVtx2Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
   fTree->Branch("Vtx3",&fVtx3Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
+  fTree->Branch("VtxGEN",&fVtxGENInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
+
+  fTree->Branch("rho",&rho,"rho/D");
+  fTree->Branch("pu_n", &pu_n, "pu_n/I");
+
   fTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
   fTree->Branch("L1trg",&fL1TrigInfo,ExoDiPhotons::l1TrigBranchDefString.c_str());
   fTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
@@ -270,7 +299,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fFakeFakeTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
   
 
-
+  gv_pos = new TClonesArray("TVector3", 100);
+  gv_p3 = new TClonesArray("TVector3", 100);
 
 
 
@@ -346,6 +376,14 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    fVtx3Info.ndof = -99999.99;
    fVtx3Info.d0 = -99999.99;
 
+   fVtxGENInfo.vx = -99999.99;
+   fVtxGENInfo.vy = -99999.99;
+   fVtxGENInfo.vz = -99999.99;
+   fVtxGENInfo.isFake = true;
+   fVtxGENInfo.Ntracks = -99;
+   fVtxGENInfo.sumPtTracks = -99999.99;
+   fVtxGENInfo.ndof = -99999.99;
+   fVtxGENInfo.d0 = -99999.99;
 
    // note for higher lumi, may want to also store second vertex, for pileup studies
    // to allow scalability for many vertices, use a vector and sort later
@@ -406,10 +444,109 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       if(myVertices.size()>=3) {
         ExoDiPhotons::FillVertexInfo(fVtx3Info,&(*(myVertices.begin()+2)));
       }
-   
 
 
+      edm::Handle<reco::GenParticleCollection> gpH;
+      iEvent.getByLabel("genParticles", gpH);   
 
+
+      gv_n = 0;
+      //      TClonesArray* gv_pos;
+ 
+      gv_pos->Clear();
+      gv_p3->Clear();
+
+  const float lowPtThrGenVtx = 0.1;
+  const float highPtThrGenVtx = 0.5;
+  if (gpH.isValid() ) {
+  for(reco::GenParticleCollection::const_iterator it_gen = 
+	gpH->begin(); it_gen!= gpH->end(); it_gen++){   
+    if( it_gen->status() != 3 || !(it_gen->vx()!=0. || it_gen->vy()!=0. || it_gen->vx()!=0.)  ) { continue; }
+
+    // check for duplicate vertex
+    bool duplicate = false;
+    for(Int_t itv = 0; itv < gv_n; itv++) {
+      TVector3 * checkVtx = (TVector3 *) gv_pos->At(itv);
+      if( (fabs(it_gen->vx()-checkVtx->X())<1e-5) &&  (fabs(it_gen->vy()-checkVtx->Y())<1e-5) && (fabs(it_gen->vz()-checkVtx->Z())<1e-5)) {
+	duplicate = true;
+	break;
+      }
+    }
+
+    if (duplicate) continue;
+    
+    new((*gv_pos)[gv_n]) TVector3();
+    ((TVector3 *) gv_pos->At(gv_n))->SetXYZ(it_gen->vx(), it_gen->vy(), it_gen->vz());
+    
+    TVector3 * this_gv_pos = (TVector3 *) gv_pos->At(gv_n);
+    TVector3 p3(0,0,0);
+    
+    gv_sumPtLo[gv_n] = 0;
+    gv_nTkLo[gv_n] = 0;
+    gv_sumPtHi[gv_n] = 0;
+    gv_nTkHi[gv_n] = 0;
+
+    for(reco::GenParticleCollection::const_iterator part = gpH->begin(); part!= gpH->end(); part++){   
+      if( part->status() == 1 && part->charge() != 0 && fabs(part->eta())<2.5 &&
+	  ( fabs(part->vx()-this_gv_pos->X())<1.e-5 && fabs(part->vy()-this_gv_pos->Y())<1.e-5 && fabs(part->vz()-this_gv_pos->Z())<1.e-5 ) )  {
+	
+	TVector3 m(part->px(),part->py(),part->pz());
+	p3 += m;
+	if( m.Pt() > lowPtThrGenVtx ) {
+	  gv_sumPtLo[gv_n] += m.Pt();
+	  gv_nTkLo[gv_n] += 1;
+	  if( m.Pt() > highPtThrGenVtx ) {
+	    gv_sumPtHi[gv_n] += m.Pt();
+	    gv_nTkHi[gv_n] += 1;
+	  }
+	}
+      }
+    }
+    new((*gv_p3)[gv_n]) TVector3();
+    ((TVector3 *) gv_p3->At(gv_n))->SetXYZ(p3.X(),p3.Y(),p3.Z());
+
+    gv_n++;
+  }
+  }
+
+
+      
+      fVtxGENInfo.Nvtx = gv_n;
+      
+      edm::Handle<std::vector<PileupSummaryInfo> > pileupHandle;
+      iEvent.getByLabel(pileupCollectionTag, pileupHandle);
+
+      if (pileupHandle.isValid()){
+      PileupSummaryInfo pileup = (*pileupHandle.product())[0];
+      
+      pu_n = pileup.getPU_NumInteractions();
+      }
+
+      //add rho correction
+
+      //      double rho;
+
+      edm::Handle<double> rhoHandle;
+      iEvent.getByLabel(fRhoTag, rhoHandle);
+  
+      rho = *(rhoHandle.product());
+//       if (rhoHandle.isValid()){
+
+// 	cout<<"rho found\n";
+//        rho = *(rhoHandle.product());
+//       }
+
+//       if (!rhoHandle.isValid()){
+// 	cout<<"no rho\n";
+//       }
+
+//       edm::Handle<std::vector<double> > vrhoHandle;
+//       iEvent.getByLabel(edm::InputTag("kt6PFJets","rhos"), vrhoHandle);
+  
+//       if (vrhoHandle.isValid()){
+// 	cout<<"yes vectors\n";
+//       }
+//       else { cout<<"no vectors \n";}
 
    // get offline beam spot
 
@@ -688,6 +825,8 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
    // now we can make decisions based on this list of obejcts
    // first, there must be at least two objects (tight or fakeable)
 
+
+
    if(allTightOrFakeableObjects.size()>=2) {
 
      // now, we are always going to consider the top two objects
@@ -708,6 +847,26 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
 
      // fill diphoton info
      ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,&allTightOrFakeableObjects[0].first,&allTightOrFakeableObjects[1].first);
+
+
+   //make an exception if there are 2 tight objects = top priority 
+
+     if ( selectedPhotons.size() >=2 ){
+
+       ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&selectedPhotons[0],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+
+       // must specifically declare isFakeable status (should be Tight = not True = false                       
+       fRecoPhotonInfo1.isFakeable = false;
+       allTightOrFakeableObjects[0].second = false;//used in sorting, now it's faked if this 2 tight exception comes up
+       ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,&selectedPhotons[1],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+       fRecoPhotonInfo2.isFakeable = false;
+       allTightOrFakeableObjects[1].second = false;
+       // fill diphoton info                                                                                                   
+       ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,&selectedPhotons[0],&selectedPhotons[1]);
+
+
+
+     }//end of 2 TT exception
      
      // for the pileup/vtx study.
      // lets try setting these photons to different vertices
@@ -777,6 +936,7 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
 
 
   
+
 
 
 
