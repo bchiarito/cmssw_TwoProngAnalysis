@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.21 2011/05/02 17:06:44 yma Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.22 2011/05/19 17:07:26 yma Exp $
 //
 //
 
@@ -101,6 +101,12 @@
 #include "DiPhotonAnalysis/CommonClasses/interface/EventAndVertexInfo.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/DiphotonInfo.h"
 
+// for MC
+#include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+
+#include "DiPhotonAnalysis/CommonClasses/interface/MCTrueObjectInfo.h"
 
 //new for PU gen
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
@@ -193,6 +199,12 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       ExoDiPhotons::diphotonInfo_t fDiphotonInfoVtx2; 
       ExoDiPhotons::diphotonInfo_t fDiphotonInfoVtx3; 
 
+      // MC truth event-level info
+      ExoDiPhotons::mcEventInfo_t fMCEventInfo;
+
+  // event normalisation histogram
+  TH1F *fNorm_h;
+
 };
 
 //
@@ -223,6 +235,10 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree = fs->make<TTree>("fTree","PhotonTree");
 
   fTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
+  // MC truth event info
+  fTree->Branch("GenEvent",&fMCEventInfo,ExoDiPhotons::mcEventInfoBranchDefString.c_str());
+
+
   fTree->Branch("Vtx",&fVtxInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
   //adding a second vtx
   fTree->Branch("Vtx2",&fVtx2Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
@@ -247,7 +263,10 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("DiphotonVtx2",&fDiphotonInfoVtx2,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
   fTree->Branch("DiphotonVtx3",&fDiphotonInfoVtx3,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
   
-
+  // and the histogram for event normalisation purposes
+  // Fill this with 0 if event fails, 1 if event passes
+  fNorm_h = fs->make<TH1F>("fNorm_h","Normalisation Hist",4,0,2);
+ 
   // repeating all this for each of tight-fake and fake-fake trees
   // basically they'll all point to the same structs, but the structs will contain
   // different values for the event, depending on the event category
@@ -507,7 +526,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     gv_n++;
   }
-  }
+  }//end of GEN vertex part
 
 
       
@@ -547,6 +566,19 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 // 	cout<<"yes vectors\n";
 //       }
 //       else { cout<<"no vectors \n";}
+
+//MC event truth (process ID for GJet)
+
+     Handle<GenEventInfoProduct> genEventInfo;
+     iEvent.getByLabel("generator",genEventInfo);
+
+     if(genEventInfo.isValid()) {
+       ExoDiPhotons::FillMCEventInfo(fMCEventInfo,genEventInfo.product());
+     }//only for MC
+     
+
+
+
 
    // get offline beam spot
 
@@ -903,6 +935,7 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
      if(!allTightOrFakeableObjects[0].second && !allTightOrFakeableObjects[1].second) {
        // fill the tight-tight tree
        fTree->Fill();
+       fNorm_h->Fill(1);
        //       cout << "This event was TT" <<endl;
      }
      else if(!allTightOrFakeableObjects[0].second ) {
@@ -911,10 +944,12 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
        // and fill the tight-fake tree instead
 	   
        fTightFakeTree->Fill();
+       fNorm_h->Fill(0);
        //       cout << "This event was TF (or FT)" <<endl;
      }
      else if(!allTightOrFakeableObjects[1].second ) {
        fFakeTightTree->Fill();
+       fNorm_h->Fill(0);
      }
      else if(allTightOrFakeableObjects[0].second && allTightOrFakeableObjects[1].second) {
        // so if both isFakeable are true, then 
@@ -923,6 +958,7 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
        fRecoPhotonInfo2.isFakeable = true;
 
        fFakeFakeTree->Fill();
+       fNorm_h->Fill(0);
        //       cout << "This event was FF" <<endl;
      }
      else {
