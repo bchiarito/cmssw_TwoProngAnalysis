@@ -69,11 +69,11 @@ namespace ExoDiPhotons
   // like signalProcess ID, and pthat value
 
   struct mcEventInfo_t {
-    int SignalProcessId;
     double binningValue;
+    int SignalProcessId;
   };
 
-  std::string mcEventInfoBranchDefString("signalProcessId/I:binningValue/D");
+  std::string mcEventInfoBranchDefString("binningValue/D:signalProcessId/I");
 
   void FillMCEventInfo(mcEventInfo_t &mcEventInfo, const GenEventInfoProduct *genEventInfo) {
     
