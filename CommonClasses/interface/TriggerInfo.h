@@ -7,7 +7,7 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-// $Id: TriggerInfo.h,v 1.9 2010/09/30 12:03:33 torimoto Exp $ 
+// $Id: TriggerInfo.h,v 1.10 2010/10/27 12:00:20 torimoto Exp $ 
 // 
 //********************************************************************
 
@@ -103,11 +103,71 @@ namespace ExoDiPhotons
     int HLT_DoublePhoton17_L1R;
     int HLT_DoublePhoton17_SingleIsol_L1R_v1;
     int HLT_DoublePhoton20_L1R;
-    int HLT_DoublePhoton22_L1R_v1;                   
+    int HLT_DoublePhoton22_L1R_v1;    
+    //newly added, 2011A
+    int HLT_DoublePhoton33_v1;
+    int HLT_DoublePhoton33_v2;
+    int HLT_DoublePhoton33_v3;
+    int HLT_DoublePhoton5_IsoVL_CEP_v1;
+    int HLT_DoublePhoton5_IsoVL_CEP_v2;
+    int HLT_Photon125_NoSpikeFilter_v1;
+    int HLT_Photon125_NoSpikeFilter_v2;
+    int HLT_Photon125_NoSpikeFilter_v3;
+    int HLT_Photon20_CaloIdVL_IsoL_v1;
+    int HLT_Photon20_CaloIdVL_IsoL_v2;
+    int HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v1;
+    int HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v2;
+    int HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v3;
+    int HLT_Photon20_EBOnly_NoSpikeFilter_v1;
+    int HLT_Photon20_NoSpikeFilter_v1;
+    int HLT_Photon20_R9Id_Photon18_R9Id_v1;
+    int HLT_Photon20_R9Id_Photon18_R9Id_v2;
+    int HLT_Photon20_R9Id_Photon18_R9Id_v3;
+    int HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v1;
+    int HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v2;
+    int HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v3;
+    int HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v1;
+    int HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v2;
+    int HLT_Photon26_CaloIdL_IsoVL_Photon18_v1;
+    int HLT_Photon26_CaloIdL_IsoVL_Photon18_v2;
+    int HLT_Photon26_CaloIdL_IsoVL_Photon18_v3;
+    int HLT_Photon26_IsoVL_Photon18_IsoVL_v1;
+    int HLT_Photon26_IsoVL_Photon18_IsoVL_v2;
+    int HLT_Photon26_IsoVL_Photon18_IsoVL_v3;
+    int HLT_Photon26_IsoVL_Photon18_v1;
+    int HLT_Photon26_IsoVL_Photon18_v2;
+    int HLT_Photon26_IsoVL_Photon18_v3;
+    int HLT_Photon26_Photon18_v1;
+    int HLT_Photon26_Photon18_v2;
+    int HLT_Photon26_Photon18_v3;
+    int HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v1;
+    int HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v2;
+    int HLT_Photon30_CaloIdVL_IsoL_v1;
+    int HLT_Photon30_CaloIdVL_IsoL_v2;
+    int HLT_Photon30_CaloIdVL_IsoL_v3;
+    int HLT_Photon30_CaloIdVL_v1;
+    int HLT_Photon30_CaloIdVL_v2;
+    int HLT_Photon30_CaloIdVL_v3;
+    int HLT_Photon32_CaloIdL_Photon26_CaloIdL_v1;
+    int HLT_Photon32_CaloIdL_Photon26_CaloIdL_v2;
+    int HLT_Photon32_CaloIdL_Photon26_CaloIdL_v3;
+    int HLT_Photon36_CaloIdL_Photon22_CaloIdL_v1;
+    int HLT_Photon36_CaloIdL_Photon22_CaloIdL_v2;
+    int HLT_Photon50_CaloIdVL_IsoL_v1;
+    int HLT_Photon50_CaloIdVL_IsoL_v2;
+    int HLT_Photon75_CaloIdVL_IsoL_v1;
+    int HLT_Photon75_CaloIdVL_IsoL_v2;
+    int HLT_Photon75_CaloIdVL_IsoL_v3;
+    int HLT_Photon75_CaloIdVL_v1;
+    int HLT_Photon75_CaloIdVL_v2;
+    int HLT_Photon75_CaloIdVL_v3;
+    
+    
+               
   };
 
   // string for defining a tree branch for this struct
-  std::string hltTrigBranchDefString("HLT_MinBiasBSC/I:HLT_MinBiasBSC_NoBPTX:HLT_MinBiasBSC_OR:HLT_L1_BscMinBiasOR_BptxPlusORMinus:HLT_L1SingleEG2:HLT_L1SingleEG5:HLT_L1SingleEG8:HLT_L1DoubleEG5:HLT_Photon10_L1R:HLT_Photon10_Cleaned_L1R:HLT_Photon15_L1R:HLT_Photon15_Cleaned_L1R:HLT_Photon15_LooseEcalIso_L1R:HLT_Photon15_LooseEcalIso_Cleaned_L1R:HLT_Photon15_TrackIso_L1R:HLT_Photon15_TrackIso_Cleaned_L1R:HLT_Photon17_Isol_SC17HE_L1R_v1:HLT_Photon17_SC17HE_L1R_v1:HLT_Photon20_L1R:HLT_Photon20_Cleaned_L1R:HLT_Photon20_NoHE_L1R:HLT_Photon22_SC22HE_L1R_v1:HLT_Photon25_Cleaned_L1R:HLT_Photon30_L1R:HLT_Photon30_Cleaned_L1R:HLT_Photon30_L1R_8E29:HLT_Photon30_Isol_EBOnly_Cleaned_L1R_v1:HLT_Photon35_Isol_Cleaned_L1R_v1:HLT_Photon40_CaloId_Cleaned_L1R_v1:HLT_Photon40_Isol_Cleaned_L1R_v1:HLT_Photon50_L1R:HLT_Photon50_Cleaned_L1R:HLT_Photon50_Cleaned_L1R_v1:HLT_Photon50_NoHE_L1R:HLT_Photon50_NoHE_Cleaned_L1R:HLT_Photon70_Cleaned_L1R_v1:HLT_Photon70_NoHE_Cleaned_L1R_v1:HLT_Photon100_NoHE_Cleaned_L1R_v1:HLT_Photon110_NoHE_Cleaned_L1R_v1:HLT_DoublePhoton5_L1R:HLT_DoublePhoton5_CEP_L1R:HLT_DoublePhoton5_CEP_L1R_v3:HLT_DoublePhoton5_Jpsi_L1R:HLT_DoublePhoton5_Upsilon_L1R:HLT_DoublePhoton10_L1R:HLT_DoublePhoton15_L1R:HLT_DoublePhoton17_L1R:HLT_DoublePhoton17_SingleIsol_L1R_v1:HLT_DoublePhoton20_L1R:HLT_DoublePhoton22_L1R_v1");
+  std::string hltTrigBranchDefString("HLT_MinBiasBSC/I:HLT_MinBiasBSC_NoBPTX:HLT_MinBiasBSC_OR:HLT_L1_BscMinBiasOR_BptxPlusORMinus:HLT_L1SingleEG2:HLT_L1SingleEG5:HLT_L1SingleEG8:HLT_L1DoubleEG5:HLT_Photon10_L1R:HLT_Photon10_Cleaned_L1R:HLT_Photon15_L1R:HLT_Photon15_Cleaned_L1R:HLT_Photon15_LooseEcalIso_L1R:HLT_Photon15_LooseEcalIso_Cleaned_L1R:HLT_Photon15_TrackIso_L1R:HLT_Photon15_TrackIso_Cleaned_L1R:HLT_Photon17_Isol_SC17HE_L1R_v1:HLT_Photon17_SC17HE_L1R_v1:HLT_Photon20_L1R:HLT_Photon20_Cleaned_L1R:HLT_Photon20_NoHE_L1R:HLT_Photon22_SC22HE_L1R_v1:HLT_Photon25_Cleaned_L1R:HLT_Photon30_L1R:HLT_Photon30_Cleaned_L1R:HLT_Photon30_L1R_8E29:HLT_Photon30_Isol_EBOnly_Cleaned_L1R_v1:HLT_Photon35_Isol_Cleaned_L1R_v1:HLT_Photon40_CaloId_Cleaned_L1R_v1:HLT_Photon40_Isol_Cleaned_L1R_v1:HLT_Photon50_L1R:HLT_Photon50_Cleaned_L1R:HLT_Photon50_Cleaned_L1R_v1:HLT_Photon50_NoHE_L1R:HLT_Photon50_NoHE_Cleaned_L1R:HLT_Photon70_Cleaned_L1R_v1:HLT_Photon70_NoHE_Cleaned_L1R_v1:HLT_Photon100_NoHE_Cleaned_L1R_v1:HLT_Photon110_NoHE_Cleaned_L1R_v1:HLT_DoublePhoton5_L1R:HLT_DoublePhoton5_CEP_L1R:HLT_DoublePhoton5_CEP_L1R_v3:HLT_DoublePhoton5_Jpsi_L1R:HLT_DoublePhoton5_Upsilon_L1R:HLT_DoublePhoton10_L1R:HLT_DoublePhoton15_L1R:HLT_DoublePhoton17_L1R:HLT_DoublePhoton17_SingleIsol_L1R_v1:HLT_DoublePhoton20_L1R:HLT_DoublePhoton22_L1R_v1:HLT_DoublePhoton33_v1:HLT_DoublePhoton33_v2:HLT_DoublePhoton33_v3:HLT_DoublePhoton5_IsoVL_CEP_v1:HLT_DoublePhoton5_IsoVL_CEP_v2:HLT_Photon125_NoSpikeFilter_v1:HLT_Photon125_NoSpikeFilter_v2:HLT_Photon125_NoSpikeFilter_v3:HLT_Photon20_CaloIdVL_IsoL_v1:HLT_Photon20_CaloIdVL_IsoL_v2:HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v1:HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v2:HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v3:HLT_Photon20_EBOnly_NoSpikeFilter_v1:HLT_Photon20_NoSpikeFilter_v1:HLT_Photon20_R9Id_Photon18_R9Id_v1:HLT_Photon20_R9Id_Photon18_R9Id_v2:HLT_Photon20_R9Id_Photon18_R9Id_v3:HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v1:HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v2:HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v3:HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v1:HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v2:HLT_Photon26_CaloIdL_IsoVL_Photon18_v1:HLT_Photon26_CaloIdL_IsoVL_Photon18_v2:HLT_Photon26_CaloIdL_IsoVL_Photon18_v3:HLT_Photon26_IsoVL_Photon18_IsoVL_v1:HLT_Photon26_IsoVL_Photon18_IsoVL_v2:HLT_Photon26_IsoVL_Photon18_IsoVL_v3:HLT_Photon26_IsoVL_Photon18_v1:HLT_Photon26_IsoVL_Photon18_v2:HLT_Photon26_IsoVL_Photon18_v3:HLT_Photon26_Photon18_v1:HLT_Photon26_Photon18_v2:HLT_Photon26_Photon18_v3:HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v1:HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v2:HLT_Photon30_CaloIdVL_IsoL_v1:HLT_Photon30_CaloIdVL_IsoL_v2:HLT_Photon30_CaloIdVL_IsoL_v3:HLT_Photon30_CaloIdVL_v1:HLT_Photon30_CaloIdVL_v2:HLT_Photon30_CaloIdVL_v3:HLT_Photon32_CaloIdL_Photon26_CaloIdL_v1:HLT_Photon32_CaloIdL_Photon26_CaloIdL_v2:HLT_Photon32_CaloIdL_Photon26_CaloIdL_v3:HLT_Photon36_CaloIdL_Photon22_CaloIdL_v1:HLT_Photon36_CaloIdL_Photon22_CaloIdL_v2:HLT_Photon50_CaloIdVL_IsoL_v1:HLT_Photon50_CaloIdVL_IsoL_v2:HLT_Photon75_CaloIdVL_IsoL_v1:HLT_Photon75_CaloIdVL_IsoL_v2:HLT_Photon75_CaloIdVL_IsoL_v3:HLT_Photon75_CaloIdVL_v1:HLT_Photon75_CaloIdVL_v2:HLT_Photon75_CaloIdVL_v3");
   
   // need also to have an Initialise() function?
   // No, we can do this inside the Fill function ...
@@ -171,6 +231,64 @@ namespace ExoDiPhotons
     hltInfo.HLT_DoublePhoton17_SingleIsol_L1R_v1 = -1;
     hltInfo.HLT_DoublePhoton20_L1R = -1;
     hltInfo.HLT_DoublePhoton22_L1R_v1 = -1;
+    //new 2011A
+    hltInfo.HLT_DoublePhoton33_v1 = -1;
+    hltInfo.HLT_DoublePhoton33_v2 = -1;
+    hltInfo.HLT_DoublePhoton33_v3 = -1;
+    hltInfo.HLT_DoublePhoton5_IsoVL_CEP_v1 = -1;
+    hltInfo.HLT_DoublePhoton5_IsoVL_CEP_v2 = -1;
+    hltInfo.HLT_Photon125_NoSpikeFilter_v1 = -1;
+    hltInfo.HLT_Photon125_NoSpikeFilter_v2 = -1;
+    hltInfo.HLT_Photon125_NoSpikeFilter_v3 = -1;
+    hltInfo.HLT_Photon20_CaloIdVL_IsoL_v1 = -1;
+    hltInfo.HLT_Photon20_CaloIdVL_IsoL_v2 = -1;
+    hltInfo.HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v1 = -1;
+    hltInfo.HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v2 = -1;
+    hltInfo.HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v3 = -1;
+    hltInfo.HLT_Photon20_EBOnly_NoSpikeFilter_v1 = -1;
+    hltInfo.HLT_Photon20_NoSpikeFilter_v1 = -1;
+    hltInfo.HLT_Photon20_R9Id_Photon18_R9Id_v1 = -1;
+    hltInfo.HLT_Photon20_R9Id_Photon18_R9Id_v2 = -1;
+    hltInfo.HLT_Photon20_R9Id_Photon18_R9Id_v3 = -1;
+    hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v1 = -1;
+    hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v2 = -1;
+    hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v3 = -1;
+    hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v1 = -1;
+    hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v2 = -1;
+    hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_v1 = -1;
+    hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_v2 = -1;
+    hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_v3 = -1;
+    hltInfo.HLT_Photon26_IsoVL_Photon18_IsoVL_v1 = -1;
+    hltInfo.HLT_Photon26_IsoVL_Photon18_IsoVL_v2 = -1;
+    hltInfo.HLT_Photon26_IsoVL_Photon18_IsoVL_v3 = -1;
+    hltInfo.HLT_Photon26_IsoVL_Photon18_v1 = -1;
+    hltInfo.HLT_Photon26_IsoVL_Photon18_v2 = -1;
+    hltInfo.HLT_Photon26_IsoVL_Photon18_v3 = -1;
+    hltInfo.HLT_Photon26_Photon18_v1 = -1;
+    hltInfo.HLT_Photon26_Photon18_v2 = -1;
+    hltInfo.HLT_Photon26_Photon18_v3 = -1;
+    hltInfo.HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v1 = -1;
+    hltInfo.HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v2 = -1;
+    hltInfo.HLT_Photon30_CaloIdVL_IsoL_v1 = -1;
+    hltInfo.HLT_Photon30_CaloIdVL_IsoL_v2 = -1;
+    hltInfo.HLT_Photon30_CaloIdVL_IsoL_v3 = -1;
+    hltInfo.HLT_Photon30_CaloIdVL_v1 = -1;
+    hltInfo.HLT_Photon30_CaloIdVL_v2 = -1;
+    hltInfo.HLT_Photon30_CaloIdVL_v3 = -1;
+    hltInfo.HLT_Photon32_CaloIdL_Photon26_CaloIdL_v1 = -1;
+    hltInfo.HLT_Photon32_CaloIdL_Photon26_CaloIdL_v2 = -1;
+    hltInfo.HLT_Photon32_CaloIdL_Photon26_CaloIdL_v3 = -1;
+    hltInfo.HLT_Photon36_CaloIdL_Photon22_CaloIdL_v1 = -1;
+    hltInfo.HLT_Photon36_CaloIdL_Photon22_CaloIdL_v2 = -1;
+    hltInfo.HLT_Photon50_CaloIdVL_IsoL_v1 = -1;
+    hltInfo.HLT_Photon50_CaloIdVL_IsoL_v2 = -1;
+    hltInfo.HLT_Photon75_CaloIdVL_IsoL_v1 = -1;
+    hltInfo.HLT_Photon75_CaloIdVL_IsoL_v2 = -1;
+    hltInfo.HLT_Photon75_CaloIdVL_IsoL_v3 = -1;
+    hltInfo.HLT_Photon75_CaloIdVL_v1 = -1;
+    hltInfo.HLT_Photon75_CaloIdVL_v2 = -1;
+    hltInfo.HLT_Photon75_CaloIdVL_v3 = -1;
+
     
     // we'll just loop over all triggers in the current event
     // and check one-by-one the result for the triggers we are interested in
@@ -277,7 +395,118 @@ namespace ExoDiPhotons
         hltInfo.HLT_DoublePhoton20_L1R = (int) hltResults->accept(itrig);
       else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton22_L1R_v1")
         hltInfo.HLT_DoublePhoton22_L1R_v1 = (int) hltResults->accept(itrig);
-
+      else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton33_v1")
+	hltInfo.HLT_DoublePhoton33_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton33_v2")
+	hltInfo.HLT_DoublePhoton33_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton33_v3")
+	hltInfo.HLT_DoublePhoton33_v3 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton5_IsoVL_CEP_v1")
+	hltInfo.HLT_DoublePhoton5_IsoVL_CEP_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_DoublePhoton5_IsoVL_CEP_v2")
+	hltInfo.HLT_DoublePhoton5_IsoVL_CEP_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon125_NoSpikeFilter_v1")
+	hltInfo.HLT_Photon125_NoSpikeFilter_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon125_NoSpikeFilter_v2")
+	hltInfo.HLT_Photon125_NoSpikeFilter_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon125_NoSpikeFilter_v3")
+	hltInfo.HLT_Photon125_NoSpikeFilter_v3 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon20_CaloIdVL_IsoL_v1")
+	hltInfo.HLT_Photon20_CaloIdVL_IsoL_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon20_CaloIdVL_IsoL_v2")
+	hltInfo.HLT_Photon20_CaloIdVL_IsoL_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v1")
+	hltInfo.HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v2")
+	hltInfo.HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v3")
+	hltInfo.HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v3 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon20_EBOnly_NoSpikeFilter_v1")
+	hltInfo.HLT_Photon20_EBOnly_NoSpikeFilter_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon20_NoSpikeFilter_v1")
+	hltInfo.HLT_Photon20_NoSpikeFilter_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon20_R9Id_Photon18_R9Id_v1")
+	hltInfo.HLT_Photon20_R9Id_Photon18_R9Id_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon20_R9Id_Photon18_R9Id_v2")
+	hltInfo.HLT_Photon20_R9Id_Photon18_R9Id_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon20_R9Id_Photon18_R9Id_v3")
+	hltInfo.HLT_Photon20_R9Id_Photon18_R9Id_v3 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v1")
+	hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v2")
+	hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v3")
+	hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v3 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v1")
+	hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v2")
+	hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_CaloIdL_IsoVL_Photon18_v1")
+	hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_CaloIdL_IsoVL_Photon18_v2")
+	hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_CaloIdL_IsoVL_Photon18_v3")
+	hltInfo.HLT_Photon26_CaloIdL_IsoVL_Photon18_v3 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_IsoVL_Photon18_IsoVL_v1")
+	hltInfo.HLT_Photon26_IsoVL_Photon18_IsoVL_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_IsoVL_Photon18_IsoVL_v2")
+	hltInfo.HLT_Photon26_IsoVL_Photon18_IsoVL_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_IsoVL_Photon18_IsoVL_v3")
+	hltInfo.HLT_Photon26_IsoVL_Photon18_IsoVL_v3 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_IsoVL_Photon18_v1")
+	hltInfo.HLT_Photon26_IsoVL_Photon18_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_IsoVL_Photon18_v2")
+	hltInfo.HLT_Photon26_IsoVL_Photon18_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_IsoVL_Photon18_v3")
+	hltInfo.HLT_Photon26_IsoVL_Photon18_v3 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_Photon18_v1")
+	hltInfo.HLT_Photon26_Photon18_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_Photon18_v2")
+	hltInfo.HLT_Photon26_Photon18_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_Photon18_v3")
+	hltInfo.HLT_Photon26_Photon18_v3 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v1")
+	hltInfo.HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v2")
+	hltInfo.HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon30_CaloIdVL_IsoL_v1")
+	hltInfo.HLT_Photon30_CaloIdVL_IsoL_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon30_CaloIdVL_IsoL_v2")
+	hltInfo.HLT_Photon30_CaloIdVL_IsoL_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon30_CaloIdVL_IsoL_v3")
+	hltInfo.HLT_Photon30_CaloIdVL_IsoL_v3 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon30_CaloIdVL_v1")
+	hltInfo.HLT_Photon30_CaloIdVL_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon30_CaloIdVL_v2")
+	hltInfo.HLT_Photon30_CaloIdVL_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon30_CaloIdVL_v3")
+	hltInfo.HLT_Photon30_CaloIdVL_v3 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon32_CaloIdL_Photon26_CaloIdL_v1")
+	hltInfo.HLT_Photon32_CaloIdL_Photon26_CaloIdL_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon32_CaloIdL_Photon26_CaloIdL_v2")
+	hltInfo.HLT_Photon32_CaloIdL_Photon26_CaloIdL_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon32_CaloIdL_Photon26_CaloIdL_v3")
+	hltInfo.HLT_Photon32_CaloIdL_Photon26_CaloIdL_v3 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon36_CaloIdL_Photon22_CaloIdL_v1")
+	hltInfo.HLT_Photon36_CaloIdL_Photon22_CaloIdL_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon36_CaloIdL_Photon22_CaloIdL_v2")
+	hltInfo.HLT_Photon36_CaloIdL_Photon22_CaloIdL_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon50_CaloIdVL_IsoL_v1")
+	hltInfo.HLT_Photon50_CaloIdVL_IsoL_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon50_CaloIdVL_IsoL_v2")
+	hltInfo.HLT_Photon50_CaloIdVL_IsoL_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon75_CaloIdVL_IsoL_v1")
+	hltInfo.HLT_Photon75_CaloIdVL_IsoL_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon75_CaloIdVL_IsoL_v2")
+	hltInfo.HLT_Photon75_CaloIdVL_IsoL_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon75_CaloIdVL_IsoL_v3")
+	hltInfo.HLT_Photon75_CaloIdVL_IsoL_v3 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon75_CaloIdVL_v1")
+	hltInfo.HLT_Photon75_CaloIdVL_v1 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon75_CaloIdVL_v2")
+	hltInfo.HLT_Photon75_CaloIdVL_v2 = (int) hltResults->accept(itrig);
+      else if(hltNames.triggerName(itrig)=="HLT_Photon75_CaloIdVL_v3")
+	hltInfo.HLT_Photon75_CaloIdVL_v3 = (int) hltResults->accept(itrig);
     }
 
   }
