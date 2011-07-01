@@ -101,12 +101,6 @@
 #include "DiPhotonAnalysis/CommonClasses/interface/EventAndVertexInfo.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/DiphotonInfo.h"
 
-// for MC
-#include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
-
-#include "DiPhotonAnalysis/CommonClasses/interface/MCTrueObjectInfo.h"
 
 //new for PU gen
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
@@ -139,8 +133,8 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       double             fMin_pt;          // min pt cut (photons)
       edm::InputTag      fHltInputTag;     // hltResults
       edm::InputTag      fL1InputTag;      // L1 results
-  edm::InputTag     fRhoTag;
-  edm::InputTag     pileupCollectionTag;
+      edm::InputTag     fRhoTag;
+      edm::InputTag     pileupCollectionTag;
 
       bool               fkRemoveSpikes;   // option to remove spikes before filling tree
       bool               fkRequireTightPhotons;  // option to require tight photon id in tree
@@ -167,20 +161,20 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
   // now even adding a third vtx!
       ExoDiPhotons::vtxInfo_t fVtx3Info;
 
-  ExoDiPhotons::vtxInfo_t fVtxGENInfo;
+      ExoDiPhotons::vtxInfo_t fVtxGENInfo;
 
-  double rho;
-  int pu_n;
+      double rho;
+      int pu_n;
 
-  Int_t gv_n;
+      Int_t gv_n;
   
-  TClonesArray* gv_pos;
-  TClonesArray* gv_p3;
+      TClonesArray* gv_pos;
+      TClonesArray* gv_p3;
   
-  Float_t gv_sumPtHi[100];
-  Float_t gv_sumPtLo[100];
-  Short_t gv_nTkHi[100];
-  Short_t gv_nTkLo[100];
+      Float_t gv_sumPtHi[100];
+      Float_t gv_sumPtLo[100];
+      Short_t gv_nTkHi[100];
+      Short_t gv_nTkLo[100];
 
       ExoDiPhotons::beamSpotInfo_t fBeamSpotInfo;
 
@@ -198,12 +192,6 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
   // diphoton info based on using hte second or third vtx in event
       ExoDiPhotons::diphotonInfo_t fDiphotonInfoVtx2; 
       ExoDiPhotons::diphotonInfo_t fDiphotonInfoVtx3; 
-
-      // MC truth event-level info
-      ExoDiPhotons::mcEventInfo_t fMCEventInfo;
-
-  // event normalisation histogram
-  TH1F *fNorm_h;
 
 };
 
@@ -235,10 +223,6 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree = fs->make<TTree>("fTree","PhotonTree");
 
   fTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
-  // MC truth event info
-  fTree->Branch("GenEvent",&fMCEventInfo,ExoDiPhotons::mcEventInfoBranchDefString.c_str());
-
-
   fTree->Branch("Vtx",&fVtxInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
   //adding a second vtx
   fTree->Branch("Vtx2",&fVtx2Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
@@ -263,10 +247,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("DiphotonVtx2",&fDiphotonInfoVtx2,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
   fTree->Branch("DiphotonVtx3",&fDiphotonInfoVtx3,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
   
-  // and the histogram for event normalisation purposes
-  // Fill this with 0 if event fails, 1 if event passes
-  fNorm_h = fs->make<TH1F>("fNorm_h","Normalisation Hist",4,0,2);
- 
+
   // repeating all this for each of tight-fake and fake-fake trees
   // basically they'll all point to the same structs, but the structs will contain
   // different values for the event, depending on the event category
@@ -347,6 +328,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 {
    using namespace edm;
 
+   //   cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
    // basic event info
    ExoDiPhotons::FillEventInfo(fEventInfo,iEvent);
@@ -354,201 +336,207 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    // get the vertex collection
    Handle<reco::VertexCollection> vertexColl;
    iEvent.getByLabel("offlinePrimaryVertices",vertexColl);
-
+   
    if(!vertexColl.isValid()) {
      cout << "Vertex collection empty! Bailing out!" <<endl;
-     return;
+           return;
    }
-   //    cout << "N vertices = " << vertexColl->size() <<endl;
-   //   fVtxInfo.Nvtx = vertexColl->size();
-   // this just counts the collection size
-   // may want to count N vtx with TrkPt> some cut ?
+//    //    cout << "N vertices = " << vertexColl->size() <<endl;
+//    //   fVtxInfo.Nvtx = vertexColl->size();
+//    // this just counts the collection size
+//    // may want to count N vtx with TrkPt> some cut ?
 
    
 
-   fVtxInfo.vx = -99999.99;
-   fVtxInfo.vy = -99999.99;
-   fVtxInfo.vz = -99999.99;
-   fVtxInfo.isFake = true;   
-   fVtxInfo.Ntracks = -99;
-   fVtxInfo.sumPtTracks = -99999.99;
-   fVtxInfo.ndof = -99999.99;
-   fVtxInfo.d0 = -99999.99;
+    fVtxInfo.vx = -99999.99;
+    fVtxInfo.vy = -99999.99;
+    fVtxInfo.vz = -99999.99;
+    fVtxInfo.isFake = true;   
+    fVtxInfo.Ntracks = -99;
+    fVtxInfo.sumPtTracks = -99999.99;
+    fVtxInfo.ndof = -99999.99;
+    fVtxInfo.d0 = -99999.99;
 
 
-   fVtx2Info.vx = -99999.99;
-   fVtx2Info.vy = -99999.99;
-   fVtx2Info.vz = -99999.99;
-   fVtx2Info.isFake = true;   
-   fVtx2Info.Ntracks = -99;
-   fVtx2Info.sumPtTracks = -99999.99;
-   fVtx2Info.ndof = -99999.99;
-   fVtx2Info.d0 = -99999.99;
+    fVtx2Info.vx = -99999.99;
+    fVtx2Info.vy = -99999.99;
+    fVtx2Info.vz = -99999.99;
+    fVtx2Info.isFake = true;   
+    fVtx2Info.Ntracks = -99;
+    fVtx2Info.sumPtTracks = -99999.99;
+    fVtx2Info.ndof = -99999.99;
+    fVtx2Info.d0 = -99999.99;
 
 
-   fVtx3Info.vx = -99999.99;
-   fVtx3Info.vy = -99999.99;
-   fVtx3Info.vz = -99999.99;
-   fVtx3Info.isFake = true;   
-   fVtx3Info.Ntracks = -99;
-   fVtx3Info.sumPtTracks = -99999.99;
-   fVtx3Info.ndof = -99999.99;
-   fVtx3Info.d0 = -99999.99;
+    fVtx3Info.vx = -99999.99;
+    fVtx3Info.vy = -99999.99;
+    fVtx3Info.vz = -99999.99;
+    fVtx3Info.isFake = true;   
+    fVtx3Info.Ntracks = -99;
+    fVtx3Info.sumPtTracks = -99999.99;
+    fVtx3Info.ndof = -99999.99;
+    fVtx3Info.d0 = -99999.99;
 
-   fVtxGENInfo.vx = -99999.99;
-   fVtxGENInfo.vy = -99999.99;
-   fVtxGENInfo.vz = -99999.99;
-   fVtxGENInfo.isFake = true;
-   fVtxGENInfo.Ntracks = -99;
-   fVtxGENInfo.sumPtTracks = -99999.99;
-   fVtxGENInfo.ndof = -99999.99;
-   fVtxGENInfo.d0 = -99999.99;
+    fVtxGENInfo.vx = -99999.99;
+    fVtxGENInfo.vy = -99999.99;
+    fVtxGENInfo.vz = -99999.99;
+    fVtxGENInfo.isFake = true;
+    fVtxGENInfo.Ntracks = -99;
+    fVtxGENInfo.sumPtTracks = -99999.99;
+    fVtxGENInfo.ndof = -99999.99;
+    fVtxGENInfo.d0 = -99999.99;
 
-   // note for higher lumi, may want to also store second vertex, for pileup studies
-   // to allow scalability for many vertices, use a vector and sort later
-   std::vector<reco::Vertex> myVertices;
+//    // note for higher lumi, may want to also store second vertex, for pileup studies
+//    // to allow scalability for many vertices, use a vector and sort later
+    std::vector<reco::Vertex> myVertices;
    
-   for(reco::VertexCollection::const_iterator vtx=vertexColl->begin(); vtx!=vertexColl->end(); vtx++) {
+    for(reco::VertexCollection::const_iterator vtx=vertexColl->begin(); vtx!=vertexColl->end(); vtx++) {
      
-     // add to my vtx vector if not fake and ndof>4 and maxd0=2 and |vz|<24
-     // ie default criteria
-     if(!vtx->isFake() && vtx->ndof()>4 && fabs(vtx->position().rho())<=2.0 && fabs(vtx->z())<=24.0  ) {
-       myVertices.push_back(*vtx);
-     }      
+//      // add to my vtx vector if not fake and ndof>4 and maxd0=2 and |vz|<24
+//      // ie default criteria
+      if(!vtx->isFake() && vtx->ndof()>4 && fabs(vtx->position().rho())<=2.0 && fabs(vtx->z())<=24.0  ) {
+        myVertices.push_back(*vtx);
+      }      
 
-     //cout << "Vtx x = "<< vtx->x()<<", y= "<< vtx->y()<<", z = " << vtx->z() << ";  N tracks = " << vtx->tracksSize() << "; isFake = " << vtx->isFake() <<", sumPt(tracks) = "<< ExoDiPhotons::calcVtxSumPtTracks(&(*vtx)) << "; ndof = " << vtx->ndof()<< "; d0 = " << vtx->position().rho() << endl;
+//      //cout << "Vtx x = "<< vtx->x()<<", y= "<< vtx->y()<<", z = " << vtx->z() << ";  N tracks = " << vtx->tracksSize() << "; isFake = " << vtx->isFake() <<", sumPt(tracks) = "<< ExoDiPhotons::calcVtxSumPtTracks(&(*vtx)) << "; ndof = " << vtx->ndof()<< "; d0 = " << vtx->position().rho() << endl;
      
-     // and note that this vertex collection can contain vertices with Ntracks = 0
-     // watch out for these!
+//      // and note that this vertex collection can contain vertices with Ntracks = 0
+//      // watch out for these!
    
-   }// end vertex loop
+    }// end vertex loop
 
 
-//    // loop over my selected vertices
-//    for(std::vector<reco::Vertex>::iterator myVtxIter=myVertices.begin();myVtxIter<myVertices.end();myVtxIter++) {
+// //    // loop over my selected vertices
+// //    for(std::vector<reco::Vertex>::iterator myVtxIter=myVertices.begin();myVtxIter<myVertices.end();myVtxIter++) {
 
-//      cout << "MY MyVtxIter x = "<< myVtxIter->x()<<", y= "<< myVtxIter->y()<<", z = " << myVtxIter->z() << ";  N tracks = " << myVtxIter->tracksSize() << "; isFake = " << myVtxIter->isFake() <<", sumPt(tracks) = "<< ExoDiPhotons::calcVtxSumPtTracks(&(*myVtxIter))<< "; ndof = " << myVtxIter->ndof()<< "; d0 = " << myVtxIter->position().rho() << endl;
+// //      cout << "MY MyVtxIter x = "<< myVtxIter->x()<<", y= "<< myVtxIter->y()<<", z = " << myVtxIter->z() << ";  N tracks = " << myVtxIter->tracksSize() << "; isFake = " << myVtxIter->isFake() <<", sumPt(tracks) = "<< ExoDiPhotons::calcVtxSumPtTracks(&(*myVtxIter))<< "; ndof = " << myVtxIter->ndof()<< "; d0 = " << myVtxIter->position().rho() << endl;
 
-//    }
+// //    }
 
-   // now sort the vertices after
-   // can be either by Ntracks or TrackSumPt, depending how I write the function
-   sort(myVertices.begin(),myVertices.end(),ExoDiPhotons::sortVertices) ;
+//    // now sort the vertices after
+//    // can be either by Ntracks or TrackSumPt, depending how I write the function
+    sort(myVertices.begin(),myVertices.end(),ExoDiPhotons::sortVertices) ;
 
-   //   cout << "After sorting" << endl;
+//    //   cout << "After sorting" << endl;
 
-   //    // check sorting
-   //    for(std::vector<reco::Vertex>::iterator myVtxIter=myVertices.begin();myVtxIter<myVertices.end();myVtxIter++) {
+//    //    // check sorting
+//    //    for(std::vector<reco::Vertex>::iterator myVtxIter=myVertices.begin();myVtxIter<myVertices.end();myVtxIter++) {
 
-   //      cout << "MY MyVtxIter x = "<< myVtxIter->x()<<", y= "<< myVtxIter->y()<<", z = " << myVtxIter->z() << ";  N tracks = " << myVtxIter->tracksSize() << "; isFake = " << myVtxIter->isFake() <<", sumPt(tracks) = "<< ExoDiPhotons::calcVtxSumPtTracks(&(*myVtxIter))<< "; ndof = " << myVtxIter->ndof()<< "; d0 = " << myVtxIter->position().rho() << endl;
+//    //      cout << "MY MyVtxIter x = "<< myVtxIter->x()<<", y= "<< myVtxIter->y()<<", z = " << myVtxIter->z() << ";  N tracks = " << myVtxIter->tracksSize() << "; isFake = " << myVtxIter->isFake() <<", sumPt(tracks) = "<< ExoDiPhotons::calcVtxSumPtTracks(&(*myVtxIter))<< "; ndof = " << myVtxIter->ndof()<< "; d0 = " << myVtxIter->position().rho() << endl;
 
-   //    }
-
-
-   // first count the number of good vertices
-   fVtxInfo.Nvtx = myVertices.size();
-   fVtx2Info.Nvtx = myVertices.size();
-   fVtx3Info.Nvtx = myVertices.size();
+//    //    }
 
 
-   //temporary don't fill vertex info due to memory issue?
-   // now we will fill the vertex info structs from the sorted list
-      if(myVertices.size()>=1) {
-        ExoDiPhotons::FillVertexInfo(fVtxInfo,&(*myVertices.begin()));
-      }
-      if(myVertices.size()>=2) {
-        ExoDiPhotons::FillVertexInfo(fVtx2Info,&(*(myVertices.begin()+1)));
-      }
-
-      if(myVertices.size()>=3) {
-        ExoDiPhotons::FillVertexInfo(fVtx3Info,&(*(myVertices.begin()+2)));
-      }
+//    // first count the number of good vertices
+    fVtxInfo.Nvtx = myVertices.size();
+    fVtx2Info.Nvtx = myVertices.size();
+    fVtx3Info.Nvtx = myVertices.size();
 
 
-      edm::Handle<reco::GenParticleCollection> gpH;
-      iEvent.getByLabel("genParticles", gpH);   
+//    //temporary don't fill vertex info due to memory issue?
+//    // now we will fill the vertex info structs from the sorted list
+       if(myVertices.size()>=1) {
+         ExoDiPhotons::FillVertexInfo(fVtxInfo,&(*myVertices.begin()));
+       }
+       if(myVertices.size()>=2) {
+         ExoDiPhotons::FillVertexInfo(fVtx2Info,&(*(myVertices.begin()+1)));
+       }
+
+       if(myVertices.size()>=3) {
+         ExoDiPhotons::FillVertexInfo(fVtx3Info,&(*(myVertices.begin()+2)));
+       }
+
+       /*
+       edm::Handle<reco::GenParticleCollection> gpH;
+       iEvent.getByLabel("genParticles", gpH);   
 
 
-      gv_n = 0;
-      //      TClonesArray* gv_pos;
+       gv_n = 0;
+       //      TClonesArray* gv_pos;
  
-      gv_pos->Clear();
-      gv_p3->Clear();
+       gv_pos->Clear();
+       gv_p3->Clear();
 
-  const float lowPtThrGenVtx = 0.1;
-  const float highPtThrGenVtx = 0.5;
-  if (gpH.isValid() ) {
-  for(reco::GenParticleCollection::const_iterator it_gen = 
-	gpH->begin(); it_gen!= gpH->end(); it_gen++){   
-    if( it_gen->status() != 3 || !(it_gen->vx()!=0. || it_gen->vy()!=0. || it_gen->vx()!=0.)  ) { continue; }
+   const float lowPtThrGenVtx = 0.1;
+   const float highPtThrGenVtx = 0.5;
+   if (gpH.isValid() ) {
+   for(reco::GenParticleCollection::const_iterator it_gen = 
+ 	gpH->begin(); it_gen!= gpH->end(); it_gen++){   
+     if( it_gen->status() != 3 || !(it_gen->vx()!=0. || it_gen->vy()!=0. || it_gen->vx()!=0.)  ) { continue; }
 
-    // check for duplicate vertex
-    bool duplicate = false;
-    for(Int_t itv = 0; itv < gv_n; itv++) {
-      TVector3 * checkVtx = (TVector3 *) gv_pos->At(itv);
-      if( (fabs(it_gen->vx()-checkVtx->X())<1e-5) &&  (fabs(it_gen->vy()-checkVtx->Y())<1e-5) && (fabs(it_gen->vz()-checkVtx->Z())<1e-5)) {
-	duplicate = true;
-	break;
-      }
-    }
+     // check for duplicate vertex
+     bool duplicate = false;
+     for(Int_t itv = 0; itv < gv_n; itv++) {
+       TVector3 * checkVtx = (TVector3 *) gv_pos->At(itv);
+       if( (fabs(it_gen->vx()-checkVtx->X())<1e-5) &&  (fabs(it_gen->vy()-checkVtx->Y())<1e-5) && (fabs(it_gen->vz()-checkVtx->Z())<1e-5)) {
+ 	duplicate = true;
+ 	break;
+       }
+     }
 
-    if (duplicate) continue;
+     if (duplicate) continue;
     
-    new((*gv_pos)[gv_n]) TVector3();
-    ((TVector3 *) gv_pos->At(gv_n))->SetXYZ(it_gen->vx(), it_gen->vy(), it_gen->vz());
+     new((*gv_pos)[gv_n]) TVector3();
+     ((TVector3 *) gv_pos->At(gv_n))->SetXYZ(it_gen->vx(), it_gen->vy(), it_gen->vz());
     
-    TVector3 * this_gv_pos = (TVector3 *) gv_pos->At(gv_n);
-    TVector3 p3(0,0,0);
+     TVector3 * this_gv_pos = (TVector3 *) gv_pos->At(gv_n);
+     TVector3 p3(0,0,0);
     
-    gv_sumPtLo[gv_n] = 0;
-    gv_nTkLo[gv_n] = 0;
-    gv_sumPtHi[gv_n] = 0;
-    gv_nTkHi[gv_n] = 0;
+     gv_sumPtLo[gv_n] = 0;
+     gv_nTkLo[gv_n] = 0;
+     gv_sumPtHi[gv_n] = 0;
+     gv_nTkHi[gv_n] = 0;
 
-    for(reco::GenParticleCollection::const_iterator part = gpH->begin(); part!= gpH->end(); part++){   
-      if( part->status() == 1 && part->charge() != 0 && fabs(part->eta())<2.5 &&
-	  ( fabs(part->vx()-this_gv_pos->X())<1.e-5 && fabs(part->vy()-this_gv_pos->Y())<1.e-5 && fabs(part->vz()-this_gv_pos->Z())<1.e-5 ) )  {
+     for(reco::GenParticleCollection::const_iterator part = gpH->begin(); part!= gpH->end(); part++){   
+       if( part->status() == 1 && part->charge() != 0 && fabs(part->eta())<2.5 &&
+ 	  ( fabs(part->vx()-this_gv_pos->X())<1.e-5 && fabs(part->vy()-this_gv_pos->Y())<1.e-5 && fabs(part->vz()-this_gv_pos->Z())<1.e-5 ) )  {
 	
-	TVector3 m(part->px(),part->py(),part->pz());
-	p3 += m;
-	if( m.Pt() > lowPtThrGenVtx ) {
-	  gv_sumPtLo[gv_n] += m.Pt();
-	  gv_nTkLo[gv_n] += 1;
-	  if( m.Pt() > highPtThrGenVtx ) {
-	    gv_sumPtHi[gv_n] += m.Pt();
-	    gv_nTkHi[gv_n] += 1;
-	  }
-	}
-      }
-    }
-    new((*gv_p3)[gv_n]) TVector3();
-    ((TVector3 *) gv_p3->At(gv_n))->SetXYZ(p3.X(),p3.Y(),p3.Z());
+ 	TVector3 m(part->px(),part->py(),part->pz());
+ 	p3 += m;
+ 	if( m.Pt() > lowPtThrGenVtx ) {
+ 	  gv_sumPtLo[gv_n] += m.Pt();
+ 	  gv_nTkLo[gv_n] += 1;
+ 	  if( m.Pt() > highPtThrGenVtx ) {
+ 	    gv_sumPtHi[gv_n] += m.Pt();
+ 	    gv_nTkHi[gv_n] += 1;
+ 	  }
+ 	}
+       }
+     }
+     new((*gv_p3)[gv_n]) TVector3();
+     ((TVector3 *) gv_p3->At(gv_n))->SetXYZ(p3.X(),p3.Y(),p3.Z());
 
-    gv_n++;
-  }
-  }//end of GEN vertex part
+     gv_n++;
+   }
+   }
 
 
       
-      fVtxGENInfo.Nvtx = gv_n;
+       fVtxGENInfo.Nvtx = gv_n;
+
+       TVector3 * gen_pos = (TVector3 *) gv_pos->At(0); 
+       fVtxGENInfo.vx = gen_pos->X();
+       fVtxGENInfo.vy = gen_pos->Y();
+       fVtxGENInfo.vz = gen_pos->Z();
+       */
+
+       edm::Handle<std::vector<PileupSummaryInfo> > pileupHandle;
+       iEvent.getByLabel(pileupCollectionTag, pileupHandle);
+
+       if (pileupHandle.isValid()){
+       PileupSummaryInfo pileup = (*pileupHandle.product())[0];
       
-      edm::Handle<std::vector<PileupSummaryInfo> > pileupHandle;
-      iEvent.getByLabel(pileupCollectionTag, pileupHandle);
+       pu_n = pileup.getPU_NumInteractions();
+       }
 
-      if (pileupHandle.isValid()){
-      PileupSummaryInfo pileup = (*pileupHandle.product())[0];
-      
-      pu_n = pileup.getPU_NumInteractions();
-      }
+       //add rho correction
 
-      //add rho correction
+       //      double rho;
 
-      //      double rho;
-
-      edm::Handle<double> rhoHandle;
-      iEvent.getByLabel(fRhoTag, rhoHandle);
+       edm::Handle<double> rhoHandle;
+       iEvent.getByLabel(fRhoTag, rhoHandle);
   
-      rho = *(rhoHandle.product());
+       rho = *(rhoHandle.product());
 //       if (rhoHandle.isValid()){
 
 // 	cout<<"rho found\n";
@@ -566,19 +554,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 // 	cout<<"yes vectors\n";
 //       }
 //       else { cout<<"no vectors \n";}
-
-//MC event truth (process ID for GJet)
-
-     Handle<GenEventInfoProduct> genEventInfo;
-     iEvent.getByLabel("generator",genEventInfo);
-
-     if(genEventInfo.isValid()) {
-       ExoDiPhotons::FillMCEventInfo(fMCEventInfo,genEventInfo.product());
-     }//only for MC
-     
-
-
-
 
    // get offline beam spot
 
@@ -735,18 +710,18 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
 
    // photon loop
    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
-
-     //          cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
-     //     cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
-//      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
-//       cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
-//      cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
-//       cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
-//       cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
-//       cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
-//       cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();
-//      cout << endl;
-
+     /*
+     cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+     cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
+     cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
+     cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
+     cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
+     cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
+     cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
+     cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
+     cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();
+     cout << endl;
+     */
 
      // now add selected photons to vector if:
      // tight ID
@@ -765,7 +740,7 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
 	    if(ExoDiPhotons::isTightPhoton(&(*recoPhoton)) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {
 	    //	    if( !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {   
 	 selectedPhotons.push_back(*recoPhoton);
-       }
+	    }
        
        // also check for fakeable objects
        if(ExoDiPhotons::isFakeableObject(&(*recoPhoton)) ) {
@@ -904,38 +879,37 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
      // lets try setting these photons to different vertices
      // and see how much these changes Mgg
      
-     if(myVertices.size()>=2) {
-       reco::Photon photon1_vtx2(allTightOrFakeableObjects[0].first);
-       // keep calo poisiton same, but assign new vertex
-       // this func also recalcs 4-vector after changing vertex!
-       photon1_vtx2.setVertex(myVertices[1].position()); 
+//      if(myVertices.size()>=2) {
+//        reco::Photon photon1_vtx2(allTightOrFakeableObjects[0].first);
+//        // keep calo poisiton same, but assign new vertex
+//        // this func also recalcs 4-vector after changing vertex!
+//        photon1_vtx2.setVertex(myVertices[1].position()); 
 
-       reco::Photon photon2_vtx2(allTightOrFakeableObjects[1].first);
-       photon2_vtx2.setVertex(myVertices[1].position()); 
+//        reco::Photon photon2_vtx2(allTightOrFakeableObjects[1].first);
+//        photon2_vtx2.setVertex(myVertices[1].position()); 
 
-       ExoDiPhotons::FillDiphotonInfo(fDiphotonInfoVtx2,&photon1_vtx2,&photon2_vtx2);
+//        ExoDiPhotons::FillDiphotonInfo(fDiphotonInfoVtx2,&photon1_vtx2,&photon2_vtx2);
 
-     }
+//      }
      
-     if(myVertices.size()>=3) {
-       reco::Photon photon1_vtx3(allTightOrFakeableObjects[0].first);
-       // keep calo poisiton same, but assign new vertex
-       // this func also recalcs 4-vector after changing vertex!
-       photon1_vtx3.setVertex(myVertices[2].position()); 
+//      if(myVertices.size()>=3) {
+//        reco::Photon photon1_vtx3(allTightOrFakeableObjects[0].first);
+//        // keep calo poisiton same, but assign new vertex
+//        // this func also recalcs 4-vector after changing vertex!
+//        photon1_vtx3.setVertex(myVertices[2].position()); 
 
-       reco::Photon photon2_vtx3(allTightOrFakeableObjects[1].first);
-       photon2_vtx3.setVertex(myVertices[2].position()); 
+//        reco::Photon photon2_vtx3(allTightOrFakeableObjects[1].first);
+//        photon2_vtx3.setVertex(myVertices[2].position()); 
 
-       ExoDiPhotons::FillDiphotonInfo(fDiphotonInfoVtx3,&photon1_vtx3,&photon2_vtx3);
+//        ExoDiPhotons::FillDiphotonInfo(fDiphotonInfoVtx3,&photon1_vtx3,&photon2_vtx3);
 
-     }
+//      }
 
      // now, we just decide which tree to fill: TT/TF/FF
      // remember the boolean is for isFakeable, so false is tight
      if(!allTightOrFakeableObjects[0].second && !allTightOrFakeableObjects[1].second) {
        // fill the tight-tight tree
        fTree->Fill();
-       fNorm_h->Fill(1);
        //       cout << "This event was TT" <<endl;
      }
      else if(!allTightOrFakeableObjects[0].second ) {
@@ -944,12 +918,10 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
        // and fill the tight-fake tree instead
 	   
        fTightFakeTree->Fill();
-       fNorm_h->Fill(0);
        //       cout << "This event was TF (or FT)" <<endl;
      }
      else if(!allTightOrFakeableObjects[1].second ) {
        fFakeTightTree->Fill();
-       fNorm_h->Fill(0);
      }
      else if(allTightOrFakeableObjects[0].second && allTightOrFakeableObjects[1].second) {
        // so if both isFakeable are true, then 
@@ -958,7 +930,6 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
        fRecoPhotonInfo2.isFakeable = true;
 
        fFakeFakeTree->Fill();
-       fNorm_h->Fill(0);
        //       cout << "This event was FF" <<endl;
      }
      else {
