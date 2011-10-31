@@ -11,8 +11,10 @@
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
+#include <TMath.h>
 #include "TH1.h"
 #include "TH2.h"
+#include "TGraph.h"
 
 #include <iomanip>
 #include <iostream>
@@ -31,24 +33,44 @@ public :
    Int_t           Event_evnum;
    Int_t           GenEvent_signalProcessId;
    Double_t        GenEvent_binningValue;
-   Int_t           Vtx_Nvtx;
    Double_t        Vtx_vx;
    Double_t        Vtx_vy;
    Double_t        Vtx_vz;
-   Int_t           Vtx_isFake;
-   Int_t           Vtx_Ntracks;
    Double_t        Vtx_sumPtTracks;
    Double_t        Vtx_ndof;
    Double_t        Vtx_d0;
-   Int_t           Vtx2_Nvtx;
+   Int_t           Vtx_Nvtx;
+   Int_t           Vtx_Ntracks;
+   Bool_t          Vtx_isFake;
    Double_t        Vtx2_vx;
    Double_t        Vtx2_vy;
    Double_t        Vtx2_vz;
-   Int_t           Vtx2_isFake;
-   Int_t           Vtx2_Ntracks;
    Double_t        Vtx2_sumPtTracks;
    Double_t        Vtx2_ndof;
    Double_t        Vtx2_d0;
+   Int_t           Vtx2_Nvtx;
+   Int_t           Vtx2_Ntracks;
+   Bool_t          Vtx2_isFake;
+   Double_t        Vtx3_vx;
+   Double_t        Vtx3_vy;
+   Double_t        Vtx3_vz;
+   Double_t        Vtx3_sumPtTracks;
+   Double_t        Vtx3_ndof;
+   Double_t        Vtx3_d0;
+   Int_t           Vtx3_Nvtx;
+   Int_t           Vtx3_Ntracks;
+   Bool_t          Vtx3_isFake;
+   Double_t        VtxGEN_vx;
+   Double_t        VtxGEN_vy;
+   Double_t        VtxGEN_vz;
+   Double_t        VtxGEN_sumPtTracks;
+   Double_t        VtxGEN_ndof;
+   Double_t        VtxGEN_d0;
+   Int_t           VtxGEN_Nvtx;
+   Int_t           VtxGEN_Ntracks;
+   Bool_t          VtxGEN_isFake;
+   Double_t        rho;
+   Double_t           pu_n;
    Double_t        BeamSpot_x0;
    Double_t        BeamSpot_y0;
    Double_t        BeamSpot_z0;
@@ -119,8 +141,146 @@ public :
    Int_t           TrigHLT_HLT_DoublePhoton17_SingleIsol_L1R_v1;
    Int_t           TrigHLT_HLT_DoublePhoton20_L1R;
    Int_t           TrigHLT_HLT_DoublePhoton22_L1R_v1;
+   Int_t           TrigHLT_HLT_DoublePhoton33_v1;
+   Int_t           TrigHLT_HLT_DoublePhoton33_v2;
+   Int_t           TrigHLT_HLT_DoublePhoton33_v3;
+   Int_t           TrigHLT_HLT_DoublePhoton33_v5;
+   Int_t           TrigHLT_HLT_DoublePhoton33_HEVT_v2;
+   Int_t           TrigHLT_HLT_DoublePhoton5_IsoVL_CEP_v1;
+   Int_t           TrigHLT_HLT_DoublePhoton5_IsoVL_CEP_v2;
+   Int_t           TrigHLT_HLT_Photon125_NoSpikeFilter_v1;
+   Int_t           TrigHLT_HLT_Photon125_NoSpikeFilter_v2;
+   Int_t           TrigHLT_HLT_Photon125_NoSpikeFilter_v3;
+   Int_t           TrigHLT_HLT_Photon20_CaloIdVL_IsoL_v1;
+   Int_t           TrigHLT_HLT_Photon20_CaloIdVL_IsoL_v2;
+   Int_t           TrigHLT_HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v1;
+   Int_t           TrigHLT_HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v2;
+   Int_t           TrigHLT_HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v3;
+   Int_t           TrigHLT_HLT_Photon20_EBOnly_NoSpikeFilter_v1;
+   Int_t           TrigHLT_HLT_Photon20_NoSpikeFilter_v1;
+   Int_t           TrigHLT_HLT_Photon20_R9Id_Photon18_R9Id_v1;
+   Int_t           TrigHLT_HLT_Photon20_R9Id_Photon18_R9Id_v2;
+   Int_t           TrigHLT_HLT_Photon20_R9Id_Photon18_R9Id_v3;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v1;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v2;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v3;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v1;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v2;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_v1;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_v2;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_v3;
+   Int_t           TrigHLT_HLT_Photon26_IsoVL_Photon18_IsoVL_v1;
+   Int_t           TrigHLT_HLT_Photon26_IsoVL_Photon18_IsoVL_v2;
+   Int_t           TrigHLT_HLT_Photon26_IsoVL_Photon18_IsoVL_v3;
+   Int_t           TrigHLT_HLT_Photon26_IsoVL_Photon18_v1;
+   Int_t           TrigHLT_HLT_Photon26_IsoVL_Photon18_v2;
+   Int_t           TrigHLT_HLT_Photon26_IsoVL_Photon18_v3;
+   Int_t           TrigHLT_HLT_Photon26_Photon18_v1;
+   Int_t           TrigHLT_HLT_Photon26_Photon18_v2;
+   Int_t           TrigHLT_HLT_Photon26_Photon18_v3;
+   Int_t           TrigHLT_HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v1;
+   Int_t           TrigHLT_HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v2;
+   Int_t           TrigHLT_HLT_Photon30_CaloIdVL_IsoL_v1;
+   Int_t           TrigHLT_HLT_Photon30_CaloIdVL_IsoL_v2;
+   Int_t           TrigHLT_HLT_Photon30_CaloIdVL_IsoL_v3;
+   Int_t           TrigHLT_HLT_Photon30_CaloIdVL_v1;
+   Int_t           TrigHLT_HLT_Photon30_CaloIdVL_v2;
+   Int_t           TrigHLT_HLT_Photon30_CaloIdVL_v3;
+   Int_t           TrigHLT_HLT_Photon32_CaloIdL_Photon26_CaloIdL_v1;
+   Int_t           TrigHLT_HLT_Photon32_CaloIdL_Photon26_CaloIdL_v2;
+   Int_t           TrigHLT_HLT_Photon32_CaloIdL_Photon26_CaloIdL_v3;
+   Int_t           TrigHLT_HLT_Photon36_CaloIdL_Photon22_CaloIdL_v1;
+   Int_t           TrigHLT_HLT_Photon36_CaloIdL_Photon22_CaloIdL_v2;
+   Int_t           TrigHLT_HLT_Photon50_CaloIdVL_IsoL_v1;
+   Int_t           TrigHLT_HLT_Photon50_CaloIdVL_IsoL_v2;
+   Int_t           TrigHLT_HLT_Photon75_CaloIdVL_IsoL_v1;
+   Int_t           TrigHLT_HLT_Photon75_CaloIdVL_IsoL_v2;
+   Int_t           TrigHLT_HLT_Photon75_CaloIdVL_IsoL_v3;
+   Int_t           TrigHLT_HLT_Photon75_CaloIdVL_v1;
+   Int_t           TrigHLT_HLT_Photon75_CaloIdVL_v2;
+   Int_t           TrigHLT_HLT_Photon75_CaloIdVL_v3;
+   Int_t           TrigHLT_HLT_DoublePhoton40_MR150_v3;
+   Int_t           TrigHLT_HLT_DoublePhoton40_R014_MR150_v3;
+   Int_t           TrigHLT_HLT_DoublePhoton50_v2;
+   Int_t           TrigHLT_HLT_DoublePhoton5_IsoVL_CEP_v4;
+   Int_t           TrigHLT_HLT_DoublePhoton60_v2;
+   Int_t           TrigHLT_HLT_Mu15_DoublePhoton15_CaloIdL_v6;
+   Int_t           TrigHLT_HLT_Mu15_Photon20_CaloIdL_v6;
+   Int_t           TrigHLT_HLT_Mu8_Photon20_CaloIdVT_IsoT_v5;
+   Int_t           TrigHLT_HLT_Photon125_v2;
+   Int_t           TrigHLT_HLT_Photon200_NoHE_v2;
+   Int_t           TrigHLT_HLT_Photon20_CaloIdVL_IsoL_v4;
+   Int_t           TrigHLT_HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v5;
+   Int_t           TrigHLT_HLT_Photon20_R9Id_Photon18_R9Id_v5;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v5;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v4;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_v5;
+   Int_t           TrigHLT_HLT_Photon26_IsoVL_Photon18_IsoVL_v5;
+   Int_t           TrigHLT_HLT_Photon26_IsoVL_Photon18_v5;
+   Int_t           TrigHLT_HLT_Photon26_Photon18_v5;
+   Int_t           TrigHLT_HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v4;
+   Int_t           TrigHLT_HLT_Photon26_R9Id_Photon18_R9Id_v2;
+   Int_t           TrigHLT_HLT_Photon30_CaloIdVL_IsoL_v5;
+   Int_t           TrigHLT_HLT_Photon30_CaloIdVL_v5;
+   Int_t           TrigHLT_HLT_Photon36_CaloIdL_IsoVL_Photon22_CaloIdL_IsoVL_v1;
+   Int_t           TrigHLT_HLT_Photon36_CaloIdL_IsoVL_Photon22_CaloIdL_v1;
+   Int_t           TrigHLT_HLT_Photon36_CaloIdL_IsoVL_Photon22_v2;
+   Int_t           TrigHLT_HLT_Photon36_CaloIdL_Photon22_CaloIdL_v4;
+   Int_t           TrigHLT_HLT_Photon36_CaloId_IsoVL_Photon22_R9Id_v1;
+   Int_t           TrigHLT_HLT_Photon36_IsoVL_Photon22_v2;
+   Int_t           TrigHLT_HLT_Photon36_R9Id_Photon22_CaloIdL_IsoVL_v1;
+   Int_t           TrigHLT_HLT_Photon36_R9Id_Photon22_R9Id_v1;
+   Int_t           TrigHLT_HLT_Photon40_CaloIdL_Photon28_CaloIdL_v2;
+   Int_t           TrigHLT_HLT_Photon40_R005_MR150_v3;
+   Int_t           TrigHLT_HLT_Photon40_R014_MR450_v3;
+   Int_t           TrigHLT_HLT_Photon40_R020_MR300_v3;
+   Int_t           TrigHLT_HLT_Photon40_R025_MR200_v3;
+   Int_t           TrigHLT_HLT_Photon40_R038_MR150_v3;
+   Int_t           TrigHLT_HLT_Photon50_CaloIdVL_IsoL_v4;
+   Int_t           TrigHLT_HLT_Photon50_CaloIdVL_v2;
+   Int_t           TrigHLT_HLT_Photon70_CaloIdL_HT300_v6;
+   Int_t           TrigHLT_HLT_Photon70_CaloIdL_HT350_v5;
+   Int_t           TrigHLT_HLT_Photon70_CaloIdL_MHT50_v6;
+   Int_t           TrigHLT_HLT_Photon70_CaloIdL_MHT70_v5;
+   Int_t           TrigHLT_HLT_Photon75_CaloIdVL_IsoL_v5;
+   Int_t           TrigHLT_HLT_Photon75_CaloIdVL_v5;
+   Int_t           TrigHLT_HLT_Photon90_CaloIdVL_IsoL_v2;
+   Int_t           TrigHLT_HLT_Photon90_CaloIdVL_v2;
+   Int_t           TrigHLT_HLT_DoublePhoton33_HEVT_v1;
+   Int_t           TrigHLT_HLT_DoublePhoton33_v4;
+   Int_t           TrigHLT_HLT_DoublePhoton50_v1;
+   Int_t           TrigHLT_HLT_DoublePhoton5_IsoVL_CEP_v3;
+   Int_t           TrigHLT_HLT_DoublePhoton60_v1;
+   Int_t           TrigHLT_HLT_Photon125_v1;
+   Int_t           TrigHLT_HLT_Photon200_NoHE_v1;
+   Int_t           TrigHLT_HLT_Photon20_CaloIdVL_IsoL_v3;
+   Int_t           TrigHLT_HLT_Photon20_CaloIdVT_IsoT_Ele8_CaloIdL_CaloIsoVL_v4;
+   Int_t           TrigHLT_HLT_Photon20_R9Id_Photon18_R9Id_v4;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_CaloIdL_IsoVL_v4;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_R9Id_v3;
+   Int_t           TrigHLT_HLT_Photon26_CaloIdL_IsoVL_Photon18_v4;
+   Int_t           TrigHLT_HLT_Photon26_IsoVL_Photon18_IsoVL_v4;
+   Int_t           TrigHLT_HLT_Photon26_IsoVL_Photon18_v4;
+   Int_t           TrigHLT_HLT_Photon26_Photon18_v4;
+   Int_t           TrigHLT_HLT_Photon26_R9Id_Photon18_CaloIdL_IsoVL_v3;
+   Int_t           TrigHLT_HLT_Photon26_R9Id_Photon18_R9Id_v1;
+   Int_t           TrigHLT_HLT_Photon30_CaloIdVL_IsoL_v4;
+   Int_t           TrigHLT_HLT_Photon30_CaloIdVL_v4;
+   Int_t           TrigHLT_HLT_Photon32_CaloIdL_Photon26_CaloIdL_v4;
+   Int_t           TrigHLT_HLT_Photon36_CaloIdL_IsoVL_Photon22_v1;
+   Int_t           TrigHLT_HLT_Photon36_CaloIdL_Photon22_CaloIdL_v3;
+   Int_t           TrigHLT_HLT_Photon36_IsoVL_Photon22_v1;
+   Int_t           TrigHLT_HLT_Photon40_CaloIdL_Photon28_CaloIdL_v1;
+   Int_t           TrigHLT_HLT_Photon50_CaloIdVL_IsoL_v3;
+   Int_t           TrigHLT_HLT_Photon50_CaloIdVL_v1;
+   Int_t           TrigHLT_HLT_Photon75_CaloIdVL_IsoL_v4;
+   Int_t           TrigHLT_HLT_Photon75_CaloIdVL_v4;
+   Int_t           TrigHLT_HLT_Photon90_CaloIdVL_IsoL_v1;
+   Int_t           TrigHLT_HLT_Photon90_CaloIdVL_v1;
+
    Int_t           nTightPhotons;
    Int_t           nFakeablePhotons;
+
    Int_t           GenPhoton1_status;
    Int_t           GenPhoton1_PdgId;
    Int_t           GenPhoton1_MotherPdgId;
@@ -135,17 +295,12 @@ public :
    Double_t        GenPhoton2_pt;
    Double_t        GenPhoton2_eta;
    Double_t        GenPhoton2_phi;
+
    Double_t        Photon1_pt;
    Double_t        Photon1_eta;
    Double_t        Photon1_phi;
    Double_t        Photon1_detEta;
    Double_t        Photon1_detPhi;
-   Int_t           Photon1_detId;
-   Int_t           Photon1_iEtaY;
-   Int_t           Photon1_iPhiX;
-   Double_t        Photon1_vx;
-   Double_t        Photon1_vy;
-   Double_t        Photon1_vz;
    Double_t        Photon1_r9;
    Double_t        Photon1_sigmaIetaIeta;
    Double_t        Photon1_sigmaEtaEta;
@@ -166,30 +321,33 @@ public :
    Double_t        Photon1_e2x2;
    Double_t        Photon1_e4x4;
    Double_t        Photon1_e2e9;
-   Int_t           Photon1_severityLevel;
-   Int_t           Photon1_recHitFlag;
    Double_t        Photon1_maxRecHitTime;
    Double_t        Photon1_hadOverEm;
    Double_t        Photon1_hadDepth1OverEm;
    Double_t        Photon1_hadDepth2OverEm;
-   Float_t         Photon1_hcalIso04;
-   Float_t         Photon1_hcalIso03;
-   Float_t         Photon1_ecalIso04;
-   Float_t         Photon1_ecalIso03;
-   Float_t         Photon1_trkIsoSumPtHollow04;
-   Float_t         Photon1_trkIsoSumPtSolid04;
-   Int_t           Photon1_trkIsoNtrksHollow04;
-   Int_t           Photon1_trkIsoNtrksSolid04;
-   Float_t         Photon1_trkIsoSumPtHollow03;
-   Float_t         Photon1_trkIsoSumPtSolid03;
-   Int_t           Photon1_trkIsoNtrksHollow03;
-   Int_t           Photon1_trkIsoNtrksSolid03;
-   Float_t         Photon1_esRatio;
+   Double_t        Photon1_hcalIso04;
+   Double_t        Photon1_hcalIso03;
+   Double_t        Photon1_ecalIso04;
+   Double_t        Photon1_ecalIso03;
+   Double_t        Photon1_trkIsoSumPtHollow04;
+   Double_t        Photon1_trkIsoSumPtSolid04;
+   Double_t        Photon1_trkIsoSumPtHollow03;
+   Double_t        Photon1_trkIsoSumPtSolid03;
+   Double_t        Photon1_esRatio;
    Double_t        Photon1_scRawEnergy;
    Double_t        Photon1_scPreshowerEnergy;
    Double_t        Photon1_scPhiWidth;
    Double_t        Photon1_scEtaWidth;
    Int_t           Photon1_scNumBasicClusters;
+   Int_t           Photon1_trkIsoNtrksHollow04;
+   Int_t           Photon1_trkIsoNtrksSolid04;
+   Int_t           Photon1_trkIsoNtrksHollow03;
+   Int_t           Photon1_trkIsoNtrksSolid03;
+   Int_t           Photon1_severityLevel;
+   Int_t           Photon1_recHitFlag;
+   Int_t           Photon1_detId;
+   Int_t           Photon1_iEtaY;
+   Int_t           Photon1_iPhiX;
    Bool_t          Photon1_isEB;
    Bool_t          Photon1_isEE;
    Bool_t          Photon1_isEBEtaGap;
@@ -204,12 +362,6 @@ public :
    Double_t        Photon2_phi;
    Double_t        Photon2_detEta;
    Double_t        Photon2_detPhi;
-   Int_t           Photon2_detId;
-   Int_t           Photon2_iEtaY;
-   Int_t           Photon2_iPhiX;
-   Double_t        Photon2_vx;
-   Double_t        Photon2_vy;
-   Double_t        Photon2_vz;
    Double_t        Photon2_r9;
    Double_t        Photon2_sigmaIetaIeta;
    Double_t        Photon2_sigmaEtaEta;
@@ -230,30 +382,33 @@ public :
    Double_t        Photon2_e2x2;
    Double_t        Photon2_e4x4;
    Double_t        Photon2_e2e9;
-   Int_t           Photon2_severityLevel;
-   Int_t           Photon2_recHitFlag;
    Double_t        Photon2_maxRecHitTime;
    Double_t        Photon2_hadOverEm;
    Double_t        Photon2_hadDepth1OverEm;
    Double_t        Photon2_hadDepth2OverEm;
-   Float_t         Photon2_hcalIso04;
-   Float_t         Photon2_hcalIso03;
-   Float_t         Photon2_ecalIso04;
-   Float_t         Photon2_ecalIso03;
-   Float_t         Photon2_trkIsoSumPtHollow04;
-   Float_t         Photon2_trkIsoSumPtSolid04;
-   Int_t           Photon2_trkIsoNtrksHollow04;
-   Int_t           Photon2_trkIsoNtrksSolid04;
-   Float_t         Photon2_trkIsoSumPtHollow03;
-   Float_t         Photon2_trkIsoSumPtSolid03;
-   Int_t           Photon2_trkIsoNtrksHollow03;
-   Int_t           Photon2_trkIsoNtrksSolid03;
-   Float_t         Photon2_esRatio;
+   Double_t        Photon2_hcalIso04;
+   Double_t        Photon2_hcalIso03;
+   Double_t        Photon2_ecalIso04;
+   Double_t        Photon2_ecalIso03;
+   Double_t        Photon2_trkIsoSumPtHollow04;
+   Double_t        Photon2_trkIsoSumPtSolid04;
+   Double_t        Photon2_trkIsoSumPtHollow03;
+   Double_t        Photon2_trkIsoSumPtSolid03;
+   Double_t        Photon2_esRatio;
    Double_t        Photon2_scRawEnergy;
    Double_t        Photon2_scPreshowerEnergy;
    Double_t        Photon2_scPhiWidth;
    Double_t        Photon2_scEtaWidth;
    Int_t           Photon2_scNumBasicClusters;
+   Int_t           Photon2_trkIsoNtrksHollow04;
+   Int_t           Photon2_trkIsoNtrksSolid04;
+   Int_t           Photon2_trkIsoNtrksHollow03;
+   Int_t           Photon2_trkIsoNtrksSolid03;
+   Int_t           Photon2_severityLevel;
+   Int_t           Photon2_recHitFlag;
+   Int_t           Photon2_detId;
+   Int_t           Photon2_iEtaY;
+   Int_t           Photon2_iPhiX;
    Bool_t          Photon2_isEB;
    Bool_t          Photon2_isEE;
    Bool_t          Photon2_isEBEtaGap;
@@ -263,6 +418,7 @@ public :
    Bool_t          Photon2_isEBEEGap;
    Bool_t          Photon2_hasPixelSeed;
    Bool_t          Photon2_isFakeable;
+
    Int_t           MCMatchPhoton1_Status3_status;
    Int_t           MCMatchPhoton1_Status3_PdgId;
    Int_t           MCMatchPhoton1_Status3_MotherPdgId;
@@ -291,12 +447,26 @@ public :
    Double_t        MCMatchPhoton2_Status1_pt;
    Double_t        MCMatchPhoton2_Status1_eta;
    Double_t        MCMatchPhoton2_Status1_phi;
+
    Double_t        Diphoton_Minv;
    Double_t        Diphoton_qt;
    Double_t        Diphoton_deltaPhi;
    Double_t        Diphoton_deltaEta;
    Double_t        Diphoton_deltaR;
    Double_t        Diphoton_cosThetaStar;
+   Double_t        DiphotonVtx2_Minv;
+   Double_t        DiphotonVtx2_qt;
+   Double_t        DiphotonVtx2_deltaPhi;
+   Double_t        DiphotonVtx2_deltaEta;
+   Double_t        DiphotonVtx2_deltaR;
+   Double_t        DiphotonVtx2_cosThetaStar;
+   Double_t        DiphotonVtx3_Minv;
+   Double_t        DiphotonVtx3_qt;
+   Double_t        DiphotonVtx3_deltaPhi;
+   Double_t        DiphotonVtx3_deltaEta;
+   Double_t        DiphotonVtx3_deltaR;
+   Double_t        DiphotonVtx3_cosThetaStar;
+
    Double_t        DiphotonGen_Minv;
    Double_t        DiphotonGen_qt;
    Double_t        DiphotonGen_deltaPhi;
@@ -306,47 +476,103 @@ public :
 
    // List of branches
    TBranch        *b_Event;   //!
-   TBranch        *b_GenEvent;   //!
+   TBranch        *b_GenEvent;   //! 
    TBranch        *b_Vtx;   //!
    TBranch        *b_Vtx2;   //!
+   TBranch        *b_Vtx3;   //!
+   TBranch        *b_VtxGEN;   //!
+   TBranch        *b_rho;   //!
+   TBranch        *b_pu_n;   //!
    TBranch        *b_BeamSpot;   //!
    TBranch        *b_L1trg;   //!
+   TBranch        *b_TrigHLT;   //!
    TBranch        *b_nTightPhotons;   //!
    TBranch        *b_nFakeablePhotons;   //!
-   TBranch        *b_TrigHLT;   //!
-   TBranch        *b_GenPhoton1;   //!
-   TBranch        *b_GenPhoton2;   //!
+   TBranch        *b_GenPhoton1;   //! 
+   TBranch        *b_GenPhoton2;   //! 
    TBranch        *b_Photon1;   //!
    TBranch        *b_Photon2;   //!
-   TBranch        *b_MCMatchPhoton1_Status3;   //!
-   TBranch        *b_MCMatchPhoton2_Status3;   //!
-   TBranch        *b_MCMatchPhoton1_Status1;   //!
-   TBranch        *b_MCMatchPhoton2_Status1;   //!
+   TBranch        *b_MCMatchPhoton1_Status3;   //! 
+   TBranch        *b_MCMatchPhoton2_Status3;   //! 
+   TBranch        *b_MCMatchPhoton1_Status1;   //! 
+   TBranch        *b_MCMatchPhoton2_Status1;   //! 
    TBranch        *b_Diphoton;   //!
-   TBranch        *b_DiphotonGen;   //!
+   TBranch        *b_DiphotonVtx2;   //!
+   TBranch        *b_DiphotonVtx3;   //!
+   TBranch        *b_DiphotonGen;   //! 
+
 
    // diphoton analysis
    Float_t _cutPhoton1Pt;
    Float_t _cutPhoton2Pt;
    Float_t _cutEta;
 
-   Bool_t  _onlyEB;
    Bool_t  _filterGen;
+   TString _categoryEBEE;
+
+   TString _fakeRateFile;
+
+   TString _puFile;
+   TH1F*   _puHistMC;
+   TString _kFactorFile;
+   TFile*  fInKfactor;
+
+   Bool_t  _reweightPU;
+   Bool_t  _Kfactor;
+   Float_t _effScaleFactor;
+
+   TString _fakeStatus;
+
+   Double_t  _weight;
 
    TFile*  _outF;
+   TTree*  _outT0;
    
+   struct outputS {
+     Double_t minv; 
+     Double_t r9_photon1;
+     Double_t r9_photon2;
+     Double_t eta_photon1;
+     Double_t eta_photon2;
+     Double_t weight;
+   };
+   outputS outVar0; 
+
+
+   TH1* h_mcMatch1;
+   TH1* h_mcMatch2;
+      
+   TH1* h_Nvtx;
    TH1* h_TrigHLT;
 
    TH1* h_Diphoton_Minv;
+   //   TH1* h_Diphoton_Minv_add;
+   TH1* h_Diphoton_Minv_log;
    TH1* h_Diphoton_Minv_high;
+   TH1* h_Diphoton_Minv_low;
+   TH1* h_Diphoton_Minv_low_bin1GeV;
    TH1* h_Diphoton_qt;
    TH1* h_Diphoton_deltaPhi;
    TH1* h_Diphoton_deltaEta;
    TH1* h_Diphoton_deltaR;
    TH1* h_Diphoton_cosThetaStar;
+   TH2* h_Diphoton_Minv_v_Photon1_pt; 
+   TH2* h_Diphoton_Minv_v_Photon2_pt; 
+   TH1* h_Diphoton_Minv_120to200;
+   TH1* h_Diphoton_Minv_200to500;
+   TH1* h_Diphoton_Minv_500to800;
+   TH1* h_Diphoton_Minv_800toInf;
+   TH1* h_Diphoton_Minv_Yousi5;
+   TH1* h_Diphoton_Minv_Yousi10;
+   TH1* h_Diphoton_Minv_Yousi40;
+   TH1* h_Diphoton_Minv_Yousi100;
+
    TH1* h_Photon1_pt; 
+   TH1* h_Photon1_pt_log; 
+   TH1* h_Photon1_pt_zoom; 
    TH1* h_Photon1_eta; 
    TH1* h_Photon1_phi; 
+   TH2* h_Photon1_occupancy; 
    
    TH1* h_Photon1_r9; 
    TH1* h_Photon1_sigmaIetaIeta; 
@@ -359,6 +585,7 @@ public :
    TH1* h_Photon1_recHitFlag; 
    TH1* h_Photon1_maxRecHitTime; 
    TH1* h_Photon1_maxRecHitTime_wide; 
+   TH2* h_Photon1_e2e9_v_maxRecHitTime; 
    
    TH1* h_Photon1_hadOverEm; 
    TH1* h_Photon1_hadDepth1OverEm; 
@@ -382,11 +609,13 @@ public :
    
    TH1* h_Photon1_esRatio; 
 
-
    TH1* h_Photon2_pt; 
+   TH1* h_Photon2_pt_log; 
+   TH1* h_Photon2_pt_zoom; 
    TH1* h_Photon2_eta; 
    TH1* h_Photon2_phi; 
-   
+   TH2* h_Photon2_occupancy; 
+
    TH1* h_Photon2_r9; 
    TH1* h_Photon2_sigmaIetaIeta; 
    TH1* h_Photon2_sigmaEtaEta; 
@@ -398,6 +627,7 @@ public :
    TH1* h_Photon2_recHitFlag; 
    TH1* h_Photon2_maxRecHitTime; 
    TH1* h_Photon2_maxRecHitTime_wide; 
+   TH2* h_Photon2_e2e9_v_maxRecHitTime; 
    
    TH1* h_Photon2_hadOverEm; 
    TH1* h_Photon2_hadDepth1OverEm; 
@@ -421,6 +651,89 @@ public :
    
    TH1* h_Photon2_esRatio; 
 
+   // tight-tight ie signal sample
+
+   TH1* h_FakeRate_tt_pt1;
+   TH1* h_FakeRate_tt_pt1_zoom;
+   TH1* h_FakeRate_tt_eta1;
+   TH1* h_FakeRate_tt_phi1;
+   TH1* h_FakeRate_tt_pt2;
+   TH1* h_FakeRate_tt_pt2_zoom;
+   TH1* h_FakeRate_tt_eta2;
+   TH1* h_FakeRate_tt_phi2;
+   TH1* h_FakeRate_tt_minv;
+   TH1* h_FakeRate_tt_minv_high;
+   TH1* h_FakeRate_tt_qt;
+   TH1* h_FakeRate_tt_deltaPhi;
+   TH1* h_FakeRate_tt_deltaEta;
+   TH1* h_FakeRate_tt_deltaR;
+   TH1* h_FakeRate_tt_cosThetaStar;
+   
+   // tight-fake
+   TH1* h_FakeRate_tf_pt1;
+   TH1* h_FakeRate_tf_pt1_zoom;
+   TH1* h_FakeRate_tf_eta1;
+   TH1* h_FakeRate_tf_phi1;
+   TH1* h_FakeRate_tf_pt2;
+   TH1* h_FakeRate_tf_pt2_zoom;
+   TH1* h_FakeRate_tf_eta2;
+   TH1* h_FakeRate_tf_phi2;
+   TH1* h_FakeRate_tf_minv;
+   TH1* h_FakeRate_tf_minv_high;
+   TH1* h_FakeRate_tf_qt;
+   TH1* h_FakeRate_tf_deltaPhi;
+   TH1* h_FakeRate_tf_deltaEta;
+   TH1* h_FakeRate_tf_deltaR;
+   TH1* h_FakeRate_tf_cosThetaStar;
+   
+   TH1* h_FakeRate_tf_pt1_noweight;
+   TH1* h_FakeRate_tf_pt2_noweight;
+
+   TH1* h_FakeRate_ft_pt1_noweight;
+   TH1* h_FakeRate_ft_pt2_noweight;
+
+   // fake-fake
+   TH1* h_FakeRate_ff_pt1;
+   TH1* h_FakeRate_ff_pt1_zoom;
+   TH1* h_FakeRate_ff_eta1;
+   TH1* h_FakeRate_ff_phi1;
+   TH1* h_FakeRate_ff_pt2;
+   TH1* h_FakeRate_ff_pt2_zoom;
+   TH1* h_FakeRate_ff_eta2;
+   TH1* h_FakeRate_ff_phi2;
+   TH1* h_FakeRate_ff_minv;   
+   TH1* h_FakeRate_ff_minv_high;   
+   TH1* h_FakeRate_ff_qt;
+   TH1* h_FakeRate_ff_deltaPhi;
+   TH1* h_FakeRate_ff_deltaEta;
+   TH1* h_FakeRate_ff_deltaR;
+   TH1* h_FakeRate_ff_cosThetaStar;
+
+   TH1* h_FakeRate_ff_pt1_noweight;
+   TH1* h_FakeRate_ff_pt2_noweight;
+
+   TH2* h_trkIsoVRho1;
+   TH2* h_ecalIsoVRho1;
+   TH2* h_hcalIsoVRho1;
+   TH2* h_trkIsoVRho2;
+   TH2* h_ecalIsoVRho2;
+   TH2* h_hcalIsoVRho2;
+
+   TH1* h_FakeRate_tt_minv_120to200;
+   TH1* h_FakeRate_tt_minv_200to500;
+   TH1* h_FakeRate_tt_minv_500to800;
+   TH1* h_FakeRate_tt_minv_800toInf;
+
+   TH1* h_FakeRate_tf_minv_120to200;
+   TH1* h_FakeRate_tf_minv_200to500;
+   TH1* h_FakeRate_tf_minv_500to800;
+   TH1* h_FakeRate_tf_minv_800toInf;
+
+   TH1* h_FakeRate_ff_minv_120to200;
+   TH1* h_FakeRate_ff_minv_200to500;
+   TH1* h_FakeRate_ff_minv_500to800;
+   TH1* h_FakeRate_ff_minv_800toInf;
+   
    fTree(TTree *tree=0);
    virtual ~fTree();
    virtual Int_t    Cut(Long64_t entry);
@@ -430,6 +743,77 @@ public :
    virtual void     Loop();
    virtual Bool_t   Notify();
    virtual void     Show(Long64_t entry = -1);
+
+   double kfactorF(float x) {
+
+     //     return -6.08061 + 9.90359/TMath::Power(x,3.88349e-02); // old one
+     //     return 2.91986557985310036-0.284606795636766441/TMath::Power(x, -2.32654814731609899e-01) ;     
+     //     return 1.6;
+     //     return 2.91986557985310036-0.284606795636766441/TMath::Power(x, -2.32654814731609899e-01) ;
+
+     //     TH1D* hKfactor = (TH1D*)fInKfactor->Get("k-factorTmp") ;
+     //     TGraph* g = new TGraph(hKfactor);
+     //     return g->Eval(x);
+
+     if (x<320) {
+       return 1.73405 ;
+     } else {
+       return 1.07559 + 1.22200*TMath::Exp((-1.85612e-3)*x);
+     }
+   }
+
+   vector<double> generate_flat10_weights(TH1D* data_npu_estimated, TH1F* mc_npu ){
+
+     cout << " generating weights " << endl;
+     // see SimGeneral/MixingModule/python/mix_E7TeV_FlatDist10_2011EarlyData_inTimeOnly_cfi.py; copy and paste from there:
+     //     const double npu_probs[25] = {0.0698146584, 0.0698146584, 0.0698146584,0.0698146584,0.0698146584,0.0698146584,0.0698146584,0.0698146584,0.0698146584,0.0698146584,0.0698146584 /* <-- 10*/,				   0.0630151648,0.0526654164,0.0402754482,0.0292988928,0.0194384503,0.0122016783,0.007207042,0.004003637,0.0020278322,
+     //				   0.0010739954,0.0004595759,0.0002229748,0.0001028162,4.58337152809607E-05 /* <-- 24 */};
+     
+     //     const double npu_probs[25] = {  0.078138816,  0.076506664,  0.068656428,  0.075431185,  0.073189343,  0.073480934,  0.071769257,  0.067796803,  0.073704361,  0.073814181,  0.066293405,  0.057038231,  0.048566944,  0.034847019,   0.021276676,   0.01644649, 0.010870286,  0.007108004,  0.0035256,  0.001047077,  7.57379E-06,  3.97624E-05,  6.43772E-05,  0.000200705, 0.000179878 };
+
+
+     // the latest
+     //     const double npu_probs[25] = { 0.07813870, 0.07650480, 0.06865510, 0.07542560,0.07319340,0.07348120,0.07177530,0.06779940,0.07370080,0.07381820,0.06629420,0.05704160,0.04856530,0.03484440,0.02127510,0.01644530,0.01086950,0.00710748,0.00352534,0.00104700,0.00000757,0.00003976,0.00006437,0.00020069,0.00017986  };
+     
+     const double npu_probs[25] = {     0.106825,  0.0775458,  0.0778654,  0.0786776,  0.0779586,  0.0757749,  0.0692773,  0.0721932,  0.0653893,  0.0588784,  0.0558292,  0.0474808,  0.0405038,  0.0307707,  0.0219296,  0.0164705,  0.0101859,  0.00734981,  0.00410098,  0.0022369,  0.00135812,  0.000599169,  0.000346187,  0.000226353, 7.98892e-05 };
+
+     double npu_mc[25];
+
+     vector<double> result(25);
+     //     cout << "mc_npu " << mc_npu << endl;
+     double s = 0.0;
+     double smc = 0.0;
+     for(int npu=0; npu<25; ++npu){
+       double npu_estimated = data_npu_estimated->GetBinContent(data_npu_estimated->GetXaxis()->FindBin(npu));
+       if (mc_npu!=0) {
+	 //	 cout << "we have MC histogram!" << endl;
+	 cout << npu << endl;
+	 cout << mc_npu->GetBinContent(mc_npu->GetXaxis()->FindBin(npu)) << endl;
+       	 npu_mc[npu] = mc_npu->GetBinContent(mc_npu->GetXaxis()->FindBin(npu));                              
+       } else {
+	 npu_mc[npu] = npu_probs[npu];
+       }
+       //       cout << npu_estimated << " " << npu_mc << endl;
+       result[npu] = npu_estimated / npu_mc[npu];
+       s += npu_estimated;
+       smc += npu_mc[npu];
+     }
+     //     cout << s << " " << smc << endl;
+     // normalize weights such that the total sum of weights over thw whole sample is 1.0, i.e., sum_i  result[i] * npu_probs[i] should be 1.0 (!)
+     for(int npu=0; npu<25; ++npu){
+       result[npu] /= s;
+       result[npu] *= smc;
+     }
+     return result;
+   }
+   
+   double deltaPhi(double phi1, double phi2) { 
+     double result = phi1 - phi2;
+     while (result > M_PI) result -= 2*M_PI;
+     while (result <= -M_PI) result += 2*M_PI;
+     return result;
+   }
+
 };
 
 #endif
@@ -437,13 +821,21 @@ public :
 #ifdef fTree_cxx
 
 fTree::fTree(TTree *tree)
-  :_cutPhoton1Pt(10)
-  , _cutPhoton2Pt(10)
+  :_cutPhoton1Pt(65)
+  , _cutPhoton2Pt(65)
   , _cutEta(2.5)
-  , _onlyEB(kFALSE)
   , _filterGen(kFALSE)
+  , _categoryEBEE("ALL")
+  , _fakeRateFile("fake_rate_fit_functions.root")
+  //  , _puFile("pudist_160404-163869_Cert_JSON.root")
+  , _puFile("Pileup_2011_EPS_8_jul.root")
+  , _kFactorFile("kFactor_new.root")
+  , _reweightPU(kTRUE)
+  , _Kfactor(kFALSE)
+  , _effScaleFactor(1.005)
+  , _fakeStatus("TightTight")
+  , _weight(1.0)
   , _outF(0)
-	    //  , h_TrigHLT(0)
 {
 // if parameter tree is not specified (or zero), connect the file
 // used to generate this class and read the Tree.
@@ -500,15 +892,19 @@ void fTree::Init(TTree *tree)
 
    fChain->SetBranchAddress("Event", &Event_run, &b_Event);
    fChain->SetBranchAddress("GenEvent", &GenEvent_signalProcessId, &b_GenEvent);
-   fChain->SetBranchAddress("Vtx", &Vtx_Nvtx, &b_Vtx);
-   fChain->SetBranchAddress("Vtx2", &Vtx2_Nvtx, &b_Vtx2);
+   fChain->SetBranchAddress("Vtx", &Vtx_vx, &b_Vtx);
+   fChain->SetBranchAddress("Vtx2", &Vtx2_vx, &b_Vtx2);
+   fChain->SetBranchAddress("Vtx3", &Vtx3_vx, &b_Vtx3);
+   fChain->SetBranchAddress("VtxGEN", &VtxGEN_vx, &b_VtxGEN);
+   fChain->SetBranchAddress("rho", &rho, &b_rho);
+   fChain->SetBranchAddress("pu_n", &pu_n, &b_pu_n);
    fChain->SetBranchAddress("BeamSpot", &BeamSpot_x0, &b_BeamSpot);
    fChain->SetBranchAddress("L1trg", &L1trg_L1_Tech0, &b_L1trg);
    fChain->SetBranchAddress("TrigHLT", &TrigHLT_HLT_MinBiasBSC, &b_TrigHLT);
-   fChain->SetBranchAddress("GenPhoton1", &GenPhoton1_pt, &b_GenPhoton1);
-   fChain->SetBranchAddress("GenPhoton2", &GenPhoton2_pt, &b_GenPhoton2);
    fChain->SetBranchAddress("nTightPhotons", &nTightPhotons, &b_nTightPhotons);
    fChain->SetBranchAddress("nFakeablePhotons", &nFakeablePhotons, &b_nFakeablePhotons);
+   fChain->SetBranchAddress("GenPhoton1", &GenPhoton1_pt, &b_GenPhoton1);
+   fChain->SetBranchAddress("GenPhoton2", &GenPhoton2_pt, &b_GenPhoton2);
    fChain->SetBranchAddress("Photon1", &Photon1_pt, &b_Photon1);
    fChain->SetBranchAddress("Photon2", &Photon2_pt, &b_Photon2);
    fChain->SetBranchAddress("MCMatchPhoton1_Status3", &MCMatchPhoton1_Status3_status, &b_MCMatchPhoton1_Status3);
@@ -516,10 +912,16 @@ void fTree::Init(TTree *tree)
    fChain->SetBranchAddress("MCMatchPhoton1_Status1", &MCMatchPhoton1_Status1_status, &b_MCMatchPhoton1_Status1);
    fChain->SetBranchAddress("MCMatchPhoton2_Status1", &MCMatchPhoton2_Status1_status, &b_MCMatchPhoton2_Status1);
    fChain->SetBranchAddress("Diphoton", &Diphoton_Minv, &b_Diphoton);
+   fChain->SetBranchAddress("DiphotonVtx2", &DiphotonVtx2_Minv, &b_DiphotonVtx2);
+   fChain->SetBranchAddress("DiphotonVtx3", &DiphotonVtx3_Minv, &b_DiphotonVtx3);
    fChain->SetBranchAddress("DiphotonGen", &DiphotonGen_Minv, &b_DiphotonGen);
+
    Notify();
 
-   h_TrigHLT = new TH1F("h_TrigHLT","HLT Results" , 46, 0., 46);
+   h_mcMatch1 = new TH1F("h_mcMatch1","match1",100,0,0.1);
+   h_mcMatch2 = new TH1F("h_mcMatch2","match2",100,0,0.1);
+   h_Nvtx = new TH1F("h_Nvtx","Num Vertices",20,0,20);
+   h_TrigHLT = new TH1F("h_TrigHLT","HLT Results" , 186, 0., 186);
    //   h_TrigHLT->GetXaxis()->SetBinLabel(1,"HLT_MinBiasBSC");
    //   h_TrigHLT->GetXaxis()->SetBinLabel(2,"HLT_MinBiasBSC_NoBPTX");
    //   h_TrigHLT->GetXaxis()->SetBinLabel(3,"HLT_MinBiasBSC_OR");
@@ -571,24 +973,46 @@ void fTree::Init(TTree *tree)
    h_TrigHLT->GetXaxis()->SetBinLabel(45,"HLT_DoublePhoton20_L1R");
    h_TrigHLT->GetXaxis()->SetBinLabel(46,"HLT_DoublePhoton22_L1R_v1");
 
-   h_Diphoton_Minv = new TH1F("h_Diphoton_Minv","Diphoton Invariant Mass;m(#gamma#gamma) [GeV]",50,0,500);
-   h_Diphoton_Minv_high = new TH1F("h_Diphoton_Minv_high","Diphoton Invariant Mass (High mass events);m(#gamma#gamma) [GeV]",80,200,1000);
+   //   h_Diphoton_Minv = new TH1F("h_Diphoton_Minv","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",125,0,2500); // 20 GeV bins
+   //   h_Diphoton_Minv = new TH1F("h_Diphoton_Minv","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000); // 20 GeV bins
+   h_Diphoton_Minv = new TH1F("h_Diphoton_Minv","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",1860,140,2000); // 20 GeV bins
+   //
+   //   h_Diphoton_Minv = new TH1F("h_Diphoton_Minv","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",44,120,1000); // 20 GeV bins
+   //   h_Diphoton_Minv = new TH1F("h_Diphoton_Minv","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",1880,120,2000); // 40 GeV bins
+   h_Diphoton_Minv_Yousi5 = new TH1F("h_Diphoton_Minv_Yousi5","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",376,120,2000); 
+   h_Diphoton_Minv_Yousi10 = new TH1F("h_Diphoton_Minv_Yousi10","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",188,120,2000); 
+   h_Diphoton_Minv_Yousi40 = new TH1F("h_Diphoton_Minv_Yousi40","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",47,120,2000); 
+   h_Diphoton_Minv_Yousi100 = new TH1F("h_Diphoton_Minv_Yousi100","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",20,120,2000); 
+   h_Diphoton_Minv_120to200 = new TH1F("h_Diphoton_Minv_120to200","Diphoton Invariant Mass (120-200 bin);M_{#gamma#gamma} [GeV/c^2]",1,120,200); 
+   h_Diphoton_Minv_200to500 = new TH1F("h_Diphoton_Minv_200to500","Diphoton Invariant Mass (200-500 bin);M_{#gamma#gamma} [GeV/c^2]",1,200,500); 
+   h_Diphoton_Minv_500to800 = new TH1F("h_Diphoton_Minv_500to800","Diphoton Invariant Mass (500-800 bin);M_{#gamma#gamma} [GeV/c^2]",1,500,800); 
+   h_Diphoton_Minv_800toInf = new TH1F("h_Diphoton_Minv_800toInf","Diphoton Invariant Mass (800-10000 bin);M_{#gamma#gamma} [GeV/c^2]",1,800,100000); 
+
+   h_Diphoton_Minv_log = new TH1F("h_Diphoton_Minv_log","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);  // 20 GeV bins
+   h_Diphoton_Minv_high = new TH1F("h_Diphoton_Minv_high","Diphoton Invariant Mass (High mass events);M_{#gamma#gamma} [GeV/c^2]",35,500,1200); // 20 GeV bins
+   h_Diphoton_Minv_low = new TH1F("h_Diphoton_Minv_low","Diphoton Invariant Mass (Low mass events);M_{#gamma#gamma} [GeV/c^2]",190,120,500); // 2 GeV bins
+   h_Diphoton_Minv_low_bin1GeV = new TH1F("h_Diphoton_Minv_low_bin1GeV","Diphoton Invariant Mass (Low mass events);M_{#gamma#gamma} [GeV/c^2]",380,120,500); // 1 GeV bins
    h_Diphoton_qt = new TH1F("h_Diphoton_qt","Diphoton qt;#gamma#gamma qt [GeV]",20,0,50);
    h_Diphoton_deltaPhi = new TH1F("h_Diphoton_deltaPhi","Diphoton #Delta#phi;#gamma#gamma #Delta#phi",90,-3.14159,3.14159); 
    h_Diphoton_deltaEta = new TH1F("h_Diphoton_deltaEta","Diphoton #Delta#eta;#gamma#gamma #Delta#eta",40,-6.,6.); 
    h_Diphoton_deltaR = new TH1F("h_Diphoton_deltaR","Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0,7.); 
    h_Diphoton_cosThetaStar = new TH1F("h_Diphoton_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0,1); 
+   h_Diphoton_Minv_v_Photon1_pt = new TH2F("h_Diphoton_Minv_v_Photon1_pt","Diphoton Invariant Mass v Photon1 pt;M_{#gamma#gamma} [GeV/c^2];#gamma_{1} p_{T} [GeV]",50,0,500,100,0,500); 
+   h_Diphoton_Minv_v_Photon2_pt = new TH2F("h_Diphoton_Minv_v_Photon2_pt","Diphoton Invariant Mass v Photon2 pt;M_{#gamma#gamma} [GeV/c^2];#gamma_{2} p_{T} [GeV]",50,0,500,100,0,500); 
 
-   h_Photon1_pt = new TH1F("h_Photon1_pt","Photon1 pt;#gamma_{1} p_{T} [GeV]",100,0,500); 
+   h_Photon1_pt = new TH1F("h_Photon1_pt","Photon1 pt;#gamma_{1} p_{T} [GeV]",44,60,500); 
+   h_Photon1_pt_log = new TH1F("h_Photon1_pt_log","Photon1 pt;#gamma_{1} p_{T} [GeV]",44,60,500); 
+   h_Photon1_pt_zoom = new TH1F("h_Photon1_pt_zoom","Photon1 pt;#gamma_{1} p_{T} [GeV]",30,0,150); 
    h_Photon1_eta = new TH1F("h_Photon1_eta","Photon1 #eta;#gamma_{1} #eta",25,-2.5,2.5); 
    h_Photon1_phi = new TH1F ("h_Photon1_phi","Photon1 #phi;#gamma_{1} #phi",20,-3.14159,3.14159); 
+   h_Photon1_occupancy = new TH2F ("h_Photon1_occupancy","Photon1 (#eta,#phi);#gamma_{1} #eta; #gamma_{1} #phi",25,-2.5,2.5,20,-3.14159,3.14159); 
 
    h_Photon1_r9 = new TH1F("h_Photon1_r9","Photon1 R9;#gamma_{1} R9", 50, 0.1, 1.5);
    h_Photon1_sigmaIetaIeta = new TH1F("h_Photon1_sigmaIetaIeta","Photon1 #sigma_{i#etai#eta};#gamma_{1} #sigma_{i#etai#eta}", 25, 0, 0.05);
    h_Photon1_sigmaEtaEta = new TH1F("h_Photon1_sigmaEtaEta","Photon1 #sigma_{#eta#eta};#gamma_{1} #sigma_{#eta#eta}", 25, 0, 0.05);
 
-   h_Photon1_e2x2e4x4 = new TH1F("h_Photon1_e2x2e4x4","Photon1 E2x2/E4x4;#gamma_{1} E_{2x2}/E_{4x4}}", 20, 0, 1.2);
-   h_Photon1_e2e9 = new TH1F("h_Photon1_e2e9","Photon1 E2/E9;#gamma_{1} E_{2}/E_{9}}", 20, 0, 1.2);
+   h_Photon1_e2x2e4x4 = new TH1F("h_Photon1_e2x2e4x4","Photon1 E2x2/E4x4;#gamma_{1} E_{2x2}/E_{4x4}", 20, 0.4, 1.2);
+   h_Photon1_e2e9 = new TH1F("h_Photon1_e2e9","Photon1 E2/E9;#gamma_{1} E_{2}/E_{9}", 20, 0.4, 1.2);
    h_Photon1_swisscross = new TH1F("h_Photon1_swisscross","Photon1 swisscross;#gamma_{1} 1-E_{4}/E_{1}", 20, 0, 1.2);
    h_Photon1_severityLevel = new TH1F("h_Photon1_severityLevel","Photon1 severityLevel", 5, 0, 5);
    h_Photon1_severityLevel->GetXaxis()->SetBinLabel(1,"kGood");
@@ -621,6 +1045,7 @@ void fTree::Init(TTree *tree)
 
    h_Photon1_maxRecHitTime = new TH1F("h_Photon1_maxRecHitTime","Photon1 maxRecHitTime;#gamma_{1} time [ns]", 50, -5, 5); 
    h_Photon1_maxRecHitTime_wide = new TH1F("h_Photon1_maxRecHitTime_wide","Photon1 maxRecHitTime (zoom out);#gamma_{1} time [ns]", 200, -20, 20); 
+   h_Photon1_e2e9_v_maxRecHitTime = new TH2F("h_Photon1_e2e9_v_maxRecHitTime","Photon1 E2/E9 v maxRecHitTime (zoom out);#gamma_{1} time [ns]; #gamma_{1} E_{2}/E_{9}", 200, -20, 20, 20, 0.4, 1.2); 
    
    h_Photon1_hadOverEm = new TH1F("h_Photon1_hadOverEm","Photon1 H/E;#gamma_{1} H/E", 40, 0, 0.06); 
    h_Photon1_hcalIso04 = new TH1F("h_Photon1_hcalIso04","Photon1 HCAL Iso #DeltaR 0.4;#gamma_{1} HCAL Iso #DeltaR 0.4", 50, 0, 4); 
@@ -640,16 +1065,19 @@ void fTree::Init(TTree *tree)
 
 /*    h_Photon1_esRatio = new TH1F("h_Photon1_esRatio","Photon1_esRatio", , , ); */
 
-   h_Photon2_pt = new TH1F("h_Photon2_pt","Photon2 pt;#gamma_{2} p_{T} [GeV]",100,0,500); 
+   h_Photon2_pt = new TH1F("h_Photon2_pt","Photon2 pt;#gamma_{2} p_{T} [GeV]",44,60,500); 
+   h_Photon2_pt_log = new TH1F("h_Photon2_pt_log","Photon2 pt;#gamma_{2} p_{T} [GeV]",44,60,500);
+   h_Photon2_pt_zoom = new TH1F("h_Photon2_pt_zoom","Photon2 pt;#gamma_{2} p_{T} [GeV]",30,0,150); 
    h_Photon2_eta = new TH1F("h_Photon2_eta","Photon2 #eta;#gamma_{2} #eta",25,-2.5,2.5); 
    h_Photon2_phi = new TH1F ("h_Photon2_phi","Photon2 #phi;#gamma_{2} #phi",20,-3.14159,3.14159); 
+   h_Photon2_occupancy = new TH2F ("h_Photon2_occupancy","Photon2 (#eta,#phi);#gamma_{2} #eta; #gamma_{2} #phi",25,-2.5,2.5,20,-3.14159,3.14159); 
 
    h_Photon2_r9 = new TH1F("h_Photon2_r9","Photon2 R9;#gamma_{2} R9", 50, 0.1, 1.5);
    h_Photon2_sigmaIetaIeta = new TH1F("h_Photon2_sigmaIetaIeta","Photon2 #sigma_{i#etai#eta};#gamma_{2} #sigma_{i#etai#eta}", 25, 0, 0.05);
    h_Photon2_sigmaEtaEta = new TH1F("h_Photon2_sigmaEtaEta","Photon2 #sigma_{#eta#eta};#gamma_{2} #sigma_{#eta#eta}", 25, 0, 0.05);
 
-   h_Photon2_e2x2e4x4 = new TH1F("h_Photon2_e2x2e4x4","Photon2 E2x2/E4x4;#gamma_{2} E_{2x2}/E_{4x4}}", 20, 0, 1.2);
-   h_Photon2_e2e9 = new TH1F("h_Photon2_e2e9","Photon2 E2/E9;#gamma_{2} E_{2}/E_{9}}", 20, 0, 1.2);
+   h_Photon2_e2x2e4x4 = new TH1F("h_Photon2_e2x2e4x4","Photon2 E2x2/E4x4;#gamma_{2} E_{2x2}/E_{4x4}", 20, 0.4, 1.2);
+   h_Photon2_e2e9 = new TH1F("h_Photon2_e2e9","Photon2 E2/E9;#gamma_{2} E_{2}/E_{9}", 20, 0.4, 1.2);
    h_Photon2_swisscross = new TH1F("h_Photon2_swisscross","Photon2 swisscross;#gamma_{2} 1-E_{4}/E_{1}", 20, 0, 1.2);
    h_Photon2_severityLevel = new TH1F("h_Photon2_severityLevel","Photon2 severityLevel", 5, 0, 5);
    h_Photon2_severityLevel->GetXaxis()->SetBinLabel(1,"kGood");
@@ -682,6 +1110,7 @@ void fTree::Init(TTree *tree)
 
    h_Photon2_maxRecHitTime = new TH1F("h_Photon2_maxRecHitTime","Photon2 maxRecHitTime;#gamma_{2} time [ns]", 50, -5, 5); 
    h_Photon2_maxRecHitTime_wide = new TH1F("h_Photon2_maxRecHitTime_wide","Photon2 maxRecHitTime (zoom out);#gamma_{2} time [ns]", 200, -20, 20); 
+   h_Photon2_e2e9_v_maxRecHitTime = new TH2F("h_Photon2_e2e9_v_maxRecHitTime","Photon2 E2/E9 v maxRecHitTime (zoom out);#gamma_{2} time [ns]; #gamma_{2} E_{2}/E_{9}", 200, -20, 20, 20, 0.4, 1.2); 
    
    h_Photon2_hadOverEm = new TH1F("h_Photon2_hadOverEm","Photon2 H/E;#gamma_{2} H/E", 40, 0, 0.06); 
    h_Photon2_hcalIso04 = new TH1F("h_Photon2_hcalIso04","Photon2 HCAL Iso #DeltaR 0.4;#gamma_{2} HCAL Iso #DeltaR 0.4", 50, 0, 4); 
@@ -701,6 +1130,182 @@ void fTree::Init(TTree *tree)
 
 /*    h_Photon2_esRatio = new TH1F("h_Photon2_esRatio","Photon2_esRatio", , , ); */
 
+   // tight-tight ie signal sample
+   h_FakeRate_tt_pt1  = new TH1F("h_FakeRate_tt_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",44,60,500);
+   h_FakeRate_tt_pt1_zoom  = new TH1F("h_FakeRate_tt_pt1_zoom","#gamma_{1} p_{T};#gamma_{1} p_{T}",30,0,150);
+   h_FakeRate_tt_eta1 = new TH1F("h_FakeRate_tt_eta1","#gamma_{1} #eta;#gamma_{1} #eta",25,-2.5,2.5);
+   h_FakeRate_tt_phi1 = new TH1F("h_FakeRate_tt_phi1","#gamma_{1} #phi;#gamma_{1} #phi",20,-3.14159,3.14159); 
+   h_FakeRate_tt_pt2  = new TH1F("h_FakeRate_tt_pt2","#gamma_{2} p_{T};#gamma_{2} p_{T}",44,60,500);
+   h_FakeRate_tt_pt2_zoom  = new TH1F("h_FakeRate_tt_pt2_zoom","#gamma_{2} p_{T};#gamma_{2} p_{T}",30,0,150);
+   h_FakeRate_tt_eta2 = new TH1F("h_FakeRate_tt_eta2","#gamma_{2} #eta;#gamma_{2} #eta",25,-2.5,2.5);
+   h_FakeRate_tt_phi2 = new TH1F("h_FakeRate_tt_phi2","#gamma_{2} #phi;#gamma_{2} #phi",20,-3.14159,3.14159); 
+   //   h_FakeRate_tt_minv         = new TH1F("h_FakeRate_tt_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);	    
+   h_FakeRate_tt_minv         = new TH1F("h_FakeRate_tt_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",1860,140,2000);	    
+h_FakeRate_tt_minv_high         = new TH1F("h_FakeRate_tt_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500,1200);
+   h_FakeRate_tt_qt           = new TH1F("h_FakeRate_tt_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",20,0,50);			    
+   h_FakeRate_tt_deltaPhi     = new TH1F("h_FakeRate_tt_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",90,-3.14159,3.14159); 
+   h_FakeRate_tt_deltaEta     = new TH1F("h_FakeRate_tt_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",40,-6.,6.); 	    
+   h_FakeRate_tt_deltaR       = new TH1F("h_FakeRate_tt_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0,7.); 		    
+   h_FakeRate_tt_cosThetaStar = new TH1F("h_FakeRate_tt_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0,1);      
+
+   // tight-fake
+   h_FakeRate_tf_pt1  = new TH1F("h_FakeRate_tf_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",44,60,500);
+   h_FakeRate_tf_pt1_zoom  = new TH1F("h_FakeRate_tf_pt1_zoom","#gamma_{1} p_{T};#gamma_{1} p_{T}",30,0,150);
+   h_FakeRate_tf_eta1 = new TH1F("h_FakeRate_tf_eta1","#gamma_{1} #eta;#gamma_{1} #eta",25,-2.5,2.5);
+   h_FakeRate_tf_phi1 = new TH1F("h_FakeRate_tf_phi1","#gamma_{1} #phi;#gamma_{1} #phi",20,-3.14159,3.14159); 
+   h_FakeRate_tf_pt2  = new TH1F("h_FakeRate_tf_pt2","#gamma_{2} p_{T};#gamma_{2} p_{T}",44,60,500);
+   h_FakeRate_tf_pt2_zoom  = new TH1F("h_FakeRate_tf_pt2_zoom","#gamma_{2} p_{T};#gamma_{2} p_{T}",30,0,150);
+   h_FakeRate_tf_eta2 = new TH1F("h_FakeRate_tf_eta2","#gamma_{2} #eta;#gamma_{2} #eta",25,-2.5,2.5);
+   h_FakeRate_tf_phi2 = new TH1F("h_FakeRate_tf_phi2","#gamma_{2} #phi;#gamma_{2} #phi",20,-3.14159,3.14159); 
+   //   h_FakeRate_tf_minv         = new TH1F("h_FakeRate_tf_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);	    
+   h_FakeRate_tf_minv         = new TH1F("h_FakeRate_tf_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",1860,140,2000);	    
+   h_FakeRate_tf_minv_high         = new TH1F("h_FakeRate_tf_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500,1200);
+   h_FakeRate_tf_qt           = new TH1F("h_FakeRate_tf_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",20,0,50);			    
+   h_FakeRate_tf_deltaPhi     = new TH1F("h_FakeRate_tf_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",90,-3.14159,3.14159); 
+   h_FakeRate_tf_deltaEta     = new TH1F("h_FakeRate_tf_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",40,-6.,6.); 	    
+   h_FakeRate_tf_deltaR       = new TH1F("h_FakeRate_tf_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0,7.); 		    
+   h_FakeRate_tf_cosThetaStar = new TH1F("h_FakeRate_tf_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0,1);      
+   h_FakeRate_tf_pt1_noweight  = new TH1F("h_FakeRate_tf_pt1_noweight","TF #gamma_{1} (tight) p_{T}",100,0,150);
+   h_FakeRate_tf_pt2_noweight  = new TH1F("h_FakeRate_tf_pt2_noweight","TF #gamma_{2} (fake) p_{T}",100,0,150);
+
+   h_FakeRate_ft_pt1_noweight  = new TH1F("h_FakeRate_ft_pt1_noweight","FT #gamma_{1} (fake) p_{T}",100,0,150);
+   h_FakeRate_ft_pt2_noweight  = new TH1F("h_FakeRate_ft_pt2_noweight","FT #gamma_{2} (tight) p_{T}",100,0,150);
+
+   // fake-fake
+   h_FakeRate_ff_pt1  = new TH1F("h_FakeRate_ff_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",44,60,500);
+   h_FakeRate_ff_pt1_zoom  = new TH1F("h_FakeRate_ff_pt1_zoom","#gamma_{1} p_{T};#gamma_{1} p_{T}",30,0,150);
+   h_FakeRate_ff_eta1 = new TH1F("h_FakeRate_ff_eta1","#gamma_{1} #eta;#gamma_{1} #eta",25,-2.5,2.5);
+   h_FakeRate_ff_phi1 = new TH1F("h_FakeRate_ff_phi1","#gamma_{1} #phi;#gamma_{1} #phi",20,-3.14159,3.14159); 
+   h_FakeRate_ff_pt2  = new TH1F("h_FakeRate_ff_pt2","#gamma_{2} p_{T};#gamma_{2} p_{T}",44,60,500);
+   h_FakeRate_ff_pt2_zoom  = new TH1F("h_FakeRate_ff_pt2_zoom","#gamma_{2} p_{T};#gamma_{2} p_{T}",30,0,150);
+   h_FakeRate_ff_eta2 = new TH1F("h_FakeRate_ff_eta2","#gamma_{2} #eta;#gamma_{2} #eta",25,-2.5,2.5);
+   h_FakeRate_ff_phi2 = new TH1F("h_FakeRate_ff_phi2","#gamma_{1} #phi;#gamma_{1} #phi",20,-3.14159,3.14159); 
+   //   h_FakeRate_ff_minv         = new TH1F("h_FakeRate_ff_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);	    
+   h_FakeRate_ff_minv         = new TH1F("h_FakeRate_ff_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",1860,140,2000); 
+   h_FakeRate_ff_minv_high    = new TH1F("h_FakeRate_ff_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500,1200);
+   h_FakeRate_ff_qt           = new TH1F("h_FakeRate_ff_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",20,0,50);			    
+   h_FakeRate_ff_deltaPhi     = new TH1F("h_FakeRate_ff_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",90,-3.14159,3.14159); 
+   h_FakeRate_ff_deltaEta     = new TH1F("h_FakeRate_ff_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",40,-6.,6.); 	    
+   h_FakeRate_ff_deltaR       = new TH1F("h_FakeRate_ff_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0,7.); 		    
+   h_FakeRate_ff_cosThetaStar = new TH1F("h_FakeRate_ff_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0,1);      
+   h_FakeRate_ff_pt1_noweight  = new TH1F("h_FakeRate_ff_pt1_noweight","FF #gamma_{1} (fake) p_{T}",100,0,150);
+   h_FakeRate_ff_pt2_noweight  = new TH1F("h_FakeRate_ff_pt2_noweight","FF #gamma_{2} (fake) p_{T}",100,0,150);   
+   h_trkIsoVRho1 = new TH2F("h_trkIsoVRho1","Photon1 Track Iso;#rho; #gamma_{1} Track Iso", 10, 0, 10, 14, 0, 14); 
+   h_ecalIsoVRho1 = new TH2F("h_ecalIsoVRho1","Photon1 Ecal Iso;#rho; #gamma_{1} Ecal Iso", 10, 0, 10, 14, 0, 14); 
+   h_hcalIsoVRho1 = new TH2F("h_hcalIsoVRho1","Photon1 Hcal Iso;#rho; #gamma_{1} Hcal Iso", 10, 0, 10, 14, 0, 14); 
+
+   h_trkIsoVRho2 = new TH2F("h_trkIsoVRho2","Photon2 Track Iso;#rho; #gamma_{2} Track Iso", 10, 0, 10, 14, 0, 14); 
+   h_ecalIsoVRho2 = new TH2F("h_ecalIsoVRho2","Photon2 Ecal Iso;#rho; #gamma_{2} Ecal Iso", 10, 0, 10, 14, 0, 14); 
+   h_hcalIsoVRho2 = new TH2F("h_hcalIsoVRho2","Photon2 Hcal Iso;#rho; #gamma_{2} Hcal Iso", 10, 0, 10, 14, 0, 14); 
+
+   h_FakeRate_tt_minv_120to200 = new TH1F("h_FakeRate_tt_minv_120to200","Diphoton Invariant Mass (120-200 bin);M_{#gamma#gamma} [GeV/c^2]",1,120,200); 
+   h_FakeRate_tt_minv_200to500 = new TH1F("h_FakeRate_tt_minv_200to500","Diphoton Invariant Mass (200-500 bin);M_{#gamma#gamma} [GeV/c^2]",1,200,500); 
+   h_FakeRate_tt_minv_500to800 = new TH1F("h_FakeRate_tt_minv_500to800","Diphoton Invariant Mass (500-800 bin);M_{#gamma#gamma} [GeV/c^2]",1,500,800); 
+   h_FakeRate_tt_minv_800toInf = new TH1F("h_FakeRate_tt_minv_800toInf","Diphoton Invariant Mass (800-Inf bin);M_{#gamma#gamma} [GeV/c^2]",1,800,100000); 
+
+   h_FakeRate_tf_minv_120to200 = new TH1F("h_FakeRate_tf_minv_120to200","Diphoton Invariant Mass (120-200 bin);M_{#gamma#gamma} [GeV/c^2]",1,120,200); 
+   h_FakeRate_tf_minv_200to500 = new TH1F("h_FakeRate_tf_minv_200to500","Diphoton Invariant Mass (200-500 bin);M_{#gamma#gamma} [GeV/c^2]",1,200,500); 
+   h_FakeRate_tf_minv_500to800 = new TH1F("h_FakeRate_tf_minv_500to800","Diphoton Invariant Mass (500-800 bin);M_{#gamma#gamma} [GeV/c^2]",1,500,800);
+   h_FakeRate_tf_minv_800toInf = new TH1F("h_FakeRate_tf_minv_800toInf","Diphoton Invariant Mass (800-Inf bin);M_{#gamma#gamma} [GeV/c^2]",1,800,100000); 
+
+   h_FakeRate_ff_minv_120to200 = new TH1F("h_FakeRate_ff_minv_120to200","Diphoton Invariant Mass (120-200 bin);M_{#gamma#gamma} [GeV/c^2]",1,120,200); 
+   h_FakeRate_ff_minv_200to500 = new TH1F("h_FakeRate_ff_minv_200to500","Diphoton Invariant Mass (200-500 bin);M_{#gamma#gamma} [GeV/c^2]",1,200,500); 
+   h_FakeRate_ff_minv_500to800 = new TH1F("h_FakeRate_ff_minv_500to800","Diphoton Invariant Mass (500-800 bin);M_{#gamma#gamma} [GeV/c^2]",1,500,800); 
+   h_FakeRate_ff_minv_800toInf = new TH1F("h_FakeRate_ff_minv_800toInf","Diphoton Invariant Mass (800-Inf bin);M_{#gamma#gamma} [GeV/c^2]",1,800,100000); 
+
+   h_Diphoton_Minv->Sumw2();
+   h_Diphoton_Minv_Yousi5->Sumw2();
+   h_Diphoton_Minv_Yousi10->Sumw2();
+   h_Diphoton_Minv_Yousi40->Sumw2();
+   h_Diphoton_Minv_Yousi100->Sumw2();
+   h_Diphoton_Minv_120to200->Sumw2();
+   h_Diphoton_Minv_200to500->Sumw2();
+   h_Diphoton_Minv_500to800->Sumw2();
+   h_Diphoton_Minv_800toInf->Sumw2();
+   h_Diphoton_Minv_log->Sumw2();
+   h_Diphoton_Minv_high->Sumw2();
+   h_Diphoton_Minv_low->Sumw2();
+   h_FakeRate_tt_pt1->Sumw2();
+   h_FakeRate_tt_pt1_zoom->Sumw2();
+   h_FakeRate_tt_eta1->Sumw2();
+   h_FakeRate_tt_phi1->Sumw2();
+   h_FakeRate_tt_pt2->Sumw2();
+   h_FakeRate_tt_pt2_zoom->Sumw2();
+   h_FakeRate_tt_eta2->Sumw2();
+   h_FakeRate_tt_phi2->Sumw2();
+   h_FakeRate_tt_minv->Sumw2();
+   h_FakeRate_tt_minv_high->Sumw2();
+   h_FakeRate_tt_qt->Sumw2();
+   h_FakeRate_tt_deltaPhi->Sumw2();
+   h_FakeRate_tt_deltaEta->Sumw2();
+   h_FakeRate_tt_deltaR->Sumw2();
+   h_FakeRate_tt_cosThetaStar->Sumw2();
+   
+   h_FakeRate_tf_pt1->Sumw2();
+   h_FakeRate_tf_pt1_zoom->Sumw2();
+   h_FakeRate_tf_eta1->Sumw2();
+   h_FakeRate_tf_phi1->Sumw2();
+   h_FakeRate_tf_pt2->Sumw2();
+   h_FakeRate_tf_pt2_zoom->Sumw2();
+   h_FakeRate_tf_eta2->Sumw2();
+   h_FakeRate_tf_phi2->Sumw2();
+   h_FakeRate_tf_minv->Sumw2();
+   h_FakeRate_tf_minv_high->Sumw2();
+   h_FakeRate_tf_qt->Sumw2();
+   h_FakeRate_tf_deltaPhi->Sumw2();
+   h_FakeRate_tf_deltaEta->Sumw2();
+   h_FakeRate_tf_deltaR->Sumw2();
+   h_FakeRate_tf_cosThetaStar->Sumw2();
+   
+   h_FakeRate_tf_pt1_noweight->Sumw2();
+   h_FakeRate_tf_pt2_noweight->Sumw2();
+
+   h_FakeRate_ft_pt1_noweight->Sumw2();
+   h_FakeRate_ft_pt2_noweight->Sumw2();
+
+   h_FakeRate_ff_pt1->Sumw2();
+   h_FakeRate_ff_pt1_zoom->Sumw2();
+   h_FakeRate_ff_eta1->Sumw2();
+   h_FakeRate_ff_phi1->Sumw2();
+   h_FakeRate_ff_pt2->Sumw2();
+   h_FakeRate_ff_pt2_zoom->Sumw2();
+   h_FakeRate_ff_eta2->Sumw2();
+   h_FakeRate_ff_phi2->Sumw2();
+   h_FakeRate_ff_minv->Sumw2();   
+   h_FakeRate_ff_minv_high->Sumw2();   
+   h_FakeRate_ff_qt->Sumw2();
+   h_FakeRate_ff_deltaPhi->Sumw2();
+   h_FakeRate_ff_deltaEta->Sumw2();
+   h_FakeRate_ff_deltaR->Sumw2();
+   h_FakeRate_ff_cosThetaStar->Sumw2();
+
+   h_FakeRate_ff_pt1_noweight->Sumw2();
+   h_FakeRate_ff_pt2_noweight->Sumw2();
+
+   h_FakeRate_tt_minv_120to200->Sumw2();
+   h_FakeRate_tt_minv_200to500->Sumw2();
+   h_FakeRate_tt_minv_500to800->Sumw2();
+   h_FakeRate_tt_minv_800toInf->Sumw2();
+   h_FakeRate_tf_minv_120to200->Sumw2();
+   h_FakeRate_tf_minv_200to500->Sumw2();
+   h_FakeRate_tf_minv_500to800->Sumw2();   
+   h_FakeRate_tf_minv_800toInf->Sumw2();
+   h_FakeRate_ff_minv_120to200->Sumw2();
+   h_FakeRate_ff_minv_200to500->Sumw2();
+   h_FakeRate_ff_minv_500to800->Sumw2();
+   h_FakeRate_ff_minv_800toInf->Sumw2();
+
+   _outT0 = new TTree("tDiphoton","Diphoton events passing selection");
+   TBranch* b0 = _outT0->Branch("minv",&outVar0.minv,"minv/D");
+   b0 = _outT0->Branch("weight",&outVar0.weight,"weight/D");
+   b0 = _outT0->Branch("r9_photon1",&outVar0.r9_photon1,"r9_photon1/D");
+   b0 = _outT0->Branch("r9_photon2",&outVar0.r9_photon2,"r9_photon2/D");
+   b0 = _outT0->Branch("eta_photon1",&outVar0.eta_photon1,"eta_photon1/D");
+   b0 = _outT0->Branch("eta_photon2",&outVar0.eta_photon2,"eta_photon2/D");
+
+   fInKfactor = new TFile(_kFactorFile) ;
+
+   return;
 }
 
 Bool_t fTree::Notify()
