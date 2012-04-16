@@ -7,7 +7,7 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-//  $Id: RecoPhotonInfo.h,v 1.10 2011/01/14 18:55:35 chenders Exp $
+//  $Id: RecoPhotonInfo.h,v 1.12 2011/05/19 17:07:16 yma Exp $
 // 
 //********************************************************************
 
@@ -43,7 +43,8 @@
 #include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 #include "CondFormats/DataRecord/interface/EcalChannelStatusRcd.h"
 #include "CondFormats/EcalObjects/interface/EcalChannelStatus.h"
-
+#include "RecoEcal/EgammaCoreTools/interface/EcalTools.h"
+#include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgoRcd.h"
 
 //for photons
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
@@ -480,7 +481,7 @@ namespace ExoDiPhotons
      // we also need EB and EE rechits for some of this
 
      if (maxc1.first.subdetId() == EcalBarrel) {
-       recoPhotonInfo.swisscross = EcalSeverityLevelAlgo::swissCross(maxc1.first, (*recHitsEB), 0);
+       recoPhotonInfo.swisscross = EcalTools::swissCross(maxc1.first, (*recHitsEB), 0);
      }
      else {
        recoPhotonInfo.swisscross = -999.99;
@@ -513,13 +514,15 @@ namespace ExoDiPhotons
 
      const EcalRecHitCollection & rechits = ( photon->isEB() ? *recHitsEB : *recHitsEE); 
      EcalRecHitCollection::const_iterator it = rechits.find( id );
-     if( it != rechits.end() ) { 
+       if( it != rechits.end() ) { 
        time = it->time(); 
        outOfTimeChi2 = it->outOfTimeChi2();
        chi2 = it->chi2();
        flags = it->recoFlag();
-       severity = EcalSeverityLevelAlgo::severityLevel( id, rechits, (*ch_status) );
-     }
+       // edm::ESHandle<EcalSeverityLevelAlgo> sevlv;
+       //iSetup.get<EcalSeverityLevelAlgoRcd>().get(sevlv);
+       //severity = sevlv->severityLevel( id, rechits);
+            }
 
      
      EcalChannelStatusMap::const_iterator chit;
