@@ -22,10 +22,11 @@ process.source = cms.Source("PoolSource",
 #    '/store/data//Run2010B/Photon/RECO/PromptReco-v2/000/148/819/02B8C9B5-45E0-DF11-8310-001D09F295A1.root',
 #    '/store/data//Run2010B/Photon/RECO/PromptReco-v2/000/148/819/0636566B-59E0-DF11-A0C2-0019B9F70607.root'
 #    'rfio:/castor/cern.ch/user/c/chenders/DiPhotonBorn_Pt25to250_Spring10_GEN-SIM-RECO_200events.root',
-    'rfio:/castor/cern.ch/user/y/yma/RSGravitons/Nov2010/RShighest.root',
+#    'rfio:/castor/cern.ch/user/y/yma/RSGravitons/Nov2010/RShighest.root',
 #    '/store/data/Run2010B/Photon/RECO/PromptReco-v2/000/148/953/642845D7-C0E1-DF11-B968-0030487A18F2.root'
-
-    )
+#  '/store/data/Run2012A/Photon/AOD/PromptReco-v1/000/190/684/F652691B-0383-E111-9821-001D09F241F0.root'
+    'rfio:/castor/cern.ch/cms/store/data/Run2012A/Photon/AOD/PromptReco-v1/000/190/738/E4AD6153-0684-E111-AAE3-001D09F24DA8.root'
+     )
 )
 
 # need to introduce the global tag now
@@ -34,7 +35,7 @@ process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
 
 #use the right global tag!
 #global tag fro >382 data (Nov22)
-process.GlobalTag.globaltag = 'GR_R_38X_V14::All'
+process.GlobalTag.globaltag = 'GR_R_52_V7::All'
 # global tag for prompt reco with 38X (as of Sept30)
 #process.GlobalTag.globaltag = 'GR10_P_V9::All'
 # this is global tag for PromptReco with 36X
@@ -49,7 +50,7 @@ process.load("Configuration.StandardSequences.Geometry_cff")
 
 # file for all histograms for all modules
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string('diphoton_tree.root')
+    fileName = cms.string('diphoton_tree_Run2012APromptReco-v1April13DCSJson.root')
 )
 
 # filter on good vertex
@@ -76,22 +77,27 @@ process.noScraping = cms.EDFilter("FilterOutScraping",
 )
 
 
+process.load('RecoJets.JetProducers.kt4PFJets_cfi')
+process.kt6PFJets = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True )
+process.kt6PFJets.Rho_EtaMax = cms.double(2.5)
 
 
 #load diphoton analyzer
-process.load("DiPhotonAnalysis.ExoDiPhotonAnalyzer.exodiphotonanalyzer_cfi")
+process.load("DiPhotonAnalysis.ExoDiPhotonAnalyzer.exodiphotonanalyzer_withrho_cfi")
 #process.photonAnalyzer.photonCollection = "photons"
-process.diphotonAnalyzer.ptMin = 20.0 # pt cut on all photons
+process.diphotonAnalyzer.rhoCorrection = cms.InputTag("kt6PFJets","rho")
+process.diphotonAnalyzer.ptMin = 70 # pt cut on all photons
 process.diphotonAnalyzer.removeSpikes = False # ie spikes will be exlcuded from tree
-process.diphotonAnalyzer.requireTightPhotons = True # ie only tight photons will be written 
+process.diphotonAnalyzer.requireTightPhotons = False # ie only tight photons will be written 
 
 
 # precede with a diphoton filter, to speed things up
-process.load("DiPhotonAnalysis.DiPhotonFilter.diphotonfilter_cfi")
+#process.load("DiPhotonAnalysis.DiPhotonFilter.diphotonfilter_cfi")
 
-process.diphotonFilter.ptMin_photon1 = 20.0 
-process.diphotonFilter.ptMin_photon2 = 20.0 
+#process.diphotonFilter.ptMin_photon1 = 20.0 
+#process.diphotonFilter.ptMin_photon2 = 20.0 
 
 # include all the filters as well as the analyzer
-process.path  = cms.Path(process.primaryVertexFilter+process.noScraping+process.diphotonFilter+process.diphotonAnalyzer)
-
+#process.path  = cms.Path(process.primaryVertexFilter+process.noScraping+process.diphotonFilter+process.diphotonAnalyzer)
+#process.path =cms.Path(process.diphotonAnalyzer)
+process.path  = cms.Path(process.primaryVertexFilter+process.noScraping+process.kt6PFJets+process.diphotonAnalyzer)
