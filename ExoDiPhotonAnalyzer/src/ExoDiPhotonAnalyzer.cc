@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.22 2011/05/19 17:07:26 yma Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.24 2011/07/01 13:51:48 yma Exp $
 //
 //
 
@@ -737,7 +737,7 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
      //          if(ExoDiPhotons::isBarrelPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt)) {
           if( (recoPhoton->pt()>=fMin_pt)) {       
 
-	    if(ExoDiPhotons::isTightPhoton(&(*recoPhoton)) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {
+	    if(ExoDiPhotons::isTightPhoton(&(*recoPhoton),rho) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {
 	    //	    if( !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {   
 	 selectedPhotons.push_back(*recoPhoton);
 	    }
