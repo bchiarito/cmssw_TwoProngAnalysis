@@ -23,13 +23,13 @@ namespace ExoDiPhotons{
   }
 
 
-  bool passesTrkIsoCut(const reco::Photon *photon,double rho) {
+  bool passesTrkIsoCut(const reco::Photon *photon,double rho25) {
     
     bool result = false;
 
     //    double trkIsoCut = 3.5 + 0.001*photon->et();
     //    double trkIsoCut = 2.0 + 0.001*photon->et();
-    double trkIsoCut = 2.0+0.001*photon->et()+0.0167*rho; 
+    double trkIsoCut = 2.0+0.001*photon->et()+0.0167*rho25; 
     if(photon->trkSumPtHollowConeDR04()<trkIsoCut)
       result = true;
 
@@ -37,13 +37,13 @@ namespace ExoDiPhotons{
   }
 
 
-  bool passesEcalIsoCut(const reco::Photon *photon,double rho) {
+  bool passesEcalIsoCut(const reco::Photon *photon,double rho25) {
     
     bool result = false;
 
     //double ecalIsoCut = 4.2 + 0.006*photon->et();
-    double ecalIsoCut = 4.2 + 0.006*photon->et()+0.090*rho;
-
+    // double ecalIsoCut = 4.2 + 0.006*photon->et()+0.090*rho;
+    double ecalIsoCut = 4.2 + 0.006*photon->et()+0.183*rho25;
     if(photon->ecalRecHitSumEtConeDR04()<ecalIsoCut)
       result = true;
 
@@ -51,12 +51,12 @@ namespace ExoDiPhotons{
   }
 
 
-  bool passesHcalIsoCut(const reco::Photon *photon,double rho) {
+  bool passesHcalIsoCut(const reco::Photon *photon,double rho25) {
     
     bool result = false;
 
     //   double hcalIsoCut = 2.2 + 0.0025*photon->et();
-    double hcalIsoCut = 2.2 + 0.0025*photon->et()+0.062*rho;
+    double hcalIsoCut = 2.2 + 0.0025*photon->et()+0.062*rho25;
     if(photon->hcalTowerSumEtConeDR04()<hcalIsoCut) 
       result = true;
 
@@ -100,11 +100,11 @@ namespace ExoDiPhotons{
 
 
 
-  bool isTightPhoton(const reco::Photon *photon,double rho) {
+  bool isTightPhoton(const reco::Photon *photon,double rho25) {
 
     bool result = false;
 
-    if(passesHadOverEmCut(photon) && passesTrkIsoCut(photon,rho) && passesEcalIsoCut(photon,rho) && passesHcalIsoCut(photon,rho) && passesSigmaIetaIetaCut(photon) && passesNoPixelSeedCut(photon))
+    if(passesHadOverEmCut(photon) && passesTrkIsoCut(photon,rho25) && passesEcalIsoCut(photon,rho25) && passesHcalIsoCut(photon,rho25) && passesSigmaIetaIetaCut(photon) && passesNoPixelSeedCut(photon))
       result = true;
 
     return result; 

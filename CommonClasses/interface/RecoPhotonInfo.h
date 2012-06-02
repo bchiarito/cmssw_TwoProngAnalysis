@@ -7,7 +7,7 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-//  $Id: RecoPhotonInfo.h,v 1.12 2011/05/19 17:07:16 yma Exp $
+//  $Id: RecoPhotonInfo.h,v 1.13 2012/04/16 19:07:36 jcarson Exp $
 // 
 //********************************************************************
 
@@ -123,7 +123,6 @@ namespace ExoDiPhotons
 
     // es ratio
     Double_t esRatio;
-
     // supercluster info
     Double_t scRawEnergy;
     Double_t scPreshowerEnergy;
