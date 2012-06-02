@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.24 2011/07/01 13:51:48 yma Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.25 2012/05/07 14:55:54 jcarson Exp $
 //
 //
 
@@ -133,8 +133,9 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
       double             fMin_pt;          // min pt cut (photons)
       edm::InputTag      fHltInputTag;     // hltResults
       edm::InputTag      fL1InputTag;      // L1 results
-      edm::InputTag     fRhoTag;
-      edm::InputTag     pileupCollectionTag;
+      edm::InputTag      fRho25Tag;  
+      edm::InputTag      pileupCollectionTag;         
+      
 
       bool               fkRemoveSpikes;   // option to remove spikes before filling tree
       bool               fkRequireTightPhotons;  // option to require tight photon id in tree
@@ -163,7 +164,8 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
 
       ExoDiPhotons::vtxInfo_t fVtxGENInfo;
 
-      double rho;
+      
+      double fRho25;
       int pu_n;
 
       Int_t gv_n;
@@ -186,7 +188,7 @@ class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
 
       ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo1; // leading photon 
       ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo2; // second photon
-
+   
       ExoDiPhotons::diphotonInfo_t fDiphotonInfo;
 
   // diphoton info based on using hte second or third vtx in event
@@ -212,7 +214,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fMin_pt(iConfig.getUntrackedParameter<double>("ptMin")),
     fHltInputTag(iConfig.getUntrackedParameter<edm::InputTag>("hltResults")),
     fL1InputTag(iConfig.getUntrackedParameter<edm::InputTag>("L1Results")),
-    fRhoTag(iConfig.getParameter<edm::InputTag>("rhoCorrection")),
+    fRho25Tag(iConfig.getParameter<edm::InputTag>("rho25Correction")),
     pileupCollectionTag(iConfig.getUntrackedParameter<edm::InputTag>("pileupCorrection")),
     fkRemoveSpikes(iConfig.getUntrackedParameter<bool>("removeSpikes")),
     fkRequireTightPhotons(iConfig.getUntrackedParameter<bool>("requireTightPhotons"))
@@ -229,7 +231,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("Vtx3",&fVtx3Info,ExoDiPhotons::vtxInfoBranchDefString.c_str());
   fTree->Branch("VtxGEN",&fVtxGENInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
 
-  fTree->Branch("rho",&rho,"rho/D");
+  fTree->Branch("rho25",&fRho25,"rho25/D"); 
   fTree->Branch("pu_n", &pu_n, "pu_n/I");
 
   fTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
@@ -533,19 +535,15 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
        //      double rho;
 
-       edm::Handle<double> rhoHandle;
-       iEvent.getByLabel(fRhoTag, rhoHandle);
-  
-       rho = *(rhoHandle.product());
-//       if (rhoHandle.isValid()){
+       edm::Handle<double> rho25Handle;
+       iEvent.getByLabel(fRho25Tag, rho25Handle);
 
-// 	cout<<"rho found\n";
-//        rho = *(rhoHandle.product());
-//       }
-
-//       if (!rhoHandle.isValid()){
-// 	cout<<"no rho\n";
-//       }
+        if (!rho25Handle.isValid()){
+	  cout<<"rho25 not found"<<endl;
+	  return;
+	}
+        
+        fRho25 = *(rho25Handle.product());
 
 //       edm::Handle<std::vector<double> > vrhoHandle;
 //       iEvent.getByLabel(edm::InputTag("kt6PFJets","rhos"), vrhoHandle);
@@ -737,7 +735,7 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
      //          if(ExoDiPhotons::isBarrelPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt)) {
           if( (recoPhoton->pt()>=fMin_pt)) {       
 
-	    if(ExoDiPhotons::isTightPhoton(&(*recoPhoton),rho) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {
+	    if(ExoDiPhotons::isTightPhoton(&(*recoPhoton),fRho25) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {
 	    //	    if( !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {   
 	 selectedPhotons.push_back(*recoPhoton);
 	    }

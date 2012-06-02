@@ -11,7 +11,7 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
-#        'file:myfile.root',
+        'file:HighMassSkims_April27_Mgreater500.root',
 #    'file:/tmp/chenders/02071949-FA40-DF11-9990-001A64789DEC.root',
 #'file:/afs/cern.ch/cms/CAF/CMSCOMM/COMM_ECAL/torimoto/0065C919-F53B-DF11-8BF5-001D09F29146.root'
         #direct from castor
@@ -25,7 +25,9 @@ process.source = cms.Source("PoolSource",
 #    'rfio:/castor/cern.ch/user/y/yma/RSGravitons/Nov2010/RShighest.root',
 #    '/store/data/Run2010B/Photon/RECO/PromptReco-v2/000/148/953/642845D7-C0E1-DF11-B968-0030487A18F2.root'
 #  '/store/data/Run2012A/Photon/AOD/PromptReco-v1/000/190/684/F652691B-0383-E111-9821-001D09F241F0.root'
-    'rfio:/castor/cern.ch/cms/store/data/Run2012A/Photon/AOD/PromptReco-v1/000/190/738/E4AD6153-0684-E111-AAE3-001D09F24DA8.root'
+#    'rfio:/castor/cern.ch/cms/store/data/Run2012A/Photon/AOD/PromptReco-v1/000/190/738/E4AD6153-0684-E111-AAE3-001D09F24DA8.root'
+     'rfio:/castor/cern.ch/user/j/jcarson/DiPhotonTrees/Data/HighMassSkims_April27_Mgreater500.root'      
+#      'HighMassSkims_April27_Mgreater500.root'
      )
 )
 
@@ -50,7 +52,7 @@ process.load("Configuration.StandardSequences.Geometry_cff")
 
 # file for all histograms for all modules
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string('diphoton_tree_Run2012APromptReco-v1April13DCSJson.root')
+    fileName = cms.string('April27HighMassSkimsRhoStudy.root')
 )
 
 # filter on good vertex
@@ -77,15 +79,15 @@ process.noScraping = cms.EDFilter("FilterOutScraping",
 )
 
 
-process.load('RecoJets.JetProducers.kt4PFJets_cfi')
-process.kt6PFJets = process.kt4PFJets.clone( rParam = 0.6, doRhoFastjet = True )
-process.kt6PFJets.Rho_EtaMax = cms.double(2.5)
+process.load('RecoJets.Configuration.RecoPFJets_cff')
+process.kt6PFJets25 = process.kt6PFJets.clone( doRhoFastjet = True )
+process.kt6PFJets25.Rho_EtaMax = cms.double(2.5)
 
 
 #load diphoton analyzer
 process.load("DiPhotonAnalysis.ExoDiPhotonAnalyzer.exodiphotonanalyzer_withrho_cfi")
 #process.photonAnalyzer.photonCollection = "photons"
-process.diphotonAnalyzer.rhoCorrection = cms.InputTag("kt6PFJets","rho")
+process.diphotonAnalyzer.rho25Correction = cms.InputTag("kt6PFJets25","rho") 
 process.diphotonAnalyzer.ptMin = 70 # pt cut on all photons
 process.diphotonAnalyzer.removeSpikes = False # ie spikes will be exlcuded from tree
 process.diphotonAnalyzer.requireTightPhotons = False # ie only tight photons will be written 
@@ -100,4 +102,5 @@ process.diphotonAnalyzer.requireTightPhotons = False # ie only tight photons wil
 # include all the filters as well as the analyzer
 #process.path  = cms.Path(process.primaryVertexFilter+process.noScraping+process.diphotonFilter+process.diphotonAnalyzer)
 #process.path =cms.Path(process.diphotonAnalyzer)
-process.path  = cms.Path(process.primaryVertexFilter+process.noScraping+process.kt6PFJets+process.diphotonAnalyzer)
+process.path  = cms.Path(process.primaryVertexFilter+process.noScraping+process.kt6PFJets25+process.diphotonAnalyzer)
+#process.path  = cms.Path(process.primaryVertexFilter+process.noScraping+process.kt6PFJets25+process.diphotonAnalyzer)
