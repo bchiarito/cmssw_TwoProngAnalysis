@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.25 2012/05/07 14:55:54 jcarson Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.26 2012/06/02 09:02:11 jcarson Exp $
 //
 //
 
@@ -732,8 +732,8 @@ EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::In
      // some cuts are common to both - EB and pt
      //apr 2011, remove EB cut - what should we do about the increased combinatorics?
 
-     //          if(ExoDiPhotons::isBarrelPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt)) {
-          if( (recoPhoton->pt()>=fMin_pt)) {       
+               if(ExoDiPhotons::isBarrelPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt)) {
+		 //     if( (recoPhoton->pt()>=fMin_pt)) {       
 
 	    if(ExoDiPhotons::isTightPhoton(&(*recoPhoton),fRho25) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {
 	    //	    if( !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {   
