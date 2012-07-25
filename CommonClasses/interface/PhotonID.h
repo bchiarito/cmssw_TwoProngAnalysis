@@ -143,7 +143,8 @@ namespace ExoDiPhotons{
   }
 
 
-  bool isFakeableObject(const reco::Photon *photon) {
+  //bool isFakeableObject(const reco::Photon *photon) {
+  bool isFakeableObject(const reco::Photon *photon,double rho25) {
 
     bool result = false;
     
@@ -161,18 +162,21 @@ namespace ExoDiPhotons{
     // we are defining them to be loose, but also exclude real photons (to large degree) 
 
     // these 'swing values' determine both loose limit and exclusion veto
-    double trkIsoSwingValue = 3.5 + 0.001*pt;
+    //double trkIsoSwingValue = 3.5 + 0.001*pt;
+    double trkIsoSwingValue = 2.0 + 0.001*pt + 0.0167*rho25;
     double trkIsoLooseLimit = TMath::Min( 5.0*(trkIsoSwingValue), 0.2*pt );
     double trkIsoExclusion = trkIsoSwingValue;
     // for testing, to see if I can get a Fakeable event in small sample
     //    double trkIsoExclusion = 2.0 + 0.001*pt;
 
 
-    double ecalIsoSwingValue = 4.2 + 0.006*pt;
+    //double ecalIsoSwingValue = 4.2 + 0.006*pt;
+    double ecalIsoSwingValue = 4.2 + 0.006*pt + 0.183*rho25;;
     double ecalIsoLooseLimit = TMath::Min( 5.0*(ecalIsoSwingValue), 0.2*pt );
     double ecalIsoExclusion = ecalIsoSwingValue;
 
-    double hcalIsoSwingValue = 2.2 + 0.0025*pt;
+    //double hcalIsoSwingValue = 2.2 + 0.0025*pt;
+    double hcalIsoSwingValue = 2.2 + 0.0025*pt + 0.062*rho25;
     double hcalIsoLooseLimit = TMath::Min( 5.0*(hcalIsoSwingValue), 0.2*pt );
     double hcalIsoExclusion = hcalIsoSwingValue;
     
