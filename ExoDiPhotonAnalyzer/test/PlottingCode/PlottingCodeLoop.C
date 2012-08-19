@@ -39,17 +39,17 @@ void PlottingCodeLoop::Loop()
    if (fChain == 0) return;
  
    Int_t Pass=1;
-   TFile* PileUpWeightFile = TFile::Open("/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/PileUpCorrection"+_JSON+".root");
-     TH1D* PileUpWeight = new TH1D("pileup","pileup",100,0,100);
-     PileUpWeight = (TH1D*)PileUpWeightFile->Get("pileupcor");
-     Double_t PUweight = 1 ;
+   // TFile* PileUpWeightFile = TFile::Open("/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/PileUpCorrection"+_JSON+".root");
+   //TH1D* PileUpWeight = new TH1D("pileup","pileup",100,0,100);
+   //PileUpWeight = (TH1D*)PileUpWeightFile->Get("pileupcor");
+   Double_t PUweight = 1 ;
       
-   TF1* fake_rate_fn  = new TF1("fake_rate_fn", "(2.9941e-02+2.83452e+03/x^2.66729e+00)", 30, 2000) ;
+   TF1* fake_rate_fn  = new TF1("fake_rate_fn", "(0.103+(2.597e+05/x^3.834e+00))", 30, 2000) ;
    Double_t weightFake;
     
    cout<<fChain<<endl;
 
-   TF1* KFactorFunction = new TF1("KFactorFunction","2.9199-(0.2846/(x^-2.3265e-01))",30,2000);   
+   TF1* KFactorFunction = new TF1("KFactorFunction","1.07559+(1.222/(x^(-.00185612)))",30,2000);   
    Double_t KFactorweight; 
    
    PUweight=1;
@@ -66,20 +66,29 @@ void PlottingCodeLoop::Loop()
     
      if((Photon1_isEB) && (Photon2_isEB) && (Photon1_pt>=70) && (Photon2_pt>=70)){
 
-              if (_fakeStatus="TightTight"){
+              if (_fakeStatus=="TightTight"){
 		
 		if (_SampleType == "mc"){
-		   PUweight = PileUpWeight->GetBinContent(PileUpWeight->GetXaxis()->FindBin(pu_n));
-		  KFactorweight = KFactorFunction->Eval(Diphoton_Minv);					 
+                      
+		  //PUweight = PileUpWeight->GetBinContent(PileUpWeight->GetXaxis()->FindBin(pu_n));
+		  PUweight = 1;
+                  if (Diphoton_Minv>=320){
+		    KFactorweight = 1;
+                  //KFactorweight = KFactorFunction->Eval(Diphoton_Minv);					 
 		  // cout<<KFactorweight<<endl; 
 		  //PUweight=1;
                   //KFactorweight=1; 
-		}						
+                  } 
+	          if (Diphoton_Minv<320){
+                    KFactorweight=1;
+                    //KFactorweight=1.73405;
+		      }
+    	}						
 		
 		
 		
 		
-		
+	        cout<<PUweight<<endl;	
 		h_Photon1_pt->Fill(Photon1_pt,PUweight*KFactorweight);
 		
 		
@@ -145,7 +154,7 @@ void PlottingCodeLoop::Loop()
 	      //TightFake
 	      
 	      if ((abs(Diphoton_deltaPhi)>0.05)){
-		if (_fakeStatus="FakeTight") {  
+		if (_fakeStatus=="FakeTight") {  
 		  weightFake = fake_rate_fn->Eval(Photon1_pt);
 		  h_FakeRate_ft_pt1->Fill(Photon1_pt,weightFake);
 		  h_FakeRate_ft_pt1_zoom->Fill(Photon1_pt,weightFake);
@@ -167,7 +176,7 @@ void PlottingCodeLoop::Loop()
 		  h_FakeRate_ft_pt2_noweight->Fill(Photon2_pt);
 		}
 		
-		if (_fakeStatus="TightFake") {
+		if (_fakeStatus=="TightFake") {
 		  weightFake = fake_rate_fn->Eval(Photon2_pt);
 		  h_FakeRate_tf_pt1->Fill(Photon1_pt,weightFake);
 		  
@@ -191,7 +200,7 @@ void PlottingCodeLoop::Loop()
 		  h_FakeRate_tf_pt2_noweight->Fill(Photon2_pt);
 		}
 		
-		if (_fakeStatus="FakeFake") {
+		if (_fakeStatus=="FakeFake") {
 		  weightFake = (fake_rate_fn->Eval(Photon1_pt))*(fake_rate_fn->Eval(Photon2_pt));
 		  h_FakeRate_ff_pt1->Fill(Photon1_pt,weightFake);
 		  h_FakeRate_ff_pt1_zoom->Fill(Photon1_pt,weightFake);

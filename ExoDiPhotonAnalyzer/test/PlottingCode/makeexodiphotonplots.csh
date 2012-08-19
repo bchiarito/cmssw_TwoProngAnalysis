@@ -6,6 +6,10 @@
    set LUMI = $argv[4]                   
    set JSON = $argv[5]    
                      
+set TreeDIR=/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees;
+set HistoDIR=/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/${SAMPLE};
+
+mkdir $HistoDIR
 
 
 if (${SAMPLETYPE} == "data") then
@@ -76,7 +80,7 @@ set CASTORDIR=/castor/cern.ch/user/j/jcarson/DiPhotonTrees/Histograms/${SAMPLE};
 echo $CASTORDIR;
 nsmkdir $CASTORDIR
 rfcp histograms_${SAMPLE}*.root /castor/cern.ch/user/j/jcarson/DiPhotonTrees/Histograms/${SAMPLE};
-cp histograms_${SAMPLE}*.root /afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms 
+cp histograms_${SAMPLE}*.root /afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms
 set WEBDIR=/afs/cern.ch/user/j/jcarson/www/physics/diphoton/${SAMPLETYPE}/${SAMPLE};
 
 

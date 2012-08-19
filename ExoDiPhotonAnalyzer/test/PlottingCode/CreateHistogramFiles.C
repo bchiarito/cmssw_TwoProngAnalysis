@@ -37,6 +37,8 @@ ton1_hcalIso04","h_Photon1_ecalIso04","h_Photon1_detEta","h_Photon2_sigmaIetaIet
 
 TString fNames[12] = {"h_Diphoton_Minv","h_Diphoton_qt","h_Diphoton_deltaPhi","h_Diphoton_deltaEta","h_Diphoton_deltaR","h_Diphoton_cosThetaStar","h_Photon1_pt","h_Photon1_eta","h_Photon1_phi","h_Photon2_pt","h_Photon2_eta","h_Photon2_phi"};
 
+TString TreeFileLocation = "/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/";
+TString HistogramFileLocation = "/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/";
 
 double xsec[4]={25.48,0.029038,15.54,0.0011805};
 //in pb
@@ -54,7 +56,7 @@ void CreateHistogramFiles(TString Sample = "Diphoton", TString SampleType = "dat
   TString outName;
   TFile *outfilename;
 
-   TString  inputfile= "/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/"+Sample+".root";
+  TString  inputfile= TreeFileLocation+"/"+Sample+".root";
   
  
   TChain *chain_tt = new TChain("diphotonAnalyzer/fTree");
@@ -72,14 +74,14 @@ void CreateHistogramFiles(TString Sample = "Diphoton", TString SampleType = "dat
   treereader->_SampleType=SampleType.Data();
   cout<<SampleType.Data()<<endl;
   outName = TString::Format("histograms_%s.root", Sample.Data());
-  outfilename = new TFile(outName.Data(),"RECREATE");
+  outfilename = new TFile(HistogramFileLocation+Sample.Data()+"/"+outName.Data(),"RECREATE");
   treereader->_outputfile = outfilename;
  treereader->Loop();
   
   cout << "Here 1" <<endl;
 
 
-  if (SampleType="data"){
+  if (SampleType=="data"){
     cout << "Here 2" <<endl;
     TChain *chain_tf = new TChain("diphotonAnalyzer/fTightFakeTree");
       chain_tf->Add(inputfile.Data());
@@ -102,7 +104,7 @@ void CreateHistogramFiles(TString Sample = "Diphoton", TString SampleType = "dat
     treereader->_JSON=JSON.Data();
     treereader->_SampleType=SampleType.Data();
     outName = TString::Format("histograms_%s_TF.root",Sample.Data());
-    outfilename = new TFile(outName.Data(),"RECREATE");
+    outfilename = new TFile(HistogramFileLocation+Sample+"/"+outName,"RECREATE");
     treereaderTF->_outputfile = outfilename;
     
     treereaderTF->Loop(); 
@@ -114,7 +116,7 @@ void CreateHistogramFiles(TString Sample = "Diphoton", TString SampleType = "dat
     treereader->_JSON=JSON.Data();
     treereader->_SampleType=SampleType.Data();
     outName = TString::Format("histograms_%s_FT.root",Sample.Data());
-    outfilename = new TFile(outName.Data(),"RECREATE");
+    outfilename = new TFile(HistogramFileLocation+Sample+"/"+outName,"RECREATE");
     treereaderFT->_outputfile = outfilename;
     treereaderFT->Loop();     
     
@@ -125,11 +127,16 @@ void CreateHistogramFiles(TString Sample = "Diphoton", TString SampleType = "dat
     treereader->_JSON=JSON.Data();
     treereader->_SampleType=SampleType.Data();
     outName = TString::Format("histograms_%s_FF.root",Sample.Data());
-    outfilename= new TFile(outName.Data(),"RECREATE");
+    outfilename= new TFile(HistogramFileLocation+Sample+"/"+outName.Data(),"RECREATE");
     treereaderFF->_outputfile = outfilename;
     treereaderFF->Loop();  
-    
-  } // ends if data
+     
+    cout << "TT entries = " << chain_tt->GetEntries() <<endl;
+    cout<<" TF entries = " <<chain_tf->GetEntries()<<endl;
+    cout<<" FT entries = " <<chain_ft->GetEntries()<<endl;
+    cout<<" FF entries = " <<chain_ff->GetEntries()<<endl;
+ 
+  }  // ends if data
 
 } 
 
@@ -137,9 +144,9 @@ void CreateHistogramFiles(TString Sample = "Diphoton", TString SampleType = "dat
 
 void makeplots(TString Sample = "Diphoton",TString lumi = "300", TString JSONFile="April20.json" ,TString SampleType = "data")
 {
-  char canvasname[41];
-  TCanvas*  c[41];
-  TString histogramfileinput = "histograms_"+Sample+".root";
+  char canvasname[42];
+  TCanvas*  c[42];
+  TString histogramfileinput = HistogramFileLocation+"histograms_"+Sample+".root";
   TFile* fhists = TFile::Open(histogramfileinput.Data());
   fhists->cd();
   cout<<"ROLLTIDE"<<endl;
@@ -199,10 +206,10 @@ void MakeCombinedMCHistos()
   //const
 
   TString inputmcfiles[inputfiles];
-  inputmcfiles[0]= "/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/histograms_diphoton_tree_DiPhotonBorn_Pt25to250_Summer12.root";
-  inputmcfiles[1]= "/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/histograms_diphoton_tree_DiPhotonBorn_Pt250toInf_Summer12.root";
-  inputmcfiles[2]= "/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/histograms_diphoton_tree_DiPhotonBox_Pt25to250_Summer12.root";	
-  inputmcfiles[3]= "/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/histograms_diphoton_tree_DiPhotonBox_Pt250toInf_Summer12.root";
+  inputmcfiles[0]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt25to250_Summer12/histograms_diphoton_tree_DiPhotonBorn_Pt25to250_Summer12.root";
+  inputmcfiles[1]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt250toInf_Summer12/histograms_diphoton_tree_DiPhotonBorn_Pt250toInf_Summer12.root";
+  inputmcfiles[2]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt25to250_Summer12/histograms_diphoton_tree_DiPhotonBox_Pt25to250_Summer12.root";	
+  inputmcfiles[3]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt250toInf_Summer12/histograms_diphoton_tree_DiPhotonBox_Pt250toInf_Summer12.root";
 
     TString filenames[inputfiles];
     for(int ifile=0;ifile<inputfiles;ifile++) {
@@ -247,8 +254,8 @@ void MakeCombinedMCHistos()
 	if (ifile>0){ allHistos[i]->Add(indHistos[i][ifile]);} // note we exclude first file since we used it to instantiate the sum histo
       }
     }
-
-    TFile fout("histograms_diphoton_tree_MC_all.root","RECREATE");
+    TString MCALLOut = HistogramFileLocation+"/diphoton_tree_MC_all/";
+      TFile fout(MCALLOut+"histograms_diphoton_tree_MC_all.root","RECREATE");
 
     for (int i=0; i<nHists; i++) {
       allHistos[i]->Write();
@@ -264,8 +271,8 @@ TH1F* MakeChists(TH1F* hist){
   TH1F* cHist = (TH1F*) hist->Clone("cHist");
   cHist->SetDirectory(0);
 
-  //int maxBin = hist->GetNbinsX()+1;
-  int maxBin = hist->GetNbinsX();
+  int maxBin = hist->GetNbinsX()+1;
+  //int maxBin = hist->GetNbinsX();
   for(int binNr=0;binNr<=hist->GetNbinsX();binNr++){
     float nrEntries =hist->Integral(binNr,maxBin);
     cHist->SetBinContent(binNr,nrEntries);
@@ -277,8 +284,8 @@ TH1F* MakeChists(TH1F* hist){
 
 void OverlayMCandData( TString Sample  = "", TString lumi = "1", TString JSONFile = "April20")
 {
-  TString histogramdata ="/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/histograms_"+Sample+".root";
-  TString histogrammc="/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/histograms_diphoton_tree_MC_all.root";
+  TString histogramdata =HistogramFileLocation+Sample+"/histograms_"+Sample+".root";
+  TString histogrammc=HistogramFileLocation+"diphoton_tree_MC_all/histograms_diphoton_tree_MC_all.root";
   TFile* fmchists = TFile::Open(histogrammc.Data());
   TFile* fdatahists = TFile::Open(histogramdata.Data());
 
@@ -304,8 +311,10 @@ void OverlayMCandData( TString Sample  = "", TString lumi = "1", TString JSONFil
       sprintf(canvasname,"c%i",i);
       cout<<canvasname<<endl;
       histosdata[i] = (TH1F*)fdatahists->Get(nameHists[i].Data());
+      histosdata[i]->SetMinimum(.01);
       histosmc[i] = (TH1F*)fmchists->Get(nameHists[i].Data());
       histosmc[i]->Scale(lumiNumber);
+      histosmc[i]->SetMinimum(.01);
       c[i] = new TCanvas(canvasname, canvasname, 800, 600);
       cout<<histosmc[i]<<endl;
       c[i]->cd();
@@ -324,6 +333,7 @@ void OverlayMCandData( TString Sample  = "", TString lumi = "1", TString JSONFil
       DataMCLegend[i]->AddEntry(histosdata[i],"Data","LEP");
       DataMCLegend[i]->AddEntry(histosmc[i],"SM Diphoton","F");
       gPad->RedrawAxis();
+      histosdata[i]->Draw("EPSAME");
       LumiLabel->Draw();
       DataMCLegend[i]->Draw();
       //if (((nameHists[i]=="h_Photon1_pt_log") || (nameHists[i]=="h_Photon2_pt_log") || (nameHists[i]=="h_Diphoton_Minv_log")))
@@ -359,8 +369,10 @@ void OverlayMCandData( TString Sample  = "", TString lumi = "1", TString JSONFil
   DataMCLegendCumm->AddEntry(h_Diphoton_Minv_log_MCCumm,"SM Diphoton","F");
   DataMCLegendCumm->SetFillColor(0);
   h_Diphoton_Minv_log_DataCumm->SetMaximum(2.5*h_Diphoton_Minv_log_DataCumm->GetMaximum());
+  h_Diphoton_Minv_log_DataCumm->SetMinimum(.01);
   h_Diphoton_Minv_log_DataCumm->Draw("EP");
   h_Diphoton_Minv_log_MCCumm->Draw("HISTSAME");
+  h_Diphoton_Minv_log_MCCumm->SetMinimum(.01);
   h_Diphoton_Minv_log_DataCumm->SetMaximum(2.5*h_Diphoton_Minv_log_DataCumm->GetMaximum());
   h_Diphoton_Minv_log_DataCumm->Draw("EPSAME");
   gPad->RedrawAxis();
@@ -375,7 +387,7 @@ void OverlayMCandData( TString Sample  = "", TString lumi = "1", TString JSONFil
 
 void StitchBackgroundandMC(TString Sample = "2", TString lumi = "1", TString JSONFile = "April20")
 {
-  TString histogramdata = "rfio:/castor/cern.ch/user/j/jcarson/DiPhotonTrees/Histograms/"+Sample+"/histograms_"+Sample+".root";
+  TString histogramdata = HistogramFileLocation.Data()+Sample+"/histograms_"+Sample+".root";
   TFile* fdatahists = TFile::Open(histogramdata.Data());
   TH1F* histosmcdminv[42][4];
   TH1F* histosdatadminv[42];
@@ -402,16 +414,12 @@ void StitchBackgroundandMC(TString Sample = "2", TString lumi = "1", TString JSO
   fillColors[3] = 6;
 
   TString inputmcfiles[inputfiles];
-  inputmcfiles[0]= "rfio:/castor/cern.ch/user/j/jcarson/DiPhotonTrees/Histograms/diphoton_tree_DiPhotonBorn_Pt25to250_Summer12/histograms_diphoton_tree_Di\
-PhotonBorn_Pt25to250_Summer12.root";
-  inputmcfiles[1]= "rfio:/castor/cern.ch/user/j/jcarson/DiPhotonTrees/Histograms/diphoton_tree_DiPhotonBorn_Pt250toInf_Summer12/histograms_diphoton_tree_Di\
-PhotonBorn_Pt250toInf_Summer12.root";
-  inputmcfiles[2]= "rfio:/castor/cern.ch/user/j/jcarson/DiPhotonTrees/Histograms/diphoton_tree_DiPhotonBox_Pt25to250_Summer12/histograms_diphoton_tree_Di\
-PhotonBox_Pt25to250_Summer12.root";
-  inputmcfiles[3]= "rfio:/castor/cern.ch/user/j/jcarson/DiPhotonTrees/Histograms/diphoton_tree_DiPhotonBox_Pt250toInf_Summer12/histograms_diphoton_tree_Di\
-PhotonBox_Pt250toInf_Summer12.root";
+  inputmcfiles[0]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt25to250_Summer12/histograms_diphoton_tree_DiPhotonBorn_Pt25to250_Summer12.root";
+  inputmcfiles[1]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt250toInf_Summer12/histograms_diphoton_tree_DiPhotonBorn_Pt250toInf_Summer12.root";
+  inputmcfiles[2]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt25to250_Summer12/histograms_diphoton_tree_DiPhotonBox_Pt25to250_Summer12.root";
+  inputmcfiles[3]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt250toInf_Summer12/histograms_diphotn_tree_DiPhotonBox_Pt250toInf_Summer12.root";
 
-  TString filenames[inputfiles];
+    TString filenames[inputfiles];
   for(int ifile=0;ifile<inputfiles;ifile++) {
     filenames[ifile] = inputmcfiles[ifile];
   }
@@ -494,7 +502,7 @@ PhotonBox_Pt250toInf_Summer12.root";
     h_GammaJet_eta2 = new TH1F("h_GammaJet_eta2","#gamma_{2} #eta;#gamma_{2} #eta",40,-3.14159,3.14159);
     h_GammaJet_phi2 = new TH1F("h_GammaJet_phi2","#gamma_{1} #phi;#gamma_{1} #phi",40,-3.14159,3.14159);
     //   h_GammaJet_minv         = new TH1F("h_GammaJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);
-    h_GammaJet_minv         = new TH1F("h_GammaJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",83,140,1800);
+    h_GammaJet_minv         = new TH1F("h_GammaJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",89,20,1800);
         h_GammaJet_qt           = new TH1F("h_GammaJet_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0,600);
     h_GammaJet_deltaPhi     = new TH1F("h_GammaJet_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",90,-3.14159,3.14159);
     h_GammaJet_deltaEta     = new TH1F("h_GammaJet_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",40,-6.,6.);
@@ -510,27 +518,27 @@ PhotonBox_Pt250toInf_Summer12.root";
     h_JetJet_eta2 = new TH1F("h_JetJet_eta2","#gamma_{2} #eta;#gamma_{2} #eta",40,-3.14159,3.14159);
     h_JetJet_phi2 = new TH1F("h_JetJet_phi2","#gamma_{1} #phi;#gamma_{1} #phi",40,-3.14159,3.14159);
     //   h_JetJet_minv         = new TH1F("h_JetJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);
-    h_JetJet_minv         = new TH1F("h_JetJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",83,140,1800);
+    h_JetJet_minv         = new TH1F("h_JetJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",89,20,1800);
     h_JetJet_qt           = new TH1F("h_JetJet_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0,600);
     h_JetJet_deltaPhi     = new TH1F("h_JetJet_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",90,-3.14159,3.14159);
     h_JetJet_deltaEta     = new TH1F("h_JetJet_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",40,-6.,6.);
     h_JetJet_deltaR       = new TH1F("h_JetJet_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0,7.);
     h_JetJet_cosThetaStar = new TH1F("h_JetJet_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0,1);
 
-    TString histoTFlocation="/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/histograms_"+Sample+"_TF.root";
+    TString histoTFlocation=HistogramFileLocation.Data()+Sample+"/histograms_"+Sample+"_TF.root";
     cout<<histoTFlocation<<endl;
-    TString histoFFlocation="/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/histograms_"+Sample+"_FF.root";
-    TString histoFTlocation="/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/histograms_"+Sample+"_FT.root";
+    TString histoFFlocation=HistogramFileLocation.Data()+Sample+"/histograms_"+Sample+"_FF.root";
+    TString histoFTlocation=HistogramFileLocation.Data()+Sample+"/histograms_"+Sample+"_FT.root";
     
     TFile* histoFF = TFile::Open(histoFFlocation.Data());
     TFile* histoFT = TFile::Open(histoFTlocation.Data()); 
     TFile* histoTF = TFile::Open(histoTFlocation.Data());  
     
     TString GammaJetoutName = TString::Format("histograms_%s_GammaJet.root",Sample.Data());
-    TFile* histoFileGammaJet = new TFile(GammaJetoutName,"RECREATE");       
+    TFile* histoFileGammaJet = new TFile(HistogramFileLocation.Data()+Sample+"/"+GammaJetoutName,"RECREATE");       
     
     TString JetJetoutName = TString::Format("histograms_%s_JetJet.root",Sample.Data());
-    TFile* histoFileJetJet = new TFile(JetJetoutName,"RECREATE");
+    TFile* histoFileJetJet = new TFile(HistogramFileLocation.Data()+Sample+"/"+JetJetoutName,"RECREATE");
 
     int nFakeHists=12;
 
@@ -659,7 +667,7 @@ void OverlayMCFake(TString Sample = "2", TString lumi = "1", TString JSONFile = 
 
 
   TCanvas* CummalitiveCanvas = new TCanvas("CummalitiveCanvas", "CummalitiveCanvas", 800, 600);
-
+  TCanvas* dataoverlayedCumulative = new TCanvas("dataoverlayedCumulative", "Data Overlayed onto Cumulative Plot",800,600);
   THStack *StackCumm;
 
   TPaveText *LumiLabelCumm = new TPaveText(.55,.75,.75,.9,"NDC");
@@ -670,22 +678,23 @@ void OverlayMCFake(TString Sample = "2", TString lumi = "1", TString JSONFile = 
   TString LuminosityCumm = lumi;
   LumiLabelCumm->AddText(LuminosityCumm.Data());
   LumiLabelCumm->AddText(JSONFile.Data());
-
-
-  TString histogramdata = "/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/histograms_"+Sample+".root";
+  TH1F* h_DatadivBack = new TH1F("h_DatadivBack","Data/Background",89,20,1800); 
+  TH1F* h_TotalBackground = new TH1F("h_TotalBackground","Data/Background",89,20,1800);
+  TH1F* dataoncumulative = new TH1F("h_TotalBackground"," (Cumulative) Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",89,20,1800);
+  TString histogramdata = HistogramFileLocation+Sample+"/histograms_"+Sample+".root";
   TFile* fdatahists = TFile::Open(histogramdata.Data());
-  TString histogramJetJet ="/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/histograms_"+Sample+"_JetJet.root";
-  TString histogramGammaJet ="/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/histograms_"+Sample+"_GammaJet.root";	
+  TString histogramJetJet =HistogramFileLocation+Sample+"/histograms_"+Sample+"_JetJet.root";
+  TString histogramGammaJet =HistogramFileLocation+Sample+"/histograms_"+Sample+"_GammaJet.root";	
   TFile* fJetJethists=TFile::Open(histogramJetJet.Data());
   cout<<fJetJethists<<endl; 
   TFile* fGammaJethists=TFile::Open(histogramGammaJet.Data());
-  TString histogramMC ="/afs/cern.ch/work/j/jcarson/private/DiPhotonTrees/histograms/histograms_diphoton_tree_MC_all.root";
+  TString histogramMC =HistogramFileLocation+"/diphoton_tree_MC_all/histograms_diphoton_tree_MC_all.root";
   TFile* fMChists=TFile::Open(histogramMC.Data());
   TH1F* histosmc[12];
   TH1F* histosdata[12];
   TH1F* histosJetJet[12];
   TH1F* histosGammaJet[12];
-  
+    
   char canvasname[12];
   TCanvas*  c[12];
   
@@ -708,6 +717,7 @@ void OverlayMCFake(TString Sample = "2", TString lumi = "1", TString JSONFile = 
   TLegend *StackLegend[12];
   THStack *StackMC[12];
   for(int i=0;i<12;i++){
+   
     c[i] = new TCanvas(canvasname, canvasname, 800, 600);
     c[i]->cd();
     StackLegend[i]= new TLegend(0.70,0.60,0.88,0.75,"","NDC");
@@ -716,6 +726,7 @@ void OverlayMCFake(TString Sample = "2", TString lumi = "1", TString JSONFile = 
     StackMC[i]= new THStack(fNames[i].Data(),fNames[i].Data());
     cout<<StackMC[i]<<endl;
     histosdata[i]=(TH1F*)fdatahists->Get(fNames[i].Data());
+    histosdata[i]->SetMarkerColor(1);
     histosmc[i]= (TH1F*)fMChists->Get(fNames[i].Data());
     cout<<histosmc[i]->GetEntries()<<endl;
     histosmc[i]->SetFillColor(33);
@@ -723,75 +734,111 @@ void OverlayMCFake(TString Sample = "2", TString lumi = "1", TString JSONFile = 
     cout<<"before"<<endl;
     histosJetJet[i]=(TH1F*)fJetJethists->Get(JetJetHists[i].Data());
     cout<<"RAW"<<endl;
+    histosGammaJet[i]=(TH1F*)fGammaJethists->Get(GammaJetHists[i].Data());
     cout<<histosJetJet[i]<<endl;
+    if (i==0){
+
+      h_TotalBackground->Add(histosJetJet[i],histosGammaJet[i],1,1);
+      h_TotalBackground->Add(histosmc[i],1);
+      h_DatadivBack->Divide(histosdata[i],h_TotalBackground,1,1); 
+      TCanvas* CanvasDatadivBack = new TCanvas("CDatadivBack","CDatadivBack", 800, 600);
+      CanvasDatadivBack->cd();
+      h_DatadivBack->SetMaximum(3);	
+      h_DatadivBack->Draw();
+      
+	      CanvasDatadivBack->SaveAs("h_DatadivBack_"+Sample+"CompleteOverlay"+".png");
+	      
+    }   
+
+    c[i]->cd();    
     histosJetJet[i]->SetFillColor(36); 
-     histosGammaJet[i]=(TH1F*)fGammaJethists->Get(GammaJetHists[i].Data());
-     histosGammaJet[i]->SetFillColor(38);
-     StackMC[i]->Add(histosJetJet[i]);
-     StackMC[i]->Add(histosGammaJet[i]);
-     StackMC[i]->Add(histosmc[i]);
-     StackLegend[i]->AddEntry(histosdata[0],"Data", "LEP");
-     StackLegend[i]->AddEntry(histosmc[0],"SM Diphoton","f");
-     StackLegend[i]->AddEntry(histosGammaJet[0],"Photon+Jet","f");
-     StackLegend[i]->AddEntry(histosJetJet[0],"Jet+Jet","f");
-     if ((strcmp(fNames[i],"h_Diphoton_Minv_high")==0 )|| (strcmp(fNames[i],"h_Photon1_pt")==0 ) || (strcmp(fNames[i],"h_Diphoton_Minv")==0) ||( strcmp(fNames[i],"h_Photon2_pt"))==0){
+    histosGammaJet[i]->SetFillColor(38);
+    
+    
+    StackMC[i]->Add(histosJetJet[i]);
+    StackMC[i]->Add(histosGammaJet[i]);
+    StackMC[i]->Add(histosmc[i]);
+    StackLegend[i]->AddEntry(histosdata[0],"Data", "LEP");
+    StackLegend[i]->AddEntry(histosmc[0],"SM Diphoton","f");
+    StackLegend[i]->AddEntry(histosGammaJet[0],"Photon+Jet","f");
+    StackLegend[i]->AddEntry(histosJetJet[0],"Jet+Jet","f");
+    if ((strcmp(fNames[i],"h_Diphoton_Minv_high")==0 )|| (strcmp(fNames[i],"h_Photon1_pt")==0 ) || (strcmp(fNames[i],"h_Diphoton_Minv")==0) ||( strcmp(fNames[i],"h_Photon2_pt"))==0){
        c[i]->SetLogy(1);
-     }
-     
-     histosdata[i]->Draw("HIST EP");
-     histosdata[i]->SetMinimum(.8*StackMC[i]->GetMinimum());
-     histosdata[i]->SetMaximum(1.7*histosdata[i]->GetMaximum());
-     StackMC[i]->Draw("HIST SAME") ;
-     histosdata[i]->Draw("SAME EP");
-     if ((strcmp(fNames[i],"h_Diphoton_cosThetaStar")==0) || (strcmp(fNames[i],"h_Photon1_phi")==0) ||  (strcmp(fNames[i],"h_Photon2_phi")==0)){
-       histosdata[i]->SetMinimum(0);
-     }
-     LumiLabel->Draw();
-     StackLegend[i]->Draw();
-     gPad->RedrawAxis();
-     gPad->Update();
-     
-     c[i]->SaveAs(fNames[i]+"_"+Sample.Data()+"CompleteOverlay"+".C");
-     c[i]->SaveAs(fNames[i]+"_"+Sample.Data()+"CompleteOverlay"+".png");
-     c[i]->SaveAs(fNames[i]+"_"+Sample.Data()+"CompleteOverlay"+".pdf");
-     
-     if (i==0){
-       StackCumm = new THStack(fNames[i].Data(),fNames[i].Data());
-       CummalitiveCanvas->cd();
-       CummalitiveCanvas->SetLogy(1);
-       TH1F* h_Diphoton_Minv_log_DataCumm =  MakeChists(histosdata[0]);
-       TH1F* h_Diphoton_Minv_log_MCCumm = MakeChists(histosmc[0]); 
-       TH1F* h_Diphoton_Minv_log_JetJetCumm = MakeChists(histosJetJet[0]);
-       TH1F* h_Diphoton_Minv_log_GammaJetCumm = MakeChists(histosJetJet[0]);
+    }
+    
+    histosdata[i]->Draw("HIST EP");
+    histosdata[i]->SetMinimum(.8*StackMC[i]->GetMinimum());
+    histosdata[i]->SetMaximum(1.7*histosdata[i]->GetMaximum());
+    StackMC[i]->Draw("HIST SAME") ;
+    histosdata[i]->Draw("EPSAME");
+    if ((strcmp(fNames[i],"h_Diphoton_cosThetaStar")==0) || (strcmp(fNames[i],"h_Photon1_phi")==0) ||  (strcmp(fNames[i],"h_Photon2_phi")==0)){
+      histosdata[i]->SetMinimum(0);
+    }
+    LumiLabel->Draw();
+    StackLegend[i]->Draw();
+    gPad->RedrawAxis();
+    gPad->Update();
+    
+    c[i]->SaveAs(fNames[i]+"_"+Sample.Data()+"CompleteOverlay"+".C");
+    c[i]->SaveAs(fNames[i]+"_"+Sample.Data()+"CompleteOverlay"+".png");
+    c[i]->SaveAs(fNames[i]+"_"+Sample.Data()+"CompleteOverlay"+".pdf");
+    if (i==2){
+      c[i]->SetLogy(1);
+      c[i]->SaveAs(fNames[i]+"_log_"+Sample.Data()+"CompleteOverlay"+".png"); 
+ }      
+    if (i==0){
+      StackCumm = new THStack(fNames[i].Data(),fNames[i].Data());
+      CummalitiveCanvas->cd();
+      CummalitiveCanvas->SetLogy(1);
+      TH1F* h_Diphoton_Minv_log_DataCumm =  MakeChists(histosdata[0]);
+      TH1F* h_Diphoton_Minv_log_MCCumm = MakeChists(histosmc[0]); 
+      TH1F* h_Diphoton_Minv_log_JetJetCumm = MakeChists(histosJetJet[0]);
+      TH1F* h_Diphoton_Minv_log_GammaJetCumm = MakeChists(histosJetJet[0]);
+      
+      h_Diphoton_Minv_log_MCCumm->SetFillColor(33);
+      h_Diphoton_Minv_log_JetJetCumm->SetFillColor(36);
+      h_Diphoton_Minv_log_GammaJetCumm->SetFillColor(38);
+      
+      StackCumm->Add(h_Diphoton_Minv_log_JetJetCumm);
+      StackCumm->Add(h_Diphoton_Minv_log_GammaJetCumm);
+      StackCumm->Add(h_Diphoton_Minv_log_MCCumm);
+      
+      
+      TLegend* DataMCLegendCumm = new TLegend(0.70,0.6,0.88,0.75,"","NDC");
+      DataMCLegendCumm->AddEntry( h_Diphoton_Minv_log_DataCumm,"Data","LEP");
+      DataMCLegendCumm->AddEntry(h_Diphoton_Minv_log_MCCumm,"SM Diphoton","F");
+      DataMCLegendCumm->AddEntry(h_Diphoton_Minv_log_GammaJetCumm,"Gamma+Jet","F");
+      DataMCLegendCumm->AddEntry(h_Diphoton_Minv_log_JetJetCumm,"Jet+Jet","F");
+      DataMCLegendCumm->SetFillColor(0);
+      h_Diphoton_Minv_log_DataCumm->SetMaximum(2.5*h_Diphoton_Minv_log_DataCumm->GetMaximum());
+      h_Diphoton_Minv_log_DataCumm->Draw("EP");
+      StackCumm->Draw("HISTSAME");
+      h_Diphoton_Minv_log_DataCumm->SetMaximum(2.5*h_Diphoton_Minv_log_DataCumm->GetMaximum());
+      h_Diphoton_Minv_log_DataCumm->Draw("EPSAME");
+      gPad->RedrawAxis();
+      h_Diphoton_Minv_log_DataCumm->SetMaximum(2.5*h_Diphoton_Minv_log_DataCumm->GetMaximum());
+      LumiLabelCumm->Draw();
+      DataMCLegendCumm->Draw();
+      CummalitiveCanvas->SaveAs(fNames[i]+Sample.Data()+"Cumulative"+".png");
+      
+      dataoverlayedCumulative->cd();
+      dataoverlayedCumulative->SetLogy(1);
+      h_Diphoton_Minv_log_DataCumm->Draw("EP");
+      StackCumm->Draw("HISTSAME");
+      h_Diphoton_Minv_log_DataCumm->Draw("EPSAME");
+      gPad->RedrawAxis();
+      LumiLabelCumm->Draw();
+      DataMCLegendCumm->Draw();
+      histosdata[i]->SetMarkerColor(kRed);   
+      
+       histosdata[i]->Draw("EPSAME");
+        dataoverlayedCumulative->SaveAs(fNames[i]+Sample.Data()+"DataOverlayedCumulative"+".png");
+      
+  
+      
        
-       h_Diphoton_Minv_log_MCCumm->SetFillColor(33);
-       h_Diphoton_Minv_log_JetJetCumm->SetFillColor(36);
-       h_Diphoton_Minv_log_GammaJetCumm->SetFillColor(38);
-       
-       StackCumm->Add(h_Diphoton_Minv_log_JetJetCumm);
-       StackCumm->Add(h_Diphoton_Minv_log_GammaJetCumm);
-       StackCumm->Add(h_Diphoton_Minv_log_MCCumm);
-
-
-       TLegend* DataMCLegendCumm = new TLegend(0.70,0.6,0.88,0.75,"","NDC");
-       DataMCLegendCumm->AddEntry( h_Diphoton_Minv_log_DataCumm,"Data","LEP");
-       DataMCLegendCumm->AddEntry(h_Diphoton_Minv_log_MCCumm,"SM Diphoton","F");
-       DataMCLegendCumm->AddEntry(h_Diphoton_Minv_log_GammaJetCumm,"Gamma+Jet","F");
-       DataMCLegendCumm->AddEntry(h_Diphoton_Minv_log_JetJetCumm,"Jet+Jet","F");
-       DataMCLegendCumm->SetFillColor(0);
-       h_Diphoton_Minv_log_DataCumm->SetMaximum(2.5*h_Diphoton_Minv_log_DataCumm->GetMaximum());
-       h_Diphoton_Minv_log_DataCumm->Draw("EP");
-       StackCumm->Draw("HISTSAME");
-       h_Diphoton_Minv_log_DataCumm->SetMaximum(2.5*h_Diphoton_Minv_log_DataCumm->GetMaximum());
-       h_Diphoton_Minv_log_DataCumm->Draw("EPSAME");
-       gPad->RedrawAxis();
-       h_Diphoton_Minv_log_DataCumm->SetMaximum(2.5*h_Diphoton_Minv_log_DataCumm->GetMaximum());
-       LumiLabelCumm->Draw();
-       DataMCLegendCumm->Draw();
-       CummalitiveCanvas->SaveAs(fNames[i]+Sample.Data()+"Cumulative"+".png");
-       
-
      }
+    gPad->Update();
 
     }
 
