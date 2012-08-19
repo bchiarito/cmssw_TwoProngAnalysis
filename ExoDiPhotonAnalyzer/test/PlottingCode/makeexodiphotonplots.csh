@@ -86,6 +86,7 @@ set WEBDIR=/afs/cern.ch/user/j/jcarson/www/physics/diphoton/${SAMPLETYPE}/${SAMP
 
 mkdir $WEBDIR
 mv *${SAMPLE}*.png $WEBDIR;
-
+mv *${SAMPLE}*.C $HistoDIR
+mv *${SAMPLE}*.pdf $HistoDIR
    
 EOF
