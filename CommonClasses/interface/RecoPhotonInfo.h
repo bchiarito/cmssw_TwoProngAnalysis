@@ -7,7 +7,7 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-//  $Id: RecoPhotonInfo.h,v 1.13 2012/04/16 19:07:36 jcarson Exp $
+//  $Id: RecoPhotonInfo.h,v 1.14 2012/06/02 09:09:15 jcarson Exp $
 // 
 //********************************************************************
 
@@ -75,6 +75,8 @@ namespace ExoDiPhotons
     Double_t r9;
     Double_t sigmaIetaIeta;
     Double_t sigmaEtaEta;
+    Double_t sigmaIphiIphi;
+    Double_t sigmaPhiPhi;
     Double_t maxEnergyXtal;
     // eNxN ...
     Double_t e1x5;
@@ -168,7 +170,7 @@ namespace ExoDiPhotons
   // obviously this needs to be kept up-to-date with the struct definition
   // but now at least this only needs to be done here in this file, 
   // rather than in each individual analyser 
-  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:r9/D:sigmaIetaIeta:sigmaEtaEta:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:maxRecHitTime/D:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04:hcalIso03:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoSumPtHollow03:trkIsoSumPtSolid03:esRatio:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:severityLevel/I:recHitFlag/I:detId/I:iEtaY/I:iPhiX/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:isFakeable");
+  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:r9/D:sigmaIetaIeta:sigmaEtaEta:sigmaIphiIphi:sigmaPhiPhi:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:maxRecHitTime/D:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04:hcalIso03:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoSumPtHollow03:trkIsoSumPtSolid03:esRatio:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:severityLevel/I:recHitFlag/I:detId/I:iEtaY/I:iPhiX/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:isFakeable");
 
 
   // useful function for ESratio
@@ -264,7 +266,7 @@ namespace ExoDiPhotons
   }
 
   float recHitE( const DetId id, const EcalRecHitCollection & recHits,
-					int di, int dj )
+		 int di, int dj )
   {
     // in the barrel:   di = dEta   dj = dPhi
     // in the endcap:   di = dX     dj = dY
@@ -464,150 +466,156 @@ namespace ExoDiPhotons
     recoPhotonInfo.iEtaY = -99999;
     recoPhotonInfo.iPhiX = -99999;
 
-     if(maxc1.first.subdetId() == EcalBarrel) {
-       EBDetId ebId( maxc1.first );
-       recoPhotonInfo.iEtaY = ebId.ieta(); // iEta in EB
-       recoPhotonInfo.iPhiX = ebId.iphi(); // iPhi in EB
-     }
-     else if (maxc1.first.subdetId() == EcalEndcap) {
-       EEDetId eeId( maxc1.first );
-       recoPhotonInfo.iEtaY = eeId.iy(); // iY in EE
-       recoPhotonInfo.iPhiX = eeId.ix(); // iX in EE       
-     }
+    if(maxc1.first.subdetId() == EcalBarrel) {
+      EBDetId ebId( maxc1.first );
+      recoPhotonInfo.iEtaY = ebId.ieta(); // iEta in EB
+      recoPhotonInfo.iPhiX = ebId.iphi(); // iPhi in EB
+    }
+    else if (maxc1.first.subdetId() == EcalEndcap) {
+      EEDetId eeId( maxc1.first );
+      recoPhotonInfo.iEtaY = eeId.iy(); // iY in EE
+      recoPhotonInfo.iPhiX = eeId.ix(); // iX in EE       
+    }
 
 
-     // swiss cross and other spike-related info
-     // we also need EB and EE rechits for some of this
+    // swiss cross and other spike-related info
+    // we also need EB and EE rechits for some of this
 
-     if (maxc1.first.subdetId() == EcalBarrel) {
-       recoPhotonInfo.swisscross = EcalTools::swissCross(maxc1.first, (*recHitsEB), 0);
-     }
-     else {
-       recoPhotonInfo.swisscross = -999.99;
-     }
-     //     cout << "(Internal) Swiss Cross = "<< recoPhotonInfo.swisscross <<endl;
+    if (maxc1.first.subdetId() == EcalBarrel) {
+      recoPhotonInfo.swisscross = EcalTools::swissCross(maxc1.first, (*recHitsEB), 0);
+    }
+    else {
+      recoPhotonInfo.swisscross = -999.99;
+    }
+    //     cout << "(Internal) Swiss Cross = "<< recoPhotonInfo.swisscross <<endl;
      
-     recoPhotonInfo.eMax = lazyTools_->eMax(*sc1);
-     recoPhotonInfo.eLeft = lazyTools_->eLeft(*sc1);
-     recoPhotonInfo.eRight = lazyTools_->eRight(*sc1);
-     recoPhotonInfo.eTop = lazyTools_->eTop(*sc1);
-     recoPhotonInfo.eBottom = lazyTools_->eBottom(*sc1);
-     recoPhotonInfo.eSecond = lazyTools_->e2nd(*sc1);
+    recoPhotonInfo.eMax = lazyTools_->eMax(*sc1);
+    recoPhotonInfo.eLeft = lazyTools_->eLeft(*sc1);
+    recoPhotonInfo.eRight = lazyTools_->eRight(*sc1);
+    recoPhotonInfo.eTop = lazyTools_->eTop(*sc1);
+    recoPhotonInfo.eBottom = lazyTools_->eBottom(*sc1);
+    recoPhotonInfo.eSecond = lazyTools_->e2nd(*sc1);
 
-     recoPhotonInfo.e2x2 = lazyTools_->e2x2(*sc1);
-     recoPhotonInfo.e4x4 = lazyTools_->e4x4(*sc1);
+    recoPhotonInfo.e2x2 = lazyTools_->e2x2(*sc1);
+    recoPhotonInfo.e4x4 = lazyTools_->e4x4(*sc1);
 
-     recoPhotonInfo.e2e9 = E2overE9(maxc1.first, (*recHitsEB));
+    std::vector<float> cov = lazyTools_->covariances(*sc1);
+    std::vector<float> localcov = lazyTools_->localCovariances(*sc1);
 
-     //     cout << "(Internal) eMax = "<< recoPhotonInfo.eMax <<endl;
-     //     cout << "(Internal) eSecond = "<< recoPhotonInfo.eSecond <<endl;
+    recoPhotonInfo.e2e9 = E2overE9(maxc1.first, (*recHitsEB));
+
+    //     cout << "(Internal) eMax = "<< recoPhotonInfo.eMax <<endl;
+    //     cout << "(Internal) eSecond = "<< recoPhotonInfo.eSecond <<endl;
      
-     // official ecal rec hit severity level & rec hit flag
-     // also, time of highest energy rec hit
+    // official ecal rec hit severity level & rec hit flag
+    // also, time of highest energy rec hit
 
-     const reco::CaloClusterPtr  seed = sc1->seed();
+    const reco::CaloClusterPtr  seed = sc1->seed();
 
-     DetId id = lazyTools_->getMaximum(*seed).first; 
-     float time  = -999., outOfTimeChi2 = -999., chi2 = -999.;
-     int   flags=-1, severity = -1; 
+    DetId id = lazyTools_->getMaximum(*seed).first; 
+    float time  = -999., outOfTimeChi2 = -999., chi2 = -999.;
+    int   flags=-1, severity = -1; 
 
-     const EcalRecHitCollection & rechits = ( photon->isEB() ? *recHitsEB : *recHitsEE); 
-     EcalRecHitCollection::const_iterator it = rechits.find( id );
-       if( it != rechits.end() ) { 
-       time = it->time(); 
-       outOfTimeChi2 = it->outOfTimeChi2();
-       chi2 = it->chi2();
-       flags = it->recoFlag();
-       // edm::ESHandle<EcalSeverityLevelAlgo> sevlv;
-       //iSetup.get<EcalSeverityLevelAlgoRcd>().get(sevlv);
-       //severity = sevlv->severityLevel( id, rechits);
-            }
+    const EcalRecHitCollection & rechits = ( photon->isEB() ? *recHitsEB : *recHitsEE); 
+    EcalRecHitCollection::const_iterator it = rechits.find( id );
+    if( it != rechits.end() ) { 
+      time = it->time(); 
+      outOfTimeChi2 = it->outOfTimeChi2();
+      chi2 = it->chi2();
+      flags = it->recoFlag();
+      // edm::ESHandle<EcalSeverityLevelAlgo> sevlv;
+      //iSetup.get<EcalSeverityLevelAlgoRcd>().get(sevlv);
+      //severity = sevlv->severityLevel( id, rechits);
+    }
 
      
-     EcalChannelStatusMap::const_iterator chit;
-     chit = ch_status->getMap().find(id.rawId());
-     int mystatus = -99;
-     if( chit != ch_status->getMap().end() ){
-       EcalChannelStatusCode ch_code = (*chit);
-       mystatus = ch_code.getStatusCode();
-     }
+    EcalChannelStatusMap::const_iterator chit;
+    chit = ch_status->getMap().find(id.rawId());
+    int mystatus = -99;
+    if( chit != ch_status->getMap().end() ){
+      EcalChannelStatusCode ch_code = (*chit);
+      mystatus = ch_code.getStatusCode();
+    }
 
-     recoPhotonInfo.severityLevel = severity;
-     recoPhotonInfo.recHitFlag = flags;
-     recoPhotonInfo.maxRecHitTime = time;
+    recoPhotonInfo.severityLevel = severity;
+    recoPhotonInfo.recHitFlag = flags;
+    recoPhotonInfo.maxRecHitTime = time;
 
-     //     cout << "(Internal) severity = " <<      recoPhotonInfo.severityLevel<<endl;
-     //     cout << "(Internal) rechit flag = " << recoPhotonInfo.recHitFlag <<endl;
-     //     cout << "(Internal)  rechit time = " << recoPhotonInfo.maxRecHitTime <<endl;
+    //     cout << "(Internal) severity = " <<      recoPhotonInfo.severityLevel<<endl;
+    //     cout << "(Internal) rechit flag = " << recoPhotonInfo.recHitFlag <<endl;
+    //     cout << "(Internal)  rechit time = " << recoPhotonInfo.maxRecHitTime <<endl;
 
-     //ES ratio - use the helper function
-     //     recoPhotonInfo.esRatio = getESRatio(photon, iEvent, iSetup); //broken in 311X MC samples
-     recoPhotonInfo.esRatio = -999.0;
+    //ES ratio - use the helper function
+    //     recoPhotonInfo.esRatio = getESRatio(photon, iEvent, iSetup); //broken in 311X MC samples
+    recoPhotonInfo.esRatio = -999.0;
 
 
     // since photon inherits from LeafCandidate, we can get the vertex position
     // that is associated with the photon:
-     //    recoPhotonInfo.vx = photon->vx();
-     //    recoPhotonInfo.vy = photon->vy();
-     //    recoPhotonInfo.vz = photon->vz();
+    //    recoPhotonInfo.vx = photon->vx();
+    //    recoPhotonInfo.vy = photon->vy();
+    //    recoPhotonInfo.vz = photon->vz();
 
 
 
-     recoPhotonInfo.sigmaIetaIeta = photon->sigmaIetaIeta();
-     recoPhotonInfo.sigmaEtaEta = photon->sigmaEtaEta();
-     recoPhotonInfo.maxEnergyXtal = photon->maxEnergyXtal();
+    recoPhotonInfo.sigmaIetaIeta = photon->sigmaIetaIeta();
+    recoPhotonInfo.sigmaEtaEta = photon->sigmaEtaEta();
+    recoPhotonInfo.maxEnergyXtal = photon->maxEnergyXtal();
 
-     recoPhotonInfo.e1x5 = photon->e1x5();
-     recoPhotonInfo.e2x5 = photon->e2x5();
-     recoPhotonInfo.e3x3 = photon->e3x3();
-     recoPhotonInfo.e5x5 = photon->e5x5();
-     recoPhotonInfo.r1x5 = photon->r1x5();
-     recoPhotonInfo.r2x5 = photon->r2x5();
+    recoPhotonInfo.sigmaIphiIphi = sqrt(localcov[2]);
+    recoPhotonInfo.sigmaPhiPhi = sqrt(cov[2]);
+
+    recoPhotonInfo.e1x5 = photon->e1x5();
+    recoPhotonInfo.e2x5 = photon->e2x5();
+    recoPhotonInfo.e3x3 = photon->e3x3();
+    recoPhotonInfo.e5x5 = photon->e5x5();
+    recoPhotonInfo.r1x5 = photon->r1x5();
+    recoPhotonInfo.r2x5 = photon->r2x5();
 
 
 
-     recoPhotonInfo.hadOverEm = photon->hadronicOverEm();
-     recoPhotonInfo.hadDepth1OverEm = photon->hadronicDepth1OverEm();
-     recoPhotonInfo.hadDepth2OverEm = photon->hadronicDepth2OverEm();
+    recoPhotonInfo.hadOverEm = photon->hadronicOverEm();
+    recoPhotonInfo.hadDepth1OverEm = photon->hadronicDepth1OverEm();
+    recoPhotonInfo.hadDepth2OverEm = photon->hadronicDepth2OverEm();
 
      
-     recoPhotonInfo.ecalIso04 = photon->ecalRecHitSumEtConeDR04();
-     recoPhotonInfo.ecalIso03 = photon->ecalRecHitSumEtConeDR03();
-     recoPhotonInfo.hcalIso04 = photon->hcalTowerSumEtConeDR04();
-     recoPhotonInfo.hcalIso03 = photon->hcalTowerSumEtConeDR03();
+    recoPhotonInfo.ecalIso04 = photon->ecalRecHitSumEtConeDR04();
+    recoPhotonInfo.ecalIso03 = photon->ecalRecHitSumEtConeDR03();
+    recoPhotonInfo.hcalIso04 = photon->hcalTowerSumEtConeDR04();
+    recoPhotonInfo.hcalIso03 = photon->hcalTowerSumEtConeDR03();
 
-     recoPhotonInfo.trkIsoSumPtHollow04 = photon->trkSumPtHollowConeDR04();
-     recoPhotonInfo.trkIsoSumPtSolid04 = photon->trkSumPtSolidConeDR04();
-     recoPhotonInfo.trkIsoNtrksHollow04 = photon->nTrkHollowConeDR04();
-     recoPhotonInfo.trkIsoNtrksSolid04 = photon->nTrkSolidConeDR04();
+    recoPhotonInfo.trkIsoSumPtHollow04 = photon->trkSumPtHollowConeDR04();
+    recoPhotonInfo.trkIsoSumPtSolid04 = photon->trkSumPtSolidConeDR04();
+    recoPhotonInfo.trkIsoNtrksHollow04 = photon->nTrkHollowConeDR04();
+    recoPhotonInfo.trkIsoNtrksSolid04 = photon->nTrkSolidConeDR04();
      
-     recoPhotonInfo.trkIsoSumPtHollow03 = photon->trkSumPtHollowConeDR03();
-     recoPhotonInfo.trkIsoSumPtSolid03 = photon->trkSumPtSolidConeDR03();
-     recoPhotonInfo.trkIsoNtrksHollow03 = photon->nTrkHollowConeDR03();
-     recoPhotonInfo.trkIsoNtrksSolid03 = photon->nTrkSolidConeDR03();
+    recoPhotonInfo.trkIsoSumPtHollow03 = photon->trkSumPtHollowConeDR03();
+    recoPhotonInfo.trkIsoSumPtSolid03 = photon->trkSumPtSolidConeDR03();
+    recoPhotonInfo.trkIsoNtrksHollow03 = photon->nTrkHollowConeDR03();
+    recoPhotonInfo.trkIsoNtrksSolid03 = photon->nTrkSolidConeDR03();
 
 
-     recoPhotonInfo.hasPixelSeed = photon->hasPixelSeed();
+    recoPhotonInfo.hasPixelSeed = photon->hasPixelSeed();
 
 
-     recoPhotonInfo.isEB        = photon->isEB();        
-     recoPhotonInfo.isEE	 = photon->isEE();	 
-     recoPhotonInfo.isEBEtaGap	 = photon->isEBEtaGap();	 
-     recoPhotonInfo.isEBPhiGap	 = photon->isEBPhiGap();	 
-     recoPhotonInfo.isEERingGap = photon->isEERingGap(); 
-     recoPhotonInfo.isEEDeeGap	 = photon->isEEDeeGap();	 
-     recoPhotonInfo.isEBEEGap   = photon->isEBEEGap();
+    recoPhotonInfo.isEB        = photon->isEB();        
+    recoPhotonInfo.isEE	 = photon->isEE();	 
+    recoPhotonInfo.isEBEtaGap	 = photon->isEBEtaGap();	 
+    recoPhotonInfo.isEBPhiGap	 = photon->isEBPhiGap();	 
+    recoPhotonInfo.isEERingGap = photon->isEERingGap(); 
+    recoPhotonInfo.isEEDeeGap	 = photon->isEEDeeGap();	 
+    recoPhotonInfo.isEBEEGap   = photon->isEBEEGap();
      
-     recoPhotonInfo.scRawEnergy = photon->superCluster()->rawEnergy();
-     recoPhotonInfo.scPreshowerEnergy = photon->superCluster()->preshowerEnergy();
-     recoPhotonInfo.scPhiWidth = photon->superCluster()->phiWidth();
-     recoPhotonInfo.scEtaWidth = photon->superCluster()->etaWidth();
-     recoPhotonInfo.scNumBasicClusters = photon->superCluster()->clustersSize();
+    recoPhotonInfo.scRawEnergy = photon->superCluster()->rawEnergy();
+    recoPhotonInfo.scPreshowerEnergy = photon->superCluster()->preshowerEnergy();
+    recoPhotonInfo.scPhiWidth = photon->superCluster()->phiWidth();
+    recoPhotonInfo.scEtaWidth = photon->superCluster()->etaWidth();
+    recoPhotonInfo.scNumBasicClusters = photon->superCluster()->clustersSize();
 
 
-     // by default I'm going to set the new isFakeable to false here
-     // if it is to be true, it needs to be filled inside hte analyser
-     recoPhotonInfo.isFakeable = false;
+    // by default I'm going to set the new isFakeable to false here
+    // if it is to be true, it needs to be filled inside hte analyser
+    recoPhotonInfo.isFakeable = false;
 
 
   }// end of fill reco photon info
