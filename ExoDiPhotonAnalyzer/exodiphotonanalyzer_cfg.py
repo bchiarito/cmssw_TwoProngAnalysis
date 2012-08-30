@@ -11,7 +11,7 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
-        'file:HighMassSkims_April27_Mgreater500.root',
+        'file:diphoton_tree_testsample_Born250toInf.root',
 #    'file:/tmp/chenders/02071949-FA40-DF11-9990-001A64789DEC.root',
 #'file:/afs/cern.ch/cms/CAF/CMSCOMM/COMM_ECAL/torimoto/0065C919-F53B-DF11-8BF5-001D09F29146.root'
         #direct from castor
@@ -26,8 +26,9 @@ process.source = cms.Source("PoolSource",
 #    '/store/data/Run2010B/Photon/RECO/PromptReco-v2/000/148/953/642845D7-C0E1-DF11-B968-0030487A18F2.root'
 #  '/store/data/Run2012A/Photon/AOD/PromptReco-v1/000/190/684/F652691B-0383-E111-9821-001D09F241F0.root'
 #    'rfio:/castor/cern.ch/cms/store/data/Run2012A/Photon/AOD/PromptReco-v1/000/190/738/E4AD6153-0684-E111-AAE3-001D09F24DA8.root'
-     'rfio:/castor/cern.ch/user/j/jcarson/DiPhotonTrees/Data/HighMassSkims_April27_Mgreater500.root'      
+#     'rfio:/castor/cern.ch/user/j/jcarson/DiPhotonTrees/Data/HighMassSkims_April27_Mgreater500.root'      
 #      'HighMassSkims_April27_Mgreater500.root'
+#      'diphoton_tree_testsample_Born250toInf.root'
      )
 )
 
@@ -37,7 +38,9 @@ process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
 
 #use the right global tag!
 #global tag fro >382 data (Nov22)
-process.GlobalTag.globaltag = 'GR_R_52_V7::All'
+#Aug11th Tag
+process.GlobalTag.globaltag = 'START52_V11C::All'
+#process.GlobalTag.globaltag = 'GR_R_53_V8::All'
 # global tag for prompt reco with 38X (as of Sept30)
 #process.GlobalTag.globaltag = 'GR10_P_V9::All'
 # this is global tag for PromptReco with 36X
@@ -48,11 +51,12 @@ process.GlobalTag.globaltag = 'GR_R_52_V7::All'
 #process.GlobalTag.globaltag = 'GR10_P_V5::All'
 
 # geometry for ecal 
+#When in 5_3_X Need to use diff Geometry
 process.load("Configuration.StandardSequences.Geometry_cff")
 
 # file for all histograms for all modules
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string('April27HighMassSkimsRhoStudy.root')
+    fileName = cms.string('diphoton_tree_DiPhotonBorn_Pt250ToInf_Summer12.root')
 )
 
 # filter on good vertex
@@ -91,13 +95,16 @@ process.diphotonAnalyzer.rho25Correction = cms.InputTag("kt6PFJets25","rho")
 process.diphotonAnalyzer.ptMin = 70 # pt cut on all photons
 process.diphotonAnalyzer.removeSpikes = False # ie spikes will be exlcuded from tree
 process.diphotonAnalyzer.requireTightPhotons = False # ie only tight photons will be written 
-
-
-# precede with a diphoton filter, to speed things up
+process.diphotonAnalyzer.PUDataFileName = 'PileupDataAug10thHistogram.root' #DataPileUp
+process.diphotonAnalyzer.PUMCFileName = 'PileUpMC.root'  #"MC PileUP"
+process.diphotonAnalyzer.isMC = True # MC = True or  Data = False
+process.diphotonAnalyzer.PUDataHistName = "pileup" #Name of histogram in PUDataFileName Need to be binned to 80
+process.diphotonAnalyzer.PUMCHistName = "pu_n_BeforeCuts" #Name of histogram in PUMCFileName  Need to be binned to 80
+#precede with a diphoton filter, to speed things up
 #process.load("DiPhotonAnalysis.DiPhotonFilter.diphotonfilter_cfi")
 
 #process.diphotonFilter.ptMin_photon1 = 20.0 
-#process.diphotonFilter.ptMin_photon2 = 20.0 
+#process.diphotonFilter.ptMin_photon2 = 20.0
 
 # include all the filters as well as the analyzer
 #process.path  = cms.Path(process.primaryVertexFilter+process.noScraping+process.diphotonFilter+process.diphotonAnalyzer)

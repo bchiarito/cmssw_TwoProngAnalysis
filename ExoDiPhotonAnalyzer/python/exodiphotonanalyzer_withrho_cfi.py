@@ -8,5 +8,10 @@ diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   rho25Correction = cms.InputTag("kt6PFJets25","rho"),
                                   pileupCorrection = cms.untracked.InputTag("addPileupInfo"),
                                   removeSpikes = cms.untracked.bool(False),
-                                  requireTightPhotons = cms.untracked.bool(True)
-)
+                                  requireTightPhotons = cms.untracked.bool(True),
+                                  isMC = cms.untracked.bool(True),
+                                  PUMCFileName = cms.untracked.string("PileUpMC.root"),
+                                  PUDataFileName = cms.untracked.string("PileupDataAug10thHistogram.root"),
+                                  PUMCHistName = cms.untracked.string("MCPileUpHistogram"),
+                                  PUDataHistName = cms.untracked.string("pileup")
+                                  )
