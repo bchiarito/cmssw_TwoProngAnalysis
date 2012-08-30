@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.27 2012/07/07 03:32:26 jcarson Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.28 2012/07/25 01:23:16 charaf Exp $
 //
 //
 
@@ -105,6 +105,8 @@ Implementation:
 //new for PU gen
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 
+// new for LumiReweighting 
+#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 
 using namespace std;
 
@@ -134,14 +136,22 @@ private:
   edm::InputTag      fHltInputTag;     // hltResults
   edm::InputTag      fL1InputTag;      // L1 results
   edm::InputTag      fRho25Tag;  
-  edm::InputTag      pileupCollectionTag;         
-      
-
+  edm::InputTag      fpileupCollectionTag;         
+  edm::LumiReWeighting    LumiWeights;      
+  
   bool               fkRemoveSpikes;   // option to remove spikes before filling tree
   bool               fkRequireTightPhotons;  // option to require tight photon id in tree
+  bool               fisMC;  //option to decide if MC or Data     
+  string             fPUMCFileName;
+  string             fPUDataFileName;
+  string             fPUDataHistName;
+  string             fPUMCHistName;   
 
+ 
   // tools for clusters
   std::auto_ptr<EcalClusterLazyTools> lazyTools_;
+
+
 
   // to get L1 info, the L1 guide recommends to make this a member
   // this allows the event setup parts to be cached, rather than refetched every event
@@ -166,8 +176,10 @@ private:
 
       
   double fRho25;
-  int pu_n;
-
+  int fpu_n;
+  int fold_pu_n; //Pileupbefore Bunch Crossing Correction
+  int fBC;
+  double fMCPUWeight;
   Int_t gv_n;
   
   TClonesArray* gv_pos;
@@ -195,11 +207,13 @@ private:
   ExoDiPhotons::diphotonInfo_t fDiphotonInfoVtx2; 
   ExoDiPhotons::diphotonInfo_t fDiphotonInfoVtx3; 
 
+  TH1F* fpu_n_BeforeCuts; 
+  TH1F* fpu_n_BeforeCutsAfterReWeight;
 };
 
 //
 // constants, enums and typedefs
-//
+// 
 
 
 //
@@ -215,13 +229,22 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fHltInputTag(iConfig.getUntrackedParameter<edm::InputTag>("hltResults")),
     fL1InputTag(iConfig.getUntrackedParameter<edm::InputTag>("L1Results")),
     fRho25Tag(iConfig.getParameter<edm::InputTag>("rho25Correction")),
-    pileupCollectionTag(iConfig.getUntrackedParameter<edm::InputTag>("pileupCorrection")),
+    fpileupCollectionTag(iConfig.getUntrackedParameter<edm::InputTag>("pileupCorrection")),
     fkRemoveSpikes(iConfig.getUntrackedParameter<bool>("removeSpikes")),
-    fkRequireTightPhotons(iConfig.getUntrackedParameter<bool>("requireTightPhotons"))
+    fkRequireTightPhotons(iConfig.getUntrackedParameter<bool>("requireTightPhotons")),
+    fisMC(iConfig.getUntrackedParameter<bool>("isMC")),
+    fPUMCFileName(iConfig.getUntrackedParameter<string>("PUMCFileName")),
+    fPUDataFileName(iConfig.getUntrackedParameter<string>("PUDataFileName")), 
+    fPUDataHistName(iConfig.getUntrackedParameter<string>("PUDataHistName")),
+    fPUMCHistName(iConfig.getUntrackedParameter<string>("PUMCHistName"))
+
 {
   //now do what ever initialization is needed
+  // LumiReweighting Tool
 
   edm::Service<TFileService> fs;
+  fpu_n_BeforeCuts = fs->make<TH1F>("fpu_n_BeforeCuts","PileUpBeforeCuts",300,0,300);
+  fpu_n_BeforeCutsAfterReWeight = fs->make<TH1F>("fpu_n_BeforeCutsAfterReWeight","PileUpBeforeCuts",300,0,300);
   fTree = fs->make<TTree>("fTree","PhotonTree");
 
   fTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
@@ -232,8 +255,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("VtxGEN",&fVtxGENInfo,ExoDiPhotons::vtxInfoBranchDefString.c_str());
 
   fTree->Branch("rho25",&fRho25,"rho25/D"); 
-  fTree->Branch("pu_n", &pu_n, "pu_n/I");
-
+  fTree->Branch("pu_n", &fpu_n, "pu_n/I");
+  fTree->Branch("old_pu_n", &fold_pu_n, "old_pu_n/I");
+  fTree->Branch("MCPUWeight",&fMCPUWeight,"MCPUWeight/D");
   fTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
   fTree->Branch("L1trg",&fL1TrigInfo,ExoDiPhotons::l1TrigBranchDefString.c_str());
   fTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
@@ -348,7 +372,12 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //    // this just counts the collection size
   //    // may want to count N vtx with TrkPt> some cut ?
 
-   
+  
+  fpu_n = -99999.99; 
+  fold_pu_n = -99999.99;
+  fBC = -99999.99;
+  fMCPUWeight = -99999.99;
+  fisMC = true;  
 
   fVtxInfo.vx = -99999.99;
   fVtxInfo.vy = -99999.99;
@@ -522,16 +551,33 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     fVtxGENInfo.vz = gen_pos->Z();
   */
 
+  if (fisMC){
   edm::Handle<std::vector<PileupSummaryInfo> > pileupHandle;
-  iEvent.getByLabel(pileupCollectionTag, pileupHandle);
-
+  iEvent.getByLabel(fpileupCollectionTag, pileupHandle);
+  std::vector<PileupSummaryInfo>::const_iterator PUI;
+   
   if (pileupHandle.isValid()){
-    PileupSummaryInfo pileup = (*pileupHandle.product())[0];
+    
+    for (PUI = pileupHandle->begin();PUI != pileupHandle->end(); ++PUI){
       
-    pu_n = pileup.getPU_NumInteractions();
+      fBC = PUI->getBunchCrossing() ;
+      if(fBC==0){ 
+        //Select only the in time bunch crossing with bunch crossing=0
+	PileupSummaryInfo oldpileup = (*pileupHandle.product())[0];
+        fpu_n = PUI->getTrueNumInteractions();
+	fold_pu_n = oldpileup.getPU_NumInteractions();
+        fpu_n_BeforeCuts->Fill(fpu_n);
+         
+      }
+    }
+    
+   
+     fMCPUWeight = LumiWeights.weight(fpu_n);  
+     fpu_n_BeforeCutsAfterReWeight->Fill(fpu_n,fMCPUWeight);
+  
   }
-
-  //add rho correction
+} 
+ //add rho correction
 
   //      double rho;
 
@@ -717,8 +763,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
       cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
       cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
-      cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();
-      cout << endl;
+      cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();      cout << endl;
     */
 
     // now add selected photons to vector if:
@@ -813,7 +858,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    
   for(std::vector<reco::Photon>::iterator myPhotonIter = fakeablePhotons.begin();myPhotonIter<fakeablePhotons.end();myPhotonIter++) {
     //     cout << "Photon et, eta, phi = " << myPhotonIter->et() <<", "<<myPhotonIter->eta()<< ", "<< myPhotonIter->phi()<<endl;
-    std::pair<reco::Photon, bool> myPair(*myPhotonIter,true);
+   std::pair<reco::Photon, bool> myPair(*myPhotonIter,true);
     // isFakeable = true
     allTightOrFakeableObjects.push_back(myPair);
   }
@@ -908,7 +953,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     // remember the boolean is for isFakeable, so false is tight
     if(!allTightOrFakeableObjects[0].second && !allTightOrFakeableObjects[1].second) {
       // fill the tight-tight tree
-      fTree->Fill();
+      fTree
+->Fill();
       //       cout << "This event was TT" <<endl;
     }
     else if(!allTightOrFakeableObjects[0].second ) {
@@ -962,6 +1008,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 void 
 ExoDiPhotonAnalyzer::beginJob()
 {
+  if (fisMC){
+  LumiWeights = edm::LumiReWeighting(fPUMCFileName,fPUDataFileName,fPUMCHistName,fPUDataHistName);
+  }
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
