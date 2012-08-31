@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.28 2012/07/25 01:23:16 charaf Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.29 2012/08/30 15:12:17 jcarson Exp $
 //
 //
 
@@ -209,6 +209,8 @@ private:
 
   TH1F* fpu_n_BeforeCuts; 
   TH1F* fpu_n_BeforeCutsAfterReWeight;
+  
+
 };
 
 //
@@ -377,7 +379,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fold_pu_n = -99999.99;
   fBC = -99999.99;
   fMCPUWeight = -99999.99;
-  fisMC = true;  
+    
 
   fVtxInfo.vx = -99999.99;
   fVtxInfo.vy = -99999.99;
