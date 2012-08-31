@@ -95,9 +95,12 @@ process.diphotonAnalyzer.rho25Correction = cms.InputTag("kt6PFJets25","rho")
 process.diphotonAnalyzer.ptMin = 70 # pt cut on all photons
 process.diphotonAnalyzer.removeSpikes = False # ie spikes will be exlcuded from tree
 process.diphotonAnalyzer.requireTightPhotons = False # ie only tight photons will be written 
+process.diphotonAnalyzer.isMC = False #MC = True or  Data = False
+
+# If running on data the following four entries should not be changed. They are loaded into the analyzer as strings but in the case isMC = False then all the both old_pu_n and pu_n will both be filled with -9999.99
+
 process.diphotonAnalyzer.PUDataFileName = 'PileupDataAug10thHistogram.root' #DataPileUp
 process.diphotonAnalyzer.PUMCFileName = 'PileUpMC.root'  #"MC PileUP"
-process.diphotonAnalyzer.isMC = True # MC = True or  Data = False
 process.diphotonAnalyzer.PUDataHistName = "pileup" #Name of histogram in PUDataFileName Need to be binned to 80
 process.diphotonAnalyzer.PUMCHistName = "pu_n_BeforeCuts" #Name of histogram in PUMCFileName  Need to be binned to 80
 #precede with a diphoton filter, to speed things up

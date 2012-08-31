@@ -10,6 +10,7 @@ diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   removeSpikes = cms.untracked.bool(False),
                                   requireTightPhotons = cms.untracked.bool(True),
                                   isMC = cms.untracked.bool(True),
+                                  #If running on Data do not change. Only loaded as strings into the Analyzer and will have no effect. If on MC then change to the specific files you need lodaed for the MC   
                                   PUMCFileName = cms.untracked.string("PileUpMC.root"),
                                   PUDataFileName = cms.untracked.string("PileupDataAug10thHistogram.root"),
                                   PUMCHistName = cms.untracked.string("MCPileUpHistogram"),
