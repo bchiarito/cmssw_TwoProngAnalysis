@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Wed Jun 16 17:06:28 CEST 2010
-// $Id: ExoDiPhotonSignalMCAnalyzer.cc,v 1.5 2010/10/04 13:57:17 torimoto Exp $
+// $Id: ExoDiPhotonSignalMCAnalyzer.cc,v 1.6 2010/10/05 15:34:43 torimoto Exp $
 //
 //
 
@@ -103,6 +103,12 @@
 #include "DiPhotonAnalysis/CommonClasses/interface/EventAndVertexInfo.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/DiphotonInfo.h"
 
+//new for PU gen
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+
+// new for LumiReweighting
+#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
+
 
 using namespace std;
 
@@ -128,6 +134,19 @@ class ExoDiPhotonSignalMCAnalyzer : public edm::EDAnalyzer {
       edm::InputTag      fPhotonTag;       //select photon collection 
       double             fMin_pt;          // min pt cut (photons)
       edm::InputTag      fHltInputTag;     // hltResults
+      edm::InputTag      fRho25Tag;
+      edm::InputTag      pileupCollectionTag;
+      edm::LumiReWeighting    LumiWeights;
+
+      bool               fkRemoveSpikes;   // option to remove spikes before filling tree
+      bool               fkRequireTightPhotons;  // option to require tight photon id in tree
+      string             PUMCFileName;
+      string             PUDataFileName;
+      string             PUDataHistName;
+      string             PUMCHistName;
+
+
+    
 
       // tools for clusters
       std::auto_ptr<EcalClusterLazyTools> lazyTools_;
@@ -149,6 +168,19 @@ class ExoDiPhotonSignalMCAnalyzer : public edm::EDAnalyzer {
 
       ExoDiPhotons::diphotonInfo_t fDiphotonSignalInfo;
       ExoDiPhotons::diphotonInfo_t fDiphotonRecoInfo;
+ 
+ //Store PileUp Info
+  double fRho25;
+  int fpu_n;
+  int fBC;
+  double fMCPUWeight;
+
+  //Events before selectoin
+  TH1F* fpu_n_BeforeCuts;
+  TH1F* fpu_n_BeforeCutsAfterReWeight;
+
+
+
 };
 
 //
@@ -167,14 +199,24 @@ ExoDiPhotonSignalMCAnalyzer::ExoDiPhotonSignalMCAnalyzer(const edm::ParameterSet
     fMin_pt(iConfig.getUntrackedParameter<double>("ptMin")),
     // note that the HLT process name can vary for different MC samples
     // so be sure to adjsut correctly in cfg
-    fHltInputTag(iConfig.getUntrackedParameter<edm::InputTag>("hltResults"))
+    fHltInputTag(iConfig.getUntrackedParameter<edm::InputTag>("hltResults")),
+    fRho25Tag(iConfig.getParameter<edm::InputTag>("rho25Correction")),
+    pileupCollectionTag(iConfig.getUntrackedParameter<edm::InputTag>("pileupCorrection")),
+    fkRemoveSpikes(iConfig.getUntrackedParameter<bool>("removeSpikes")),
+    fkRequireTightPhotons(iConfig.getUntrackedParameter<bool>("requireTightPhotons")),
+    PUMCFileName(iConfig.getUntrackedParameter<string>("PUMCFileName")),
+    PUDataFileName(iConfig.getUntrackedParameter<string>("PUDataFileName")),
+    PUDataHistName(iConfig.getUntrackedParameter<string>("PUDataHistName")),
+    PUMCHistName(iConfig.getUntrackedParameter<string>("PUMCHistName"))
 
 {
    //now do what ever initialization is needed
 
   edm::Service<TFileService> fs;
   fTree = fs->make<TTree>("fTree","PhotonTree");
-
+  fpu_n_BeforeCuts = fs->make<TH1F>("fpu_n_BeforeCuts","PileUpBeforeCuts",300,0,300);
+  fpu_n_BeforeCutsAfterReWeight = fs->make<TH1F>("fpu_n_BeforeCutsAfterReWeight","PileUpBeforeCuts",300,0,300);
+ 
   // now with CommonClasses, use the string defined in the header
 
   fTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
@@ -193,7 +235,13 @@ ExoDiPhotonSignalMCAnalyzer::ExoDiPhotonSignalMCAnalyzer(const edm::ParameterSet
 
    fTree->Branch("DiphotonGen",&fDiphotonSignalInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
    fTree->Branch("Diphoton",&fDiphotonRecoInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
-
+   
+   
+  //Pileup Info
+   fTree->Branch("rho25",&fRho25,"rho25/D");
+   fTree->Branch("pu_n", &fpu_n, "pu_n/I");
+   fTree->Branch("MCPUWeight",&fMCPUWeight,"MCPUWeight/D");
+  
 
 
 }
@@ -220,6 +268,11 @@ void
 ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
+   //cout<<"event"<<endl;
+   //initialize
+   fpu_n = -99999.99;
+   fBC = -99999.99;
+   fMCPUWeight = -99999.99;
 
    // basic event info
    ExoDiPhotons::FillEventInfo(fEventInfo,iEvent);
@@ -303,7 +356,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      beamSpot = *beamSpotHandle;
      ExoDiPhotons::FillBeamSpotInfo(fBeamSpotInfo,beamSpot);
    }
-
+   
 
    // L1 info
 
@@ -327,17 +380,53 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 
    // now we just use the FillHLTInfo() function from TrigInfo.h:
    ExoDiPhotons::FillHLTInfo(fHLTInfo,hltResults,hltNames);
+  
+   //Add PileUp Information
+   edm::Handle<std::vector<PileupSummaryInfo> > pileupHandle;
+   iEvent.getByLabel(pileupCollectionTag, pileupHandle);
+   std::vector<PileupSummaryInfo>::const_iterator PUI;
 
+   if (pileupHandle.isValid()){
 
+     for (PUI = pileupHandle->begin();PUI != pileupHandle->end(); ++PUI){
+
+       fBC = PUI->getBunchCrossing() ;
+       if(fBC==0){
+	 //Select only the in time bunch crossing with bunch crossing=0
+	 fpu_n = PUI->getTrueNumInteractions();
+	  fpu_n_BeforeCuts->Fill(fpu_n);
+
+       }
+     }
+
+     fMCPUWeight = LumiWeights.weight(fpu_n);
+     fpu_n_BeforeCutsAfterReWeight->Fill(fpu_n,fMCPUWeight);
+
+   }
+  
+   //add rho correction
+
+   //      double rho;
+
+   edm::Handle<double> rho25Handle;
+   iEvent.getByLabel(fRho25Tag, rho25Handle);
+
+   if (!rho25Handle.isValid()){
+     cout<<"rho25 not found"<<endl;
+     return;
+   }
+
+   fRho25 = *(rho25Handle.product());
 
 
    // ecal information
-   
-   lazyTools_ = std::auto_ptr<EcalClusterLazyTools>( new EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("ecalRecHit:EcalRecHitsEB"),edm::InputTag("ecalRecHit:EcalRecHitsEE")) );
+   lazyTools_ = std::auto_ptr<EcalClusterLazyTools>( new  EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("reducedEcalRecHitsEB"),edm::InputTag("reducedEcalRecHitsEE")));
+
+   //lazyTools_ = std::auto_ptr<EcalClusterLazyTools>( new EcalClusterLazyTools(iEvent,iSetup,edm::InputTag("ecalRecHit:EcalRecHitsEB"),edm::InputTag("ecalRecHit:EcalRecHitsEE")) );
 
    // get ecal barrel recHits for spike rejection
    edm::Handle<EcalRecHitCollection> recHitsEB_h;
-   iEvent.getByLabel(edm::InputTag("ecalRecHit:EcalRecHitsEB"), recHitsEB_h );
+   iEvent.getByLabel(edm::InputTag("reducedEcalRecHitsEB"), recHitsEB_h );
    const EcalRecHitCollection * recHitsEB = 0;
    if ( ! recHitsEB_h.isValid() ) {
      LogError("ExoDiPhotonAnalyzer") << " ECAL Barrel RecHit Collection not available !"; return;
@@ -347,12 +436,12 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 
 
    edm::Handle<EcalRecHitCollection> recHitsEE_h;
-   iEvent.getByLabel(edm::InputTag("ecalRecHit:EcalRecHitsEE"), recHitsEE_h );
+   iEvent.getByLabel(edm::InputTag("reducedEcalRecHitsEE"), recHitsEE_h );
    const EcalRecHitCollection * recHitsEE = 0;
    if ( ! recHitsEE_h.isValid() ) {
-     LogError("ExoDiPhotonAnalyzer") << " ECAL Endcap RecHit Collection not available !"; return;
+    LogError("ExoDiPhotonAnalyzer") << " ECAL Endcap RecHit Collection not available !"; return;
    } else {
-     recHitsEE = recHitsEE_h.product();
+    recHitsEE = recHitsEE_h.product();
    }
 
    edm::ESHandle<EcalChannelStatus> chStatus;
@@ -371,22 +460,22 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      return;
    }
    
-//      cout << "N photons = " << photonColl->size() <<endl;
+      cout << "N photons = " << photonColl->size() <<endl;
 
 //      //   photon loop
-//    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
+    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
 
-//      cout << "Reco photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
-//      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
-//      cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
-//      cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
-//      cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
-//      cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
-//      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
+   //  cout << "Reco photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+     cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
+      cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
+      cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
+      cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
+      cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
+      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
 //      cout << endl;
 
 
-//    } // end reco photon loop
+    } // end reco photon loop
 
    
 
@@ -435,23 +524,32 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    const reco::Photon *matchPhoton1 = NULL;
    const reco::Photon *matchPhoton2 = NULL;
 
-
+   cout<<"HereGenLoop"<<endl;
    for(reco::GenParticleCollection::const_iterator genParticle = genParticles->begin(); genParticle != genParticles->end(); ++genParticle) {
 
      
      // identify the status 1 (ie no further decay) photons
      // which came from the hard-scatt photons (status 3)
      // because I know they're there     
+     cout<<genParticle->status()<<endl;
+     cout<<genParticle->pdgId()<<endl;
+     cout<<"ROLLTIDE"<<endl;
+   
+          if(genParticle->status()==1&&genParticle->pdgId()==22) {
+     //cout<<"1"<<endl;
+     if(genParticle->numberOfMothers()>0) {
+       // cout<<"2"<<endl;
+      if(genParticle->mother()->status()==3&&genParticle->mother()->pdgId()==22) {
+     //   cout<<"3"<<endl;
+           // further require that this status 3 photon itself came from the RS graviton 
+        if(genParticle->mother()->numberOfMothers()>0) {
+     //     cout<<"4"<<endl;
 
-     if(genParticle->status()==1&&genParticle->pdgId()==22) {
-       if(genParticle->numberOfMothers()>0) {
-	 if(genParticle->mother()->status()==3&&genParticle->mother()->pdgId()==22) {
-	   // further require that this status 3 photon itself came from the RS graviton 
-	   if(genParticle->mother()->numberOfMothers()>0) {
-	     if(genParticle->mother()->mother()->pdgId()==5000039) {
-
+	      if(genParticle->mother()->mother()->pdgId()==5000039) {
 	       
-	       //	       cout << "MC particle: Status = "<< genParticle->status() << "; pdg id = "<< genParticle->pdgId() << "; pt, eta, phi = " << genParticle->pt() << ", "<< genParticle->eta() << ", " << genParticle->phi() << endl;	   	       
+		   cout<<genParticle->mother()->mother()->pdgId()<<endl;
+	       
+		      cout << "MC particle: Status = "<< genParticle->status() << "; pdg id = "<< genParticle->pdgId() << "; pt, eta, phi = " << genParticle->pt() << ", "<< genParticle->eta() << ", " << genParticle->phi() << endl;	   	       
 	       
 
 	       // now match this signal photon to best recoPhoton
@@ -471,7 +569,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 		   tempMatchPhoton = &(*recoPhoton); //deref the iter to get what it points to
 		 }
 		 
-	       } //end recoPhoton loop to match to the present signal photon
+		  } //end recoPhoton loop to match to the present signal photon
 	       
 
 	       // now assign our signal and matched photons to 1 or 2
@@ -479,26 +577,27 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 	       if(!signalPhoton1) {
 		 // then we havent found the first one yet, so this is it
 		 signalPhoton1 = &(*genParticle);
+                 cout<<signalPhoton1<<endl;
 		 matchPhoton1 = tempMatchPhoton;
 	       }
 	       else {
 		 // we have already found one, so this is the second
 		 signalPhoton2 = &(*genParticle);
 		 matchPhoton2 = tempMatchPhoton;
-	       }
+		  }
+	         }
 
-
-	     }
-	   }
-	 }
-       }
-     } //end status 1 req for  photons from RS graviton
+		   }
+		  }
+		  }
+             
+	            } //end status 1 req for  photons from RS graviton
 
 
      // identify other real photons in event
      // what about ISR photons? 
      
-     //     cout << "MC particle: Status = "<< genParticle->status() << "; pdg id = "<< genParticle->pdgId() << "; pt, eta, phi = " << genParticle->pt() << ", "<< genParticle->eta() << ", " << genParticle->phi() << endl;	   
+          cout << "MC particle: Status = "<< genParticle->status() << "; pdg id = "<< genParticle->pdgId() << "; pt, eta, phi = " << genParticle->pt() << ", "<< genParticle->eta() << ", " << genParticle->phi() << endl;	   
 
      // what about a photon which converts late in detector?
      // (or, similarly, an electron which brems a photon)
@@ -645,7 +744,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 
    // for this signal MC, want to fill the tree every event
    fTree->Fill();
-
+   
 
 
 #ifdef THIS_IS_AN_EVENT_EXAMPLE
@@ -664,6 +763,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 void 
 ExoDiPhotonSignalMCAnalyzer::beginJob()
 {
+  LumiWeights = edm::LumiReWeighting(PUMCFileName,PUDataFileName,PUMCHistName,PUDataHistName);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
