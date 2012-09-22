@@ -5,7 +5,7 @@
 
 bool passesPhotonPtCut(double photonpt){
   bool result = false;
-  if (photonpt>70){
+  if (photonpt>80){
     result = true;
   }
   return result;
