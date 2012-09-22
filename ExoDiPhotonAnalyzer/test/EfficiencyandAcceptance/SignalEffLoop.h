@@ -602,11 +602,11 @@ void SignalEffLoop::Init(TTree *tree)
  
    // Set Axis Ranges here                                                                   
 
-   ptmin = 20;
-   ptmax= 3000;
+   ptmin = 0;
+   ptmax= 10000;
    nptbins = (ptmax-ptmin)/20 ;
-   Minvmin = 2800;
-   Minvmax = 3800;
+   Minvmin = 0;
+   Minvmax = 10000;
    nMinvbins = (Minvmax-Minvmin)/20;
 
 
