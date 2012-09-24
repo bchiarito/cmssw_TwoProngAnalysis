@@ -60,8 +60,60 @@ bool PassesEffCuts(double PhotonPt,bool PixelSeed,double PhotonSigmaIetaIeta,dou
     resultPassesCuts = true;
   }
   return resultPassesCuts;
+
+}
+
+bool PassEffCutsminusPixel(double PhotonPt,bool PixelSeed,double PhotonSigmaIetaIeta,double rho,double  trckPthollow04, double hcalIso04, double ecalIso04,double HoverE){
+  bool resultPassesCuts = false;
+  if ( passesHoverECut(HoverE) && EcalIsoCut(ecalIso04,PhotonPt,rho) && HcalIsoCut(hcalIso04,PhotonPt,rho) && SigmaIetaIetaCut(PhotonSigmaIetaIeta) && trckSumPtHollow04Cut(trckPthollow04,PhotonPt,rho)) {
+    resultPassesCuts = true;
+  }
+  return resultPassesCuts;
+}
+
+bool PassesEffCutsminusHoverE(double PhotonPt,bool PixelSeed,double PhotonSigmaIetaIeta,double rho,double  trckPthollow04, double hcalIso04, double ecalIso04,double HoverE){
+  bool resultPassesCuts = false;
+  if ( EcalIsoCut(ecalIso04,PhotonPt,rho) && HcalIsoCut(hcalIso04,PhotonPt,rho) && SigmaIetaIetaCut(PhotonSigmaIetaIeta) && !PassesPixelSeed(PixelSeed) && trckSumPtHollow04Cut(trckPthollow04,PhotonPt,rho)) {
+    resultPassesCuts = true;
+  }
+  return resultPassesCuts;
+}
+
+bool PassesEffCutsminusEcal(double PhotonPt,bool PixelSeed,double PhotonSigmaIetaIeta,double rho,double  trckPthollow04, double hcalIso04, double ecalIso04,double HoverE){
+  bool resultPassesCuts = false;
+  if ( passesHoverECut(HoverE) && HcalIsoCut(hcalIso04,PhotonPt,rho) && SigmaIetaIetaCut(PhotonSigmaIetaIeta) && !PassesPixelSeed(PixelSeed) && trckSumPtHollow04Cut(trckPthollow04,PhotonPt,rho)) {
+    resultPassesCuts = true;
+  }
+  return resultPassesCuts;
+}
+
+bool PassesEffCutsminusHcal(double PhotonPt,bool PixelSeed,double PhotonSigmaIetaIeta,double rho,double  trckPthollow04, double hcalIso04, double ecalIso04,double HoverE){
+  bool resultPassesCuts = false;
+  if ( passesHoverECut(HoverE) && EcalIsoCut(ecalIso04,PhotonPt,rho) && SigmaIetaIetaCut(PhotonSigmaIetaIeta) && !PassesPixelSeed(PixelSeed) &&  trckSumPtHollow04Cut(trckPthollow04,PhotonPt,rho)) {
+    resultPassesCuts = true;
+  }
+  return resultPassesCuts;
+
+}
+
+bool PassesEffCutsminusSigmaIetaIeta(double PhotonPt,bool PixelSeed,double PhotonSigmaIetaIeta,double rho,double  trckPthollow04, double hcalIso04, double ecalIso04,double HoverE){
+  bool resultPassesCuts = false;
+  if ( passesHoverECut(HoverE) && EcalIsoCut(ecalIso04,PhotonPt,rho) && HcalIsoCut(hcalIso04,PhotonPt,rho) && !PassesPixelSeed(PixelSeed) &&  trckSumPtHollow04Cut(trckPthollow04,PhotonPt,rho)) {
+    resultPassesCuts = true;
+  }
+  return resultPassesCuts;
+
+}
+
+bool PassesEffCutsminstrckIso(double PhotonPt,bool PixelSeed,double PhotonSigmaIetaIeta,double rho,double  trckPthollow04, double hcalIso04, double ecalIso04,double HoverE){
+  bool resultPassesCuts = false;
+  if ( passesHoverECut(HoverE) && EcalIsoCut(ecalIso04,PhotonPt,rho) && HcalIsoCut(hcalIso04,PhotonPt,rho) && SigmaIetaIetaCut(PhotonSigmaIetaIeta) && !PassesPixelSeed(PixelSeed) ){
+    resultPassesCuts = true;
+  }
+  return resultPassesCuts;
+
 }
 
 
-
 #endif
+			   
