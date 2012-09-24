@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iomanip>
 #include <TMath.h>
+
 TString TreeName[18] = {"RSGravToGG_kMpl-001_M-750","RSGravToGG_kMpl-001_M-1000","RSGravToGG_kMpl-001_M-1250","RSGravToGG_kMpl-001_M-1500","RSGravToGG_kMpl-001_M-1750","RSGravToGG_kMpl-001_M-2000","RSGravToGG_kMpl-001_M-3000","RSGravToGG_kMpl-005_M-1750","RSGravToGG_kMpl-005_M-2000","RSGravToGG_kMpl-005_M-2500","RSGravToGG_kMpl-005_M-2750","RSGravToGG_kMpl-005_M-3000","RSGravToGG_kMpl-01_M-2250","RSGravToGG_kMpl-01_M-2500","RSGravToGG_kMpl-01_M-2750","RSGravToGG_kMpl-01_M-3000","RSGravToGG_kMpl-01_M-3250","RSGravToGG_kMpl-01_M-3500"};
 
 void CreateAcceptanceandEffHists( )
@@ -32,7 +33,7 @@ void CreateAcceptanceandEffHists( )
 }  
 void GetEffandAccNum() 
 {  
-  ofstream filename("EffPrivateOutputRSTabletst.txt",ios::app);
+  ofstream filename("EffPrivateOutputRSTabletcorrect.txt",ios::app);
    Double_t Efficiency[18];
   Double_t Acceptance[18];
   Double_t AcceptancetimesEfficiency[18];   
@@ -76,7 +77,8 @@ void GetEffandAccNum()
      
      AcceptanceError[i] = TMath::Sqrt((Acceptance[i]*(1-Acceptance[i])/(h_Diphoton_Minv[i]->GetEntries())));
      EffError[i] = TMath::Sqrt((Efficiency[i]*(1-Efficiency[i]))/(h_Diphoton_Minv[i]->GetEntries()));
-     AcceptancetimesEffError[i] = TMath::Sqrt((TMath::Power(AcceptanceError[i],2)+ TMath::Power(EffError[i],2)));
+     AcceptancetimesEffError[i] = TMath::Sqrt(((1-AcceptancetimesEfficiency[i])*AcceptancetimesEfficiency[i])/((h_Diphoton_Minv[i]->GetEntries()))); 
+       //AcceptancetimesEffError[i] = TMath::Sqrt((TMath::Power(AcceptanceError[i],2)+ TMath::Power(EffError[i],2)));
      filename<<Acceptance[i]<<" "<<AcceptanceError[i]<<" "<<Efficiency[i]<<" "<<EffError[i]<<" "<<AcceptancetimesEfficiency[i]<<" "<<AcceptancetimesEffError[i]<<endl;
      
    }
