@@ -757,8 +757,8 @@ class PlottingCodeLoop {
 
 #ifdef PlottingCodeLoop_cxx
 PlottingCodeLoop::PlottingCodeLoop(TTree *tree)  
-  :_cutPhoton1pt(70.)
-  ,_cutPhoton2pt(70.)
+  :_cutPhoton1pt(80.)
+  ,_cutPhoton2pt(80.)
   ,_fakeStatus("TightTight")
   ,_outputfile(0)
   ,_JSON("June22")
@@ -881,8 +881,8 @@ void PlottingCodeLoop::Init(TTree *tree)
 
 
   //WHY BOTH VERSIONS OF H/E DO NOT HAVE SAME MAX VALUES
-  h_Photon1_hadOverEm = new TH1F("h_Photon1_hadOverEm","Photon1 H/E;#gamma_{1} H/E", 40, 0., 2.);
-  h_Photon1_hadOverEm_log = new TH1F("h_Photon1_hadOverEm_log","Photon1 H/E;#gamma_{1} H/E", 40, 0., 0.06);
+  h_Photon1_hadOverEm = new TH1F("h_Photon1_hadOverEm","Photon1 H/E;#gamma_{1} H/E", 60, 0., 0.06);
+  h_Photon1_hadOverEm_log = new TH1F("h_Photon1_hadOverEm_log","Photon1 H/E;#gamma_{1} H/E", 60, 0., 0.06);
 
   h_Photon1_trkIsoSumPtHollow04 = new TH1F("h_Photon1_trkIsoSumPtHollow04","Photon1 Track Iso #Sigma p_{T} Hollow #DeltaR 0.4;#gamma_{1} Track Iso #Sigma p_{T} Hollow #DeltaR 0.4", 20, 0., 3.);
   h_Photon1_trkIsoSumPtHollow04_log = new TH1F("h_Photon1_trkIsoSumPtHollow04_log","Photon1 Track Iso #Sigma p_{T} Hollow #DeltaR 0.4;#gamma_{1} Track Iso #Sigma p_{T} Hollow #DeltaR 0.4", 20, 0., 3.);
@@ -893,8 +893,8 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_Photon1_ecalIso04 = new TH1F("h_Photon1_ecalIso04","Photon1 ECAL Iso #DeltaR 0.4;#gamma_{1} ECAL Iso #DeltaR 0.4", 100, -1., 9.);
   h_Photon2_sigmaEtaEta = new TH1F("h_Photon2_sigmaEtaEta","Photon2 #sigma_{#eta#eta};#gamma_{2} #sigma_{#eta#eta}", 50, 0.005, 0.020);
   h_Photon2_sigmaIetaIeta = new TH1F("h_Photon2_sigmaIetaIeta","Photon2 #sigma_{i#etai#eta};#gamma_{2} #sigma_{i#etai#eta}", 50, 0.005, 0.020);
-  h_Photon2_hadOverEm = new TH1F("h_Photon2_hadOverEm","Photon2 H/E;#gamma_{2} H/E", 40, 0., 0.06);
-  h_Photon2_hadOverEm_log = new TH1F("h_Photon2_hadOverEm_log","Photon2 H/E;#gamma_{2} H/E", 40, 0., 0.06);
+  h_Photon2_hadOverEm = new TH1F("h_Photon2_hadOverEm","Photon2 H/E;#gamma_{2} H/E", 60, 0., 0.06);
+  h_Photon2_hadOverEm_log = new TH1F("h_Photon2_hadOverEm_log","Photon2 H/E;#gamma_{2} H/E", 60, 0., 0.06);
   h_Photon2_trkIsoSumPtHollow04 = new TH1F("h_Photon2_trkIsoSumPtHollow04","Photon2 Track Iso #Sigma p_{T} Hollow #DeltaR 0.4;#gamma_{2} Track Iso #Sigma p_{T} Hollow #DeltaR 0.4", 20, 0., 3.);
   h_Photon2_trkIsoSumPtHollow04_log = new TH1F("h_Photon2_trkIsoSumPtHollow04_log","Photon2 Track Iso #Sigma p_{T} Hollow #DeltaR 0.4;#gamma_{2} Track Iso #Sigma p_{T} Hollow #DeltaR 0.4", 20, 0., 3.);
   h_Photon2_trkIsoNtrksHollow04 = new TH1F("h_Photon2_trkIsoNtrksHollow04","Photon2 Track Iso N_{tracks} Hollow #DeltaR 0.4;#gamma_{2} Track Iso N_{tracks}Hollow #DeltaR 0.4", 6, 0., 6.);
