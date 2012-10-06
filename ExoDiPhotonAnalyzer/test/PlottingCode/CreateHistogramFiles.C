@@ -20,6 +20,9 @@
 
 using namespace std;
 
+TString XTitles[12] = {"M_{#gamma #gamma} (GeV)","q_{t} (GeV)","#Delta #phi","#Delta #eta","#Delta R","cos #theta^{*}","#gamma_{1} p_{t} (GeV)","#gamma_{1} #eta","#gamma_{1} #phi","#gamma_{2} p_{t} (GeV)","#gamma_{2} #eta","#gamma_{2} #phi"};
+TString YTitles[12] = {"Events / 20 GeV","Events / 10 GeV","","","","","Entries / 20 GeV","","","Entries / 20 GeV","",""};
+
 TString tfHists[12] = {"h_FakeRate_tf_minv","h_FakeRate_tf_qt","h_FakeRate_tf_deltaPhi","h_FakeRate_tf_deltaEta","h_FakeRate_tf_deltaR","h_FakeRate_tf_cosThetaStar","h_FakeRate_tf_pt1","h_FakeRate_tf_eta1","h_FakeRate_tf_phi1","h_FakeRate_tf_pt2","h_FakeRate_tf_eta2","h_FakeRate_tf_phi2"};
 
 TString ffHists[12] = {"h_FakeRate_ff_minv","h_FakeRate_ff_qt","h_FakeRate_ff_deltaPhi","h_FakeRate_ff_deltaEta","h_FakeRate_ff_deltaR","h_FakeRate_ff_cosThetaStar","h_FakeRate_ff_pt1","h_FakeRate_ff_eta1","h_FakeRate_ff_phi1","h_FakeRate_ff_pt2","h_FakeRate_ff_eta2","h_FakeRate_ff_phi2"};
@@ -32,7 +35,7 @@ TString GammaJetHists[12] = {"h_GammaJet_minv","h_GammaJet_qt","h_GammaJet_delta
 TString JetJetHists[12] = {"h_JetJet_minv","h_JetJet_qt","h_JetJet_deltaPhi","h_JetJet_deltaEta","h_JetJet_deltaR","h_JetJet_cosThetaStar","h_JetJet_pt1","h_JetJet_eta1", "h_JetJet_phi1","h_JetJet_pt2","h_JetJet_eta2","h_JetJet_phi2"};
 
 TString nameHists[43] = {"h_Photon1_pt","h_Photon1_pt_log","h_Photon1_eta","h_Photon1_phi","h_Photon2_pt","h_Photon2_pt_log","h_Photon2_eta","h_Photon2_phi","h_Diphoton_Minv","h_Diphoton_Minv_log", "h_Diphoton_qt","h_Diphoton_deltaR","h_Diphoton_deltaEta","h_Diphoton_cosThetaStar","h_Diphoton_deltaPhi","h_Vtx_Nvtx","h_Vtx_vx","h_Vtx_vy","h_Vtx_vz","h_Photon1_sigmaIetaIeta","h_Photon1_sigmaEtaEta","h_Photon1_hadOverEm","h_Photon1_trkIsoSumPtHollow04","h_Photon1_trkIsoNtrksHollow04","h_Pho\
-ton1_hcalIso04","h_Photon1_ecalIso04","h_Photon1_detEta","h_Photon2_sigmaIetaIeta","h_Photon2_sigmaEtaEta","h_Photon2_hadOverEm","h_Photon2_trkIsoSumPtHollow04","h_Photon2_trkIsoNtrksHollow04","h_Photon2_hcalIso04","h_Photon2_ecalIso04","h_Photon2_detEta","h_Diphoton_qt_log","h_Photon1_hadOverEm_log","h_Photon2_hadOverEm","h_Photon2_trkIsoSumPtHollow04_log","h_Photon1_trkIsoSumPtHollow04_log","h_Photon2_hcalIso04_log","h_Photon1_hcalIso04_log","h_Cumalitive_DiphotonMinv"};
+ton1_hcalIso04","h_Photon1_ecalIso04","h_Photon1_detEta","h_Photon2_sigmaIetaIeta","h_Photon2_sigmaEtaEta","h_Photon2_hadOverEm","h_Photon2_trkIsoSumPtHollow04","h_Photon2_trkIsoNtrksHollow04","h_Photon2_hcalIso04","h_Photon2_ecalIso04","h_Photon2_detEta","h_Diphoton_qt_log","h_Photon1_hadOverEm_log","h_Photon2_hadOverEm_log","h_Photon2_trkIsoSumPtHollow04_log","h_Photon1_trkIsoSumPtHollow04_log","h_Photon2_hcalIso04_log","h_Photon1_hcalIso04_log","h_Cumalitive_DiphotonMinv"};
 
 
 TString fNames[12] = {"h_Diphoton_Minv","h_Diphoton_qt","h_Diphoton_deltaPhi","h_Diphoton_deltaEta","h_Diphoton_deltaR","h_Diphoton_cosThetaStar","h_Photon1_pt","h_Photon1_eta","h_Photon1_phi","h_Photon2_pt","h_Photon2_eta","h_Photon2_phi"};
@@ -67,8 +70,8 @@ void CreateHistogramFiles(TString Sample = "Diphoton", TString SampleType = "dat
   cout << "CreateHistogramFiles: Start processing main loop entries" <<endl;
 
   PlottingCodeLoop* treereader = new PlottingCodeLoop(chain_tt);
-  treereader->_cutPhoton1pt = 70.;
-  treereader->_cutPhoton2pt = 70.;
+  treereader->_cutPhoton1pt = 80.;
+  treereader->_cutPhoton2pt = 80.;
   treereader->_fakeStatus="TightTight";
   treereader->_JSON=JSON.Data();
   treereader->_SampleType=SampleType.Data();
@@ -98,8 +101,8 @@ void CreateHistogramFiles(TString Sample = "Diphoton", TString SampleType = "dat
 
     PlottingCodeLoop* treereaderTF = new PlottingCodeLoop(chain_tf);
     treereaderTF->_fakeStatus = "TightFake";    
-    treereaderTF->_cutPhoton1pt = 70.;
-    treereaderTF->_cutPhoton2pt = 70.;
+    treereaderTF->_cutPhoton1pt = 80.;
+    treereaderTF->_cutPhoton2pt = 80.;
     treereader->_JSON=JSON.Data();
     treereader->_SampleType=SampleType.Data();
     outName = TString::Format("histograms_%s_TF.root",Sample.Data());
@@ -109,8 +112,8 @@ void CreateHistogramFiles(TString Sample = "Diphoton", TString SampleType = "dat
     
     PlottingCodeLoop* treereaderFT = new PlottingCodeLoop(chain_ft);
     treereaderFT->_fakeStatus = "FakeTight";    
-    treereaderFT->_cutPhoton1pt = 70.;
-    treereaderFT->_cutPhoton2pt = 70.;
+    treereaderFT->_cutPhoton1pt = 80.;
+    treereaderFT->_cutPhoton2pt = 80.;
     treereader->_JSON=JSON.Data();
     treereader->_SampleType=SampleType.Data();
     outName = TString::Format("histograms_%s_FT.root",Sample.Data());
@@ -120,8 +123,8 @@ void CreateHistogramFiles(TString Sample = "Diphoton", TString SampleType = "dat
     
     PlottingCodeLoop* treereaderFF = new PlottingCodeLoop(chain_ff);
     treereaderFF->_fakeStatus = "FakeFake";    
-    treereaderFF->_cutPhoton1pt = 70.;
-    treereaderFF->_cutPhoton2pt = 70.;
+    treereaderFF->_cutPhoton1pt = 80.;
+    treereaderFF->_cutPhoton2pt = 80.;
     treereader->_JSON=JSON.Data();
     treereader->_SampleType=SampleType.Data();
     outName = TString::Format("histograms_%s_FF.root",Sample.Data());
@@ -153,6 +156,10 @@ void makeplots(TString Sample = "Diphoton",TString lumi = "1", TString JSONFile=
       <<" lumi: "<<lumi.Data()<<" /pb"
       <<endl;
 
+  Double_t crosssection = 1.;
+  Int_t numevents = 1.;
+  Double_t luminumber = lumi.Atof();
+
   char canvasname[10];
   TCanvas*  c[42];
   TString histogramfileinput = HistogramFileLocation+Sample+"/histograms_"+Sample+".root";
@@ -178,6 +185,13 @@ void makeplots(TString Sample = "Diphoton",TString lumi = "1", TString JSONFile=
 
   cout<<"Plotting histograms "<<endl;
 
+  //   if(Sample.Contains(("diphoton_tree_DiPhotonBorn_Pt25To250_Summer12_Sept10th"))) {crosssection = xsec[0];numevents = ngenevents[0];}
+  //   if(Sample.Contains(("diphoton_tree_DiPhotonBorn_Pt250ToInf_Summer12_Sept10th"))) {crosssection = xsec[1];numevents = ngenevents[1];}
+  //   if(Sample.Contains(("diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th"))) {crosssection = xsec[2];numevents = ngenevents[2];}
+  //   if(Sample.Contains(("diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th"))) {crosssection = xsec[3];numevents = ngenevents[3];}
+
+  gStyle->SetOptStat("ourmei")  ;
+
   TH1F* histos[42];
   for(int i=0;i<42;i++)
     {
@@ -185,28 +199,38 @@ void makeplots(TString Sample = "Diphoton",TString lumi = "1", TString JSONFile=
       c[i] = new TCanvas(canvasname, canvasname, 800., 600.);
       cout<<"Canvas "<<canvasname<<endl;
       c[i]->cd();
-      cout<<"Histogram "<<histos[i]->GetName()<<endl;
       histos[i] = (TH1F*)fhists->Get(nameHists[i].Data());
+      histos[i]->Sumw2();
+      cout<<"Histogram "<<histos[i]->GetName()<<endl;
+
+      //histos[i]->Scale((luminumber*crosssection)/numevents);
+
       histos[i]->GetXaxis()->CenterTitle();
       histos[i]->GetYaxis()->CenterTitle();
       histos[i]->SetMarkerStyle(20);
       histos[i]->SetMarkerColor(1);
-      histos[i]->Draw("HIST EP");
+
+      histos[i]->SetMinimum(0.);
 
       if (nameHists[i].Contains("_log"))
 	{
 	  histos[i]->SetMinimum(1.e-2);
 	  c[i]->SetLogy(1);
-	  histos[i]->Draw("HIST EP");
 	}
+
+      histos[i]->Draw("HIST EP");
 
       LumiLabel->Draw();
       c[i]->SaveAs(nameHists[i]+"_"+Sample+".C");
       c[i]->SaveAs(nameHists[i]+"_"+Sample+".png");
       c[i]->SaveAs(nameHists[i]+"_"+Sample+".pdf");
+      c[i]->SaveAs(nameHists[i]+"_"+Sample+".eps");
+
+      c[i]->cd();
+      c[i]->Close();
     }//end of loop over all histograms
 
-  cout<<"All histograms plotted and saved (scaled to "<<lumi<<" pb^{-1}"<<endl;
+  cout<<"All histograms plotted and saved()"<<endl;
 
   fhists->cd();
   fhists->Close();
@@ -241,10 +265,10 @@ void MakeCombinedMCHistos()
   //const
 
   TString inputmcfiles[inputfiles];
-  inputmcfiles[0]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt25to250_Summer12/histograms_diphoton_tree_DiPhotonBorn_Pt25to250_Summer12_Sept10th.root";
-  inputmcfiles[1]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt250toInf_Summer12/histograms_diphoton_tree_DiPhotonBorn_Pt250toInf_Summer12_Sept10th.root";
-  inputmcfiles[2]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt25to250_Summer12/histograms_diphoton_tree_DiPhotonBox_Pt25to250_Summer12_Sept10th.root";	
-  inputmcfiles[3]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt250toInf_Summer12/histograms_diphoton_tree_DiPhotonBox_Pt250toInf_Summer12_Sept10th.root";
+  inputmcfiles[0]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt25To250_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBorn_Pt25To250_Summer12_Sept10th.root";
+  inputmcfiles[1]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt250ToInf_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBorn_Pt250ToInf_Summer12_Sept10th.root";
+  inputmcfiles[2]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th.root";	
+  inputmcfiles[3]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th.root";
 
   cout << "Input MC ROOT files: " <<endl;
 
@@ -278,17 +302,22 @@ void MakeCombinedMCHistos()
       indHistos[i][ifile] = (TH1F*)ftemp[ifile]->Get(nameHists[i].Data());
       indHistos[i][ifile]->Sumw2();
 
-      //------------------------------
-      //WHAT IS THE POINTS OF ALL THIS
-      if (i==1) {
-	//  error N_tot = sqrt(C1^2 * n1 + C2^2 * n2 + ...)
-	Double_t ci = xsec[ifile]/ngenevents[ifile];
-	//      totalError = totalError + ci*ci*(indHistos[i][ifile]->Integral());
-	totalError = totalError + ci*TMath::Sqrt(indHistos[i][ifile]->Integral());
-      }
-      //------------------------------
+      //if(i == 29) cout<<indHistos[i][ifile]->GetName()<<" entries "<<indHistos[i][ifile]->GetEntries()<<" integral "<<indHistos[i][ifile]->Integral()<<endl;
+
+      //       //------------------------------
+      //       //WHAT IS THE POINTS OF ALL THIS
+      //       if (i==1) {
+      // 	//  error N_tot = sqrt(C1^2 * n1 + C2^2 * n2 + ...)
+      // 	Double_t ci = xsec[ifile]/ngenevents[ifile];
+      // 	//      totalError = totalError + ci*ci*(indHistos[i][ifile]->Integral());
+      // 	totalError = totalError + ci*TMath::Sqrt(indHistos[i][ifile]->Integral());
+      //       }
+      //       //------------------------------
 
       indHistos[i][ifile]->Scale((lumi/ngenevents[ifile])*xsec[ifile]);
+
+      //if(i == 29) cout<<indHistos[i][ifile]->GetName()<<" entries "<<indHistos[i][ifile]->GetEntries()<<" integral "<<indHistos[i][ifile]->Integral()<<endl;
+
     }//end of loop over all histograms
   }//end of loop over all MC background files
 
@@ -297,11 +326,14 @@ void MakeCombinedMCHistos()
   // instantiate the sum histos with histo in first file
   for (int i=0; i<nHists; i++) {
     allHistos[i] = indHistos[i][0];
+    if(i == 29) cout<<allHistos[i]->GetName()<<" entries "<<allHistos[i]->GetEntries()<<" integral "<<allHistos[i]->Integral()<<endl;
   }
 
-  for(int ifile=0;ifile<inputfiles;ifile++) {
+  // note we exclude first file (we start at ifile=1) since we used it to instantiate the sum histo
+  for(int ifile=1;ifile<inputfiles;ifile++) {
     for (int i=0; i<nHists; i++) {
-      if (ifile>0){ allHistos[i]->Add(indHistos[i][ifile]);} // note we exclude first file since we used it to instantiate the sum histo
+      allHistos[i]->Add(indHistos[i][ifile]);
+      //if(i == 29) cout<<allHistos[i]->GetName()<<" entries "<<allHistos[i]->GetEntries()<<" integral "<<allHistos[i]->Integral()<<endl;
     }
   }
 
@@ -317,7 +349,8 @@ void MakeCombinedMCHistos()
   }
   fout->Close();
 
-  makeplots("diphoton_tree_MC_all","1","MC","mc");
+  //makeplots("diphoton_tree_MC_all","1","MC","mc");
+  //makeplots("diphoton_tree_MC_all","10252","MC","mc");
 
 }//enf of method MakeCombinedMCHistos
 
@@ -374,6 +407,8 @@ void OverlayMCandData( TString Sample  = "Diphoton", TString lumi = "1", TString
   float lumiNumber = lumi.Atof();
   cout<<"Lumi number "<<lumiNumber<<endl;
 
+  gStyle->SetOptStat("ourmei");
+
   for(int i=0;i<42;i++)
     {
 
@@ -384,12 +419,12 @@ void OverlayMCandData( TString Sample  = "Diphoton", TString lumi = "1", TString
 
       histosdata[i] = (TH1F*)fdatahists->Get(nameHists[i].Data());
       histosdata[i]->SetMinimum(.01);
-      cout<<"Data histogram name"<<histosdata[i]->GetName()<<endl;
+      cout<<"Data histogram name "<<histosdata[i]->GetName()<<endl;
 
       histosmc[i] = (TH1F*)fmchists->Get(nameHists[i].Data());
       histosmc[i]->Scale(lumiNumber);
       histosmc[i]->SetMinimum(.01);
-      cout<<"MC histogram name"<<histosmc[i]->GetName()<<endl;
+      cout<<"MC histogram name "<<histosmc[i]->GetName()<<endl;
 
       DataMCLegend[i]= new TLegend(0.70,0.6,0.88,0.75,"","NDC");
       DataMCLegend[i]->SetFillStyle(0);
@@ -407,12 +442,13 @@ void OverlayMCandData( TString Sample  = "Diphoton", TString lumi = "1", TString
 
       //histosmc[i]->Draw("SAME HIST");
       histosmc[i]->Draw("HIST");
+      histosmc[i]->Draw("sameaxis");
       //histosdata[i]->Draw("HIST SAME EP");
-      histosdata[i]->Draw("EP,SAME");
+      histosdata[i]->Draw("EP,SAMES");
 
       DataMCLegend[i]->AddEntry(histosdata[i],"Data","LEP");
       DataMCLegend[i]->AddEntry(histosmc[i],"SM Diphoton","F");
-      gPad->RedrawAxis();
+      //gPad->RedrawAxis();
       LumiLabel->Draw();
       DataMCLegend[i]->Draw();
 
@@ -424,6 +460,7 @@ void OverlayMCandData( TString Sample  = "Diphoton", TString lumi = "1", TString
       c[i]->SaveAs(nameHists[i]+"_"+Sample.Data()+"Overlay"+".C");
       c[i]->SaveAs(nameHists[i]+"_"+Sample.Data()+"Overlay"+".png");
       c[i]->SaveAs(nameHists[i]+"_"+Sample.Data()+"Overlay"+".pdf");
+      c[i]->SaveAs(nameHists[i]+"_"+Sample.Data()+"Overlay"+".eps");
     }//end of loop over histograms
 
 
@@ -460,21 +497,25 @@ void OverlayMCandData( TString Sample  = "Diphoton", TString lumi = "1", TString
   h_Diphoton_Minv_log_MCCumm->SetMinimum(.01);
 
   h_Diphoton_Minv_log_MCCumm->Draw("HIST");
+  h_Diphoton_Minv_log_MCCumm->Draw("SAMEAXIS");
   h_Diphoton_Minv_log_DataCumm->Draw("EP,SAME");
 
-  gPad->RedrawAxis();
+  //gPad->RedrawAxis();
   LumiLabelCumm->Draw();
   DataMCLegendCumm->Draw();
   //CumulativeCanvas->SaveAs(nameHists[43]+Sample.Data()+"Overlay"+".png");
-  CumulativeCanvas->SaveAs(nameHists[42]+Sample.Data()+"Overlay"+".png");
+  CumulativeCanvas->SaveAs(nameHists[42]+"_"+Sample.Data()+"Overlay"+".png");
+  CumulativeCanvas->SaveAs(nameHists[42]+"_"+Sample.Data()+"Overlay"+".eps");
+  CumulativeCanvas->SaveAs(nameHists[42]+"_"+Sample.Data()+"Overlay"+".pdf");
+  CumulativeCanvas->SaveAs(nameHists[42]+"_"+Sample.Data()+"Overlay"+".C");
 
-  //Closing all files
+  //   //Closing all files
 
-  fmchists->cd();
-  fmchists->Close();
+  //   fmchists->cd();
+  //   fmchists->Close();
 
-  fdatahists->cd();
-  fdatahists->Close();
+  //   fdatahists->cd();
+  //   fdatahists->Close();
 
 
 }//end of method OverlayMCAndData
@@ -521,17 +562,17 @@ void StitchBackgroundandMC(TString Sample = "Diphoton", TString lumi = "1", TStr
   //AGAIN HERE HARDCODED
 
   TString inputmcfiles[inputfiles];
-  inputmcfiles[0]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt25to250_Summer12/histograms_diphoton_tree_DiPhotonBorn_Pt25to250_Summer12_Sept10th.root";
-  inputmcfiles[1]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt250toInf_Summer12/histograms_diphoton_tree_DiPhotonBorn_Pt250toInf_Summer12_Sept10th.root";
-  inputmcfiles[2]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt25to250_Summer12/histograms_diphoton_tree_DiPhotonBox_Pt25to250_Summer12_Sept10th.root";
-  inputmcfiles[3]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt250toInf_Summer12/histograms_diphotn_tree_DiPhotonBox_Pt250toInf_Summer12_Sept10th.root";
+  inputmcfiles[0]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt25To250_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBorn_Pt25To250_Summer12_Sept10th.root";
+  inputmcfiles[1]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt250ToInf_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBorn_Pt250ToInf_Summer12_Sept10th.root";
+  inputmcfiles[2]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th.root";
+  inputmcfiles[3]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th/histograms_diphotn_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th.root";
 
   TString filenames[inputfiles];
   for(int ifile=0;ifile<inputfiles;ifile++) {
     filenames[ifile] = inputmcfiles[ifile];
   }
 
-  TString SampleNames[4]={"Born_Pt_25to250","Born_Pt_250toInf","Box_Pt_25to250","Box_Pt_250toInf"};
+  TString SampleNames[4]={"Born_Pt_25To250","Born_Pt_250ToInf","Box_Pt_25To250","Box_Pt_250ToInf"};
   TLegend *StackLegend[42];
   THStack *StackMC[42];
 
@@ -546,7 +587,8 @@ void StitchBackgroundandMC(TString Sample = "Diphoton", TString lumi = "1", TStr
     StackLegend[i]->SetFillStyle(0);
     StackLegend[i]->SetTextSize(0.03);
 
-    StackMC[i]= new THStack(nameHists[i].Data(),nameHists[i].Data());
+    TString StackName(nameHists[i]+"_Stack");
+    StackMC[i]= new THStack(StackName.Data(),StackName.Data());
     histosdatadminv[i]=(TH1F*)fdatahists->Get(nameHists[i].Data());
 
     for(int ifile=0;ifile<inputfiles;ifile++) {
@@ -577,6 +619,7 @@ void StitchBackgroundandMC(TString Sample = "Diphoton", TString lumi = "1", TStr
       c[i]->SaveAs(nameHists[i]+"_"+Sample.Data()+"StitchOverlay"+".C");
       c[i]->SaveAs(nameHists[i]+"_"+Sample.Data()+"StitchOverlay"+".png");
       c[i]->SaveAs(nameHists[i]+"_"+Sample.Data()+"StitchOverlay"+".pdf");
+      c[i]->SaveAs(nameHists[i]+"_"+Sample.Data()+"StitchOverlay"+".eps");
 
     }//end of loop over all MC samples
   }//end of loop over all histograms
@@ -606,6 +649,10 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
   TH1F* h_JetJet_deltaEta;
   TH1F* h_JetJet_deltaR;
   TH1F* h_JetJet_cosThetaStar;
+  TH1F* h_JetJet_minv_UpperBand;
+  TH1F* h_JetJet_minv_LowerBand;
+  TH1F* h_JetJet_minv_UpperError;
+  TH1F* h_JetJet_minv_LowerError;
 
   TH1F* h_GammaJet_pt1;
   TH1F* h_GammaJet_eta1;
@@ -619,7 +666,10 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
   TH1F* h_GammaJet_deltaEta;
   TH1F* h_GammaJet_deltaR;
   TH1F* h_GammaJet_cosThetaStar;
-
+  TH1F* h_GammaJet_minv_UpperBand;
+  TH1F* h_GammaJet_minv_LowerBand;
+  TH1F* h_GammaJet_minv_UpperError;
+  TH1F* h_GammaJet_minv_LowerError;
 
   h_GammaJet_pt1  = new TH1F("h_GammaJet_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",42,60.,900.);
   h_GammaJet_eta1 = new TH1F("h_GammaJet_eta1","#gamma_{1} #eta;#gamma_{1} #eta",60,-3.,3.);
@@ -627,13 +677,17 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
   h_GammaJet_pt2  = new TH1F("h_GammaJet_pt2","#gamma_{2} p_{T};#gamma_{2} p_{T}",42,60.,900.);
   h_GammaJet_eta2 = new TH1F("h_GammaJet_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_GammaJet_phi2 = new TH1F("h_GammaJet_phi2","#gamma_{1} #phi;#gamma_{1} #phi",36,-3.14159,3.14159);
-  //   h_GammaJet_minv         = new TH1F("h_GammaJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);
-  h_GammaJet_minv         = new TH1F("h_GammaJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",89,20.,1800.);
+  //   h_GammaJet_minv         = new TH1F("h_GammaJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",43,140,1000);
+  h_GammaJet_minv         = new TH1F("h_GammaJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",89,20.,1800.);
   h_GammaJet_qt           = new TH1F("h_GammaJet_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_GammaJet_deltaPhi     = new TH1F("h_GammaJet_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
-  h_GammaJet_deltaEta     = new TH1F("h_GammaJet_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",120,-6.,6.);
+  h_GammaJet_deltaEta     = new TH1F("h_GammaJet_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
   h_GammaJet_deltaR       = new TH1F("h_GammaJet_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
   h_GammaJet_cosThetaStar = new TH1F("h_GammaJet_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);
+  h_GammaJet_minv_UpperBand         = new TH1F("h_GammaJet_minv_UpperBand",        "Diphoton Invariant Mass Upper Syst. Band;M_{#gamma#gamma} [GeV]",89,20.,1800.);
+  h_GammaJet_minv_LowerBand         = new TH1F("h_GammaJet_minv_LowerBand",        "Diphoton Invariant Mass Lower Syst. Band;M_{#gamma#gamma} [GeV]",89,20.,1800.);
+  h_GammaJet_minv_UpperError         = new TH1F("h_GammaJet_minv_UpperError",        "Diphoton Invariant Mass Upper Syst. Error;M_{#gamma#gamma} [GeV]",89,20.,1800.);
+  h_GammaJet_minv_LowerError         = new TH1F("h_GammaJet_minv_LowerError",        "Diphoton Invariant Mass Lower Syst. Error;M_{#gamma#gamma} [GeV]",89,20.,1800.);
 
 
   h_JetJet_pt1  = new TH1F("h_JetJet_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",42,60.,900.);
@@ -642,13 +696,17 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
   h_JetJet_pt2  = new TH1F("h_JetJet_pt2","#gamma_{2} p_{T};#gamma_{2} p_{T}",42,60.,900.);
   h_JetJet_eta2 = new TH1F("h_JetJet_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_JetJet_phi2 = new TH1F("h_JetJet_phi2","#gamma_{1} #phi;#gamma_{1} #phi",36,-3.14159,3.14159);
-  //   h_JetJet_minv         = new TH1F("h_JetJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);
-  h_JetJet_minv         = new TH1F("h_JetJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",89,20.,1800.);
+  //   h_JetJet_minv         = new TH1F("h_JetJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",43,140,1000);
+  h_JetJet_minv         = new TH1F("h_JetJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",89,20.,1800.);
   h_JetJet_qt           = new TH1F("h_JetJet_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_JetJet_deltaPhi     = new TH1F("h_JetJet_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
-  h_JetJet_deltaEta     = new TH1F("h_JetJet_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",120,-6.,6.);
+  h_JetJet_deltaEta     = new TH1F("h_JetJet_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
   h_JetJet_deltaR       = new TH1F("h_JetJet_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
   h_JetJet_cosThetaStar = new TH1F("h_JetJet_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);
+  h_JetJet_minv_UpperBand         = new TH1F("h_JetJet_minv_UpperBand",        "Diphoton Invariant Mass Upper Syst. Band;M_{#gamma#gamma} [GeV]",89,20.,1800.);
+  h_JetJet_minv_LowerBand         = new TH1F("h_JetJet_minv_LowerBand",        "Diphoton Invariant Mass Lower Syst. Band;M_{#gamma#gamma} [GeV]",89,20.,1800.);
+  h_JetJet_minv_UpperError         = new TH1F("h_JetJet_minv_UpperError",        "Diphoton Invariant Mass Upper Syst. Error;M_{#gamma#gamma} [GeV]",89,20.,1800.);
+  h_JetJet_minv_LowerError         = new TH1F("h_JetJet_minv_LowerError",        "Diphoton Invariant Mass Lower Syst. Error;M_{#gamma#gamma} [GeV]",89,20.,1800.);
 
   TString histoTFlocation=HistogramFileLocation.Data()+Sample+"/histograms_"+Sample+"_TF.root";
   TString histoFFlocation=HistogramFileLocation.Data()+Sample+"/histograms_"+Sample+"_FF.root";
@@ -732,12 +790,51 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
     //1 for TF and 1 for FT, I guess !!!
     histosGammaJet[i]->Add(hFF[i],-2.);
 
-    cout<<"Gamma+Jet total contribution "<<histosGammaJet[i]->GetEntries()<<endl;
+    cout<<"Gamma+Jet total contribution "<<histosGammaJet[i]->Integral()<<endl;
 
     histosJetJet[i]= (TH1F*)JetJetHistList->At(i);
+    histosJetJet[i]->Sumw2();
     histosJetJet[i]->Add(hFF[i],1.); 
 
-    cout<<"Jet+Jet total contribution "<<histosGammaJet[i]->GetEntries()<<endl;
+    cout<<"Jet+Jet total contribution "<<histosJetJet[i]->Integral()<<endl;
+
+    if(i == 0){
+      //Special treatment for upper bands
+      h_GammaJet_minv_UpperBand->Add(hTF[i],hFT[i],1.05,1.05);
+      h_GammaJet_minv_UpperBand->Add(hFF[i],-2.*1.05*1.05);
+      h_GammaJet_minv_UpperBand->Add(histosGammaJet[i],-1.);
+      h_GammaJet_minv_UpperBand->Scale(sqrt(3.));
+      h_GammaJet_minv_UpperBand->Add(histosGammaJet[i],1.);
+
+      h_JetJet_minv_UpperBand->Add(hFF[i],1.05*1.05); 
+      h_JetJet_minv_UpperBand->Add(histosJetJet[i],-1.); 
+      h_JetJet_minv_UpperBand->Scale(sqrt(3.));
+      h_JetJet_minv_UpperBand->Add(histosJetJet[i],1.); 
+
+      //And special treatment for lower bands
+      h_GammaJet_minv_LowerBand->Add(hTF[i],hFT[i],0.95,0.95);
+      h_GammaJet_minv_LowerBand->Add(hFF[i],-2.*0.95*0.95);
+      h_GammaJet_minv_LowerBand->Add(histosGammaJet[i],-1.);
+      h_GammaJet_minv_LowerBand->Scale(sqrt(3.));
+      h_GammaJet_minv_LowerBand->Add(histosGammaJet[i],1.);
+
+      h_JetJet_minv_LowerBand->Add(hFF[i],0.95*0.95); 
+      h_JetJet_minv_LowerBand->Add(histosJetJet[i],-1.); 
+      h_JetJet_minv_LowerBand->Scale(sqrt(3.));
+      h_JetJet_minv_LowerBand->Add(histosJetJet[i],1.); 
+
+      //Now we also compute the syst errors as 
+      //a function of the mass and store it in a TH1
+      h_GammaJet_minv_UpperError->Add(h_GammaJet_minv_UpperBand,histosGammaJet[i],1.,-1.);
+      //h_GammaJet_minv_UpperError->Scale(sqrt(3.));
+      h_GammaJet_minv_LowerError->Add(h_GammaJet_minv_LowerBand,histosGammaJet[i],-1.,1.);
+      //h_GammaJet_minv_LowerError->Scale(sqrt(3.));
+
+      h_JetJet_minv_UpperError->Add(h_JetJet_minv_UpperBand,histosJetJet[i],1.,-1.);
+      //h_JetJet_minv_UpperError->Scale(sqrt(3.));
+      h_JetJet_minv_LowerError->Add(h_JetJet_minv_LowerBand,histosJetJet[i],-1.,1.);
+      //h_JetJet_minv_LowerError->Scale(sqrt(3.));
+    }
 
     histoFileGammaJet->cd();
     histosGammaJet[i]->Write(); 
@@ -748,9 +845,17 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
   }//end of loop over histograms
   
   histoFileGammaJet->cd();
+  h_GammaJet_minv_UpperBand->Write();
+  h_GammaJet_minv_LowerBand->Write();
+  h_GammaJet_minv_UpperError->Write();
+  h_GammaJet_minv_LowerError->Write();
   histoFileGammaJet->Close();
   
   histoFileJetJet->cd();
+  h_JetJet_minv_UpperBand->Write();
+  h_JetJet_minv_LowerBand->Write();
+  h_JetJet_minv_UpperError->Write();
+  h_JetJet_minv_LowerError->Write();
   histoFileJetJet->Close();
   
   histoFF->cd();
@@ -812,9 +917,11 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
       cgj[in]->SaveAs(GammaJetHists[in]+"_"+Sample+".C");
       cgj[in]->SaveAs(GammaJetHists[in]+"_"+Sample+".png");
       cgj[in]->SaveAs(GammaJetHists[in]+"_"+Sample+".pdf");
+      cgj[in]->SaveAs(GammaJetHists[in]+"_"+Sample+".eps");
       cjj[in]->SaveAs(JetJetHists[in]+"_"+Sample+".C");
       cjj[in]->SaveAs(JetJetHists[in]+"_"+Sample+".png");
       cjj[in]->SaveAs(JetJetHists[in]+"_"+Sample+".pdf");
+      cjj[in]->SaveAs(JetJetHists[in]+"_"+Sample+".eps");
 
     }//end of loop over histograms
 
@@ -825,6 +932,7 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
 void OverlayMCFake(TString Sample = "Diphoton", TString lumi = "1", TString JSONFile = "N0JSON")
 {
 
+  gStyle->SetOptStat("ourmei");
 
   TCanvas* CumulativeCanvas = new TCanvas("CumulativeCanvas", "CumulativeCanvas", 800., 600.);
   TCanvas* dataoverlayedCumulative = new TCanvas("dataoverlayedCumulative", "Data Overlayed onto Cumulative Plot",800.,600.);
@@ -839,15 +947,21 @@ void OverlayMCFake(TString Sample = "Diphoton", TString lumi = "1", TString JSON
   LumiLabelCumm->AddText(LuminosityCumm.Data());
   LumiLabelCumm->AddText(JSONFile.Data());
 
-  TH1F* h_DatadivBack = new TH1F("h_DatadivBack","Data/Background",89,20.,1800.); 
-  TH1F* h_DataMinusBack = new TH1F("h_DataMinusBack","Data-Background",89,20.,1800.); 
-  TH1F* h_DataMinusBackdivBack = new TH1F("h_DataMinusBackdivBack","(Data-Background)/Background",89,20.,1800.); 
-  TH1F* h_TotalBackground = new TH1F("h_TotalBackground","Data/Background",89,20.,1800.);
+  TH1F* h_DatadivBack = new TH1F("h_DatadivBack","",89,20.,1800.); 
+  TH1F* h_DataMinusBack = new TH1F("h_DataMinusBack","",89,20.,1800.); 
+  TH1F* h_DataMinusBackdivBack = new TH1F("h_DataMinusBackdivBack","",89,20.,1800.); 
+  TH1F* h_TotalBackground = new TH1F("h_TotalBackground","",89,20.,1800.);
 
   h_DatadivBack->Sumw2();
   h_DataMinusBack->Sumw2();
   h_DataMinusBackdivBack->Sumw2();
   h_TotalBackground->Sumw2();
+
+  TH1F* h_DatadivBackZoom = new TH1F("h_DatadivBackZoom","",39,20.,800.); 
+  TH1F* h_DataMinusBackdivBackZoom = new TH1F("h_DataMinusBackdivBackZoom","",39,20.,800.); 
+
+  h_DatadivBackZoom->Sumw2();
+  h_DataMinusBackdivBackZoom->Sumw2();
 
   TString histogramdata = HistogramFileLocation+Sample+"/histograms_"+Sample+".root";
   TFile* fdatahists = TFile::Open(histogramdata.Data());
@@ -892,16 +1006,18 @@ void OverlayMCFake(TString Sample = "Diphoton", TString lumi = "1", TString JSON
     c[i] = new TCanvas(canvasname, canvasname, 800., 600.);
     c[i]->cd();
 
-    StackLegend[i]= new TLegend(0.70,0.60,0.88,0.75,"","NDC");
+    StackLegend[i]= new TLegend(0.23,0.71,0.41,0.86,"","NDC");
     StackLegend[i]->SetFillStyle(0);
     StackLegend[i]->SetTextSize(0.03);
 
-    StackMC[i]= new THStack(fNames[i].Data(),fNames[i].Data());
+    TString StackName(fNames[i]+"_Stack");
+    //StackMC[i]= new THStack(StackName.Data(),StackName.Data());
+    StackMC[i]= new THStack(StackName.Data(),"");
 
     cout<<"Getting data histogram "<<endl;
     histosdata[i]=(TH1F*)fdatahists->Get(fNames[i].Data());
     histosdata[i]->SetMarkerColor(1);
-    cout<<"histo "<<histosdata[i]->GetName()<<" "<<histosdata[i]->GetEntries()<<" entries"<<endl;
+    cout<<"histo "<<histosdata[i]->GetName()<<" "<<histosdata[i]->GetEntries()<<" entries"<<histosdata[i]->Integral()<<" (integral)"<<endl;
 
     cout<<"Getting MC histogram "<<endl;
     histosmc[i]= (TH1F*)fMChists->Get(fNames[i].Data());
@@ -912,15 +1028,15 @@ void OverlayMCFake(TString Sample = "Diphoton", TString lumi = "1", TString JSON
     cout<<"Getting Jet+Jet histogram "<<endl;
     histosJetJet[i]=(TH1F*)fJetJethists->Get(JetJetHists[i].Data());
     histosJetJet[i]->SetFillColor(36); 
-    cout<<"histo "<<histosJetJet[i]->GetName()<<" "<<histosJetJet[i]->GetEntries()<<" entries "<<endl;
+    cout<<"histo "<<histosJetJet[i]->GetName()<<" "<<histosJetJet[i]->GetEntries()<<" entries "<<histosJetJet[i]->Integral()<<" (integral)"<<endl;
 
     cout<<"Getting Gamma+Jet histogram "<<endl;
     histosGammaJet[i]=(TH1F*)fGammaJethists->Get(GammaJetHists[i].Data());
     histosGammaJet[i]->SetFillColor(38);
-    cout<<"histo "<<histosGammaJet[i]->GetName()<<" "<<histosGammaJet[i]->GetEntries()<<" entries "<<endl;
+    cout<<"histo "<<histosGammaJet[i]->GetName()<<" "<<histosGammaJet[i]->GetEntries()<<" entries "<<histosGammaJet[i]->Integral()<<" (integral)"<<endl;
+
 
     if (i==0){
-
       h_TotalBackground->Add(histosJetJet[i],histosGammaJet[i],1.,1.);
       h_TotalBackground->Add(histosmc[i],1.);
 
@@ -929,13 +1045,23 @@ void OverlayMCFake(TString Sample = "Diphoton", TString lumi = "1", TString JSON
       h_DataMinusBack->Add(histosdata[i],h_TotalBackground,1.,-1.);
       h_DataMinusBackdivBack->Divide(h_DataMinusBack,h_TotalBackground,1.,1.);
 
+      //Zooming parts
+      h_DatadivBackZoom->Divide(histosdata[i],h_TotalBackground,1.,1.);
+      h_DataMinusBackdivBackZoom->Divide(h_DataMinusBack,h_TotalBackground,1.,1.);
+
       TCanvas* CanvasDatadivBack = new TCanvas("CDatadivBack","CDatadivBack", 800., 600.);
       CanvasDatadivBack->cd();
 
-      h_DatadivBack->SetMaximum(2.*h_DatadivBack->GetMaximum());	
-      h_DatadivBack->SetMinimum(0.);	
+      //h_DatadivBack->SetMaximum(2.*h_DatadivBack->GetMaximum());	
+      //h_DatadivBack->SetMinimum(0.);	
+      h_DatadivBack->SetMaximum(8.2);	
+      h_DatadivBack->SetMinimum(0.001);	
+      h_DatadivBack->SetEntries(histosdata[i]->GetEntries());	
       h_DatadivBack->Draw();
       
+      h_DatadivBack->GetXaxis()->SetTitle("M_{#gamma #gamma} (GeV)");
+      h_DatadivBack->GetYaxis()->SetTitle("Data/Background");
+
       CanvasDatadivBack->SaveAs("h_DatadivBack_"+Sample+"CompleteOverlay"+".png");
       CanvasDatadivBack->SaveAs("h_DatadivBack_"+Sample+"CompleteOverlay"+".eps");
       CanvasDatadivBack->SaveAs("h_DatadivBack_"+Sample+"CompleteOverlay"+".C");
@@ -943,19 +1069,49 @@ void OverlayMCFake(TString Sample = "Diphoton", TString lumi = "1", TString JSON
 
       Float_t maxvalue = max(h_DataMinusBackdivBack->GetMaximum(),fabs(h_DataMinusBackdivBack->GetMinimum()));
 
-      h_DataMinusBackdivBack->SetMaximum(2.*maxvalue);	
-      h_DataMinusBackdivBack->SetMinimum(-2.*maxvalue);	
+      //h_DataMinusBackdivBack->SetMaximum(2.*maxvalue);	
+      //h_DataMinusBackdivBack->SetMinimum(-2.*maxvalue);	
+      h_DataMinusBackdivBack->SetMaximum(6.);	
+      h_DataMinusBackdivBack->SetMinimum(-6.);	
+      h_DataMinusBackdivBack->SetEntries(histosdata[i]->GetEntries());	
       h_DataMinusBackdivBack->Draw();
 	      
+      h_DataMinusBackdivBack->GetXaxis()->SetTitle("M_{#gamma #gamma} (GeV)");
+      h_DataMinusBackdivBack->GetYaxis()->SetTitle("(Data - Background)/Background");
+
       CanvasDatadivBack->SaveAs("h_DataMinusBackdivBack_"+Sample+"CompleteOverlay"+".png");
       CanvasDatadivBack->SaveAs("h_DataMinusBackdivBack_"+Sample+"CompleteOverlay"+".eps");
       CanvasDatadivBack->SaveAs("h_DataMinusBackdivBack_"+Sample+"CompleteOverlay"+".C");
       CanvasDatadivBack->SaveAs("h_DataMinusBackdivBack_"+Sample+"CompleteOverlay"+".pdf");
 
-    }   
+      //Zooming parts
+      h_DatadivBack->SetMaximum(2.);	
+      h_DatadivBack->SetMinimum(0.001);	
+      h_DatadivBack->GetXaxis()->SetRangeUser(0.,800.);
+      h_DatadivBack->SetEntries(histosdata[i]->GetEntries());	
+      h_DatadivBack->Draw();
+      
+
+      CanvasDatadivBack->SaveAs("h_DatadivBack_Zoom_"+Sample+"CompleteOverlay"+".png");
+      CanvasDatadivBack->SaveAs("h_DatadivBack_Zoom_"+Sample+"CompleteOverlay"+".eps");
+      CanvasDatadivBack->SaveAs("h_DatadivBack_Zoom_"+Sample+"CompleteOverlay"+".C");
+      CanvasDatadivBack->SaveAs("h_DatadivBack_Zoom_"+Sample+"CompleteOverlay"+".pdf");
+
+      h_DataMinusBackdivBack->SetMaximum(1.5);	
+      h_DataMinusBackdivBack->SetMinimum(-1.5);	
+      h_DataMinusBackdivBack->GetXaxis()->SetRangeUser(0.,800.);
+      h_DataMinusBackdivBack->SetEntries(histosdata[i]->GetEntries());	
+      h_DataMinusBackdivBack->Draw();
+	      
+      CanvasDatadivBack->SaveAs("h_DataMinusBackdivBack_Zoom_"+Sample+"CompleteOverlay"+".png");
+      CanvasDatadivBack->SaveAs("h_DataMinusBackdivBack_Zoom_"+Sample+"CompleteOverlay"+".eps");
+      CanvasDatadivBack->SaveAs("h_DataMinusBackdivBack_Zoom_"+Sample+"CompleteOverlay"+".C");
+      CanvasDatadivBack->SaveAs("h_DataMinusBackdivBack_Zoom_"+Sample+"CompleteOverlay"+".pdf");
+
+    }
 
     c[i]->cd();    
-    
+
     StackMC[i]->Add(histosJetJet[i]);
     StackMC[i]->Add(histosGammaJet[i]);
     StackMC[i]->Add(histosmc[i]);
@@ -965,9 +1121,9 @@ void OverlayMCFake(TString Sample = "Diphoton", TString lumi = "1", TString JSON
     StackLegend[i]->AddEntry(histosGammaJet[0],"Photon+Jet","f");
     StackLegend[i]->AddEntry(histosJetJet[0],"Jet+Jet","f");
 
-    //-----------------------------------------------------
-    //THERE IS NO HIST NAMED h_Diphoton_Minv_high IN fNames
-    if ((strcmp(fNames[i],"h_Diphoton_Minv_high")==0 )|| (strcmp(fNames[i],"h_Photon1_pt")==0 ) || (strcmp(fNames[i],"h_Diphoton_Minv")==0) ||( strcmp(fNames[i],"h_Photon2_pt"))==0){
+    if ( (strcmp(fNames[i],"h_Diphoton_Minv_high")==0 ) || (strcmp(fNames[i],"h_Photon1_pt")==0 ) || (strcmp(fNames[i],"h_Diphoton_Minv")==0) || (strcmp(fNames[i],"h_Photon2_pt")==0) || (strcmp(fNames[i],"h_Diphoton_qt")==0) || (strcmp(fNames[i],"h_Diphoton_deltaR")==0) ){
+      StackMC[i]->SetMaximum(10.*histosdata[i]->GetMaximum());
+      histosdata[i]->SetMaximum(10.*histosdata[i]->GetMaximum());
       c[i]->SetLogy(1);
     }
     
@@ -977,27 +1133,38 @@ void OverlayMCFake(TString Sample = "Diphoton", TString lumi = "1", TString JSON
     StackMC[i]->SetMaximum(1.7*histosdata[i]->GetMaximum());
     histosdata[i]->SetMaximum(1.7*histosdata[i]->GetMaximum());
 
-    StackMC[i]->Draw("HIST") ;
-    histosdata[i]->Draw("EP,SAME");
+    StackMC[i]->Draw("HIST");
+    histosdata[i]->Draw("EP,SAMES");
+
+    histosdata[i]->GetXaxis()->SetTitle(XTitles[i].Data());
+    histosdata[i]->GetYaxis()->SetTitle(YTitles[i].Data());
+    StackMC[i]->GetHistogram()->GetXaxis()->SetTitle(XTitles[i].Data());
+    StackMC[i]->GetHistogram()->GetYaxis()->SetTitle(YTitles[i].Data());
 
     if ((strcmp(fNames[i],"h_Diphoton_cosThetaStar")==0) || (strcmp(fNames[i],"h_Photon1_phi")==0) ||  (strcmp(fNames[i],"h_Photon2_phi")==0)){
       histosdata[i]->SetMinimum(0.);
     }
 
-    LumiLabel->Draw();
-    StackLegend[i]->Draw();
+    LumiLabel->Draw("sames");
+    StackLegend[i]->Draw("sames");
     gPad->RedrawAxis();
     gPad->Update();
     
     c[i]->SaveAs(fNames[i]+"_"+Sample.Data()+"CompleteOverlay"+".C");
     c[i]->SaveAs(fNames[i]+"_"+Sample.Data()+"CompleteOverlay"+".png");
     c[i]->SaveAs(fNames[i]+"_"+Sample.Data()+"CompleteOverlay"+".pdf");
+    c[i]->SaveAs(fNames[i]+"_"+Sample.Data()+"CompleteOverlay"+".eps");
 
-    //AGAIN NO LOG FOR I = 2
-    //WHY THE HELL DELTAPHI SHOULD BE IN LOG
     if (i==2){
       c[i]->SetLogy(1);
+
+      StackMC[i]->SetMaximum(27.*histosdata[i]->GetMaximum());
+      histosdata[i]->SetMaximum(27.*histosdata[i]->GetMaximum());
+
       c[i]->SaveAs(fNames[i]+"_log_"+Sample.Data()+"CompleteOverlay"+".png"); 
+      c[i]->SaveAs(fNames[i]+"_log_"+Sample.Data()+"CompleteOverlay"+".eps"); 
+      c[i]->SaveAs(fNames[i]+"_log_"+Sample.Data()+"CompleteOverlay"+".pdf"); 
+      c[i]->SaveAs(fNames[i]+"_log_"+Sample.Data()+"CompleteOverlay"+".C"); 
     }      
 
     if (i==0){
@@ -1005,7 +1172,8 @@ void OverlayMCFake(TString Sample = "Diphoton", TString lumi = "1", TString JSON
       CumulativeCanvas->cd();
       CumulativeCanvas->SetLogy(1);
 
-      StackCumm = new THStack(fNames[i].Data(),fNames[i].Data());
+      TString StackCummName(fNames[i]+"_Stack");
+      StackCumm = new THStack(StackCummName.Data(),"");
 
       TH1F* h_Diphoton_Minv_log_DataCumm =  MakeChists(histosdata[0]);
       TH1F* h_Diphoton_Minv_log_MCCumm = MakeChists(histosmc[0]); 
@@ -1020,35 +1188,46 @@ void OverlayMCFake(TString Sample = "Diphoton", TString lumi = "1", TString JSON
       StackCumm->Add(h_Diphoton_Minv_log_GammaJetCumm);
       StackCumm->Add(h_Diphoton_Minv_log_MCCumm);
       
-      TLegend* DataMCLegendCumm = new TLegend(0.70,0.6,0.88,0.75,"","NDC");
+      TLegend* DataMCLegendCumm = new TLegend(0.23,0.71,0.41,0.86,"","NDC");
       DataMCLegendCumm->AddEntry( h_Diphoton_Minv_log_DataCumm,"Data","LEP");
       DataMCLegendCumm->AddEntry(h_Diphoton_Minv_log_MCCumm,"SM Diphoton","F");
       DataMCLegendCumm->AddEntry(h_Diphoton_Minv_log_GammaJetCumm,"Gamma+Jet","F");
       DataMCLegendCumm->AddEntry(h_Diphoton_Minv_log_JetJetCumm,"Jet+Jet","F");
       DataMCLegendCumm->SetFillColor(0);
 
-      StackCumm->SetMaximum(2.5*h_Diphoton_Minv_log_DataCumm->GetMaximum());
-      h_Diphoton_Minv_log_DataCumm->SetMaximum(2.5*h_Diphoton_Minv_log_DataCumm->GetMaximum());
+      StackCumm->SetMaximum(25*h_Diphoton_Minv_log_DataCumm->GetMaximum());
+      h_Diphoton_Minv_log_DataCumm->SetMaximum(25*h_Diphoton_Minv_log_DataCumm->GetMaximum());
 
       StackCumm->Draw("HIST");
-      h_Diphoton_Minv_log_DataCumm->Draw("EP,SAME");
+      h_Diphoton_Minv_log_DataCumm->Draw("EP,SAMES");
       gPad->RedrawAxis();
+
+      h_Diphoton_Minv_log_DataCumm->GetXaxis()->SetTitle(XTitles[i].Data());
+      h_Diphoton_Minv_log_DataCumm->GetYaxis()->SetTitle(YTitles[i].Data());
+      StackCumm->GetHistogram()->GetXaxis()->SetTitle(XTitles[i].Data());
+      StackCumm->GetHistogram()->GetYaxis()->SetTitle(YTitles[i].Data());
 
       LumiLabelCumm->Draw();
       DataMCLegendCumm->Draw();
-      CumulativeCanvas->SaveAs(fNames[i]+Sample.Data()+"Cumulative"+".png");
+      CumulativeCanvas->SaveAs(fNames[i]+"_"+Sample.Data()+"Cumulative"+".png");
+      CumulativeCanvas->SaveAs(fNames[i]+"_"+Sample.Data()+"Cumulative"+".eps");
+      CumulativeCanvas->SaveAs(fNames[i]+"_"+Sample.Data()+"Cumulative"+".pdf");
+      CumulativeCanvas->SaveAs(fNames[i]+"_"+Sample.Data()+"Cumulative"+".C");
       
       dataoverlayedCumulative->cd();
       dataoverlayedCumulative->SetLogy(1);
       StackCumm->Draw("HIST");
-      h_Diphoton_Minv_log_DataCumm->Draw("EP,SAME");
+      h_Diphoton_Minv_log_DataCumm->Draw("EP,SAMES");
       gPad->RedrawAxis();
       LumiLabelCumm->Draw();
       DataMCLegendCumm->Draw();
       histosdata[i]->SetMarkerColor(kRed);   
       
-      histosdata[i]->Draw("EP,SAME");
+      histosdata[i]->Draw("EP,SAMES");
       dataoverlayedCumulative->SaveAs(fNames[i]+Sample.Data()+"DataOverlayedCumulative"+".png");
+      dataoverlayedCumulative->SaveAs(fNames[i]+Sample.Data()+"DataOverlayedCumulative"+".eps");
+      dataoverlayedCumulative->SaveAs(fNames[i]+Sample.Data()+"DataOverlayedCumulative"+".pdf");
+      dataoverlayedCumulative->SaveAs(fNames[i]+Sample.Data()+"DataOverlayedCumulative"+".C");
              
     }
     gPad->Update();
@@ -1247,6 +1426,7 @@ void MakeValidationPlots( TString Sample  = "Validation", TString lumi = "10000"
       c[i]->SaveAs(nameHists[i]+"_"+Sample.Data()+"Overlay"+".C");
       c[i]->SaveAs(nameHists[i]+"_"+Sample.Data()+"Overlay"+".png");
       c[i]->SaveAs(nameHists[i]+"_"+Sample.Data()+"Overlay"+".pdf");
+      c[i]->SaveAs(nameHists[i]+"_"+Sample.Data()+"Overlay"+".eps");
     }//end of loop over histograms
 
 
@@ -1285,8 +1465,438 @@ void MakeValidationPlots( TString Sample  = "Validation", TString lumi = "10000"
   LumiLabelCumm->Draw();
   LegendCumm->Draw();
   CumulativeCanvas->SaveAs(nameHists[43]+Sample.Data()+"Overlay"+".png");
+  CumulativeCanvas->SaveAs(nameHists[43]+Sample.Data()+"Overlay"+".eps");
+  CumulativeCanvas->SaveAs(nameHists[43]+Sample.Data()+"Overlay"+".pdf");
+  CumulativeCanvas->SaveAs(nameHists[43]+Sample.Data()+"Overlay"+".C");
 
 }//end of method MakeValidationPlots
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void MakeYieldsTable(TString Sample = "Diphoton", Float_t lumiNumber = 1.)
+{
+
+  gStyle->SetOptStat("ourmei");
+
+  TString histogramdata = HistogramFileLocation+Sample+"/histograms_"+Sample+".root";
+  TFile* fdatahists = TFile::Open(histogramdata.Data());
+
+  TString histogramJetJet =HistogramFileLocation+Sample+"/histograms_"+Sample+"_JetJet.root";
+  TString histogramGammaJet =HistogramFileLocation+Sample+"/histograms_"+Sample+"_GammaJet.root";	
+  TFile* fJetJethists=TFile::Open(histogramJetJet.Data());
+  TFile* fGammaJethists=TFile::Open(histogramGammaJet.Data());
+
+  //HARDCODED
+  TString histogramMC =HistogramFileLocation+"/diphoton_tree_MC_all/histograms_diphoton_tree_MC_all.root";
+  TFile* fMChists=TFile::Open(histogramMC.Data());
+
+  TH1F* histosmc;
+  TH1F* histosdata;
+  TH1F* histosJetJet;
+  TH1F* histosJetJetUpperError;
+  TH1F* histosJetJetLowerError;
+  TH1F* histosGammaJet;
+  TH1F* histosGammaJetUpperError;
+  TH1F* histosGammaJetLowerError;
+  
+
+  cout<<"Getting data histogram "<<endl;
+  histosdata=(TH1F*)fdatahists->Get("h_Diphoton_Minv");
+  cout<<"histo "<<histosdata->GetName()<<" "<<histosdata->GetEntries()<<" entries"<<histosdata->Integral()<<" (integral)"<<endl;
+
+  cout<<"Getting MC histogram "<<endl;
+  histosmc= (TH1F*)fMChists->Get("h_Diphoton_Minv");
+  histosmc->Scale(lumiNumber);
+  cout<<"histo "<<histosmc->GetName()<<" "<<histosmc->GetEntries()<<" entries "<<histosmc->Integral()<<" (integral)"<<endl;
+
+  cout<<"Getting Jet+Jet histograms "<<endl;
+  histosJetJet=(TH1F*)fJetJethists->Get("h_JetJet_minv");
+  histosJetJetUpperError=(TH1F*)fJetJethists->Get("h_JetJet_minv_UpperError");
+  histosJetJetLowerError=(TH1F*)fJetJethists->Get("h_JetJet_minv_LowerError");
+  cout<<"histo "<<histosJetJet->GetName()<<" "<<histosJetJet->GetEntries()<<" entries "<<histosJetJet->Integral()<<" (integral)"<<endl;
+  cout<<"histo "<<histosJetJetUpperError->GetName()<<" "<<histosJetJetUpperError->GetEntries()<<" entries "<<histosJetJetUpperError->Integral()<<" (integral)"<<endl;
+  cout<<"histo "<<histosJetJetLowerError->GetName()<<" "<<histosJetJetLowerError->GetEntries()<<" entries "<<histosJetJetLowerError->Integral()<<" (integral)"<<endl;
+
+  cout<<"Getting Gamma+Jet histograms "<<endl;
+  histosGammaJet=(TH1F*)fGammaJethists->Get("h_GammaJet_minv");
+  histosGammaJetUpperError=(TH1F*)fGammaJethists->Get("h_GammaJet_minv_UpperError");
+  histosGammaJetLowerError=(TH1F*)fGammaJethists->Get("h_GammaJet_minv_LowerError");
+  cout<<"histo "<<histosGammaJet->GetName()<<" "<<histosGammaJet->GetEntries()<<" entries "<<histosGammaJet->Integral()<<" (integral)"<<endl;
+  cout<<"histo "<<histosGammaJetUpperError->GetName()<<" "<<histosGammaJetUpperError->GetEntries()<<" entries "<<histosGammaJetUpperError->Integral()<<" (integral)"<<endl;
+  cout<<"histo "<<histosGammaJetLowerError->GetName()<<" "<<histosGammaJetLowerError->GetEntries()<<" entries "<<histosGammaJetLowerError->Integral()<<" (integral)"<<endl;
+
+  //special part to calculate integrals in different mass ranges
+
+  //They all have the same binning
+  //Let's take the data one
+  Int_t binnr200 = -1;
+  Int_t binnr500 = -1;
+  Int_t binnr750 = -1;
+  Int_t binnr1000 = -1;
+  Int_t binnr1250 = -1;
+
+  Int_t nbinsX = histosdata->GetNbinsX();
+
+  for(int nbin = 0; nbin <  histosdata->GetNbinsX(); nbin++)
+    {
+      Float_t binlowedge = histosdata->GetBinLowEdge(nbin);
+      //cout<<"binlowedge "<<binlowedge<<endl;
+      if(binlowedge >= 200. && binnr200 == -1 ) {binnr200 = nbin;}
+      if(binlowedge >= 500. && binnr500 == -1 ) {binnr500 = nbin;}
+      if(binlowedge >= 750. && binnr750 == -1 ) {binnr750 = nbin;}
+      if(binlowedge >= 1000. && binnr1000 == -1 ) {binnr1000 = nbin;}
+      if(binlowedge >= 1250. && binnr1250 == -1 ) {binnr1250 = nbin;}
+    }
+  cout<<" binnr200 "<<binnr200<<endl;
+  cout<<" binnr500 "<<binnr500<<endl;
+  cout<<" binnr750 "<<binnr750<<endl;
+  cout<<" binnr1000 "<<binnr1000<<endl;
+  cout<<" binnr1250 "<<binnr1250<<endl;
+
+  //Once we have the bin numbers
+  //we compute the integrals
+  //and their stat uncertainties
+  //and their syst uncertainties
+
+  //For each contribution, we take nbinsX+1 to have the overflow
+
+  Float_t entriesJetJet = histosJetJet->Integral()+histosJetJet->GetBinContent(nbinsX+1);
+  Float_t entries200JetJet = histosJetJet->Integral(binnr200,nbinsX+1);
+  Float_t entries500JetJet = histosJetJet->Integral(binnr500,nbinsX+1);
+  Float_t entries750JetJet = histosJetJet->Integral(binnr750,nbinsX+1);
+  Float_t entries1000JetJet = histosJetJet->Integral(binnr1000,nbinsX+1);
+  Float_t entries1250JetJet = histosJetJet->Integral(binnr1250,nbinsX+1);
+	
+  Float_t errorsJetJet = histosJetJetUpperError->Integral()+histosJetJetUpperError->GetBinContent(nbinsX+1);
+  Float_t errors200JetJet = histosJetJetUpperError->Integral(binnr200,nbinsX+1);
+  Float_t errors500JetJet = histosJetJetUpperError->Integral(binnr500,nbinsX+1);
+  Float_t errors750JetJet = histosJetJetUpperError->Integral(binnr750,nbinsX+1);
+  Float_t errors1000JetJet = histosJetJetUpperError->Integral(binnr1000,nbinsX+1);
+  Float_t errors1250JetJet = histosJetJetUpperError->Integral(binnr1250,nbinsX+1);
+	
+
+
+
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","Jet+Jet & ",entriesJetJet," & "
+      ,entries200JetJet," & "
+      ,entries500JetJet," & "
+      ,entries750JetJet," & "
+      ,entries1000JetJet," & "
+      ,entries1250JetJet," \\ "
+      );
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",sqrt(entriesJetJet)," & "
+      ,sqrt(entries200JetJet)," & "
+      ,sqrt(entries500JetJet)," & "
+      ,sqrt(entries750JetJet)," & "
+      ,sqrt(entries1000JetJet)," & "
+      ,sqrt(entries1250JetJet)," \\ "
+      );
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","syst & ",errorsJetJet," & "
+      ,errors200JetJet," & "
+      ,errors500JetJet," & "
+      ,errors750JetJet," & "
+      ,errors1000JetJet," & "
+      ,errors1250JetJet," \\ "
+      );
+
+
+	
+  Float_t entriesGammaJet = histosGammaJet->Integral()+histosGammaJet->GetBinContent(nbinsX+1);
+  Float_t entries200GammaJet = histosGammaJet->Integral(binnr200,nbinsX+1);
+  Float_t entries500GammaJet = histosGammaJet->Integral(binnr500,nbinsX+1);
+  Float_t entries750GammaJet = histosGammaJet->Integral(binnr750,nbinsX+1);
+  Float_t entries1000GammaJet = histosGammaJet->Integral(binnr1000,nbinsX+1);
+  Float_t entries1250GammaJet = histosGammaJet->Integral(binnr1250,nbinsX+1);
+	
+  Float_t errorsGammaJet = histosGammaJetUpperError->Integral()+histosGammaJetUpperError->GetBinContent(nbinsX+1);
+  Float_t errors200GammaJet = histosGammaJetUpperError->Integral(binnr200,nbinsX+1);
+  Float_t errors500GammaJet = histosGammaJetUpperError->Integral(binnr500,nbinsX+1);
+  Float_t errors750GammaJet = histosGammaJetUpperError->Integral(binnr750,nbinsX+1);
+  Float_t errors1000GammaJet = histosGammaJetUpperError->Integral(binnr1000,nbinsX+1);
+  Float_t errors1250GammaJet = histosGammaJetUpperError->Integral(binnr1250,nbinsX+1);
+	
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","\Gamma+Jet & ",entriesGammaJet," & "
+      ,entries200GammaJet," & "
+      ,entries500GammaJet," & "
+      ,entries750GammaJet," & "
+      ,entries1000GammaJet," & "
+      ,entries1250GammaJet," \\ "
+      );
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",sqrt(entriesGammaJet)," & "
+      ,sqrt(entries200GammaJet)," & "
+      ,sqrt(entries500GammaJet)," & "
+      ,sqrt(entries750GammaJet)," & "
+      ,sqrt(entries1000GammaJet)," & "
+      ,sqrt(entries1250GammaJet)," \\ "
+      );
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","syst & ",errorsGammaJet," & "
+      ,errors200GammaJet," & "
+      ,errors500GammaJet," & "
+      ,errors750GammaJet," & "
+      ,errors1000GammaJet," & "
+      ,errors1250GammaJet," \\ "
+      );
+
+
+  Float_t entriesFake = entriesGammaJet + entriesJetJet;
+  Float_t entries200Fake = entries200GammaJet + entries200JetJet;
+  Float_t entries500Fake = entries500GammaJet + entries500JetJet;
+  Float_t entries750Fake = entries750GammaJet + entries750JetJet;
+  Float_t entries1000Fake = entries1000GammaJet + entries1000JetJet;
+  Float_t entries1250Fake = entries1250GammaJet + entries1250JetJet;
+	
+  Float_t errorsFake = sqrt( (errorsGammaJet * errorsGammaJet) + (errorsJetJet * errorsJetJet) ); 
+  Float_t errors200Fake = sqrt( (errors200GammaJet * errors200GammaJet) + (errors200JetJet * errors200JetJet) ); 
+  Float_t errors500Fake = sqrt( (errors500GammaJet * errors500GammaJet) + (errors500JetJet * errors500JetJet) ); 
+  Float_t errors750Fake = sqrt( (errors750GammaJet * errors750GammaJet) + (errors750JetJet * errors750JetJet) ); 
+  Float_t errors1000Fake = sqrt( (errors1000GammaJet * errors1000GammaJet) + (errors1000JetJet * errors1000JetJet) ); 
+  Float_t errors1250Fake = sqrt( (errors1250GammaJet * errors1250GammaJet) + (errors1250JetJet * errors1250JetJet) ); 
+	
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","Total Fake & ",entriesFake," & "
+      ,entries200Fake," & "
+      ,entries500Fake," & "
+      ,entries750Fake," & "
+      ,entries1000Fake," & "
+      ,entries1250Fake," \\ "
+      );
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",sqrt(entriesFake)," & "
+      ,sqrt(entries200Fake)," & "
+      ,sqrt(entries500Fake)," & "
+      ,sqrt(entries750Fake)," & "
+      ,sqrt(entries1000Fake)," & "
+      ,sqrt(entries1250Fake)," \\ "
+      );
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","syst & ",errorsFake," & "
+      ,errors200Fake," & "
+      ,errors500Fake," & "
+      ,errors750Fake," & "
+      ,errors1000Fake," & "
+      ,errors1250Fake," \\ "
+      );
+
+
+  Float_t entriesMC = histosmc->Integral()+histosmc->GetBinContent(nbinsX+1);
+  Float_t entries200MC = histosmc->Integral(binnr200,nbinsX+1);
+  Float_t entries500MC = histosmc->Integral(binnr500,nbinsX+1);
+  Float_t entries750MC = histosmc->Integral(binnr750,nbinsX+1);
+  Float_t entries1000MC = histosmc->Integral(binnr1000,nbinsX+1);
+  Float_t entries1250MC = histosmc->Integral(binnr1250,nbinsX+1);
+	
+  //No syst uncertainties for MC yet
+  Float_t errorsMC = 0.;
+  Float_t errors200MC = 0.;
+  Float_t errors500MC = 0.;
+  Float_t errors750MC = 0.;
+  Float_t errors1000MC = 0.;
+  Float_t errors1250MC = 0.;
+	
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","MC & ",entriesMC," & "
+      ,entries200MC," & "
+      ,entries500MC," & "
+      ,entries750MC," & "
+      ,entries1000MC," & "
+      ,entries1250MC," \\ "
+      );
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",sqrt(entriesMC)," & "
+      ,sqrt(entries200MC)," & "
+      ,sqrt(entries500MC)," & "
+      ,sqrt(entries750MC)," & "
+      ,sqrt(entries1000MC)," & "
+      ,sqrt(entries1250MC)," \\ "
+      );
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","syst & ",errorsMC," & "
+      ,errors200MC," & "
+      ,errors500MC," & "
+      ,errors750MC," & "
+      ,errors1000MC," & "
+      ,errors1250MC," \\ "
+      );
+
+
+
+  Float_t entriesBackground = entriesGammaJet + entriesJetJet + entriesMC;
+  Float_t entries200Background = entries200GammaJet + entries200JetJet + entries200MC;
+  Float_t entries500Background = entries500GammaJet + entries500JetJet + entries500MC;
+  Float_t entries750Background = entries750GammaJet + entries750JetJet + entries750MC;
+  Float_t entries1000Background = entries1000GammaJet + entries1000JetJet + entries1000MC;
+  Float_t entries1250Background = entries1250GammaJet + entries1250JetJet + entries1250MC;
+	
+  Float_t errorsBackground = sqrt( (errorsGammaJet * errorsGammaJet) + (errorsJetJet * errorsJetJet) + (errorsMC * errorsMC) ); 
+  Float_t errors200Background = sqrt( (errors200GammaJet * errors200GammaJet) + (errors200JetJet * errors200JetJet) + (errors200MC * errors200MC) ); 
+  Float_t errors500Background = sqrt( (errors500GammaJet * errors500GammaJet) + (errors500JetJet * errors500JetJet) + (errors500MC * errors500MC) ); 
+  Float_t errors750Background = sqrt( (errors750GammaJet * errors750GammaJet) + (errors750JetJet * errors750JetJet) + (errors750MC * errors750MC) ); 
+  Float_t errors1000Background = sqrt( (errors1000GammaJet * errors1000GammaJet) + (errors1000JetJet * errors1000JetJet) + (errors1000MC * errors1000MC) ); 
+  Float_t errors1250Background = sqrt( (errors1250GammaJet * errors1250GammaJet) + (errors1250JetJet * errors1250JetJet) + (errors1250MC * errors1250MC) ); 
+	
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","Total Background & ",entriesBackground," & "
+      ,entries200Background," & "
+      ,entries500Background," & "
+      ,entries750Background," & "
+      ,entries1000Background," & "
+      ,entries1250Background," \\ "
+      );
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",sqrt(entriesBackground)," & "
+      ,sqrt(entries200Background)," & "
+      ,sqrt(entries500Background)," & "
+      ,sqrt(entries750Background)," & "
+      ,sqrt(entries1000Background)," & "
+      ,sqrt(entries1250Background)," \\ "
+      );
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","syst & ",errorsBackground," & "
+      ,errors200Background," & "
+      ,errors500Background," & "
+      ,errors750Background," & "
+      ,errors1000Background," & "
+      ,errors1250Background," \\ "
+      );
+
+
+  Float_t entriesData = histosdata->Integral()+histosdata->GetBinContent(nbinsX+1);
+  Float_t entries200Data = histosdata->Integral(binnr200,nbinsX+1);
+  Float_t entries500Data = histosdata->Integral(binnr500,nbinsX+1);
+  Float_t entries750Data = histosdata->Integral(binnr750,nbinsX+1);
+  Float_t entries1000Data = histosdata->Integral(binnr1000,nbinsX+1);
+  Float_t entries1250Data = histosdata->Integral(binnr1250,nbinsX+1);
+	
+  Float_t errorsData = 0.;
+  Float_t errors200Data = 0.;
+  Float_t errors500Data = 0.;
+  Float_t errors750Data = 0.;
+  Float_t errors1000Data = 0.;
+  Float_t errors1250Data = 0.;
+	
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","Data & ",entriesData," & "
+      ,entries200Data," & "
+      ,entries500Data," & "
+      ,entries750Data," & "
+      ,entries1000Data," & "
+      ,entries1250Data," \\ "
+      );
+	
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",sqrt(entriesData)," & "
+      ,sqrt(entries200Data)," & "
+      ,sqrt(entries500Data)," & "
+      ,sqrt(entries750Data)," & "
+      ,sqrt(entries1000Data)," & "
+      ,sqrt(entries1250Data)," \\ "
+      );
+
+	
+
+
+
+  Float_t entriesDataOverBackground = entriesData/entriesBackground;
+  Float_t entries200DataOverBackground = entries200Data/entries200Background;
+  Float_t entries500DataOverBackground = entries500Data/entries500Background;
+  Float_t entries750DataOverBackground = entries750Data/entries750Background;
+  Float_t entries1000DataOverBackground = entries1000Data/entries1000Background;
+  Float_t entries1250DataOverBackground = entries1250Data/entries1250Background;
+	
+  Float_t errorsDataOverBackground = entriesDataOverBackground * sqrt( (errorsData/entriesData)*(errorsData/entriesData) + (errorsBackground/entriesBackground)*(errorsBackground/entriesBackground) );
+  Float_t errors200DataOverBackground = entries200DataOverBackground * sqrt( (errors200Data/entries200Data)*(errors200Data/entries200Data) + (errors200Background/entries200Background)*(errors200Background/entries200Background) );
+  Float_t errors500DataOverBackground = entries500DataOverBackground * sqrt( (errors500Data/entries500Data)*(errors500Data/entries500Data) + (errors500Background/entries500Background)*(errors500Background/entries500Background) );
+  Float_t errors750DataOverBackground = entries750DataOverBackground * sqrt( (errors750Data/entries750Data)*(errors750Data/entries750Data) + (errors750Background/entries750Background)*(errors750Background/entries750Background) );
+  Float_t errors1000DataOverBackground = entries1000DataOverBackground * sqrt( (errors1000Data/entries1000Data)*(errors1000Data/entries1000Data) + (errors1000Background/entries1000Background)*(errors1000Background/entries1000Background) );
+  Float_t errors1250DataOverBackground = entries1250DataOverBackground * sqrt( (errors1250Data/entries1250Data)*(errors1250Data/entries1250Data) + (errors1250Background/entries1250Background)*(errors1250Background/entries1250Background) );
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","DataOverBackground & ",entriesDataOverBackground," & "
+      ,entries200DataOverBackground," & "
+      ,entries500DataOverBackground," & "
+      ,entries750DataOverBackground," & "
+      ,entries1000DataOverBackground," & "
+      ,entries1250DataOverBackground," \\ "
+      );	
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",entriesDataOverBackground * sqrt(1./entriesData + 1./entriesBackground)," & "
+      ,entries200DataOverBackground * sqrt(1./entries200Data + 1./entries200Background)," & "
+      ,entries500DataOverBackground * sqrt(1./entries500Data + 1./entries500Background)," & "
+      ,entries750DataOverBackground * sqrt(1./entries750Data + 1./entries750Background)," & "
+      ,entries1000DataOverBackground * sqrt(1./entries1000Data + 1./entries1000Background)," & "
+      ,entries1250DataOverBackground * sqrt(1./entries1250Data + 1./entries1250Background)," \\ "
+      );
+
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","syst & ",errorsDataOverBackground," & "
+      ,errors200DataOverBackground," & "
+      ,errors500DataOverBackground," & "
+      ,errors750DataOverBackground," & "
+      ,errors1000DataOverBackground," & "
+      ,errors1250DataOverBackground," \\ "
+      );
+
+
+
+}//end of method MakeYieldsTable
+
+
+
+
+
 
 
 

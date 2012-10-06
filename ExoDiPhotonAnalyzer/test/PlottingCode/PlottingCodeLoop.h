@@ -866,7 +866,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_Diphoton_qt = new TH1F("h_Diphoton_qt","Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_Diphoton_qt_log = new TH1F("h_Diphoton_qt_log","Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_Diphoton_deltaR = new TH1F("h_Diphoton_deltaR","Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
-  h_Diphoton_deltaEta = new TH1F("h_Diphoton_deltaEta","Diphoton #Delta#eta;#gamma#gamma #Delta#eta",120,-6.,6.);
+  h_Diphoton_deltaEta = new TH1F("h_Diphoton_deltaEta","Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
   h_Diphoton_deltaPhi = new TH1F("h_Diphoton_deltaPhi","Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
   h_Diphoton_cosThetaStar = new TH1F("h_Diphoton_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.); 
 
@@ -921,7 +921,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_FakeRate_tt_minv_high         = new TH1F("h_FakeRate_tt_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
   h_FakeRate_tt_qt           = new TH1F("h_FakeRate_tt_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);    
   h_FakeRate_tt_deltaPhi     = new TH1F("h_FakeRate_tt_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159); 
-  h_FakeRate_tt_deltaEta     = new TH1F("h_FakeRate_tt_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",120,-6.,6.);     
+  h_FakeRate_tt_deltaEta     = new TH1F("h_FakeRate_tt_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);     
   h_FakeRate_tt_deltaR       = new TH1F("h_FakeRate_tt_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);     
   h_FakeRate_tt_cosThetaStar = new TH1F("h_FakeRate_tt_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);      
 
@@ -939,7 +939,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_FakeRate_ft_minv_high         = new TH1F("h_FakeRate_ft_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
   h_FakeRate_ft_qt           = new TH1F("h_FakeRate_ft_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_FakeRate_ft_deltaPhi     = new TH1F("h_FakeRate_ft_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
-  h_FakeRate_ft_deltaEta     = new TH1F("h_FakeRate_ft_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",120,-6.,6.);
+  h_FakeRate_ft_deltaEta     = new TH1F("h_FakeRate_ft_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
   h_FakeRate_ft_deltaR       = new TH1F("h_FakeRate_ft_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
   h_FakeRate_ft_cosThetaStar = new TH1F("h_FakeRate_ft_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);
 
@@ -961,7 +961,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_FakeRate_tf_minv_high         = new TH1F("h_FakeRate_tf_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
   h_FakeRate_tf_qt           = new TH1F("h_FakeRate_tf_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_FakeRate_tf_deltaPhi     = new TH1F("h_FakeRate_tf_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
-  h_FakeRate_tf_deltaEta     = new TH1F("h_FakeRate_tf_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",120,-6.,6.);
+  h_FakeRate_tf_deltaEta     = new TH1F("h_FakeRate_tf_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
   h_FakeRate_tf_deltaR       = new TH1F("h_FakeRate_tf_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
   h_FakeRate_tf_cosThetaStar = new TH1F("h_FakeRate_tf_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);
 
@@ -984,7 +984,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_FakeRate_ff_minv_high         = new TH1F("h_FakeRate_ff_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
   h_FakeRate_ff_qt           = new TH1F("h_FakeRate_ff_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_FakeRate_ff_deltaPhi     = new TH1F("h_FakeRate_ff_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
-  h_FakeRate_ff_deltaEta     = new TH1F("h_FakeRate_ff_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",120,-6.,6.);
+  h_FakeRate_ff_deltaEta     = new TH1F("h_FakeRate_ff_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
   h_FakeRate_ff_deltaR       = new TH1F("h_FakeRate_ff_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
   h_FakeRate_ff_cosThetaStar = new TH1F("h_FakeRate_ff_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);
 
