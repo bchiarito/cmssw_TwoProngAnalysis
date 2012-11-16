@@ -43,9 +43,13 @@ TString fNames[12] = {"h_Diphoton_Minv","h_Diphoton_qt","h_Diphoton_deltaPhi","h
 TString TreeFileLocation = "/afs/cern.ch/work/c/charaf/private/DiPhotonTrees/";
 TString HistogramFileLocation = "/afs/cern.ch/work/c/charaf/private/DiPhotonTrees/Histograms/";
 
-int inputfiles=4 ;
+int inputfiles=4;
 double xsec[4]={25.41,1.079e-2,15.53,3.202e-4};
 int ngenevents[4]={500254,500038,500050,500352};
+
+// int inputfiles=3;
+// double xsec[4]={15.53,3.202e-4,75.39};
+// int ngenevents[4]={500050,500352,1154970};
 
 TFile* ftemp[4];
 
@@ -58,12 +62,21 @@ void CreateHistogramFiles(TString Sample = "Diphoton", TString SampleType = "dat
       <<" JSON: "<<JSON.Data()
       <<endl;
 
+  //   char *answer = "n";
+  //   cout<<"signal Sample RS Graviton y/n ";
+  //   cin>>answer;
+
   TString outName;
   TFile *outfilename;
 
   TString  inputfile= TreeFileLocation+Sample+".root";
    
   TChain *chain_tt = new TChain("diphotonAnalyzer/fTree");
+  //TChain *chain_tt = new TChain("diphotonSignalMCAnalyzer/fTree");
+
+  //if(answer == "n") chain_tt = new TChain("diphotonAnalyzer/fTree");
+  //if(answer == "y") chain_tt = new TChain("diphotonSignalMCAnalyzer/fTree");
+
   chain_tt->Add(inputfile.Data());
   cout << "TT entries = " << chain_tt->GetEntries() <<endl;
   
@@ -269,6 +282,9 @@ void MakeCombinedMCHistos()
   inputmcfiles[1]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt250ToInf_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBorn_Pt250ToInf_Summer12_Sept10th.root";
   inputmcfiles[2]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th.root";	
   inputmcfiles[3]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th.root";
+  //   inputmcfiles[0]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th.root";	
+  //   inputmcfiles[1]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th.root";
+  //   inputmcfiles[2]= HistogramFileLocation+"ExoDiPhotonAnalyzer_DiPhotonJetsMadGraph/histograms_ExoDiPhotonAnalyzer_DiPhotonJetsMadGraph.root";
 
   cout << "Input MC ROOT files: " <<endl;
 
@@ -678,16 +694,16 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
   h_GammaJet_eta2 = new TH1F("h_GammaJet_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_GammaJet_phi2 = new TH1F("h_GammaJet_phi2","#gamma_{1} #phi;#gamma_{1} #phi",36,-3.14159,3.14159);
   //   h_GammaJet_minv         = new TH1F("h_GammaJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",43,140,1000);
-  h_GammaJet_minv         = new TH1F("h_GammaJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",89,20.,1800.);
+  h_GammaJet_minv         = new TH1F("h_GammaJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",149,20.,3000.);
   h_GammaJet_qt           = new TH1F("h_GammaJet_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_GammaJet_deltaPhi     = new TH1F("h_GammaJet_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
   h_GammaJet_deltaEta     = new TH1F("h_GammaJet_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
   h_GammaJet_deltaR       = new TH1F("h_GammaJet_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
   h_GammaJet_cosThetaStar = new TH1F("h_GammaJet_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);
-  h_GammaJet_minv_UpperBand         = new TH1F("h_GammaJet_minv_UpperBand",        "Diphoton Invariant Mass Upper Syst. Band;M_{#gamma#gamma} [GeV]",89,20.,1800.);
-  h_GammaJet_minv_LowerBand         = new TH1F("h_GammaJet_minv_LowerBand",        "Diphoton Invariant Mass Lower Syst. Band;M_{#gamma#gamma} [GeV]",89,20.,1800.);
-  h_GammaJet_minv_UpperError         = new TH1F("h_GammaJet_minv_UpperError",        "Diphoton Invariant Mass Upper Syst. Error;M_{#gamma#gamma} [GeV]",89,20.,1800.);
-  h_GammaJet_minv_LowerError         = new TH1F("h_GammaJet_minv_LowerError",        "Diphoton Invariant Mass Lower Syst. Error;M_{#gamma#gamma} [GeV]",89,20.,1800.);
+  h_GammaJet_minv_UpperBand         = new TH1F("h_GammaJet_minv_UpperBand",        "Diphoton Invariant Mass Upper Syst. Band;M_{#gamma#gamma} [GeV]",149,20.,3000.);
+  h_GammaJet_minv_LowerBand         = new TH1F("h_GammaJet_minv_LowerBand",        "Diphoton Invariant Mass Lower Syst. Band;M_{#gamma#gamma} [GeV]",149,20.,3000.);
+  h_GammaJet_minv_UpperError         = new TH1F("h_GammaJet_minv_UpperError",        "Diphoton Invariant Mass Upper Syst. Error;M_{#gamma#gamma} [GeV]",149,20.,3000.);
+  h_GammaJet_minv_LowerError         = new TH1F("h_GammaJet_minv_LowerError",        "Diphoton Invariant Mass Lower Syst. Error;M_{#gamma#gamma} [GeV]",149,20.,3000.);
 
 
   h_JetJet_pt1  = new TH1F("h_JetJet_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",42,60.,900.);
@@ -697,16 +713,16 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
   h_JetJet_eta2 = new TH1F("h_JetJet_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_JetJet_phi2 = new TH1F("h_JetJet_phi2","#gamma_{1} #phi;#gamma_{1} #phi",36,-3.14159,3.14159);
   //   h_JetJet_minv         = new TH1F("h_JetJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",43,140,1000);
-  h_JetJet_minv         = new TH1F("h_JetJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",89,20.,1800.);
+  h_JetJet_minv         = new TH1F("h_JetJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",149,20.,3000.);
   h_JetJet_qt           = new TH1F("h_JetJet_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_JetJet_deltaPhi     = new TH1F("h_JetJet_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
   h_JetJet_deltaEta     = new TH1F("h_JetJet_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
   h_JetJet_deltaR       = new TH1F("h_JetJet_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
   h_JetJet_cosThetaStar = new TH1F("h_JetJet_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);
-  h_JetJet_minv_UpperBand         = new TH1F("h_JetJet_minv_UpperBand",        "Diphoton Invariant Mass Upper Syst. Band;M_{#gamma#gamma} [GeV]",89,20.,1800.);
-  h_JetJet_minv_LowerBand         = new TH1F("h_JetJet_minv_LowerBand",        "Diphoton Invariant Mass Lower Syst. Band;M_{#gamma#gamma} [GeV]",89,20.,1800.);
-  h_JetJet_minv_UpperError         = new TH1F("h_JetJet_minv_UpperError",        "Diphoton Invariant Mass Upper Syst. Error;M_{#gamma#gamma} [GeV]",89,20.,1800.);
-  h_JetJet_minv_LowerError         = new TH1F("h_JetJet_minv_LowerError",        "Diphoton Invariant Mass Lower Syst. Error;M_{#gamma#gamma} [GeV]",89,20.,1800.);
+  h_JetJet_minv_UpperBand         = new TH1F("h_JetJet_minv_UpperBand",        "Diphoton Invariant Mass Upper Syst. Band;M_{#gamma#gamma} [GeV]",149,20.,3000.);
+  h_JetJet_minv_LowerBand         = new TH1F("h_JetJet_minv_LowerBand",        "Diphoton Invariant Mass Lower Syst. Band;M_{#gamma#gamma} [GeV]",149,20.,3000.);
+  h_JetJet_minv_UpperError         = new TH1F("h_JetJet_minv_UpperError",        "Diphoton Invariant Mass Upper Syst. Error;M_{#gamma#gamma} [GeV]",149,20.,3000.);
+  h_JetJet_minv_LowerError         = new TH1F("h_JetJet_minv_LowerError",        "Diphoton Invariant Mass Lower Syst. Error;M_{#gamma#gamma} [GeV]",149,20.,3000.);
 
   TString histoTFlocation=HistogramFileLocation.Data()+Sample+"/histograms_"+Sample+"_TF.root";
   TString histoFFlocation=HistogramFileLocation.Data()+Sample+"/histograms_"+Sample+"_FF.root";
@@ -947,10 +963,10 @@ void OverlayMCFake(TString Sample = "Diphoton", TString lumi = "1", TString JSON
   LumiLabelCumm->AddText(LuminosityCumm.Data());
   LumiLabelCumm->AddText(JSONFile.Data());
 
-  TH1F* h_DatadivBack = new TH1F("h_DatadivBack","",89,20.,1800.); 
-  TH1F* h_DataMinusBack = new TH1F("h_DataMinusBack","",89,20.,1800.); 
-  TH1F* h_DataMinusBackdivBack = new TH1F("h_DataMinusBackdivBack","",89,20.,1800.); 
-  TH1F* h_TotalBackground = new TH1F("h_TotalBackground","",89,20.,1800.);
+  TH1F* h_DatadivBack = new TH1F("h_DatadivBack","",149,20.,3000.); 
+  TH1F* h_DataMinusBack = new TH1F("h_DataMinusBack","",149,20.,3000.); 
+  TH1F* h_DataMinusBackdivBack = new TH1F("h_DataMinusBackdivBack","",149,20.,3000.); 
+  TH1F* h_TotalBackground = new TH1F("h_TotalBackground","",149,20.,3000.);
 
   h_DatadivBack->Sumw2();
   h_DataMinusBack->Sumw2();
@@ -1634,28 +1650,28 @@ void MakeYieldsTable(TString Sample = "Diphoton", Float_t lumiNumber = 1.)
 
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","Jet+Jet & ",entriesJetJet," & "
-      ,entries200JetJet," & "
-      ,entries500JetJet," & "
-      ,entries750JetJet," & "
-      ,entries1000JetJet," & "
-      ,entries1250JetJet," \\ "
-      );
+	 ,entries200JetJet," & "
+	 ,entries500JetJet," & "
+	 ,entries750JetJet," & "
+	 ,entries1000JetJet," & "
+	 ,entries1250JetJet," \\ "
+	 );
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",sqrt(entriesJetJet)," & "
-      ,sqrt(entries200JetJet)," & "
-      ,sqrt(entries500JetJet)," & "
-      ,sqrt(entries750JetJet)," & "
-      ,sqrt(entries1000JetJet)," & "
-      ,sqrt(entries1250JetJet)," \\ "
-      );
+	 ,sqrt(entries200JetJet)," & "
+	 ,sqrt(entries500JetJet)," & "
+	 ,sqrt(entries750JetJet)," & "
+	 ,sqrt(entries1000JetJet)," & "
+	 ,sqrt(entries1250JetJet)," \\ "
+	 );
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","syst & ",errorsJetJet," & "
-      ,errors200JetJet," & "
-      ,errors500JetJet," & "
-      ,errors750JetJet," & "
-      ,errors1000JetJet," & "
-      ,errors1250JetJet," \\ "
-      );
+	 ,errors200JetJet," & "
+	 ,errors500JetJet," & "
+	 ,errors750JetJet," & "
+	 ,errors1000JetJet," & "
+	 ,errors1250JetJet," \\ "
+	 );
 
 
 	
@@ -1674,28 +1690,28 @@ void MakeYieldsTable(TString Sample = "Diphoton", Float_t lumiNumber = 1.)
   Float_t errors1250GammaJet = histosGammaJetUpperError->Integral(binnr1250,nbinsX+1);
 	
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","\Gamma+Jet & ",entriesGammaJet," & "
-      ,entries200GammaJet," & "
-      ,entries500GammaJet," & "
-      ,entries750GammaJet," & "
-      ,entries1000GammaJet," & "
-      ,entries1250GammaJet," \\ "
-      );
+	 ,entries200GammaJet," & "
+	 ,entries500GammaJet," & "
+	 ,entries750GammaJet," & "
+	 ,entries1000GammaJet," & "
+	 ,entries1250GammaJet," \\ "
+	 );
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",sqrt(entriesGammaJet)," & "
-      ,sqrt(entries200GammaJet)," & "
-      ,sqrt(entries500GammaJet)," & "
-      ,sqrt(entries750GammaJet)," & "
-      ,sqrt(entries1000GammaJet)," & "
-      ,sqrt(entries1250GammaJet)," \\ "
-      );
+	 ,sqrt(entries200GammaJet)," & "
+	 ,sqrt(entries500GammaJet)," & "
+	 ,sqrt(entries750GammaJet)," & "
+	 ,sqrt(entries1000GammaJet)," & "
+	 ,sqrt(entries1250GammaJet)," \\ "
+	 );
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","syst & ",errorsGammaJet," & "
-      ,errors200GammaJet," & "
-      ,errors500GammaJet," & "
-      ,errors750GammaJet," & "
-      ,errors1000GammaJet," & "
-      ,errors1250GammaJet," \\ "
-      );
+	 ,errors200GammaJet," & "
+	 ,errors500GammaJet," & "
+	 ,errors750GammaJet," & "
+	 ,errors1000GammaJet," & "
+	 ,errors1250GammaJet," \\ "
+	 );
 
 
   Float_t entriesFake = entriesGammaJet + entriesJetJet;
@@ -1713,28 +1729,28 @@ void MakeYieldsTable(TString Sample = "Diphoton", Float_t lumiNumber = 1.)
   Float_t errors1250Fake = sqrt( (errors1250GammaJet * errors1250GammaJet) + (errors1250JetJet * errors1250JetJet) ); 
 	
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","Total Fake & ",entriesFake," & "
-      ,entries200Fake," & "
-      ,entries500Fake," & "
-      ,entries750Fake," & "
-      ,entries1000Fake," & "
-      ,entries1250Fake," \\ "
-      );
+	 ,entries200Fake," & "
+	 ,entries500Fake," & "
+	 ,entries750Fake," & "
+	 ,entries1000Fake," & "
+	 ,entries1250Fake," \\ "
+	 );
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",sqrt(entriesFake)," & "
-      ,sqrt(entries200Fake)," & "
-      ,sqrt(entries500Fake)," & "
-      ,sqrt(entries750Fake)," & "
-      ,sqrt(entries1000Fake)," & "
-      ,sqrt(entries1250Fake)," \\ "
-      );
+	 ,sqrt(entries200Fake)," & "
+	 ,sqrt(entries500Fake)," & "
+	 ,sqrt(entries750Fake)," & "
+	 ,sqrt(entries1000Fake)," & "
+	 ,sqrt(entries1250Fake)," \\ "
+	 );
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","syst & ",errorsFake," & "
-      ,errors200Fake," & "
-      ,errors500Fake," & "
-      ,errors750Fake," & "
-      ,errors1000Fake," & "
-      ,errors1250Fake," \\ "
-      );
+	 ,errors200Fake," & "
+	 ,errors500Fake," & "
+	 ,errors750Fake," & "
+	 ,errors1000Fake," & "
+	 ,errors1250Fake," \\ "
+	 );
 
 
   Float_t entriesMC = histosmc->Integral()+histosmc->GetBinContent(nbinsX+1);
@@ -1753,28 +1769,28 @@ void MakeYieldsTable(TString Sample = "Diphoton", Float_t lumiNumber = 1.)
   Float_t errors1250MC = 0.;
 	
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","MC & ",entriesMC," & "
-      ,entries200MC," & "
-      ,entries500MC," & "
-      ,entries750MC," & "
-      ,entries1000MC," & "
-      ,entries1250MC," \\ "
-      );
+	 ,entries200MC," & "
+	 ,entries500MC," & "
+	 ,entries750MC," & "
+	 ,entries1000MC," & "
+	 ,entries1250MC," \\ "
+	 );
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",sqrt(entriesMC)," & "
-      ,sqrt(entries200MC)," & "
-      ,sqrt(entries500MC)," & "
-      ,sqrt(entries750MC)," & "
-      ,sqrt(entries1000MC)," & "
-      ,sqrt(entries1250MC)," \\ "
-      );
+	 ,sqrt(entries200MC)," & "
+	 ,sqrt(entries500MC)," & "
+	 ,sqrt(entries750MC)," & "
+	 ,sqrt(entries1000MC)," & "
+	 ,sqrt(entries1250MC)," \\ "
+	 );
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","syst & ",errorsMC," & "
-      ,errors200MC," & "
-      ,errors500MC," & "
-      ,errors750MC," & "
-      ,errors1000MC," & "
-      ,errors1250MC," \\ "
-      );
+	 ,errors200MC," & "
+	 ,errors500MC," & "
+	 ,errors750MC," & "
+	 ,errors1000MC," & "
+	 ,errors1250MC," \\ "
+	 );
 
 
 
@@ -1793,28 +1809,28 @@ void MakeYieldsTable(TString Sample = "Diphoton", Float_t lumiNumber = 1.)
   Float_t errors1250Background = sqrt( (errors1250GammaJet * errors1250GammaJet) + (errors1250JetJet * errors1250JetJet) + (errors1250MC * errors1250MC) ); 
 	
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","Total Background & ",entriesBackground," & "
-      ,entries200Background," & "
-      ,entries500Background," & "
-      ,entries750Background," & "
-      ,entries1000Background," & "
-      ,entries1250Background," \\ "
-      );
+	 ,entries200Background," & "
+	 ,entries500Background," & "
+	 ,entries750Background," & "
+	 ,entries1000Background," & "
+	 ,entries1250Background," \\ "
+	 );
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",sqrt(entriesBackground)," & "
-      ,sqrt(entries200Background)," & "
-      ,sqrt(entries500Background)," & "
-      ,sqrt(entries750Background)," & "
-      ,sqrt(entries1000Background)," & "
-      ,sqrt(entries1250Background)," \\ "
-      );
+	 ,sqrt(entries200Background)," & "
+	 ,sqrt(entries500Background)," & "
+	 ,sqrt(entries750Background)," & "
+	 ,sqrt(entries1000Background)," & "
+	 ,sqrt(entries1250Background)," \\ "
+	 );
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","syst & ",errorsBackground," & "
-      ,errors200Background," & "
-      ,errors500Background," & "
-      ,errors750Background," & "
-      ,errors1000Background," & "
-      ,errors1250Background," \\ "
-      );
+	 ,errors200Background," & "
+	 ,errors500Background," & "
+	 ,errors750Background," & "
+	 ,errors1000Background," & "
+	 ,errors1250Background," \\ "
+	 );
 
 
   Float_t entriesData = histosdata->Integral()+histosdata->GetBinContent(nbinsX+1);
@@ -1832,20 +1848,20 @@ void MakeYieldsTable(TString Sample = "Diphoton", Float_t lumiNumber = 1.)
   Float_t errors1250Data = 0.;
 	
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","Data & ",entriesData," & "
-      ,entries200Data," & "
-      ,entries500Data," & "
-      ,entries750Data," & "
-      ,entries1000Data," & "
-      ,entries1250Data," \\ "
-      );
+	 ,entries200Data," & "
+	 ,entries500Data," & "
+	 ,entries750Data," & "
+	 ,entries1000Data," & "
+	 ,entries1250Data," \\ "
+	 );
 	
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",sqrt(entriesData)," & "
-      ,sqrt(entries200Data)," & "
-      ,sqrt(entries500Data)," & "
-      ,sqrt(entries750Data)," & "
-      ,sqrt(entries1000Data)," & "
-      ,sqrt(entries1250Data)," \\ "
-      );
+	 ,sqrt(entries200Data)," & "
+	 ,sqrt(entries500Data)," & "
+	 ,sqrt(entries750Data)," & "
+	 ,sqrt(entries1000Data)," & "
+	 ,sqrt(entries1250Data)," \\ "
+	 );
 
 	
 
@@ -1866,28 +1882,28 @@ void MakeYieldsTable(TString Sample = "Diphoton", Float_t lumiNumber = 1.)
   Float_t errors1250DataOverBackground = entries1250DataOverBackground * sqrt( (errors1250Data/entries1250Data)*(errors1250Data/entries1250Data) + (errors1250Background/entries1250Background)*(errors1250Background/entries1250Background) );
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","DataOverBackground & ",entriesDataOverBackground," & "
-      ,entries200DataOverBackground," & "
-      ,entries500DataOverBackground," & "
-      ,entries750DataOverBackground," & "
-      ,entries1000DataOverBackground," & "
-      ,entries1250DataOverBackground," \\ "
-      );	
+	 ,entries200DataOverBackground," & "
+	 ,entries500DataOverBackground," & "
+	 ,entries750DataOverBackground," & "
+	 ,entries1000DataOverBackground," & "
+	 ,entries1250DataOverBackground," \\ "
+	 );	
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","stat & ",entriesDataOverBackground * sqrt(1./entriesData + 1./entriesBackground)," & "
-      ,entries200DataOverBackground * sqrt(1./entries200Data + 1./entries200Background)," & "
-      ,entries500DataOverBackground * sqrt(1./entries500Data + 1./entries500Background)," & "
-      ,entries750DataOverBackground * sqrt(1./entries750Data + 1./entries750Background)," & "
-      ,entries1000DataOverBackground * sqrt(1./entries1000Data + 1./entries1000Background)," & "
-      ,entries1250DataOverBackground * sqrt(1./entries1250Data + 1./entries1250Background)," \\ "
-      );
+	 ,entries200DataOverBackground * sqrt(1./entries200Data + 1./entries200Background)," & "
+	 ,entries500DataOverBackground * sqrt(1./entries500Data + 1./entries500Background)," & "
+	 ,entries750DataOverBackground * sqrt(1./entries750Data + 1./entries750Background)," & "
+	 ,entries1000DataOverBackground * sqrt(1./entries1000Data + 1./entries1000Background)," & "
+	 ,entries1250DataOverBackground * sqrt(1./entries1250Data + 1./entries1250Background)," \\ "
+	 );
 
   printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","syst & ",errorsDataOverBackground," & "
-      ,errors200DataOverBackground," & "
-      ,errors500DataOverBackground," & "
-      ,errors750DataOverBackground," & "
-      ,errors1000DataOverBackground," & "
-      ,errors1250DataOverBackground," \\ "
-      );
+	 ,errors200DataOverBackground," & "
+	 ,errors500DataOverBackground," & "
+	 ,errors750DataOverBackground," & "
+	 ,errors1000DataOverBackground," & "
+	 ,errors1250DataOverBackground," \\ "
+	 );
 
 
 
@@ -1895,6 +1911,420 @@ void MakeYieldsTable(TString Sample = "Diphoton", Float_t lumiNumber = 1.)
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void MakeYieldsTableForMassRanges(TString Sample, Float_t lumiNumber, std::vector<Float_t> minmasses, std::vector<Float_t> maxmasses)
+{
+
+  gStyle->SetOptStat("ourmei");
+
+  TString histogramdata = HistogramFileLocation+Sample+"/histograms_"+Sample+".root";
+  TFile* fdatahists = TFile::Open(histogramdata.Data());
+
+  TString histogramJetJet =HistogramFileLocation+Sample+"/histograms_"+Sample+"_JetJet.root";
+  TString histogramGammaJet =HistogramFileLocation+Sample+"/histograms_"+Sample+"_GammaJet.root";	
+  TFile* fJetJethists=TFile::Open(histogramJetJet.Data());
+  TFile* fGammaJethists=TFile::Open(histogramGammaJet.Data());
+
+  //HARDCODED
+  TString histogramMC =HistogramFileLocation+"/diphoton_tree_MC_all/histograms_diphoton_tree_MC_all.root";
+  TFile* fMChists=TFile::Open(histogramMC.Data());
+
+  TH1F* histosmc;
+  TH1F* histosdata;
+  TH1F* histosJetJet;
+  TH1F* histosJetJetUpperError;
+  TH1F* histosJetJetLowerError;
+  TH1F* histosGammaJet;
+  TH1F* histosGammaJetUpperError;
+  TH1F* histosGammaJetLowerError;
+  
+
+  cout<<"Getting data histogram "<<endl;
+  histosdata=(TH1F*)fdatahists->Get("h_Diphoton_Minv");
+  cout<<"histo "<<histosdata->GetName()<<" "<<histosdata->GetEntries()<<" entries"<<histosdata->Integral()<<" (integral)"<<endl;
+
+  cout<<"Getting MC histogram "<<endl;
+  histosmc= (TH1F*)fMChists->Get("h_Diphoton_Minv");
+  histosmc->Scale(lumiNumber);
+  cout<<"histo "<<histosmc->GetName()<<" "<<histosmc->GetEntries()<<" entries "<<histosmc->Integral()<<" (integral)"<<endl;
+
+  cout<<"Getting Jet+Jet histograms "<<endl;
+  histosJetJet=(TH1F*)fJetJethists->Get("h_JetJet_minv");
+  histosJetJetUpperError=(TH1F*)fJetJethists->Get("h_JetJet_minv_UpperError");
+  histosJetJetLowerError=(TH1F*)fJetJethists->Get("h_JetJet_minv_LowerError");
+  cout<<"histo "<<histosJetJet->GetName()<<" "<<histosJetJet->GetEntries()<<" entries "<<histosJetJet->Integral()<<" (integral)"<<endl;
+  cout<<"histo "<<histosJetJetUpperError->GetName()<<" "<<histosJetJetUpperError->GetEntries()<<" entries "<<histosJetJetUpperError->Integral()<<" (integral)"<<endl;
+  cout<<"histo "<<histosJetJetLowerError->GetName()<<" "<<histosJetJetLowerError->GetEntries()<<" entries "<<histosJetJetLowerError->Integral()<<" (integral)"<<endl;
+
+  cout<<"Getting Gamma+Jet histograms "<<endl;
+  histosGammaJet=(TH1F*)fGammaJethists->Get("h_GammaJet_minv");
+  histosGammaJetUpperError=(TH1F*)fGammaJethists->Get("h_GammaJet_minv_UpperError");
+  histosGammaJetLowerError=(TH1F*)fGammaJethists->Get("h_GammaJet_minv_LowerError");
+  cout<<"histo "<<histosGammaJet->GetName()<<" "<<histosGammaJet->GetEntries()<<" entries "<<histosGammaJet->Integral()<<" (integral)"<<endl;
+  cout<<"histo "<<histosGammaJetUpperError->GetName()<<" "<<histosGammaJetUpperError->GetEntries()<<" entries "<<histosGammaJetUpperError->Integral()<<" (integral)"<<endl;
+  cout<<"histo "<<histosGammaJetLowerError->GetName()<<" "<<histosGammaJetLowerError->GetEntries()<<" entries "<<histosGammaJetLowerError->Integral()<<" (integral)"<<endl;
+
+  //special part to calculate integrals in different mass ranges
+
+  //They all have the same binning
+  //Let's take the data one
+  std::vector<Int_t> binminnumbers;
+  std::vector<Int_t> binmaxnumbers;
+
+  Int_t nbinsX = histosdata->GetNbinsX();
+  Int_t binnr = nbinsX;
+
+  cout<<"---------------Mass intervals to seek----------------"<<endl;
+  for(int index = 0;index < minmasses.size();index++){
+    cout<<"interval ["<<minmasses[index]<<","<<maxmasses[index]<<"]"<<endl;
+  }
+
+  for(unsigned int index = 0;index < minmasses.size();index++) {
+    binnr = nbinsX;
+    for(int nbin = 0; nbin <  histosdata->GetNbinsX(); nbin++) {
+      Float_t binlowedge = histosdata->GetBinLowEdge(nbin);
+      if(binlowedge >= minmasses[index] && binnr == nbinsX ) {binnr = nbin;}
+    }
+    //cout<<" binnr "<<binnr<<endl;
+    binminnumbers.push_back(binnr);
+  }
+
+  for(unsigned int index = 0;index < maxmasses.size();index++) {
+    binnr = nbinsX;
+    for(int nbin = 0; nbin <  histosdata->GetNbinsX(); nbin++) {
+      Float_t binlowedge = histosdata->GetBinLowEdge(nbin);
+      if(binlowedge >= maxmasses[index] && binnr == nbinsX ) {binnr = nbin;}
+    }
+    //cout<<" binnr-1 "<<binnr-1<<endl;
+    binmaxnumbers.push_back(binnr-1);
+  }
+
+  //Once we have the bin numbers
+  //we compute the integrals
+  //and their stat uncertainties
+  //and their syst uncertainties
+
+  for(unsigned int index = 0;index < binminnumbers.size();index++) {
+    cout<<binminnumbers[index]<<"---"<<binmaxnumbers[index]<<endl;
+  }
+
+  //For each contribution, we take nbinsX+1 to have the overflow
+
+  std::vector<Float_t> entriesJetJet;
+  std::vector<Float_t> errorsJetJet;
+
+  for(unsigned int index=0;index<binminnumbers.size();index++){
+    entriesJetJet.push_back(histosJetJet->Integral(binminnumbers[index],binmaxnumbers[index]));
+    errorsJetJet.push_back(histosJetJetUpperError->Integral(binminnumbers[index],binmaxnumbers[index]));
+  }
+
+  printf("%s","JetJet #entries = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",entriesJetJet[index]);
+  }
+  printf("}; \n");
+	
+  printf("%s","JetJet stat = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",sqrt(entriesJetJet[index]));
+  }
+  printf("}; \n");
+	
+  printf("%s","JetJet syst = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",errorsJetJet[index]);
+  }
+  printf("}; \n");
+
+
+  std::vector<Float_t> entriesGammaJet;
+  std::vector<Float_t> errorsGammaJet;
+
+  for(unsigned int index=0;index<binminnumbers.size();index++){
+    entriesGammaJet.push_back(histosGammaJet->Integral(binminnumbers[index],binmaxnumbers[index]));
+    errorsGammaJet.push_back(histosGammaJetUpperError->Integral(binminnumbers[index],binmaxnumbers[index]));
+  }
+
+  printf("%s","GammaJet #entries = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",entriesGammaJet[index]);
+  }
+  printf("}; \n");
+	
+  printf("%s","GammaJet stat = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",sqrt(entriesGammaJet[index]));
+  }
+  printf("}; \n");
+	
+  printf("%s","GammaJet syst = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",errorsGammaJet[index]);
+  }
+  printf("}; \n");
+
+
+
+  std::vector<Float_t> entriesFake;
+  std::vector<Float_t> errorsFake;
+
+  for(unsigned int index=0;index<binminnumbers.size();index++){
+    entriesFake.push_back(entriesGammaJet[index] + entriesJetJet[index]);
+    errorsFake.push_back(sqrt( (errorsGammaJet[index] * errorsGammaJet[index]) + (errorsJetJet[index] * errorsJetJet[index]) ));
+  }
+
+  printf("%s","Fake #entries = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",entriesFake[index]);
+  }
+  printf("}; \n");
+	
+  printf("%s","Fake stat = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",sqrt(entriesFake[index]));
+  }
+  printf("}; \n");
+	
+  printf("%s","Fake syst = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",errorsFake[index]);
+  }
+  printf("}; \n");
+
+
+
+  std::vector<Float_t> entriesMC;
+  std::vector<Float_t> errorsMC;
+
+  for(unsigned int index=0;index<binminnumbers.size();index++){
+    entriesMC.push_back(histosmc->Integral(binminnumbers[index],binmaxnumbers[index]));
+    errorsMC.push_back(0.);
+  }
+
+  printf("%s","MC #entries = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",entriesMC[index]);
+  }
+  printf("}; \n");
+	
+  printf("%s","MC stat = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",sqrt(entriesMC[index]));
+  }
+  printf("}; \n");
+	
+  printf("%s","MC syst = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",errorsMC[index]);
+  }
+  printf("}; \n");
+
+
+
+  std::vector<Float_t> entriesBackground;
+  std::vector<Float_t> errorsBackground;
+
+  for(unsigned int index=0;index<binminnumbers.size();index++){
+    entriesBackground.push_back(entriesGammaJet[index] + entriesJetJet[index] + entriesMC[index]);
+    errorsBackground.push_back(sqrt( (errorsGammaJet[index] * errorsGammaJet[index]) + (errorsJetJet[index] * errorsJetJet[index]) + (errorsMC[index] * errorsMC[index]) ));
+  }
+
+  printf("%s","Background #entries = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",entriesBackground[index]);
+  }
+  printf("}; \n");
+	
+  printf("%s","Background stat = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",sqrt(entriesBackground[index]));
+  }
+  printf("}; \n");
+	
+  printf("%s","Background syst = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",errorsBackground[index]);
+  }
+  printf("}; \n");
+
+
+
+
+  std::vector<Float_t> entriesData;
+  std::vector<Float_t> errorsData;
+
+  for(unsigned int index=0;index<binminnumbers.size();index++){
+    entriesData.push_back(histosdata->Integral(binminnumbers[index],binmaxnumbers[index]));
+    errorsData.push_back(0.);
+  }
+
+  printf("%s","Data #entries = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",entriesData[index]);
+  }
+  printf("}; \n");
+	
+  printf("%s","Data stat = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",sqrt(entriesData[index]));
+  }
+  printf("}; \n");
+	
+  printf("%s","Data syst = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",errorsData[index]);
+  }
+  printf("}; \n");
+
+  std::vector<Float_t> entriesDataOverBackground;
+  std::vector<Float_t> errorsDataOverBackground;
+
+  for(unsigned int index=0;index<binminnumbers.size();index++){
+    entriesDataOverBackground.push_back(entriesData[index]/entriesBackground[index]);
+    errorsDataOverBackground.push_back(entriesDataOverBackground[index] * sqrt( (errorsData[index]/entriesData[index])*(errorsData[index]/entriesData[index]) + (errorsBackground[index]/entriesBackground[index])*(errorsBackground[index]/entriesBackground[index]) ));
+  }
+
+  printf("%s","Data/Background #entries = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",entriesDataOverBackground[index]);
+  }
+  printf("}; \n");
+	
+  printf("%s","Data/Background stat = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",sqrt(entriesDataOverBackground[index]));
+  }
+  printf("}; \n");
+	
+  printf("%s","Data/Background syst = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",errorsDataOverBackground[index]);
+  }
+  printf("}; \n");
+
+
+
+}//end of method MakeYieldsTable
+
+
+
+
+
+
+
+
+
+
+
+void CalculateYieldsInMassRanges(Int_t couplingValue = 1, Int_t numsigmas = 2)
+{
+
+  cout<<"Entering CalculateYieldsInMassRanges with parameters: "
+      <<" couplingValue (x 100) "<<couplingValue
+      <<" numsigmas "<<numsigmas
+      <<endl;
+
+  const Int_t n1=7;
+  const Int_t n5=5;
+  const Int_t n10=6;
+
+  Float_t mass1[n1] = {750, 1000, 1250, 1500, 1750, 2000, 3000 };
+  Float_t mass5[n5] = { 1750, 2000, 2500, 2750, 3000 };
+  Float_t mass10[n10] = { 2250, 2500, 2750, 3000, 3250, 3500 };
+  
+  Float_t sigma1[n1] = { 5.2041, 6.50326, 8.53237, 10.0917, 11.5976, 13.6845, 22.4852 };
+  Float_t sigma5[n5] = { 13.7476, 16.795, 20.4539, 22.7374, 25.2982 };    
+  Float_t sigma10[n10] = { 26.3803, 30.8038, 35.9283, 38.7399, 41.8178, 40.2991 };
+
+  std::vector<Float_t> masses;
+  std::vector<Float_t> sigmas;
+
+  if(couplingValue == 1){
+    for(int index = 0;index < n1;index++){masses.push_back(mass1[index]);sigmas.push_back(sigma1[index]);}
+  }
+  if(couplingValue == 5){
+    for(int index = 0;index < n5;index++){masses.push_back(mass5[index]);sigmas.push_back(sigma5[index]);}
+  }
+  if(couplingValue == 10){
+    for(int index = 0;index < n10;index++){masses.push_back(mass10[index]);sigmas.push_back(sigma10[index]);}
+  }
+
+  std::vector<Float_t> minmasses;
+  std::vector<Float_t> maxmasses;
+
+  for(unsigned int index=0;index<masses.size();index++){
+    minmasses.push_back(masses[index] - numsigmas * sigmas[index]);
+    maxmasses.push_back(masses[index] + numsigmas * sigmas[index]);
+  }
+  
+  
+  MakeYieldsTableForMassRanges("ExoDiPhotonAnalyzer_DataABC",10252,minmasses,maxmasses);
+
+}
 
 
 
