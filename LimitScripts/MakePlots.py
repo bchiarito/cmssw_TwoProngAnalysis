@@ -54,8 +54,8 @@ def ReadFromFile(file):
 
 
 def PlotBands(modelPointArray):
-  print '----- PlotBands -----'
-  print 'Coupling:',modelPointArray[0].coupling
+  #print '----- PlotBands -----'
+  #print 'Coupling:',modelPointArray[0].coupling
   # fill arrays
   errMass = [0]*len(modelPointArray)
   errUp = []
@@ -380,8 +380,8 @@ def PlotBands(modelPointArray):
 
 
 def GetMassLimit(modelPointArray):
-  print '----- GetMassLimit -----'
-  print 'Coupling:',modelPointArray[0].coupling
+  #print '----- GetMassLimit -----'
+  #print 'Coupling:',modelPointArray[0].coupling
   # fill arrays
   masses = []
   limitExp = []
@@ -414,7 +414,8 @@ def GetMassLimit(modelPointArray):
   #print 'obs: rHigh:',rHigh
   #print 'obs: mLow:',mLow
   #print 'obs: mHigh:',mHigh
-  print 'observed limit mass:',m,' and xsec: ',xs
+  print string.ljust('Coupling: %0.2f'%modelPointArray[0].coupling,14),
+  print ' Observed limit mass: %0.2f'%m
 
   #   EXPECTED LIMITS SECTION
   #     do it again for expected limits
@@ -438,7 +439,10 @@ def GetMassLimit(modelPointArray):
   #print 'exp: rHigh:',rHighExp
   #print 'exp: mLow:',mLowExp
   #print 'exp: mHigh:',mHighExp
-  print 'expected limit mass:',mExp,' and xsec: ',xsExp
+  print '                Expected limit mass: %0.2f'%mExp
+  #
+  print '                Observed XSec limit: %0.6f'%xs
+  print '                Expected XSec limit: %0.6f'%xsExp
   #   R = 1, M=?
   #     R-r_low/(M-m_low) = (r_low - r_high)/(m_low - m_high)
   return m,mExp

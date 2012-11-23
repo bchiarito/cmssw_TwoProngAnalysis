@@ -6,6 +6,7 @@
 # Seth I. Cooper, U. Alabama
 # November 21 2012
 
+import string
 
 class ModelPoint:
   def __init__(self,coupling=-1,mass=-1,totalXSec=-1,totalEff=-1,nDataObs=-1,bg=-1,bgErr=-1):
@@ -59,3 +60,26 @@ class ModelPoint:
     file.write("ExpectedLimitTwoSigmaHigh: " + str(self.expLimitTwoSigmaHigh) + "\n")
     file.write("ExpectedLimitTwoSigmaLow: " + str(self.expLimitTwoSigmaLow) + "\n")
     file.write("ObservedLimit: " + str(self.obsLimit) + "\n\n")
+
+  def LatexTableLine(self,lumi):
+    latexLine=self.coupling+'&'+str(self.mass)+str(round(self.totalEff,2))+'&'
+    expectedSignalEvents = lumi * self.totalXSec * self.totalEff
+    latexLine+=str(int(expectedSignalEvents))
+    latexLine+=str(round(self.nBackground,2))+'$\pm$'+str(round(self.nBackground,2))+'&'
+    latexLine+=str(int(self.nDataObs))+'&'
+    latexLine+='%.1E'%float(self.totalXSec)+'&'
+    latexLine+='%.1E'%self.expLimit+'&'
+    latexLine+='%.1E'%self.obsLimit+'&'
+    latexLine+='\\\\'
+    return latexLine
+
+
+  def StringTableLine(self,lumi):
+    tableString=string.ljust(str(self.coupling),9)+string.ljust(str(int(self.mass)),6)+string.ljust('%0.3f'%self.totalEff,8)
+    expectedSignalEvents = lumi * self.totalXSec * self.totalEff
+    tableString+=string.center(str(round(expectedSignalEvents,2)),9)
+    backExpString = '%0.2f'%self.nBackground+'+/-'+'%0.2f'%self.nBackgroundErr
+    tableString+=string.center(backExpString,18)+string.center(str(self.nDataObs),10)
+    tableString+=string.center('%.1E'%float(self.totalXSec),10)+string.center(str(round(self.expLimit,6)),10)
+    tableString+=string.center(str(round(self.obsLimit,5)),12)
+    return tableString
