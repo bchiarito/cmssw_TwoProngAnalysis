@@ -174,6 +174,8 @@ elif sys.argv[1]=='limits':
 elif sys.argv[1]=='plots':
   print 'plots: DoPlotsAllPoints'
   DoPlotsAllPoints(lumi)
+# TODO: add yield calculation into all
+# TODO: calculate signal efficiency from here
 elif sys.argv[1]=='all':
   print 'all: limits+plots'
   print 'limits: DoLimitsAllPoints'

@@ -188,5 +188,9 @@ def MakeYieldsTableForMassRanges(HistogramFileLocation, modelPointArray, lumi, n
       errorsDataOverBackground.append(-1)
   PrintInfo('Data/Background',entriesDataOverBackground,errorsDataOverBackground)
 
-
+  # Now put the info into the ModelPoints
+  for mp, entryData, entryBG, errorBG in itertools.izip(modelPointArray,entriesData,entriesBackground,errorsBackground):
+    mp.nDataObs = entryData
+    mp.nBackground = entryBG
+    mp.nBackgroundErr = math.sqrt(entryBG) 
 
