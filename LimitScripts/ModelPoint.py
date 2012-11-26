@@ -9,11 +9,12 @@
 import string
 
 class ModelPoint:
-  def __init__(self,coupling=-1,mass=-1,totalXSec=-1,totalEff=-1,nDataObs=-1,bg=-1,bgErr=-1):
+  def __init__(self,coupling=-1,mass=-1,totalXSec=-1,totalEff=-1,halfWidth=-1,nDataObs=-1,bg=-1,bgErr=-1):
     self.coupling = coupling
     self.mass = mass
     self.totalXSec = totalXSec
     self.totalEff = totalEff
+    self.halfWidth = halfWidth
     self.nDataObs = nDataObs
     self.nBackground = bg
     self.nBackgroundErr = bgErr
@@ -37,6 +38,7 @@ class ModelPoint:
     print "Mass: ",self.mass
     print "TotalXSection: " , self.totalXSec
     print "TotalEff: " , self.totalEff
+    print "HalfWidth: " , self.halfWidth
     print "NDataObs: " , self.nDataObs
     print "NBackground: " , self.nBackground , " +/- " , self.nBackgroundErr
     print "Expected Limit:" , self.expLimit , " + " , self.expLimitOneSigmaHigh , " - " , self.expLimitOneSigmaLow
