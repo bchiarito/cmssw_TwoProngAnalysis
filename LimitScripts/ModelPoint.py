@@ -37,10 +37,10 @@ class ModelPoint:
     print "Coupling : " , self.coupling
     print "Mass: ",self.mass
     print "TotalXSection: " , self.totalXSec
-    print "TotalEff: " , self.totalEff
+    print "TotalEff: %.5f"%self.totalEff
     print "HalfWidth: " , self.halfWidth
     print "NDataObs: " , self.nDataObs
-    print "NBackground: " , self.nBackground , " +/- " , self.nBackgroundErr
+    print "NBackground: %.5f"%self.nBackground , " +/- %.5f"%self.nBackgroundErr
     print "Expected Limit:" , self.expLimit , " + " , self.expLimitOneSigmaHigh , " - " , self.expLimitOneSigmaLow
     print "Expected Limit2SigmaBounds: + " , self.expLimitTwoSigmaHigh , " - " , self.expLimitTwoSigmaLow
     print "Observed Limit: " , self.obsLimit
