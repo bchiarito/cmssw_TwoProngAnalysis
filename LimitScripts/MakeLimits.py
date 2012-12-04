@@ -22,6 +22,7 @@ from ModelPoint import *
 def ComputeLimits(cl95MacroPath,lumi,lumiErr,modelPointArray,file):
   gROOT.ProcessLine('.L '+cl95MacroPath+'+')
   ROOT.SetParameter("Optimize",False)
+  ROOT.SetParameter("NToys",3000)
   ROOT.SetParameter("MakePlot",True)
   ROOT.SetParameter("WriteResult",True)
   ROOT.SetParameter("PlotHypoTestResult",True)
