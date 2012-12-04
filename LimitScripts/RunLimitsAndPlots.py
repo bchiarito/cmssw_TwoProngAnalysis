@@ -47,29 +47,27 @@ def DoPlotsAllPoints(lumi):
   print 'Run for coupling 0.01'
   with open(limitsFileNameBase+'0p01.txt', 'r') as file:
     readModelPoints0p01 = ReadFromFile(file)
-  PlotBands(readModelPoints0p01)
+  PlotBands(readModelPoints0p01,lumi)
   m0p01,mExp0p01 = GetMassLimit(readModelPoints0p01)
   # 0.05
   print 'Run for coupling 0.05'
   with open(limitsFileNameBase+'0p05.txt', 'r') as file:
     readModelPoints0p05 = ReadFromFile(file)
-  PlotBands(readModelPoints0p05)
+  PlotBands(readModelPoints0p05,lumi)
   m0p05,mExp0p05 = GetMassLimit(readModelPoints0p05)
   # 0.1
   print 'Run for coupling 0.1'
   with open(limitsFileNameBase+'0p1.txt', 'r') as file:
     readModelPoints0p1 = ReadFromFile(file)
-  PlotBands(readModelPoints0p1)
+  PlotBands(readModelPoints0p1,lumi)
   m0p1,mExp0p1 = GetMassLimit(readModelPoints0p1)
   # 2-D results plot
   mLimObs = [m0p01,m0p05,m0p1]
   mLimExp = [mExp0p01,mExp0p05,mExp0p1]
   couplings = [0.01,0.05,0.1]
-  #for i in range(0,len(mLimExp)):
-  #  print 'coupling[',i,']:',couplings[i]
-  #  print 'mLimExp[',i,']:',mLimExp[i]
-  #  print 'mLimObs[',i,']:',mLimObs[i]
   CouplingVsMassPlot(couplings,mLimExp,mLimObs)
+  # limit plot for all couplings on same axes
+  PlotAllBands([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi)
   # make table
   tableTitleString=string.ljust('Coupling',9)+string.ljust('Mass',6)+string.ljust('Eff.',8)
   tableTitleString+=string.center('Exp. Sig.',9)
@@ -104,59 +102,60 @@ limitsFileNameBase = 'results_limits_k_'
 # Declarations of Lumi and model points
 lumi = 10252.
 lumiErr = lumi*0.044
-# No Cuts
+# No Cuts -- updated signal eff.
 # coupling, mass, totalXSec, totalEff, width, nDataObs, nBG, nBGerr
 ##c = 0.01
 #modelPointsC0p01 = []
-#modelPointsC0p01.append(ModelPoint(0.01, 750,  1.023e-02, 30.1475/100, 5.2041,  4, 3.47787, 1.86490))
-#modelPointsC0p01.append(ModelPoint(0.01, 1000, 2.072e-03, 34.7347/100, 6.50326, 0, 0.46004, 0.67826))
-#modelPointsC0p01.append(ModelPoint(0.01, 1250, 5.21e-04,  38.7874/100, 8.53237, 0, 0.21650, 0.46530))
-#modelPointsC0p01.append(ModelPoint(0.01, 1500, 1.604e-04, 42.5412/100, 10.0917, 0, 0.11362, 0.33708))
-#modelPointsC0p01.append(ModelPoint(0.01, 1750, 5.408e-05, 46.6982/100, 11.5976, 0, 0.04732, 0.21752))
-#modelPointsC0p01.append(ModelPoint(0.01, 2000, 1.853e-05, 49.1978/100, 13.6845, 0, 0.02484, 0.15760))
-#modelPointsC0p01.append(ModelPoint(0.01, 3000, 4.703e-07, 54.5872/100, 22.4852, 0, 0.00193, 0.04389))
+#modelPointsC0p01.append(ModelPoint(0.01, 750,  1.023e-02, 0.300598, 5.2041,  4, 3.47787, 1.86490))
+#modelPointsC0p01.append(ModelPoint(0.01, 1000, 2.072e-03, 0.346988, 6.50326, 0, 0.46004, 0.67826))
+#modelPointsC0p01.append(ModelPoint(0.01, 1250, 5.21e-04,  0.387196, 8.53237, 0, 0.21650, 0.46530))
+#modelPointsC0p01.append(ModelPoint(0.01, 1500, 1.604e-04, 0.424459, 10.0917, 0, 0.11362, 0.33708))
+#modelPointsC0p01.append(ModelPoint(0.01, 1750, 5.408e-05, 0.466624, 11.5976, 0, 0.04732, 0.21752))
+#modelPointsC0p01.append(ModelPoint(0.01, 2000, 1.853e-05, 0.491459, 13.6845, 0, 0.02484, 0.15760))
+#modelPointsC0p01.append(ModelPoint(0.01, 3000, 4.703e-07, 0.545592, 22.4852, 0, 0.00193, 0.04389))
 ##c = 0.05
 #modelPointsC0p05 = []
-#modelPointsC0p05.append(ModelPoint(0.05, 1750, 1.331e-03, 46.1352/100, 13.7476, 0, 0.04732, 0.21752))
-#modelPointsC0p05.append(ModelPoint(0.05, 2000, 4.665e-04, 49.1199/100, 16.795,  0, 0.02484, 0.15760))
-#modelPointsC0p05.append(ModelPoint(0.05, 2500, 7.226e-05, 52.9777/100, 20.4539, 0, 0.00456, 0.06750))
-#modelPointsC0p05.append(ModelPoint(0.05, 2750, 2.803e-05, 53.6758/100, 22.7374, 0, 0.00182, 0.04265))
-#modelPointsC0p05.append(ModelPoint(0.05, 3000, 1.169e-05, 53.6002/100, 25.2982, 0, 0.00193, 0.04389))
+#modelPointsC0p05.append(ModelPoint(0.05, 1750, 1.331e-03, 0.46056,  13.7476, 0, 0.04732, 0.21752))
+#modelPointsC0p05.append(ModelPoint(0.05, 2000, 4.665e-04, 0.490243, 16.795,  0, 0.02484, 0.15760))
+#modelPointsC0p05.append(ModelPoint(0.05, 2500, 7.226e-05, 0.528822, 20.4539, 0, 0.00456, 0.06750))
+#modelPointsC0p05.append(ModelPoint(0.05, 2750, 2.803e-05, 0.5364,   22.7374, 0, 0.00182, 0.04265))
+#modelPointsC0p05.append(ModelPoint(0.05, 3000, 1.169e-05, 0.535603, 25.2982, 0, 0.00193, 0.04389))
 ##c = 0.1
 #modelPointsC0p1 = []
-#modelPointsC0p1.append(ModelPoint(0.1, 2250, 7.04e-04, 51.4743/100, 26.3803, 0, 0.01617, 0.12718))
-#modelPointsC0p1.append(ModelPoint(0.1, 2500, 2.79e-04, 52.9381/100, 30.8038, 0, 0.00674, 0.08211))
-#modelPointsC0p1.append(ModelPoint(0.1, 2750, 1.14e-04, 53.6588/100, 35.9283, 0, 0.00321, 0.05667))
-#modelPointsC0p1.append(ModelPoint(0.1, 3000, 4.68e-05, 53.512/100,  38.7399, 0, 0.00193, 0.04390))
-#modelPointsC0p1.append(ModelPoint(0.1, 3250, 1.19e-05, 53.5149/100, 41.8178, 0, 0.00326, 0.05711))
-#modelPointsC0p1.append(ModelPoint(0.1, 3500, 7.7e-05,  52.9363/100, 40.2991, 0, 0.00326, 0.05711))
+#modelPointsC0p1.append(ModelPoint(0.1, 2250, 7.04e-04, 0.514227, 26.3803, 0, 0.01617, 0.12718))
+#modelPointsC0p1.append(ModelPoint(0.1, 2500, 2.79e-04, 0.528942, 30.8038, 0, 0.00674, 0.08211))
+#modelPointsC0p1.append(ModelPoint(0.1, 2750, 1.14e-04, 0.536109, 35.9283, 0, 0.00321, 0.05667))
+#modelPointsC0p1.append(ModelPoint(0.1, 3000, 4.68e-05, 0.53504,  38.7399, 0, 0.00193, 0.04390))
+#modelPointsC0p1.append(ModelPoint(0.1, 3250, 1.19e-05, 0.534551, 41.8178, 0, 0.00326, 0.05711))
+#modelPointsC0p1.append(ModelPoint(0.1, 3500, 7.7e-05,  0.529164, 40.2991, 0, 0.00326, 0.05711))
 
-# With DeltaPhi 2.8 cut, but old efficiencies
+# With DeltaPhi 2.8 cut, updated efficiencies
 # coupling, mass, totalXSec, totalEff, width, nDataObs, nBG, nBGerr
 #c = 0.01
 modelPointsC0p01 = []
-modelPointsC0p01.append(ModelPoint(0.01, 750,  1.023e-02, 30.1475/100, 5.2041,  4, 3.29455, 1.81509))
-modelPointsC0p01.append(ModelPoint(0.01, 1000, 2.072e-03, 34.7347/100, 6.50326, 0, 0.44277, 0.66541))
-modelPointsC0p01.append(ModelPoint(0.01, 1250, 5.21e-04,  38.7874/100, 8.53237, 0, 0.21078, 0.45911))
-modelPointsC0p01.append(ModelPoint(0.01, 1500, 1.604e-04, 42.5412/100, 10.0917, 0, 0.10940, 0.33076))
-modelPointsC0p01.append(ModelPoint(0.01, 1750, 5.408e-05, 46.6982/100, 11.5976, 0, 0.04682, 0.21638))
-modelPointsC0p01.append(ModelPoint(0.01, 2000, 1.853e-05, 49.1978/100, 13.6845, 0, 0.02463, 0.15695))
-modelPointsC0p01.append(ModelPoint(0.01, 3000, 4.703e-07, 54.5872/100, 22.4852, 0, 0.00193, 0.04389))
+modelPointsC0p01.append(ModelPoint(0.01, 750,  1.023e-02, 0.245853, 5.2041,  4, 3.29455, 1.81509))
+modelPointsC0p01.append(ModelPoint(0.01, 1000, 2.072e-03, 0.302633, 6.50326, 0, 0.44277, 0.66541))
+modelPointsC0p01.append(ModelPoint(0.01, 1250, 5.21e-04,  0.349581, 8.53237, 0, 0.21078, 0.45911))
+modelPointsC0p01.append(ModelPoint(0.01, 1500, 1.604e-04, 0.395791, 10.0917, 0, 0.10940, 0.33076))
+modelPointsC0p01.append(ModelPoint(0.01, 1750, 5.408e-05, 0.444453, 11.5976, 0, 0.04682, 0.21638))
+modelPointsC0p01.append(ModelPoint(0.01, 2000, 1.853e-05, 0.47302,  13.6845, 0, 0.02463, 0.15695))
+modelPointsC0p01.append(ModelPoint(0.01, 3000, 4.703e-07, 0.53921,  22.4852, 0, 0.00193, 0.04389))
 #c = 0.05
 modelPointsC0p05 = []
-modelPointsC0p05.append(ModelPoint(0.05, 1750, 1.331e-03, 46.1352/100, 13.7476, 0, 0.04682, 0.21638))
-modelPointsC0p05.append(ModelPoint(0.05, 2000, 4.665e-04, 49.1199/100, 16.795,  0, 0.02463, 0.15695))
-modelPointsC0p05.append(ModelPoint(0.05, 2500, 7.226e-05, 52.9777/100, 20.4539, 0, 0.00445, 0.06668))
-modelPointsC0p05.append(ModelPoint(0.05, 2750, 2.803e-05, 53.6758/100, 22.7374, 0, 0.00182, 0.04265))
-modelPointsC0p05.append(ModelPoint(0.05, 3000, 1.169e-05, 53.6002/100, 25.2982, 0, 0.00193, 0.04389))
+modelPointsC0p05.append(ModelPoint(0.05, 1750, 1.331e-03, 0.437371, 13.7476, 0, 0.04682, 0.21638))
+modelPointsC0p05.append(ModelPoint(0.05, 2000, 4.665e-04, 0.471764, 16.795,  0, 0.02463, 0.15695))
+modelPointsC0p05.append(ModelPoint(0.05, 2500, 7.226e-05, 0.517763, 20.4539, 0, 0.00445, 0.06668))
+modelPointsC0p05.append(ModelPoint(0.05, 2750, 2.803e-05, 0.528236, 22.7374, 0, 0.00182, 0.04265))
+modelPointsC0p05.append(ModelPoint(0.05, 3000, 1.169e-05, 0.529311, 25.2982, 0, 0.00193, 0.04389))
 #c = 0.1
 modelPointsC0p1 = []
-modelPointsC0p1.append(ModelPoint(0.1, 2250, 7.04e-04, 51.4743/100, 26.3803, 0, 0.01589, 0.12605))
-modelPointsC0p1.append(ModelPoint(0.1, 2500, 2.79e-04, 52.9381/100, 30.8038, 0, 0.00663, 0.08143))
-modelPointsC0p1.append(ModelPoint(0.1, 2750, 1.14e-04, 53.6588/100, 35.9283, 0, 0.00321, 0.05667))
-modelPointsC0p1.append(ModelPoint(0.1, 3000, 4.68e-05, 53.512/100,  38.7399, 0, 0.00193, 0.04390))
-modelPointsC0p1.append(ModelPoint(0.1, 3250, 1.19e-05, 53.5149/100, 41.8178, 0, 0.00326, 0.05711))
-modelPointsC0p1.append(ModelPoint(0.1, 3500, 7.7e-05,  52.9363/100, 40.2991, 0, 0.00326, 0.05711))
+modelPointsC0p1.append(ModelPoint(0.1, 2250, 7.04e-04, 0.499742, 26.3803, 0, 0.01589, 0.12605))
+modelPointsC0p1.append(ModelPoint(0.1, 2500, 2.79e-04, 0.517166, 30.8038, 0, 0.00663, 0.08143))
+modelPointsC0p1.append(ModelPoint(0.1, 2750, 1.14e-04, 0.527167, 35.9283, 0, 0.00321, 0.05667))
+modelPointsC0p1.append(ModelPoint(0.1, 3000, 4.68e-05, 0.527422, 38.7399, 0, 0.00193, 0.04390))
+modelPointsC0p1.append(ModelPoint(0.1, 3250, 1.19e-05, 0.529048, 41.8178, 0, 0.00326, 0.05711))
+modelPointsC0p1.append(ModelPoint(0.1, 3500, 7.7e-05,  0.524787, 40.2991, 0, 0.00326, 0.05711))
+
 #
 #
 # RUN

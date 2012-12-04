@@ -13,6 +13,7 @@ import glob
 import math
 import array
 import subprocess
+import itertools
 
 from ROOT import *
 from ModelPoint import *
@@ -53,10 +54,7 @@ def ReadFromFile(file):
   return outputModelPoints
 
 
-def PlotBands(modelPointArray):
-  #print '----- PlotBands -----'
-  #print 'Coupling:',modelPointArray[0].coupling
-  # fill arrays
+def makeArrays(modelPointArray):
   errMass = [0]*len(modelPointArray)
   errUp = []
   errDn = []
@@ -83,111 +81,10 @@ def PlotBands(modelPointArray):
     limitExp.append(modelPoint.expLimit)
     limitObs.append(modelPoint.obsLimit)
     totalXSec.append(modelPoint.totalXSec)
-
-  #turn the error arrays into graphs
-  canvas = TCanvas("canvas","canvas",100,200,500,500)
-  canvas.cd()
-  canvas.SetLeftMargin(0.139262)
-  canvas.SetRightMargin(0.0604027)
-  canvas.SetTopMargin(0.0804196)
-  canvas.SetBottomMargin(0.14)
-  g_up = TGraph(len(modelPointArray), array.array("f",masses),array.array("f",expUp));
-  g_dn = TGraph(len(modelPointArray), array.array("f",masses), array.array("f",expDn));
-  g_2up = TGraph(len(modelPointArray), array.array("f",masses), array.array("f",exp2Up));
-  g_2dn = TGraph(len(modelPointArray), array.array("f",masses), array.array("f",exp2Dn));
-  g_exp = TGraph(len(modelPointArray), array.array("f",masses), array.array("f",limitExp));
-
-  g_up.SetMarkerStyle(20)
-  #g_up.Draw("AP")
-  #g_dn.Draw("P")
-  #g_2up.Draw("P")
-  #g_2dn.Draw("P")
-  #g_exp.Draw("P")
-   
-  #smooth them (didn't work
-
-  gs = TGraphSmooth("normnal");
-  gs_up = gs.SmoothSuper(g_up,"",3,0);
-  gs_dn = gs.SmoothSuper(g_dn,"",3,0);
-  gs_2up = gs.SmoothSuper(g_2up,"",3,0);
-  gs_2dn = gs.SmoothSuper(g_2dn,"",3,0);
-  gs_exp =  gs.SmoothSuper(g_exp,"",3,0);
-  #gs_up = gs.SmoothKern(g_up);
-  #gs_dn = gs.SmoothKern(g_dn);
-  #gs_2up = gs.SmoothKern(g_2up);
-  #gs_2dn = gs.SmoothKern(g_2dn);
-  #gs_exp =  gs.SmoothKern(g_exp);
-  #gs_up = gs.SmoothLowess(g_up,"",1);
-  #gs_dn = gs.SmoothLowess(g_dn,"",1);
-  #gs_2up = gs.SmoothLowess(g_2up,"",1);
-  #gs_2dn = gs.SmoothLowess(g_2dn,"",1);
-  #gs_exp =  gs.SmoothLowess(g_exp,"",1);
-
-  # gs_up.SetLineColor(kRed);
-  # gs_up.Draw("L");
-  # gs_dn.Draw("L");
-  # gs_2up.Draw("L");
-  # gs_2dn.Draw("L");
-  # gs_exp.Draw("L");
-
-  #   //fit them instead (pol8 seems to work), not for CLs, try pol2
-  #   gs_up = new TF1("gs_up","pol2",500,2000);
-  #   gs_dn = new TF1("gs_dn","pol2",500,2000);
-  #   gs_2up = new TF1("gs_2up","pol2",500,2000);
-  #   gs_dn = new TF1("gs_2dn","pol2",500,2000);
-  #   //gs_exp = new TF1("gs_exp","pol8",500,2000);
+  return errMass, errUp, errDn, err2Up, err2Dn, masses, expUp, expDn, exp2Up, exp2Dn, limitExp, limitObs, totalXSec
 
 
-  #   g_up->Fit(gs_up,"QS");
-  #   g_dn->Fit(gs_dn,"QS");
-  #   g_2up->Fit(gs_2up,"QS");
-  #   g_2dn->Fit(gs_2dn,"QS");
-  #   //g_exp->Fit(gs_exp,"QS");
-
-  #   gs_up->Draw("same");
-  #   gs_dn->Draw("same");
-  #   gs_2up->Draw("same");
-  #   gs_2dn->Draw("same");
-  #   //gs_exp->Draw("same");
-
-
-  #problem with CLs smoothing, turn it off for now.
-
-  #  for (int i = 0; i< 5; i++) {
-  #   err_up[i] = gs_up->Eval(MASSES[i]) - gs_exp->Eval(MASSES[i]);
-  #   err_2up[i] = gs_2up->Eval(MASSES[i]) - gs_exp->Eval(MASSES[i]);
-
-  #   if (i>10) {
-  #   err_dn[i] = -( gs_dn->Eval(MASSES[i]) - gs_exp->Eval(MASSES[i]) );
-  #   err_2dn[i] = -( gs_2dn->Eval(MASSES[i]) - gs_exp->Eval(MASSES[i]) );
-  #   } //bottom part got smoothed away otherwise...
-
-  #   if (MASSES[i]>1300 && (err_up[i] < 0.001) ) {
-  #     err_up[i] = 0;
-  #     err_2up[i] = 0;
-  #     err_dn[i] = 0;
-  #     err_2dn[i] = 0;
-  #  }
-  #  }
-
-  #cout<<gs_up->Eval(700)<<endl;;
-
-
-  g01_obs = TGraph(len(masses), array.array("f",masses),array.array("f",limitObs));
-  g01_exp = TGraph(len(masses), array.array("f",masses), array.array("f",limitExp));
-
-  g01_exp_2s = TGraphAsymmErrors(len(masses), array.array("f",masses), array.array("f",limitExp),
-                                 array.array("f",errMass),array.array("f",errMass),
-                                 array.array("f",err2Dn),array.array("f",err2Up))
-  g01_exp_1s = TGraphAsymmErrors(len(masses), array.array("f",masses), array.array("f",limitExp),
-                                 array.array("f",errMass),array.array("f",errMass),
-                                 array.array("f",errDn),array.array("f",errUp))
-
-
-  g01_theory = TGraph(len(masses), array.array("f",masses), array.array("f",totalXSec))
-
-  #cout<<"Defined TGraphs again"<<endl;
-
+def SetCustomGStyle():
   gStyle.SetOptStat(0)
   gStyle.SetTextSize(18)
   gStyle.SetTitleBorderSize(0)
@@ -211,6 +108,224 @@ def PlotBands(modelPointArray):
   gStyle.SetOptStat(0)
   gStyle.SetOptFit(111111)
 
+
+def PlotAllBands(modelPointArrays, lumi):
+  # this function takes a list of modelPointArrays: [mpsCoupling0.01, mpsCoupling0.05, ...]
+  # fill arrays that we care about
+  # TODO reuse this code in the plotbands section
+  massesArrs = []
+  limitExpArrs = []
+  limitObsArrs = []
+  totalXSecArrs = []
+  couplings = []
+  for mpArray in modelPointArrays:
+    errMass, errUp, errDn, err2Up, err2Dn, masses, expUp, expDn, exp2Up, exp2Dn, limitExp, limitObs, totalXSec = makeArrays(mpArray)
+    massesArrs.append(masses)
+    limitExpArrs.append(limitExp)
+    limitObsArrs.append(limitObs)
+    totalXSecArrs.append(totalXSec)
+    couplings.append(mpArray[0].coupling)
+
+  c = TCanvas("c","c",100,100,600,600)
+  c.cd()
+  c.SetLogy()
+  c.SetRightMargin(0.04)
+  # turn the arrays into graphs
+  limitObsGraphs = []
+  limitExpGraphs = []
+  thGraphs = []
+  for massesArr, limitExpArr, limitObsArr, thArr in itertools.izip(massesArrs,limitExpArrs,limitObsArrs,totalXSecArrs):
+    limitObsGraphs.append(TGraph(len(massesArr), array.array("f",massesArr),array.array("f",limitObsArr)))
+    limitExpGraphs.append(TGraph(len(massesArr), array.array("f",massesArr), array.array("f",limitExpArr)))
+    thGraphs.append(TGraph(len(massesArr), array.array("f",massesArr), array.array("f",thArr)))
+
+  SetCustomGStyle()
+
+  # Multigraph
+  mg = TMultiGraph()
+  legend = TLegend(0.42,0.71,0.73,0.92)
+  colorIndex = 2 
+  for limitObsGraph, limitExpGraph, thGraph, coupling in itertools.izip(limitObsGraphs,limitExpGraphs,thGraphs,couplings):
+    limitExpGraph.SetMarkerSize(2)
+    limitExpGraph.SetMarkerColor(colorIndex)
+    limitExpGraph.SetLineColor(colorIndex)
+    limitExpGraph.SetLineWidth(4)
+    limitExpGraph.SetLineStyle(2)
+    #
+    limitObsGraph.SetMarkerSize(0.4)
+    limitObsGraph.SetMarkerColor(colorIndex)
+    limitObsGraph.SetLineColor(colorIndex)
+    limitObsGraph.SetLineWidth(4)
+    #
+    thGraph.SetLineStyle(7)
+    thGraph.SetLineColor(colorIndex)
+    thGraph.SetLineWidth(4)
+    #
+    # no exp graph for now
+    #mg.Add(limitExpGraph,"C")
+    #legend.AddEntry(limitExpGraph,"Exp. limit #tilde{k} = %.2f" % coupling,"l")
+    mg.Add(limitObsGraph,"L")
+    legend.AddEntry(limitObsGraph,"95%"+" CL limit #tilde{k} = %.2f" % coupling,"l")
+    mg.Add(thGraph,"L")
+    legend.AddEntry(thGraph,"G_{KK} #tilde{k} = %.2f" % coupling,"l")
+    colorIndex+=1
+    if colorIndex == 3:
+      colorIndex+=3
+    if colorIndex == 7:
+      colorIndex+=1
+
+
+  # To make the separate graphs share the same axes
+  h = TH1F("test","test",10,750,3500)
+  h.SetStats(False)
+  h.GetYaxis().SetRangeUser(4e-4,3e-3)
+  h.GetXaxis().SetTitle("M_{1} [GeV]")
+  h.GetYaxis().SetTitle("RS graviton #sigma [pb]     ")
+  h.GetXaxis().SetLabelFont(42)
+  h.GetYaxis().SetLabelFont(42)
+  h.GetXaxis().SetLabelSize(0.04)
+  h.GetYaxis().SetLabelSize(0.04)
+  h.GetYaxis().SetTitleOffset(1.5)
+  h.GetXaxis().SetTitleOffset(1.2)
+  h.GetXaxis().SetTitleSize(0.04)
+  h.GetYaxis().SetTitleSize(0.04)
+  h.Draw()
+  mg.Draw("L")
+
+  # draw legend
+  legend.SetBorderSize(0)
+  legend.SetFillColor(0)
+  legend.Draw()
+
+  # CMS
+  pt = TPaveText(0.645973,0.629371,0.845638,0.699301,"blNDC")
+  pt.SetName("CMS Preliminary")
+  pt.SetBorderSize(1)
+  pt.SetLineColor(0)
+  pt.SetFillColor(0)
+  pt.SetTextSize(0.0354545)
+  text = pt.AddText("CMS Preliminary")
+  pt.Draw()
+  # lumi
+  pt2 = TPaveText(0.654362,0.585664,0.825503,0.652098,"blNDC")
+  pt2.SetFillColor(0)
+  pt2.SetBorderSize(1)
+  pt2.SetLineColor(0)
+  pt2.SetTextSize(0.0354545)
+  text = pt2.AddText("%.1f" % (lumi/1000)+" fb^{-1} at 8 TeV")
+  pt2.Draw()
+
+  gPad.RedrawAxis()
+
+  plotname = "allLimits.pdf"
+  savename = TString(plotname)
+  pdfName = savename.Data()
+  c.SaveAs(savename.Data())
+  plotname = "allLimits.C"
+  savename = TString(plotname)
+  c.SaveAs(savename.Data())
+  plotname = "allLimits.png"
+  savename = TString(plotname)
+  subprocess.Popen(['convert','-trim',pdfName,savename.Data()])
+  # png output looks strange, so convert from pdf instead
+
+
+def PlotBands(modelPointArray, lumi):
+  #print '----- PlotBands -----'
+  #print 'Coupling:',modelPointArray[0].coupling
+  # fill arrays
+  errMass, errUp, errDn, err2Up, err2Dn, masses, expUp, expDn, exp2Up, exp2Dn, limitExp, limitObs, totalXSec = makeArrays(modelPointArray)
+
+  #turn the arrays into graphs
+  #canvas = TCanvas("canvas","canvas",100,200,500,500)
+  #canvas.cd()
+  #canvas.SetLeftMargin(0.139262)
+  #canvas.SetRightMargin(0.0604027)
+  #canvas.SetTopMargin(0.0804196)
+  #canvas.SetBottomMargin(0.14)
+  #g_up = TGraph(len(modelPointArray), array.array("f",masses),array.array("f",expUp));
+  #g_dn = TGraph(len(modelPointArray), array.array("f",masses), array.array("f",expDn));
+  #g_2up = TGraph(len(modelPointArray), array.array("f",masses), array.array("f",exp2Up));
+  #g_2dn = TGraph(len(modelPointArray), array.array("f",masses), array.array("f",exp2Dn));
+  #g_exp = TGraph(len(modelPointArray), array.array("f",masses), array.array("f",limitExp));
+  #g_up.SetMarkerStyle(20)
+  #g_up.Draw("AP")
+  #g_dn.Draw("P")
+  #g_2up.Draw("P")
+  #g_2dn.Draw("P")
+  #g_exp.Draw("P")
+  #smooth them (didn't work)
+  #gs = TGraphSmooth("normnal");
+  #gs_up = gs.SmoothSuper(g_up,"",3,0);
+  #gs_dn = gs.SmoothSuper(g_dn,"",3,0);
+  #gs_2up = gs.SmoothSuper(g_2up,"",3,0);
+  #gs_2dn = gs.SmoothSuper(g_2dn,"",3,0);
+  #gs_exp =  gs.SmoothSuper(g_exp,"",3,0);
+  ##gs_up = gs.SmoothKern(g_up);
+  ##gs_dn = gs.SmoothKern(g_dn);
+  ##gs_2up = gs.SmoothKern(g_2up);
+  ##gs_2dn = gs.SmoothKern(g_2dn);
+  ##gs_exp =  gs.SmoothKern(g_exp);
+  ##gs_up = gs.SmoothLowess(g_up,"",1);
+  ##gs_dn = gs.SmoothLowess(g_dn,"",1);
+  ##gs_2up = gs.SmoothLowess(g_2up,"",1);
+  ##gs_2dn = gs.SmoothLowess(g_2dn,"",1);
+  ##gs_exp =  gs.SmoothLowess(g_exp,"",1);
+  # gs_up.SetLineColor(kRed);
+  # gs_up.Draw("L");
+  # gs_dn.Draw("L");
+  # gs_2up.Draw("L");
+  # gs_2dn.Draw("L");
+  # gs_exp.Draw("L");
+  #   //fit them instead (pol8 seems to work), not for CLs, try pol2
+  #   gs_up = new TF1("gs_up","pol2",500,2000);
+  #   gs_dn = new TF1("gs_dn","pol2",500,2000);
+  #   gs_2up = new TF1("gs_2up","pol2",500,2000);
+  #   gs_dn = new TF1("gs_2dn","pol2",500,2000);
+  #   //gs_exp = new TF1("gs_exp","pol8",500,2000);
+  #   g_up->Fit(gs_up,"QS");
+  #   g_dn->Fit(gs_dn,"QS");
+  #   g_2up->Fit(gs_2up,"QS");
+  #   g_2dn->Fit(gs_2dn,"QS");
+  #   //g_exp->Fit(gs_exp,"QS");
+  #   gs_up->Draw("same");
+  #   gs_dn->Draw("same");
+  #   gs_2up->Draw("same");
+  #   gs_2dn->Draw("same");
+  #   //gs_exp->Draw("same");
+
+  #problem with CLs smoothing, turn it off for now.
+  #  for (int i = 0; i< 5; i++) {
+  #   err_up[i] = gs_up->Eval(MASSES[i]) - gs_exp->Eval(MASSES[i]);
+  #   err_2up[i] = gs_2up->Eval(MASSES[i]) - gs_exp->Eval(MASSES[i]);
+  #   if (i>10) {
+  #   err_dn[i] = -( gs_dn->Eval(MASSES[i]) - gs_exp->Eval(MASSES[i]) );
+  #   err_2dn[i] = -( gs_2dn->Eval(MASSES[i]) - gs_exp->Eval(MASSES[i]) );
+  #   } //bottom part got smoothed away otherwise...
+  #   if (MASSES[i]>1300 && (err_up[i] < 0.001) ) {
+  #     err_up[i] = 0;
+  #     err_2up[i] = 0;
+  #     err_dn[i] = 0;
+  #     err_2dn[i] = 0;
+  #  }
+  #  }
+  #cout<<gs_up->Eval(700)<<endl;;
+
+
+  g01_obs = TGraph(len(masses), array.array("f",masses),array.array("f",limitObs));
+  g01_exp = TGraph(len(masses), array.array("f",masses), array.array("f",limitExp));
+
+  g01_exp_2s = TGraphAsymmErrors(len(masses), array.array("f",masses), array.array("f",limitExp),
+                                 array.array("f",errMass),array.array("f",errMass),
+                                 array.array("f",err2Dn),array.array("f",err2Up))
+  g01_exp_1s = TGraphAsymmErrors(len(masses), array.array("f",masses), array.array("f",limitExp),
+                                 array.array("f",errMass),array.array("f",errMass),
+                                 array.array("f",errDn),array.array("f",errUp))
+
+
+  g01_theory = TGraph(len(masses), array.array("f",masses), array.array("f",totalXSec))
+
+  SetCustomGStyle()
 
   g01_exp_2s.SetTitle("")
   g01_exp_2s.GetYaxis().SetLabelSize(0.03)
@@ -304,9 +419,13 @@ def PlotBands(modelPointArray):
   mg.Add(g01_obs,"L")
   mg.Add(g01_theory,"L")
   mg.Draw("AL")
-  mg.GetYaxis().SetRangeUser(1.e-4,totalXSec[0]*10.)
+  # To have diff. x-axes for each limit graph (TMultiGraph doesn't exactly respect zoomed x-axis)
+  #mg.GetYaxis().SetRangeUser(1.e-4,totalXSec[0]*10.)
+  #mg.GetYaxis().SetRangeUser(2e-4,2e-2)
+  mg.GetYaxis().SetRangeUser(limitExp[len(limitExp)-1]/2,totalXSec[0]*2)
   #mg.GetXaxis().SetRangeUser(totalXSec[0],totalXSec[len(totalXSec)-1])
   mg.GetXaxis().SetRangeUser(masses[0],masses[len(masses)-1])
+  #mg.GetXaxis().SetRangeUser(750,3500)
   mg.GetXaxis().SetTitle("M_{1} [GeV]")
   mg.GetYaxis().SetTitle("RS graviton #sigma [pb]     ")
   mg.GetXaxis().SetLabelFont(42)
@@ -317,6 +436,24 @@ def PlotBands(modelPointArray):
   mg.GetXaxis().SetTitleOffset(1.2)
   mg.GetXaxis().SetTitleSize(0.04)
   mg.GetYaxis().SetTitleSize(0.04)
+  #
+  ## To make the separate graphs share the same axes
+  #h = TH1F("test","test",10,750,3500)
+  #h.SetStats(False)
+  #h.GetYaxis().SetRangeUser(2e-4,2e-2)
+  #h.GetXaxis().SetTitle("M_{1} [GeV]")
+  #h.GetYaxis().SetTitle("RS graviton #sigma [pb]     ")
+  #h.GetXaxis().SetLabelFont(42)
+  #h.GetYaxis().SetLabelFont(42)
+  #h.GetXaxis().SetLabelSize(0.04)
+  #h.GetYaxis().SetLabelSize(0.04)
+  #h.GetYaxis().SetTitleOffset(1.5)
+  #h.GetXaxis().SetTitleOffset(1.2)
+  #h.GetXaxis().SetTitleSize(0.04)
+  #h.GetYaxis().SetTitleSize(0.04)
+  #h.Draw()
+  #mg.Draw("L")
+  #
 
   titlename = "G_{KK} #tilde{k} = %.2f" % modelPointArray[0].coupling
   legend = TLegend(.42,0.71,.73,.88)
@@ -331,31 +468,23 @@ def PlotBands(modelPointArray):
   legend.SetFillColor(0)
   legend.Draw()
 
+  # CMS
   pt = TPaveText(0.645973,0.629371,0.845638,0.699301,"blNDC")
   pt.SetName("CMS Preliminary")
   pt.SetBorderSize(1)
   pt.SetLineColor(0)
   pt.SetFillColor(0)
-  #   pt.SetTextFont(72)
   pt.SetTextSize(0.0354545)
   text = pt.AddText("CMS Preliminary")
   pt.Draw()
-
+  # lumi
   pt2 = TPaveText(0.654362,0.585664,0.825503,0.652098,"blNDC")
   pt2.SetFillColor(0)
   pt2.SetBorderSize(1)
   pt2.SetLineColor(0)
   pt2.SetTextSize(0.0354545)
-  text = pt2.AddText("10.3 fb^{-1} at 8 TeV")
+  text = pt2.AddText("%.1f" % (lumi/1000)+" fb^{-1} at 8 TeV")
   pt2.Draw()
-
-  #   pt = new TPaveText(0.67953, 0.383357, 0.780201, 0.481259,"blNDC")
-  #   pt.SetFillColor(0)
-  #   pt.SetBorderSize(1)
-  #   pt.SetLineColor(0)
-  #   pt.SetTextSize(0.0454545)
-  #   text = pt.AddText("L = 1091 pb^{-1}")
-  #   pt.Draw()
 
   gPad.RedrawAxis()
 
@@ -376,7 +505,6 @@ def PlotBands(modelPointArray):
   savename.Replace(indexstring,1,"p")
   subprocess.Popen(['convert','-trim',pdfName,savename.Data()])
   # png output looks strange, so convert from pdf instead
-  #c.SaveAs(savename.Data())
 
 
 def GetMassLimit(modelPointArray):
