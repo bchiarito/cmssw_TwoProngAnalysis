@@ -163,11 +163,11 @@ def PlotAllBands(modelPointArrays, lumi):
     #
     # no exp graph for now
     #mg.Add(limitExpGraph,"C")
-    #legend.AddEntry(limitExpGraph,"Exp. limit #tilde{k} = %.2f" % coupling,"l")
+    #legend.AddEntry(limitExpGraph,"Exp. limit #tilde{k} = "+str(coupling),"l")
     mg.Add(limitObsGraph,"L")
-    legend.AddEntry(limitObsGraph,"95%"+" CL limit #tilde{k} = %.2f" % coupling,"l")
+    legend.AddEntry(limitObsGraph,"95%"+" CL limit #tilde{k} = "+str(coupling),"l")
     mg.Add(thGraph,"L")
-    legend.AddEntry(thGraph,"G_{KK} #tilde{k} = %.2f" % coupling,"l")
+    legend.AddEntry(thGraph,"G_{KK} #tilde{k} = "+str(coupling),"l")
     colorIndex+=1
     if colorIndex == 3:
       colorIndex+=3
@@ -455,7 +455,7 @@ def PlotBands(modelPointArray, lumi):
   #mg.Draw("L")
   #
 
-  titlename = "G_{KK} #tilde{k} = %.2f" % modelPointArray[0].coupling
+  titlename = "G_{KK} #tilde{k} = "+str(modelPointArray[0].coupling)
   legend = TLegend(.42,0.71,.73,.88)
   #  legend.AddEntry((TObject*)0,title,"")
   #legend.AddEntry(gr_exp_out ,"median expected","l")
@@ -542,8 +542,6 @@ def GetMassLimit(modelPointArray):
   #print 'obs: rHigh:',rHigh
   #print 'obs: mLow:',mLow
   #print 'obs: mHigh:',mHigh
-  print string.ljust('Coupling: %0.2f'%modelPointArray[0].coupling,14),
-  print ' Observed limit mass: %0.2f'%m
 
   #   EXPECTED LIMITS SECTION
   #     do it again for expected limits
@@ -567,13 +565,15 @@ def GetMassLimit(modelPointArray):
   #print 'exp: rHigh:',rHighExp
   #print 'exp: mLow:',mLowExp
   #print 'exp: mHigh:',mHighExp
-  print '                Expected limit mass: %0.2f'%mExp
-  #
-  print '                Observed XSec limit: %0.6f'%xs
-  print '                Expected XSec limit: %0.6f'%xsExp
+  #print string.ljust('Coupling: '+str(modelPointArray[0].coupling),14),
+  #print ' Observed limit mass: %0.2f'%m
+  #print '                Expected limit mass: %0.2f'%mExp
+  ##
+  #print '                Observed XSec limit: %0.6f'%xs
+  #print '                Expected XSec limit: %0.6f'%xsExp
   #   R = 1, M=?
   #     R-r_low/(M-m_low) = (r_low - r_high)/(m_low - m_high)
-  return m,mExp
+  return m,xs,mExp,xsExp
 
 
 def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList):
