@@ -31,6 +31,7 @@ from MakeLimits import *
 
 
 
+# TODO: remove hardcoding; instead use list of couplings to run over
 def DoLimitsAllPoints(cl95MacroPathAndName,lumi,lumiErr,limitsFileNameBase):
   print 'Run for coupling 0.01'
   with open(limitsFileNameBase+'0p01.txt', 'w') as file:
@@ -41,6 +42,19 @@ def DoLimitsAllPoints(cl95MacroPathAndName,lumi,lumiErr,limitsFileNameBase):
   print 'Run for coupling 0.1'
   with open(limitsFileNameBase+'0p1.txt', 'w') as file:
     ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p1,file)
+
+
+## TODO
+# function to read in the coupling we ran over
+#def ReadResultsAllPoints():
+#  resultsByCoupling = {}
+#  for c in couplingsToRunOver:
+#    # make coupling string
+#    couplingString = f(c)
+#    with open(limitsFileNameBase+couplingString+'.txt', 'r') as file:
+#      readModelPoints = ReadFromFile(file)
+#    resultsByCoupling[c] = readModelPoints
+#  return resultsByCoupling
 
 
 def DoPlotsAllPoints(lumi):
@@ -69,6 +83,19 @@ def DoPlotsAllPoints(lumi):
   # limit plot for all couplings on same axes
   PlotAllBands([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi)
   # make table
+  DoTablesAllPoints(lumi,3)
+
+
+def DoTablesAllPoints(lumi,numsigmas):
+  with open(limitsFileNameBase+'0p01.txt', 'r') as file:
+    readModelPoints0p01 = ReadFromFile(file)
+  # 0.05
+  with open(limitsFileNameBase+'0p05.txt', 'r') as file:
+    readModelPoints0p05 = ReadFromFile(file)
+  # 0.1
+  with open(limitsFileNameBase+'0p1.txt', 'r') as file:
+    readModelPoints0p1 = ReadFromFile(file)
+  # now make table output
   tableTitleString=string.ljust('Coupling',9)+string.ljust('Mass',6)+string.ljust('Eff.',8)
   tableTitleString+=string.center('Exp. Sig.',9)
   tableTitleString+=string.center('Exp. Bkg.',17)+string.center('Obs.',10)
@@ -78,8 +105,27 @@ def DoPlotsAllPoints(lumi):
   print tableTitleString
   for modelPoint in readModelPoints0p01+readModelPoints0p05+readModelPoints0p1:
     print modelPoint.StringTableLine(lumi)
+  # latex table
+  # k, mass, windowRange, sigEff, expSigEvts, expBgEvts, obs
+  print
+  print
+  print '\\begin{table}[htpb]\n\t\\begin{center}'
+  print '\t\t\\begin{tabular}{ccccccc}\n\t\t\\hline'
+  print '\t\t$\\tilde{k}$ & $M_1$ & Window & Sig. Eff. & Exp. Sig. Evts. & Exp. Bg. Evts. & Obs. \\\\'
+  print '\t\t\\hline'
+  for modelPoint in readModelPoints0p01+readModelPoints0p05+readModelPoints0p1:
+    print modelPoint.LatexTableLine(lumi,numsigmas) # numsigmas for mass windows
+  print '\t\t\\hline'
+  print '\t\t\\end{tabular}'
+  captionLine="\t\t\\caption[Event Yields]{Event yields of signal and data after selection.  "
+  captionLine+="The columns show: coupling ``$\\tilde{k}$'', graviton mass ``$M_1$'' in GeV, mass window range ``Window'' in GeV, "
+  captionLine+="signal efficiency ``Sig. Eff.'', expected number of signal events ``Exp. Sig. Evts.'', "
+  captionLine+="expected number of background events and error ``Exp. Bg. Evts.'', and observed data events ``Obs.''.}"
+  print captionLine
+  print '\t\\label{table:eventYields}'
+  print '\t\\end{center}'
+  print '\\end{table}'
   
-
 
 def Usage():
   print 'Usage: python RunLimitsAndPlots.py [arg] where arg can be:'
@@ -173,6 +219,9 @@ elif sys.argv[1]=='limits':
 elif sys.argv[1]=='plots':
   print 'plots: DoPlotsAllPoints'
   DoPlotsAllPoints(lumi)
+elif sys.argv[1]=='tables':
+  print 'tables: DoTablesAllPoints'
+  DoTablesAllPoints(lumi,3)
 # TODO: add yield calculation into all
 # TODO: calculate signal efficiency from here
 elif sys.argv[1]=='all':

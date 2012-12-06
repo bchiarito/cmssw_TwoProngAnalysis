@@ -63,16 +63,21 @@ class ModelPoint:
     file.write("ExpectedLimitTwoSigmaLow: " + str(self.expLimitTwoSigmaLow) + "\n")
     file.write("ObservedLimit: " + str(self.obsLimit) + "\n\n")
 
-  def LatexTableLine(self,lumi):
-    latexLine=self.coupling+'&'+str(self.mass)+str(round(self.totalEff,2))+'&'
+
+  def LatexTableLine(self,lumi,numsigmas):
+    latexLine='\t\t'+str(self.coupling)+' & '+str(int(self.mass))+' & '
+    minMass = self.mass - numsigmas * self.halfWidth
+    maxMass = self.mass + numsigmas * self.halfWidth
+    latexLine+=str(int(minMass))+' to '+str(int(maxMass))+' & '
+    latexLine+='%.2f'%self.totalEff+' & '
     expectedSignalEvents = lumi * self.totalXSec * self.totalEff
-    latexLine+=str(int(expectedSignalEvents))
-    latexLine+=str(round(self.nBackground,2))+'$\pm$'+str(round(self.nBackground,2))+'&'
-    latexLine+=str(int(self.nDataObs))+'&'
-    latexLine+='%.1E'%float(self.totalXSec)+'&'
-    latexLine+='%.1E'%self.expLimit+'&'
-    latexLine+='%.1E'%self.obsLimit+'&'
-    latexLine+='\\\\'
+    latexLine+='%.2f'%float(expectedSignalEvents)+' & '
+    latexLine+='%.4f'%self.nBackground+' $\\pm$ '+'%.4f'%self.nBackgroundErr+' & '
+    latexLine+=str(int(self.nDataObs))#+'&'
+    #latexLine+='%.1E'%float(self.totalXSec)+'&'
+    #latexLine+='%.1E'%self.expLimit+'&'
+    #latexLine+='%.1E'%self.obsLimit+'&'
+    latexLine+=' \\\\'
     return latexLine
 
 
