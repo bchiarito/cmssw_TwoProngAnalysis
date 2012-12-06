@@ -62,19 +62,34 @@ def DoPlotsAllPoints(lumi):
   with open(limitsFileNameBase+'0p01.txt', 'r') as file:
     readModelPoints0p01 = ReadFromFile(file)
   PlotBands(readModelPoints0p01,lumi)
-  m0p01,mExp0p01 = GetMassLimit(readModelPoints0p01)
+  m0p01,xs,mExp0p01,xsE = GetMassLimit(readModelPoints0p01)
+  print string.ljust('Coupling: '+str(readModelPoints0p01[0].coupling),14),
+  print ' Observed limit mass: %0.2f'%m0p01
+  print '                Expected limit mass: %0.2f'%mExp0p01
+  print '                Observed XSec limit: %0.6f'%xs
+  print '                Expected XSec limit: %0.6f'%xsE
   # 0.05
   print 'Run for coupling 0.05'
   with open(limitsFileNameBase+'0p05.txt', 'r') as file:
     readModelPoints0p05 = ReadFromFile(file)
   PlotBands(readModelPoints0p05,lumi)
-  m0p05,mExp0p05 = GetMassLimit(readModelPoints0p05)
+  m0p05,xs,mExp0p05,xsE = GetMassLimit(readModelPoints0p05)
+  print string.ljust('Coupling: '+str(readModelPoints0p05[0].coupling),14),
+  print ' Observed limit mass: %0.2f'%m0p05
+  print '                Expected limit mass: %0.2f'%mExp0p05
+  print '                Observed XSec limit: %0.6f'%xs
+  print '                Expected XSec limit: %0.6f'%xsE
   # 0.1
   print 'Run for coupling 0.1'
   with open(limitsFileNameBase+'0p1.txt', 'r') as file:
     readModelPoints0p1 = ReadFromFile(file)
   PlotBands(readModelPoints0p1,lumi)
-  m0p1,mExp0p1 = GetMassLimit(readModelPoints0p1)
+  m0p1,xs,mExp0p1,xsE = GetMassLimit(readModelPoints0p1)
+  print string.ljust('Coupling: '+str(readModelPoints0p1[0].coupling),14),
+  print ' Observed limit mass: %0.2f'%m0p1
+  print '                Expected limit mass: %0.2f'%mExp0p1
+  print '                Observed XSec limit: %0.6f'%xs
+  print '                Expected XSec limit: %0.6f'%xsE
   # 2-D results plot
   mLimObs = [m0p01,m0p05,m0p1]
   mLimExp = [mExp0p01,mExp0p05,mExp0p1]
@@ -83,7 +98,7 @@ def DoPlotsAllPoints(lumi):
   # limit plot for all couplings on same axes
   PlotAllBands([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi)
   # make table
-  DoTablesAllPoints(lumi,3)
+  #DoTablesAllPoints(lumi,3)
 
 
 def DoTablesAllPoints(lumi,numsigmas):
@@ -123,6 +138,44 @@ def DoTablesAllPoints(lumi,numsigmas):
   captionLine+="expected number of background events and error ``Exp. Bg. Evts.'', and observed data events ``Obs.''.}"
   print captionLine
   print '\t\\label{table:eventYields}'
+  print '\t\\end{center}'
+  print '\\end{table}'
+  # next table -- limits
+  print
+  print
+  print '\\begin{table}[htpb]\n\t\\begin{center}'
+  print '\t\t\\begin{tabular}{ccc}\n\t\t\\hline'
+  print '\t\t\t$\\tilde{k}$ & $\sigma$ & $M_1$ \\\\'
+  print '\t\t\t\\hline'
+  # FIXME remove hardcoding of couplings to run over
+  # 0.01
+  latexLine='\t\t\t'+'0.01'+' & '
+  massLimObs, xsLimObs, massLimExp, xsLimExp = GetMassLimit(readModelPoints0p01)
+  latexLine+='%.5f'%xsLimObs+' & '
+  latexLine+=str(int(massLimObs))
+  latexLine+=' \\\\'
+  print latexLine
+  # 0.05
+  latexLine='\t\t\t'+'0.05'+' & '
+  massLimObs, xsLimObs, massLimExp, xsLimExp = GetMassLimit(readModelPoints0p05)
+  latexLine+='%.5f'%xsLimObs+' & '
+  latexLine+=str(int(massLimObs))
+  latexLine+=' \\\\'
+  print latexLine
+  # 0.1
+  latexLine='\t\t\t'+'0.1'+' & '
+  massLimObs, xsLimObs, massLimExp, xsLimExp = GetMassLimit(readModelPoints0p1)
+  latexLine+='%.5f'%xsLimObs+' & '
+  latexLine+=str(int(massLimObs))
+  latexLine+=' \\\\'
+  print latexLine
+  print '\t\t\t\\hline'
+  print '\t\t\\end{tabular}'
+  captionLine="\t\t\\caption[Limit results]{ Limit results from the observed data. "
+  captionLine+="The columns show: coupling ``$\\tilde{k}$'', observed 95\% confidence level upper limit on the graviton cross section in pb, "
+  captionLine+="and the observed 95\% confidence level lower limit on the graviton mass ``$M_1$'' in GeV. }"
+  print captionLine
+  print '\t\\label{table:limitResults}'
   print '\t\\end{center}'
   print '\\end{table}'
   
@@ -230,6 +283,8 @@ elif sys.argv[1]=='all':
   DoLimitsAllPoints(cl95MacroPath+cl95MacroName,lumi,lumiErr,limitsFileNameBase)
   print 'plots: DoPlotsAllPoints'
   DoPlotsAllPoints(lumi)
+  print 'tables: DoTablesAllPoints'
+  DoTablesAllPoints(lumi,3)
 else:
   print 'Did not understand input.'
   Usage()
