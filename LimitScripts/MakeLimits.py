@@ -82,8 +82,15 @@ def PrintInfo(name, listEntries, listErrors):
   print "}"
 
 
+def GetMinMaxMassArrays(modelPointArray, numsigmas = 3):
+  # make list of lower/upper edges of mass windows
+  minMasses = [(modelPoint.mass - numsigmas * modelPoint.halfWidth) for modelPoint in modelPointArray]
+  maxMasses = [(modelPoint.mass + numsigmas * modelPoint.halfWidth) for modelPoint in modelPointArray]
+  return minMasses,maxMasses
+
+
 # import of yield-calculating code from ExoDiPhotonAnalyzer/test/PlottingCode/CreateHistogramFiles.C
-def MakeYieldsTableForMassRanges(HistogramFileLocation, modelPointArray, lumi, numsigmas = 2):
+def MakeYieldsTableForMassRanges(HistogramFileLocation, modelPointArray, lumi, numsigmas = 3):
   gStyle.SetOptStat("ourmei")
   Sample = "ExoDiPhotonAnalyzer_DataABC"
 
@@ -123,8 +130,7 @@ def MakeYieldsTableForMassRanges(HistogramFileLocation, modelPointArray, lumi, n
   print "histo",histosGammaJetLowerError.GetName(),histosGammaJetLowerError.GetEntries(),"entries",histosGammaJetLowerError.Integral(),"(integral)"
 
   ## make list of lower/upper edges of mass windows
-  minMasses = [(modelPoint.mass - numsigmas * modelPoint.halfWidth) for modelPoint in modelPointArray]
-  maxMasses = [(modelPoint.mass + numsigmas * modelPoint.halfWidth) for modelPoint in modelPointArray]
+  minMasses,maxMasses = GetMinMaxMassArrays(modelPointsArray, numsigmas)
 
   # calculate integrals in different mass ranges
   # They all have the same binning
