@@ -7,7 +7,7 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-//  $Id: RecoPhotonInfo.h,v 1.14 2012/06/02 09:09:15 jcarson Exp $
+//  $Id: RecoPhotonInfo.h,v 1.15 2012/08/27 22:49:26 charaf Exp $
 // 
 //********************************************************************
 
@@ -103,6 +103,7 @@ namespace ExoDiPhotons
     Double_t maxRecHitTime;
 
     Double_t hadOverEm;  
+    Double_t hadTowerOverEm;  
     // note also that two hadronic depths are available
     Double_t hadDepth1OverEm; 
     Double_t hadDepth2OverEm; 
@@ -120,8 +121,37 @@ namespace ExoDiPhotons
     Double_t trkIsoSumPtSolid03;
 
 
+    //PF Isolation variables
+    //Raw and rho corrected values
+    Double_t PFIsoCharged04;
+    Double_t PFIsoNeutral04;
+    Double_t PFIsoPhoton04;
+    Double_t PFIsoAll04;
 
+    Double_t PFIsoCharged03;
+    Double_t PFIsoNeutral03;
+    Double_t PFIsoPhoton03;
+    Double_t PFIsoAll03;
 
+    Double_t PFIsoCharged02;
+    Double_t PFIsoNeutral02;
+    Double_t PFIsoPhoton02;
+    Double_t PFIsoAll02;
+
+    Double_t rhocorPFIsoCharged04;
+    Double_t rhocorPFIsoNeutral04;
+    Double_t rhocorPFIsoPhoton04;
+    Double_t rhocorPFIsoAll04;
+
+    Double_t rhocorPFIsoCharged03;
+    Double_t rhocorPFIsoNeutral03;
+    Double_t rhocorPFIsoPhoton03;
+    Double_t rhocorPFIsoAll03;
+
+    Double_t rhocorPFIsoCharged02;
+    Double_t rhocorPFIsoNeutral02;
+    Double_t rhocorPFIsoPhoton02;
+    Double_t rhocorPFIsoAll02;
 
     // es ratio
     Double_t esRatio;
@@ -159,6 +189,7 @@ namespace ExoDiPhotons
 
     // pixel seed match?
     Bool_t hasPixelSeed;
+    Bool_t hasMatchedPromptElec;
     // note to self: weird problems with this var in middle of struct - try at end
 
     // since we will now store also 'Fakeable objects' from data
@@ -166,11 +197,12 @@ namespace ExoDiPhotons
   };
 
 
+
   // also include a string that can be used to define the tree branch
   // obviously this needs to be kept up-to-date with the struct definition
   // but now at least this only needs to be done here in this file, 
   // rather than in each individual analyser 
-  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:r9/D:sigmaIetaIeta:sigmaEtaEta:sigmaIphiIphi:sigmaPhiPhi:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:maxRecHitTime/D:hadOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04:hcalIso03:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoSumPtHollow03:trkIsoSumPtSolid03:esRatio:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:severityLevel/I:recHitFlag/I:detId/I:iEtaY/I:iPhiX/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:isFakeable");
+  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:r9/D:sigmaIetaIeta:sigmaEtaEta:sigmaIphiIphi:sigmaPhiPhi:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:maxRecHitTime/D:hadOverEm:hadTowerOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04:hcalIso03:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoSumPtHollow03:trkIsoSumPtSolid03:PFIsoCharged04:PFIsoNeutral04:PFIsoPhoton04:PFIsoAll04:PFIsoCharged03:PFIsoNeutral03:PFIsoPhoton03:PFIsoAll03:PFIsoCharged02:PFIsoNeutral02:PFIsoPhoton02:PFIsoAll02:rhocorPFIsoCharged04:rhocorPFIsoNeutral04:rhocorPFIsoPhoton04:rhocorPFIsoAll04:rhocorPFIsoCharged03:rhocorPFIsoNeutral03:rhocorPFIsoPhoton03:rhocorPFIsoAll03:rhocorPFIsoCharged02:rhocorPFIsoNeutral02:rhocorPFIsoPhoton02:rhocorPFIsoAll02:esRatio:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:severityLevel/I:recHitFlag/I:detId/I:iEtaY/I:iPhiX/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:hasMatchedPromptElec:isFakeable");
 
 
   // useful function for ESratio
@@ -575,6 +607,7 @@ namespace ExoDiPhotons
 
 
     recoPhotonInfo.hadOverEm = photon->hadronicOverEm();
+    recoPhotonInfo.hadTowerOverEm = photon->hadTowOverEm();
     recoPhotonInfo.hadDepth1OverEm = photon->hadronicDepth1OverEm();
     recoPhotonInfo.hadDepth2OverEm = photon->hadronicDepth2OverEm();
 
