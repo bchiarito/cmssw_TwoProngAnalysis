@@ -14,5 +14,7 @@ diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   PUMCFileName = cms.untracked.string("PileUpMC.root"),
                                   PUDataFileName = cms.untracked.string("PileupDataAug10thHistogram.root"),
                                   PUMCHistName = cms.untracked.string("MCPileUpHistogram"),
-                                  PUDataHistName = cms.untracked.string("pileup")
+                                  PUDataHistName = cms.untracked.string("pileup"),
+                                  PFIDCategory = cms.untracked.string("Medium"),
+                                  IDMethod = cms.untracked.string("Detector")
                                   )
