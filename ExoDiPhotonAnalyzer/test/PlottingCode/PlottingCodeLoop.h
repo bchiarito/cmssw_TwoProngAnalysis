@@ -1,6 +1,6 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Wed Sep 19 13:46:11 2012 by ROOT version 5.32/00
+// Tue Sep 25 18:35:26 2012 by ROOT version 5.32/00
 // from TChain diphotonAnalyzer/fTree/
 //////////////////////////////////////////////////////////
 
@@ -369,8 +369,12 @@ class PlottingCodeLoop {
   Int_t           TrigHLT_HLT_DoublePhoton48_HEVT_v8;
   Int_t           TrigHLT_HLT_DoublePhoton53_HEVT_v1;
   Int_t           TrigHLT_HLT_DoublePhoton53_HEVT_v2;
+  Int_t           TrigHLT_HLT_DoublePhoton70_v3;
+  Int_t           TrigHLT_HLT_DoublePhoton70_v4;
   Int_t           TrigHLT_HLT_DoublePhoton70_v5;
   Int_t           TrigHLT_HLT_DoublePhoton70_v6;
+  Int_t           TrigHLT_HLT_DoublePhoton80_v4;
+  Int_t           TrigHLT_HLT_DoublePhoton80_v5;
   Int_t           TrigHLT_HLT_DoublePhoton80_v6;
   Int_t           TrigHLT_HLT_DoublePhoton80_v7;
   Int_t           nTightPhotons;
@@ -783,7 +787,7 @@ PlottingCodeLoop::PlottingCodeLoop(TTree *tree)
       // The following code should be used if you want this class to access a chain
       // of trees.
     TChain * chain = new TChain("diphotonAnalyzer/fTree","");
-    chain->Add("/afs/cern.ch/work/c/charaf/public/ExoDiPhotonAnalyer_DataABC.root/diphotonAnalyzer/fTree");
+    chain->Add("/afs/cern.ch/work/c/charaf/private/DiPhotonTrees/ExoDiPhotonAnalyzer_DataABC.root/diphotonAnalyzer/fTree");
     tree = chain;
 #endif // SINGLE_TREE
 
