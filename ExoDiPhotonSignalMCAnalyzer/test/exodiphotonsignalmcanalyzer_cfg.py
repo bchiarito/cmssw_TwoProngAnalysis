@@ -11,19 +11,18 @@ process.MessageLogger = cms.Service("MessageLogger",
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source("PoolSource",
-    # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
-#       'file:diphoton_tree_test_SignalEvents.root'
-#    'rfio:/castor/cern.ch/user/c/chenders/DiPhotons/RSGravitons/RSGravToGG_kMpl001_M-1000_7TeV-pythia6_Spring10-START3X_V26-v1_GEN-SIM-RECO_50events.root'
+      # otman's file
+      'root://eoscms//eos/cms/store/user/charaf/RSGravToGG_kMpl-001_M-1000_TuneZ2star_8TeV-pythia6/EXOMCRECO_Summer12_DR53X_PU_S10_START53_V7A-v0/06e6bebb6525c1c46ccfcc56d82513c0/RSGravToGG_kMpl-001_M-1000_TuneZ2star_8TeV-pythia6_Summer12_DR53X_PU_S10_START53_V7A-v0_10_1_BrT.root'
     )
 )
 
 # global tag for MC because now we need geometry
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
 #GlobalTag Sept10th
-process.GlobalTag.globaltag = 'START53_V11::All
+#process.GlobalTag.globaltag = 'START53_V11::All'
 #Global Tag August 28, 2012
-#process.GlobalTag.globaltag = 'START53_V7A::All'
+process.GlobalTag.globaltag = 'START53_V7A::All'
 #process.GlobalTag.globaltag = 'START3X_V27::All'
 
 # geometry for ecal 
@@ -39,7 +38,7 @@ process.kt6PFJets25.Rho_EtaMax = cms.double(2.5)
 
 # file for all histograms for all modules
 process.TFileService = cms.Service("TFileService",
-    fileName = cms.string('diphoton_tree_RSGravToGG_kMpl-001_M-750_TuneZ2star_8TeV-pythia6.root')
+    fileName = cms.string('diphoton_tree_RSGravToGG_kMpl-001_M-1000_TuneZ2star_8TeV-pythia6.root')
 )
 
 # filter on good vertex
@@ -68,11 +67,13 @@ process.diphotonSignalMCAnalyzer.rho25Correction = cms.InputTag("kt6PFJets25","r
 process.diphotonSignalMCAnalyzer.removeSpikes = False # ie spikes will be exlcuded from tree
 process.diphotonSignalMCAnalyzer.removeSpikes = False # ie spikes will be exlcuded from tree
 process.diphotonSignalMCAnalyzer.requireTightPhotons = False # ie only tight photons will be written
-process.diphotonSignalMCAnalyzer.PUDataFileName = 'PileUpDataSept10th.root' #DataPileUp
-process.diphotonSignalMCAnalyzer.PUMCFileName = 'PileUpRSGravToGG_kMpl_001_M_750.root' #"MC PileUP"
+#process.diphotonSignalMCAnalyzer.PUDataFileName = 'PileUpDataSept10th.root' #DataPileUp
+#process.diphotonSignalMCAnalyzer.PUMCFileName = 'PileUpRSGravToGG_kMpl_001_M_750.root' #"MC PileUP"
+process.diphotonSignalMCAnalyzer.PUDataFileName = 'PileupDataAug10thHistogram.root'
+process.diphotonSignalMCAnalyzer.PUMCFileName = 'PileUpMC.root'
 process.diphotonSignalMCAnalyzer.isMC = True # MC = True or  Data = False
 process.diphotonSignalMCAnalyzer.PUDataHistName = "pileup" #Name of histogram in PUDataFileName Need to be binned to 80
-process.diphotonSignalMCAnalyzer.PUMCHistName = "fpu_n_BeforeCuts"  #Name of histogram in PUMCFileName  Need to be binned to 80
+process.diphotonSignalMCAnalyzer.PUMCHistName = "MCPileUpHisto"  #Name of histogram in PUMCFileName  Need to be binned to 80
 
 
 process.p = cms.Path(process.primaryVertexFilter+process.noScraping+process.kt6PFJets25+process.diphotonSignalMCAnalyzer)
