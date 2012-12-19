@@ -286,21 +286,21 @@ namespace ExoDiPhotons{
 
 
     if(photon->isEB()){
-      if(CategoryID.Contains("Loose")) hadTowerOverEmCut = 0.05;
-      if(CategoryID.Contains("Loose")) {CHIsoCut.first = 2.6;CHIsoCut.second=0.;}
-      if(CategoryID.Contains("Loose")) {PHIsoCut.first = 1.3;PHIsoCut.second=0.005;}
-      if(CategoryID.Contains("Loose")) {NHIsoCut.first = 3.5;NHIsoCut.second=0.04;}
-      if(CategoryID.Contains("Loose")) sigmaIetaIetaCut = 0.012;
+      hadTowerOverEmCut = 0.05;
+      CHIsoCut.first = 2.6;CHIsoCut.second=0.;
+      PHIsoCut.first = 1.3;PHIsoCut.second=0.005;
+      NHIsoCut.first = 3.5;NHIsoCut.second=0.04;
+      sigmaIetaIetaCut = 0.012;
     }
 
 
 
     if(photon->isEE()){
-      if(CategoryID.Contains("Loose")) hadTowerOverEmCut = 0.05;
-      if(CategoryID.Contains("Loose")) {CHIsoCut.first = 2.3;CHIsoCut.second=0.;}
-      if(CategoryID.Contains("Loose")) {PHIsoCut.first = 99999.;PHIsoCut.second=99999.;}
-      if(CategoryID.Contains("Loose")) {NHIsoCut.first = 2.9;NHIsoCut.second=0.04;}
-      if(CategoryID.Contains("Loose")) sigmaIetaIetaCut = 0.034;
+      hadTowerOverEmCut = 0.05;
+      CHIsoCut.first = 2.3;CHIsoCut.second=0.;
+      PHIsoCut.first = 99999.;PHIsoCut.second=99999.;
+      NHIsoCut.first = 2.9;NHIsoCut.second=0.04;
+      sigmaIetaIetaCut = 0.034;
     }
 
 
