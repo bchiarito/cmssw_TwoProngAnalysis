@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.29 2012/08/30 15:12:17 jcarson Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.30 2012/08/31 16:44:44 jcarson Exp $
 //
 //
 
@@ -44,6 +44,7 @@ Implementation:
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TH1.h"
 #include "TTree.h"
+#include "TString.h"
 
 // geometry
 #include "Geometry/CaloGeometry/interface/CaloGeometry.h"
@@ -108,6 +109,15 @@ Implementation:
 // new for LumiReweighting 
 #include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 
+//new for PF ID definition
+#include "DiPhotonAnalysis/CommonClasses/interface/PFPhotonID.h"
+
+//for conversion safe electron veto
+#include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
+
+//new for PFIsolation code
+#include "EGamma/EGammaAnalysisTools/src/PFIsolationEstimator.cc"
+
 using namespace std;
 
 
@@ -146,6 +156,8 @@ private:
   string             fPUDataFileName;
   string             fPUDataHistName;
   string             fPUMCHistName;   
+  string             fPFIDCategory;   
+  string             fIDMethod;   
 
  
   // tools for clusters
@@ -198,6 +210,11 @@ private:
   int fNTightPhotons; // number of candidate photons in event (ie tight)
   int fNFakeablePhotons;  // number of 'fakeable objects' in event
 
+  //for PFIsolation Code
+  PFIsolationEstimator isolator04;
+  PFIsolationEstimator isolator03;
+  PFIsolationEstimator isolator02;
+
   ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo1; // leading photon 
   ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo2; // second photon
    
@@ -238,11 +255,16 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fPUMCFileName(iConfig.getUntrackedParameter<string>("PUMCFileName")),
     fPUDataFileName(iConfig.getUntrackedParameter<string>("PUDataFileName")), 
     fPUDataHistName(iConfig.getUntrackedParameter<string>("PUDataHistName")),
-    fPUMCHistName(iConfig.getUntrackedParameter<string>("PUMCHistName"))
-
+    fPUMCHistName(iConfig.getUntrackedParameter<string>("PUMCHistName")),
+    fPFIDCategory(iConfig.getUntrackedParameter<string>("PFIDCategory")),
+    fIDMethod(iConfig.getUntrackedParameter<string>("IDMethod"))
 {
   //now do what ever initialization is needed
   // LumiReweighting Tool
+
+  std::cout<<"ExoDiPhotonAnalyzer: ID Method used "<<fIDMethod.c_str()
+	   <<"PF ID Category "<<fPFIDCategory.c_str()
+	   <<std::endl;
 
   edm::Service<TFileService> fs;
   fpu_n_BeforeCuts = fs->make<TH1F>("fpu_n_BeforeCuts","PileUpBeforeCuts",300,0,300);
@@ -330,7 +352,13 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   gv_pos = new TClonesArray("TVector3", 100);
   gv_p3 = new TClonesArray("TVector3", 100);
 
-
+  //new PFIsolation code
+  isolator04.initializePhotonIsolation(kTRUE);
+  isolator04.setConeSize(0.4);
+  isolator03.initializePhotonIsolation(kTRUE);
+  isolator03.setConeSize(0.3);
+  isolator02.initializePhotonIsolation(kTRUE);
+  isolator02.setConeSize(0.2);
 
 }
 
@@ -554,32 +582,32 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   */
 
   if (fisMC){
-  edm::Handle<std::vector<PileupSummaryInfo> > pileupHandle;
-  iEvent.getByLabel(fpileupCollectionTag, pileupHandle);
-  std::vector<PileupSummaryInfo>::const_iterator PUI;
+    edm::Handle<std::vector<PileupSummaryInfo> > pileupHandle;
+    iEvent.getByLabel(fpileupCollectionTag, pileupHandle);
+    std::vector<PileupSummaryInfo>::const_iterator PUI;
    
-  if (pileupHandle.isValid()){
+    if (pileupHandle.isValid()){
     
-    for (PUI = pileupHandle->begin();PUI != pileupHandle->end(); ++PUI){
+      for (PUI = pileupHandle->begin();PUI != pileupHandle->end(); ++PUI){
       
-      fBC = PUI->getBunchCrossing() ;
-      if(fBC==0){ 
-        //Select only the in time bunch crossing with bunch crossing=0
-	PileupSummaryInfo oldpileup = (*pileupHandle.product())[0];
-        fpu_n = PUI->getTrueNumInteractions();
-	fold_pu_n = oldpileup.getPU_NumInteractions();
-        fpu_n_BeforeCuts->Fill(fpu_n);
+	fBC = PUI->getBunchCrossing() ;
+	if(fBC==0){ 
+	  //Select only the in time bunch crossing with bunch crossing=0
+	  PileupSummaryInfo oldpileup = (*pileupHandle.product())[0];
+	  fpu_n = PUI->getTrueNumInteractions();
+	  fold_pu_n = oldpileup.getPU_NumInteractions();
+	  fpu_n_BeforeCuts->Fill(fpu_n);
          
+	}
       }
-    }
     
    
-     fMCPUWeight = LumiWeights.weight(fpu_n);  
-     fpu_n_BeforeCutsAfterReWeight->Fill(fpu_n,fMCPUWeight);
+      fMCPUWeight = LumiWeights.weight(fpu_n);  
+      fpu_n_BeforeCutsAfterReWeight->Fill(fpu_n,fMCPUWeight);
   
-  }
-} 
- //add rho correction
+    }
+  } 
+  //add rho correction
 
   //      double rho;
 
@@ -601,8 +629,19 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //       }
   //       else { cout<<"no vectors \n";}
 
-  // get offline beam spot
+  //for conversion safe electron veto
+  edm::Handle<reco::ConversionCollection> hConversions;
+  iEvent.getByLabel("allConversions", hConversions);
+  
+  edm::Handle<reco::GsfElectronCollection> hElectrons;
+  iEvent.getByLabel("gsfElectrons", hElectrons);
+  
+  //for PFIsolation code
+  Handle<PFCandidateCollection> pfCandidatesColl;
+  iEvent.getByLabel("particleFlow",pfCandidatesColl);
+  const PFCandidateCollection * pfCandidates = pfCandidatesColl.product();
 
+  // get offline beam spot
   reco::BeamSpot beamSpot;
   edm::Handle<reco::BeamSpot> beamSpotHandle;
   iEvent.getByLabel("offlineBeamSpot", beamSpotHandle);
@@ -617,7 +656,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fBeamSpotInfo.sigmaZ0error = -99999999.99;
 
   if(beamSpotHandle.isValid()) {
-    beamSpot = *beamSpotHandle;
+    beamSpot = *beamSpotHandle.product();
     //   cout << beamSpot <<endl;
     ExoDiPhotons::FillBeamSpotInfo(fBeamSpotInfo,beamSpot);
   }
@@ -730,6 +769,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iSetup.get<EcalChannelStatusRcd>().get(chStatus);
   const EcalChannelStatus *ch_status = chStatus.product(); 
 
+  //get the reference to 1st vertex for use in fGetIsolation
+  //for PFIsolation calculation
+  reco::VertexRef firstVtx(vertexColl,0);
    
   // get the photon collection
   Handle<reco::PhotonCollection> photonColl;
@@ -742,6 +784,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   }
    
   //   cout << "N reco photons = " << photonColl->size() <<endl;
+
+  TString CategoryPFID(fPFIDCategory.c_str());
+  TString MethodID(fIDMethod.c_str());
 
   // new approach - 
   // make vector of all selected Photons (tight ID, not spike, min pt, etc)
@@ -779,32 +824,83 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     // some cuts are common to both - EB and pt
     //apr 2011, remove EB cut - what should we do about the increased combinatorics?
 
+
+
+    //Unfortunately, we have to compute PF isolation variables here
+    //to check if the photon is tight or fakeable
+    //But then, we have to recompute them later for each tight or fakeable photon
+    //because once again the PF isolation variables are not accessible 
+    //in the Photon class
+    //We need to compute only 03 isol variables so far
+    //because they are the official ones
+
+    //we retrieve the effective areas
+    //Remember effareaCH = 1st, effareaNH = 2nd, effareaPH = 3rd
+    std::vector<double> effareas = ExoDiPhotons::EffectiveAreas(&(*recoPhoton));
+    double pfisoall = isolator03.fGetIsolation(&(*recoPhoton),pfCandidates,firstVtx,vertexColl);
+    double rhocorPFIsoCH = max(isolator03.getIsolationCharged()-fRho25*effareas[0],0.);
+    double rhocorPFIsoNH = max(isolator03.getIsolationNeutral()-fRho25*effareas[1],0.);
+    double rhocorPFIsoPH = max(isolator03.getIsolationPhoton()-fRho25*effareas[2],0.);
+    //and we also have to test the conversion safe electron veto
+    bool passelecveto = !ConversionTools::hasMatchedPromptElectron(recoPhoton->superCluster(), hElectrons, hConversions, beamSpot.position());
+
     if(ExoDiPhotons::isBarrelPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt)) {
       //     if( (recoPhoton->pt()>=fMin_pt)) {       
 
-      if(ExoDiPhotons::isTightPhoton(&(*recoPhoton),fRho25) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {
-	//	    if( !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {   
-	selectedPhotons.push_back(*recoPhoton);
+      //Now we choose which ID to use (PF or Det)
+      if(MethodID.Contains("Detector")){
+	if(ExoDiPhotons::isTightPhoton(&(*recoPhoton),fRho25) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {
+	  //	    if( !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {   
+	  selectedPhotons.push_back(*recoPhoton);
+	}
+      }
+      else if(MethodID.Contains("ParticleFlow")){
+	if(ExoDiPhotons::isPFTightPhoton(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,passelecveto,CategoryPFID) && 
+	   !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && 
+	   !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {
+	  //	    if( !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {   
+	  selectedPhotons.push_back(*recoPhoton);
+	}
       }
        
       // also check for fakeable objects
       //if(ExoDiPhotons::isFakeableObject(&(*recoPhoton)) ) {
-      if(ExoDiPhotons::isFakeableObject(&(*recoPhoton),fRho25) ) {
+      if(MethodID.Contains("Detector")){
+	if(ExoDiPhotons::isFakeableObject(&(*recoPhoton),fRho25) ) {
 	 
-	//        cout << "Fakeable photon! ";
-	//        cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
-	//      //     cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
-	// //      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
-	//        cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
-	//        cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
-	//        cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
-	//        cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
-	//        //      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
-	//        cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();
-	//        cout << endl;
+	  //        cout << "Fakeable photon! ";
+	  //        cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+	  //      //     cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
+	  // //      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
+	  //        cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
+	  //        cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
+	  //        cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
+	  //        cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
+	  //        //      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
+	  //        cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();
+	  //        cout << endl;
 	 
 	 
-	fakeablePhotons.push_back(*recoPhoton);
+	  fakeablePhotons.push_back(*recoPhoton);
+	}
+      }
+      else if(MethodID.Contains("ParticleFlow")){
+	if(ExoDiPhotons::isPFFakeableObject(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,CategoryPFID) ) {
+	 
+	  //        cout << "Fakeable photon! ";
+	  //        cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+	  //      //     cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
+	  // //      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
+	  //        cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
+	  //        cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
+	  //        cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
+	  //        cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
+	  //        //      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
+	  //        cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();
+	  //        cout << endl;
+	 	 
+	  fakeablePhotons.push_back(*recoPhoton);
+	}
       }
        
     } //end first cuts on pt and (not applied, april2011) EB-only
@@ -860,7 +956,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    
   for(std::vector<reco::Photon>::iterator myPhotonIter = fakeablePhotons.begin();myPhotonIter<fakeablePhotons.end();myPhotonIter++) {
     //     cout << "Photon et, eta, phi = " << myPhotonIter->et() <<", "<<myPhotonIter->eta()<< ", "<< myPhotonIter->phi()<<endl;
-   std::pair<reco::Photon, bool> myPair(*myPhotonIter,true);
+    std::pair<reco::Photon, bool> myPair(*myPhotonIter,true);
     // isFakeable = true
     allTightOrFakeableObjects.push_back(myPair);
   }
@@ -889,35 +985,178 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     // order Photon1,2 by pt, no matter which is tight and which is fake
     // and then use isFakeable leaf to distinguish them
 
-    ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&allTightOrFakeableObjects[0].first,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
-
     // must specifically declare isFakeable status
     // the bool in hte pair uses the same convention, so:
+
+    ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&allTightOrFakeableObjects[0].first,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
     fRecoPhotonInfo1.isFakeable = allTightOrFakeableObjects[0].second;
+    fRecoPhotonInfo1.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron((&allTightOrFakeableObjects[0].first)->superCluster(), hElectrons, hConversions, beamSpot.position());
+
+    //Now we store all PF isolation variables for the 1st photon
+    std::vector<double> photon1TorFEffAreas = ExoDiPhotons::EffectiveAreas((&allTightOrFakeableObjects[0].first));
      
+    fRecoPhotonInfo1.PFIsoAll04 = isolator04.fGetIsolation((&allTightOrFakeableObjects[0].first),pfCandidates,firstVtx,vertexColl);
+    fRecoPhotonInfo1.PFIsoCharged04 = isolator04.getIsolationCharged();
+    fRecoPhotonInfo1.PFIsoNeutral04 = isolator04.getIsolationNeutral();
+    fRecoPhotonInfo1.PFIsoPhoton04 = isolator04.getIsolationPhoton();      
+
+    fRecoPhotonInfo1.PFIsoAll03 = isolator03.fGetIsolation((&allTightOrFakeableObjects[0].first),pfCandidates,firstVtx,vertexColl);
+    fRecoPhotonInfo1.PFIsoCharged03 = isolator03.getIsolationCharged();
+    fRecoPhotonInfo1.PFIsoNeutral03 = isolator03.getIsolationNeutral();
+    fRecoPhotonInfo1.PFIsoPhoton03 = isolator03.getIsolationPhoton();      
+    
+    fRecoPhotonInfo1.PFIsoAll02 = isolator02.fGetIsolation((&allTightOrFakeableObjects[0].first),pfCandidates,firstVtx,vertexColl);
+    fRecoPhotonInfo1.PFIsoCharged02 = isolator02.getIsolationCharged();
+    fRecoPhotonInfo1.PFIsoNeutral02 = isolator02.getIsolationNeutral();
+    fRecoPhotonInfo1.PFIsoPhoton02 = isolator02.getIsolationPhoton();      
+
+    //now the corrected PF isolation variables
+    fRecoPhotonInfo1.rhocorPFIsoCharged04 = max(fRecoPhotonInfo1.PFIsoCharged04-fRho25*photon1TorFEffAreas[0],0.);
+    fRecoPhotonInfo1.rhocorPFIsoNeutral04 = max(fRecoPhotonInfo1.PFIsoNeutral04-fRho25*photon1TorFEffAreas[1],0.);
+    fRecoPhotonInfo1.rhocorPFIsoPhoton04 = max(fRecoPhotonInfo1.PFIsoPhoton04-fRho25*photon1TorFEffAreas[2],0.);
+    fRecoPhotonInfo1.rhocorPFIsoAll04 = fRecoPhotonInfo1.rhocorPFIsoCharged04 + fRecoPhotonInfo1.rhocorPFIsoNeutral04 + fRecoPhotonInfo1.rhocorPFIsoPhoton04;
+
+    fRecoPhotonInfo1.rhocorPFIsoCharged03 = max(fRecoPhotonInfo1.PFIsoCharged03-fRho25*photon1TorFEffAreas[0],0.);
+    fRecoPhotonInfo1.rhocorPFIsoNeutral03 = max(fRecoPhotonInfo1.PFIsoNeutral03-fRho25*photon1TorFEffAreas[1],0.);
+    fRecoPhotonInfo1.rhocorPFIsoPhoton03 = max(fRecoPhotonInfo1.PFIsoPhoton03-fRho25*photon1TorFEffAreas[2],0.);
+    fRecoPhotonInfo1.rhocorPFIsoAll03 = fRecoPhotonInfo1.rhocorPFIsoCharged03 + fRecoPhotonInfo1.rhocorPFIsoNeutral03 + fRecoPhotonInfo1.rhocorPFIsoPhoton03;
+
+    fRecoPhotonInfo1.rhocorPFIsoCharged02 = max(fRecoPhotonInfo1.PFIsoCharged02-fRho25*photon1TorFEffAreas[0],0.);
+    fRecoPhotonInfo1.rhocorPFIsoNeutral02 = max(fRecoPhotonInfo1.PFIsoNeutral02-fRho25*photon1TorFEffAreas[1],0.);
+    fRecoPhotonInfo1.rhocorPFIsoPhoton02 = max(fRecoPhotonInfo1.PFIsoPhoton02-fRho25*photon1TorFEffAreas[2],0.);
+    fRecoPhotonInfo1.rhocorPFIsoAll02 = fRecoPhotonInfo1.rhocorPFIsoCharged02 + fRecoPhotonInfo1.rhocorPFIsoNeutral02 + fRecoPhotonInfo1.rhocorPFIsoPhoton02;
+
+
+
     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,&allTightOrFakeableObjects[1].first,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
     fRecoPhotonInfo2.isFakeable = allTightOrFakeableObjects[1].second;
+    fRecoPhotonInfo2.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron((&allTightOrFakeableObjects[1].first)->superCluster(), hElectrons, hConversions, beamSpot.position());
+
+    //Now we store all PF isolation variables for the 2nd photon
+    std::vector<double> photon2TorFEffAreas = ExoDiPhotons::EffectiveAreas((&allTightOrFakeableObjects[1].first));
+     
+    fRecoPhotonInfo2.PFIsoAll04 = isolator04.fGetIsolation((&allTightOrFakeableObjects[1].first),pfCandidates,firstVtx,vertexColl);
+    fRecoPhotonInfo2.PFIsoCharged04 = isolator04.getIsolationCharged();
+    fRecoPhotonInfo2.PFIsoNeutral04 = isolator04.getIsolationNeutral();
+    fRecoPhotonInfo2.PFIsoPhoton04 = isolator04.getIsolationPhoton();      
+
+    fRecoPhotonInfo2.PFIsoAll03 = isolator03.fGetIsolation((&allTightOrFakeableObjects[1].first),pfCandidates,firstVtx,vertexColl);
+    fRecoPhotonInfo2.PFIsoCharged03 = isolator03.getIsolationCharged();
+    fRecoPhotonInfo2.PFIsoNeutral03 = isolator03.getIsolationNeutral();
+    fRecoPhotonInfo2.PFIsoPhoton03 = isolator03.getIsolationPhoton();      
+    
+    fRecoPhotonInfo2.PFIsoAll02 = isolator02.fGetIsolation((&allTightOrFakeableObjects[1].first),pfCandidates,firstVtx,vertexColl);
+    fRecoPhotonInfo2.PFIsoCharged02 = isolator02.getIsolationCharged();
+    fRecoPhotonInfo2.PFIsoNeutral02 = isolator02.getIsolationNeutral();
+    fRecoPhotonInfo2.PFIsoPhoton02 = isolator02.getIsolationPhoton();      
+
+    //now the corrected PF isolation variables
+    fRecoPhotonInfo2.rhocorPFIsoCharged04 = max(fRecoPhotonInfo2.PFIsoCharged04-fRho25*photon2TorFEffAreas[0],0.);
+    fRecoPhotonInfo2.rhocorPFIsoNeutral04 = max(fRecoPhotonInfo2.PFIsoNeutral04-fRho25*photon2TorFEffAreas[1],0.);
+    fRecoPhotonInfo2.rhocorPFIsoPhoton04 = max(fRecoPhotonInfo2.PFIsoPhoton04-fRho25*photon2TorFEffAreas[2],0.);
+    fRecoPhotonInfo2.rhocorPFIsoAll04 = fRecoPhotonInfo2.rhocorPFIsoCharged04 + fRecoPhotonInfo2.rhocorPFIsoNeutral04 + fRecoPhotonInfo2.rhocorPFIsoPhoton04;
+
+    fRecoPhotonInfo2.rhocorPFIsoCharged03 = max(fRecoPhotonInfo2.PFIsoCharged03-fRho25*photon2TorFEffAreas[0],0.);
+    fRecoPhotonInfo2.rhocorPFIsoNeutral03 = max(fRecoPhotonInfo2.PFIsoNeutral03-fRho25*photon2TorFEffAreas[1],0.);
+    fRecoPhotonInfo2.rhocorPFIsoPhoton03 = max(fRecoPhotonInfo2.PFIsoPhoton03-fRho25*photon2TorFEffAreas[2],0.);
+    fRecoPhotonInfo2.rhocorPFIsoAll03 = fRecoPhotonInfo2.rhocorPFIsoCharged03 + fRecoPhotonInfo2.rhocorPFIsoNeutral03 + fRecoPhotonInfo2.rhocorPFIsoPhoton03;
+
+    fRecoPhotonInfo2.rhocorPFIsoCharged02 = max(fRecoPhotonInfo2.PFIsoCharged02-fRho25*photon2TorFEffAreas[0],0.);
+    fRecoPhotonInfo2.rhocorPFIsoNeutral02 = max(fRecoPhotonInfo2.PFIsoNeutral02-fRho25*photon2TorFEffAreas[1],0.);
+    fRecoPhotonInfo2.rhocorPFIsoPhoton02 = max(fRecoPhotonInfo2.PFIsoPhoton02-fRho25*photon2TorFEffAreas[2],0.);
+    fRecoPhotonInfo2.rhocorPFIsoAll02 = fRecoPhotonInfo2.rhocorPFIsoCharged02 + fRecoPhotonInfo2.rhocorPFIsoNeutral02 + fRecoPhotonInfo2.rhocorPFIsoPhoton02;
 
     // fill diphoton info
     ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,&allTightOrFakeableObjects[0].first,&allTightOrFakeableObjects[1].first);
-
 
     //make an exception if there are 2 tight objects = top priority 
 
     if ( selectedPhotons.size() >=2 ){
 
-      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&selectedPhotons[0],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
-
       // must specifically declare isFakeable status (should be Tight = not True = false                       
+      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&selectedPhotons[0],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+      fRecoPhotonInfo1.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron((&selectedPhotons[0])->superCluster(), hElectrons, hConversions, beamSpot.position());
       fRecoPhotonInfo1.isFakeable = false;
       allTightOrFakeableObjects[0].second = false;//used in sorting, now it's faked if this 2 tight exception comes up
+
+      //Now we store all PF isolation variables for the 1st photon (tight exception)
+      std::vector<double> photon1TEffAreas = ExoDiPhotons::EffectiveAreas((&selectedPhotons[0]));
+     
+      fRecoPhotonInfo1.PFIsoAll04 = isolator04.fGetIsolation((&selectedPhotons[0]),pfCandidates,firstVtx,vertexColl);
+      fRecoPhotonInfo1.PFIsoCharged04 = isolator04.getIsolationCharged();
+      fRecoPhotonInfo1.PFIsoNeutral04 = isolator04.getIsolationNeutral();
+      fRecoPhotonInfo1.PFIsoPhoton04 = isolator04.getIsolationPhoton();      
+
+      fRecoPhotonInfo1.PFIsoAll03 = isolator03.fGetIsolation((&selectedPhotons[0]),pfCandidates,firstVtx,vertexColl);
+      fRecoPhotonInfo1.PFIsoCharged03 = isolator03.getIsolationCharged();
+      fRecoPhotonInfo1.PFIsoNeutral03 = isolator03.getIsolationNeutral();
+      fRecoPhotonInfo1.PFIsoPhoton03 = isolator03.getIsolationPhoton();      
+    
+      fRecoPhotonInfo1.PFIsoAll02 = isolator02.fGetIsolation((&selectedPhotons[0]),pfCandidates,firstVtx,vertexColl);
+      fRecoPhotonInfo1.PFIsoCharged02 = isolator02.getIsolationCharged();
+      fRecoPhotonInfo1.PFIsoNeutral02 = isolator02.getIsolationNeutral();
+      fRecoPhotonInfo1.PFIsoPhoton02 = isolator02.getIsolationPhoton();      
+
+
+      //now the corrected PF isolation variables
+      fRecoPhotonInfo1.rhocorPFIsoCharged04 = max(fRecoPhotonInfo1.PFIsoCharged04-fRho25*photon1TEffAreas[0],0.);
+      fRecoPhotonInfo1.rhocorPFIsoNeutral04 = max(fRecoPhotonInfo1.PFIsoNeutral04-fRho25*photon1TEffAreas[1],0.);
+      fRecoPhotonInfo1.rhocorPFIsoPhoton04 = max(fRecoPhotonInfo1.PFIsoPhoton04-fRho25*photon1TEffAreas[2],0.);
+      fRecoPhotonInfo1.rhocorPFIsoAll04 = fRecoPhotonInfo1.rhocorPFIsoCharged04 + fRecoPhotonInfo1.rhocorPFIsoNeutral04 + fRecoPhotonInfo1.rhocorPFIsoPhoton04;
+
+      fRecoPhotonInfo1.rhocorPFIsoCharged03 = max(fRecoPhotonInfo1.PFIsoCharged03-fRho25*photon1TEffAreas[0],0.);
+      fRecoPhotonInfo1.rhocorPFIsoNeutral03 = max(fRecoPhotonInfo1.PFIsoNeutral03-fRho25*photon1TEffAreas[1],0.);
+      fRecoPhotonInfo1.rhocorPFIsoPhoton03 = max(fRecoPhotonInfo1.PFIsoPhoton03-fRho25*photon1TEffAreas[2],0.);
+      fRecoPhotonInfo1.rhocorPFIsoAll03 = fRecoPhotonInfo1.rhocorPFIsoCharged03 + fRecoPhotonInfo1.rhocorPFIsoNeutral03 + fRecoPhotonInfo1.rhocorPFIsoPhoton03;
+
+      fRecoPhotonInfo1.rhocorPFIsoCharged02 = max(fRecoPhotonInfo1.PFIsoCharged02-fRho25*photon1TEffAreas[0],0.);
+      fRecoPhotonInfo1.rhocorPFIsoNeutral02 = max(fRecoPhotonInfo1.PFIsoNeutral02-fRho25*photon1TEffAreas[1],0.);
+      fRecoPhotonInfo1.rhocorPFIsoPhoton02 = max(fRecoPhotonInfo1.PFIsoPhoton02-fRho25*photon1TEffAreas[2],0.);
+      fRecoPhotonInfo1.rhocorPFIsoAll02 = fRecoPhotonInfo1.rhocorPFIsoCharged02 + fRecoPhotonInfo1.rhocorPFIsoNeutral02 + fRecoPhotonInfo1.rhocorPFIsoPhoton02;
+
+
       ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,&selectedPhotons[1],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+      fRecoPhotonInfo2.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron((&selectedPhotons[1])->superCluster(), hElectrons, hConversions, beamSpot.position());
       fRecoPhotonInfo2.isFakeable = false;
       allTightOrFakeableObjects[1].second = false;
+
+      //Now we store all PF isolation variables for the 2st photon (tight exception)
+      std::vector<double> photon2TEffAreas = ExoDiPhotons::EffectiveAreas((&selectedPhotons[1]));
+     
+      fRecoPhotonInfo2.PFIsoAll04 = isolator04.fGetIsolation((&selectedPhotons[1]),pfCandidates,firstVtx,vertexColl);
+      fRecoPhotonInfo2.PFIsoCharged04 = isolator04.getIsolationCharged();
+      fRecoPhotonInfo2.PFIsoNeutral04 = isolator04.getIsolationNeutral();
+      fRecoPhotonInfo2.PFIsoPhoton04 = isolator04.getIsolationPhoton();      
+
+      fRecoPhotonInfo2.PFIsoAll03 = isolator03.fGetIsolation((&selectedPhotons[1]),pfCandidates,firstVtx,vertexColl);
+      fRecoPhotonInfo2.PFIsoCharged03 = isolator03.getIsolationCharged();
+      fRecoPhotonInfo2.PFIsoNeutral03 = isolator03.getIsolationNeutral();
+      fRecoPhotonInfo2.PFIsoPhoton03 = isolator03.getIsolationPhoton();      
+    
+      fRecoPhotonInfo2.PFIsoAll02 = isolator02.fGetIsolation((&selectedPhotons[1]),pfCandidates,firstVtx,vertexColl);
+      fRecoPhotonInfo2.PFIsoCharged02 = isolator02.getIsolationCharged();
+      fRecoPhotonInfo2.PFIsoNeutral02 = isolator02.getIsolationNeutral();
+      fRecoPhotonInfo2.PFIsoPhoton02 = isolator02.getIsolationPhoton();      
+
+      //now the corrected PF isolation variables
+      fRecoPhotonInfo2.rhocorPFIsoCharged04 = max(fRecoPhotonInfo2.PFIsoCharged04-fRho25*photon2TEffAreas[0],0.);
+      fRecoPhotonInfo2.rhocorPFIsoNeutral04 = max(fRecoPhotonInfo2.PFIsoNeutral04-fRho25*photon2TEffAreas[1],0.);
+      fRecoPhotonInfo2.rhocorPFIsoPhoton04 = max(fRecoPhotonInfo2.PFIsoPhoton04-fRho25*photon2TEffAreas[2],0.);
+      fRecoPhotonInfo2.rhocorPFIsoAll04 = fRecoPhotonInfo2.rhocorPFIsoCharged04 + fRecoPhotonInfo2.rhocorPFIsoNeutral04 + fRecoPhotonInfo2.rhocorPFIsoPhoton04;
+
+      fRecoPhotonInfo2.rhocorPFIsoCharged03 = max(fRecoPhotonInfo2.PFIsoCharged03-fRho25*photon2TEffAreas[0],0.);
+      fRecoPhotonInfo2.rhocorPFIsoNeutral03 = max(fRecoPhotonInfo2.PFIsoNeutral03-fRho25*photon2TEffAreas[1],0.);
+      fRecoPhotonInfo2.rhocorPFIsoPhoton03 = max(fRecoPhotonInfo2.PFIsoPhoton03-fRho25*photon2TEffAreas[2],0.);
+      fRecoPhotonInfo2.rhocorPFIsoAll03 = fRecoPhotonInfo2.rhocorPFIsoCharged03 + fRecoPhotonInfo2.rhocorPFIsoNeutral03 + fRecoPhotonInfo2.rhocorPFIsoPhoton03;
+
+      fRecoPhotonInfo2.rhocorPFIsoCharged02 = max(fRecoPhotonInfo2.PFIsoCharged02-fRho25*photon2TEffAreas[0],0.);
+      fRecoPhotonInfo2.rhocorPFIsoNeutral02 = max(fRecoPhotonInfo2.PFIsoNeutral02-fRho25*photon2TEffAreas[1],0.);
+      fRecoPhotonInfo2.rhocorPFIsoPhoton02 = max(fRecoPhotonInfo2.PFIsoPhoton02-fRho25*photon2TEffAreas[2],0.);
+      fRecoPhotonInfo2.rhocorPFIsoAll02 = fRecoPhotonInfo2.rhocorPFIsoCharged02 + fRecoPhotonInfo2.rhocorPFIsoNeutral02 + fRecoPhotonInfo2.rhocorPFIsoPhoton02;
+
+
       // fill diphoton info                                                                                                   
       ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,&selectedPhotons[0],&selectedPhotons[1]);
-
-
 
     }//end of 2 TT exception
      
@@ -955,8 +1194,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     // remember the boolean is for isFakeable, so false is tight
     if(!allTightOrFakeableObjects[0].second && !allTightOrFakeableObjects[1].second) {
       // fill the tight-tight tree
-      fTree
-->Fill();
+      fTree->Fill();
       //       cout << "This event was TT" <<endl;
     }
     else if(!allTightOrFakeableObjects[0].second ) {
@@ -1011,7 +1249,7 @@ void
 ExoDiPhotonAnalyzer::beginJob()
 {
   if (fisMC){
-  LumiWeights = edm::LumiReWeighting(fPUMCFileName,fPUDataFileName,fPUMCHistName,fPUDataHistName);
+    LumiWeights = edm::LumiReWeighting(fPUMCFileName,fPUDataFileName,fPUMCHistName,fPUDataHistName);
   }
 }
 
