@@ -8,6 +8,7 @@
 <use   name="DataFormats/BeamSpot"/>
 <use   name="L1Trigger/GlobalTriggerAnalyzer"/>
 <use   name="RecoEcal/EgammaCoreTools"/>
+<use   name="RecoEgamma/EgammaTools"/>
 <use   name="CondFormats/EcalObjects"/>
 <use   name="CondFormats/DataRecord"/>
 <use   name="Geometry/CaloGeometry"/>
