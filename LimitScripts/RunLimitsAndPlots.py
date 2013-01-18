@@ -33,15 +33,21 @@ from MakeLimits import *
 
 # TODO: remove hardcoding; instead use list of couplings to run over
 def DoLimitsAllPoints(cl95MacroPathAndName,lumi,lumiErr,limitsFileNameBase):
+  #print 'Run for coupling 0.01'
+  #with open(limitsFileNameBase+'0p01.txt', 'w') as file:
+  #  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p01,file)
+  #print 'Run for coupling 0.05'
+  #with open(limitsFileNameBase+'0p05.txt', 'w') as file:
+  #  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p05,file)
+  #print 'Run for coupling 0.1'
+  #with open(limitsFileNameBase+'0p1.txt', 'w') as file:
+  #  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p1,file)
   print 'Run for coupling 0.01'
-  with open(limitsFileNameBase+'0p01.txt', 'w') as file:
-    ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p01,file)
+  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p01,limitsFileNameBase+'0p01.txt')
   print 'Run for coupling 0.05'
-  with open(limitsFileNameBase+'0p05.txt', 'w') as file:
-    ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p05,file)
+  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p05,limitsFileNameBase+'0p05.txt')
   print 'Run for coupling 0.1'
-  with open(limitsFileNameBase+'0p1.txt', 'w') as file:
-    ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p1,file)
+  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p1,limitsFileNameBase+'0p1.txt')
 
 
 ## TODO
@@ -57,11 +63,16 @@ def DoLimitsAllPoints(cl95MacroPathAndName,lumi,lumiErr,limitsFileNameBase):
 #  return resultsByCoupling
 
 
-def DoPlotsAllPoints(lumi):
+def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
+  # set up tdrStyle
+  gROOT.ProcessLine('.L '+pathToTDRStyle)
+  gROOT.ProcessLine('setTDRStyle()')
   print 'Run for coupling 0.01'
   with open(limitsFileNameBase+'0p01.txt', 'r') as file:
     readModelPoints0p01 = ReadFromFile(file)
-  PlotBands(readModelPoints0p01,lumi)
+  for modelPoint in readModelPoints0p01:
+    modelPoint.Print()
+  PlotBands(readModelPoints0p01,lumi,rootFile)
   m0p01,xs,mExp0p01,xsE = GetMassLimit(readModelPoints0p01)
   print string.ljust('Coupling: '+str(readModelPoints0p01[0].coupling),14),
   print ' Observed limit mass: %0.2f'%m0p01
@@ -72,7 +83,7 @@ def DoPlotsAllPoints(lumi):
   print 'Run for coupling 0.05'
   with open(limitsFileNameBase+'0p05.txt', 'r') as file:
     readModelPoints0p05 = ReadFromFile(file)
-  PlotBands(readModelPoints0p05,lumi)
+  PlotBands(readModelPoints0p05,lumi,rootFile)
   m0p05,xs,mExp0p05,xsE = GetMassLimit(readModelPoints0p05)
   print string.ljust('Coupling: '+str(readModelPoints0p05[0].coupling),14),
   print ' Observed limit mass: %0.2f'%m0p05
@@ -83,7 +94,7 @@ def DoPlotsAllPoints(lumi):
   print 'Run for coupling 0.1'
   with open(limitsFileNameBase+'0p1.txt', 'r') as file:
     readModelPoints0p1 = ReadFromFile(file)
-  PlotBands(readModelPoints0p1,lumi)
+  PlotBands(readModelPoints0p1,lumi,rootFile)
   m0p1,xs,mExp0p1,xsE = GetMassLimit(readModelPoints0p1)
   print string.ljust('Coupling: '+str(readModelPoints0p1[0].coupling),14),
   print ' Observed limit mass: %0.2f'%m0p1
@@ -94,11 +105,17 @@ def DoPlotsAllPoints(lumi):
   mLimObs = [m0p01,m0p05,m0p1]
   mLimExp = [mExp0p01,mExp0p05,mExp0p1]
   couplings = [0.01,0.05,0.1]
-  CouplingVsMassPlot(couplings,mLimExp,mLimObs)
+  CouplingVsMassPlot(couplings,mLimExp,mLimObs,rootFile)
+  # efficiencies for all couplings/masses on same axes
+  PlotAllEfficiencies([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile)
+  # half widths
+  PlotAllHalfWidths([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile)
+  # exp BG
+  PlotAllExpBGs([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile)
   # limit plot for all couplings on same axes
-  PlotAllBands([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi)
+  PlotAllBands([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile)
   # make table
-  #DoTablesAllPoints(lumi,3)
+  DoTablesAllPoints(lumi,3)
 
 
 def DoTablesAllPoints(lumi,numsigmas):
@@ -187,10 +204,13 @@ def Usage():
   print '    plots  --> Read limit results from text files and make limit plots'
   print '    yields --> Calculate event yields from histograms in root file'
 
-# set up tdrStyle
+
 gROOT.Reset()
-gROOT.ProcessLine('.L tdrStyle.C')
-gROOT.ProcessLine('setTDRStyle()')
+# get path to tdrStyle script (should always be in LimitScripts, but we don't hardcode it anyway)
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+pathToTDRStyle = dname+'/tdrStyle.C'
+#gROOT.ProcessLine('.L '+)
 # Define RooStats macro path and name
 cl95MacroPath = os.environ['CMSSW_BASE']+'/src/StatisticalTools/RooStatsRoutines/root/'
 cl95MacroName = 'roostats_cl95.C'
@@ -201,8 +221,12 @@ limitsFileNameBase = 'results_limits_k_'
 # Declarations of Lumi and model points
 lumi = 10252.
 lumiErr = lumi*0.044
+# root file for plots
+plotFileName = 'plots.root'
+rootFile = TFile(plotFileName,'recreate')
+
 # No Cuts -- updated signal eff.
-# coupling, mass, totalXSec, totalEff, width, nDataObs, nBG, nBGerr
+#                              coupling, mass, totalXSec, totalEff, width, nDataObs, nBG, nBGerr
 ##c = 0.01
 #modelPointsC0p01 = []
 #modelPointsC0p01.append(ModelPoint(0.01, 750,  1.023e-02, 0.300598, 5.2041,  4, 3.47787, 1.86490))
@@ -226,7 +250,7 @@ lumiErr = lumi*0.044
 #modelPointsC0p1.append(ModelPoint(0.1, 2750, 1.14e-04, 0.536109, 35.9283, 0, 0.00321, 0.05667))
 #modelPointsC0p1.append(ModelPoint(0.1, 3000, 4.68e-05, 0.53504,  38.7399, 0, 0.00193, 0.04390))
 #modelPointsC0p1.append(ModelPoint(0.1, 3250, 1.19e-05, 0.534551, 41.8178, 0, 0.00326, 0.05711))
-#modelPointsC0p1.append(ModelPoint(0.1, 3500, 7.7e-05,  0.529164, 40.2991, 0, 0.00326, 0.05711))
+#modelPointsC0p1.append(ModelPoint(0.1, 3500, 7.7e-06,  0.529164, 40.2991, 0, 0.00326, 0.05711))
 
 # With DeltaPhi 2.8 cut, updated efficiencies
 # coupling, mass, totalXSec, totalEff, width, nDataObs, nBG, nBGerr
@@ -253,7 +277,7 @@ modelPointsC0p1.append(ModelPoint(0.1, 2500, 2.79e-04, 0.517166, 30.8038, 0, 0.0
 modelPointsC0p1.append(ModelPoint(0.1, 2750, 1.14e-04, 0.527167, 35.9283, 0, 0.00321, 0.05667))
 modelPointsC0p1.append(ModelPoint(0.1, 3000, 4.68e-05, 0.527422, 38.7399, 0, 0.00193, 0.04390))
 modelPointsC0p1.append(ModelPoint(0.1, 3250, 1.19e-05, 0.529048, 41.8178, 0, 0.00326, 0.05711))
-modelPointsC0p1.append(ModelPoint(0.1, 3500, 7.7e-05,  0.524787, 40.2991, 0, 0.00326, 0.05711))
+modelPointsC0p1.append(ModelPoint(0.1, 3500, 7.7e-06,  0.524787, 40.2991, 0, 0.00326, 0.05711))
 
 #
 #
@@ -271,7 +295,7 @@ elif sys.argv[1]=='limits':
   DoLimitsAllPoints(cl95MacroPath+cl95MacroName,lumi,lumiErr,limitsFileNameBase)
 elif sys.argv[1]=='plots':
   print 'plots: DoPlotsAllPoints'
-  DoPlotsAllPoints(lumi)
+  DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle)
 elif sys.argv[1]=='tables':
   print 'tables: DoTablesAllPoints'
   DoTablesAllPoints(lumi,3)
@@ -282,7 +306,7 @@ elif sys.argv[1]=='all':
   print 'limits: DoLimitsAllPoints'
   DoLimitsAllPoints(cl95MacroPath+cl95MacroName,lumi,lumiErr,limitsFileNameBase)
   print 'plots: DoPlotsAllPoints'
-  DoPlotsAllPoints(lumi)
+  DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle)
   print 'tables: DoTablesAllPoints'
   DoTablesAllPoints(lumi,3)
 else:
@@ -290,6 +314,7 @@ else:
   Usage()
   sys.exit()
 
+rootFile.Close()
 
 ### wait for input to keep the GUI (which lives on a ROOT event dispatcher) alive
 #if __name__ == '__main__':

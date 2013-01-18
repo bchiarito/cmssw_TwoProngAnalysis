@@ -15,41 +15,35 @@ import array
 import subprocess
 import itertools
 
+# run root in batch
+sys.argv.append('-b')
 from ROOT import *
 from ModelPoint import *
 
 
-def ComputeLimits(cl95MacroPath,lumi,lumiErr,modelPointArray,file):
-  gROOT.ProcessLine('.L '+cl95MacroPath+'+')
-  ROOT.SetParameter("Optimize",False)
-  ROOT.SetParameter("NToys",3000)
-  ROOT.SetParameter("MakePlot",True)
-  ROOT.SetParameter("WriteResult",True)
-  ROOT.SetParameter("PlotHypoTestResult",True)
+def ComputeLimits(cl95MacroPath,lumi,lumiErr,modelPointArray,fileName):
+  # check to see if results txt file exists; if so, remove
+  if os.path.isfile(fileName):
+    os.remove(fileName)
+  # Get setup script path
+  setupScriptPath = cl95MacroPath.split('root')[0]
+  setupScriptPath+='setup/lxplus_standalone_setup.sh'
   for modelPoint in modelPointArray:
-    # new interface
-    #limit = ROOT.GetClsLimit(lumi, lumiErr, modelPoint.GetTotalEff(), 
-    #                         math.sqrt((modelPoint.GetTotalEff()*(1.-modelPoint.GetTotalEff()))/25000.),
-    #                         modelPoint.GetNBackground(), modelPoint.GetNBackgroundErr(),
-    #                         modelPoint.GetNDataObs());
-  
-    # legacy interface
-    limit = ROOT.roostats_limit(lumi, lumiErr, modelPoint.totalEff,
-                                       math.sqrt((modelPoint.totalEff*(1.-modelPoint.totalEff))/25000.),
-                                       modelPoint.nBackground, modelPoint.nBackgroundErr,
-                                       modelPoint.nDataObs, False, 0, "cls",
-                                       "plots_cl95_"+str(modelPoint.coupling)+"_"+str(modelPoint.mass)+".pdf",0)
-                                       #"",0)
-                                       #"",123456) # seed for testing
+    # void ComputeLimit(float lumi, float lumiError, float totalEff, float nBackground, float nBackgroundErr,
+    # float nDataObs, int mass, float coupling, float halfWidth, float totalXSec, std::string fileName)
+    command = 'ComputeLimit.C('+str(lumi)+','+str(lumiErr)+','+str(modelPoint.totalEff)+','+str(modelPoint.nBackground)+','
+    command+=str(modelPoint.nBackgroundErr)+','+str(modelPoint.nDataObs)+','+str(modelPoint.mass)+','
+    command+=str(modelPoint.coupling)+','+str(modelPoint.halfWidth)+','+str(modelPoint.totalXSec)+','
+    command+='\"'+fileName+'\"'
+    command+=')'
+    subprocess.call(['root','-b','-q',command]) # wait for each one to finish
     couplingStr = str(modelPoint.coupling).replace('.','p')
     plotFileSamplingName = 'cls_sampling_k_'+couplingStr+"_m"+str(modelPoint.mass)+".pdf"
     plotFileName = 'cls_k_'+couplingStr+"_m"+str(modelPoint.mass)+".pdf"
-    if os.path.isdir('cls_plots') == False:
-      subprocess.Popen(['mkdir','cls_plots'])
-    subprocess.Popen(['mv','cls_sampling.pdf','cls_plots/'+plotFileSamplingName])
-    subprocess.Popen(['mv','cls.pdf','cls_plots/'+plotFileName])
-    modelPoint.AddLimitResult(limit);
-    modelPoint.Write(file)
+    if not os.path.isdir('cls_plots'):
+      os.mkdir('cls_plots')
+    subprocess.call(['mv','cls_sampling.pdf','cls_plots/'+plotFileSamplingName])
+    subprocess.call(['mv','cls.pdf','cls_plots/'+plotFileName])
   print 'Used StatisticalTools/RooStatsRoutine CVS tag:',GetRooStatsMacroCVSTag(cl95MacroPath)
 
 

@@ -53,6 +53,7 @@ class ModelPoint:
     file.write("Mass: " + str(self.mass) + "\n")
     file.write("TotalXSection: " + str(self.totalXSec) + "\n")
     file.write("TotalEff: " + str(self.totalEff) + "\n")
+    file.write("HalfWidth: " + str(self.halfWidth) + "\n")
     file.write("NDataObs: " + str(self.nDataObs) + "\n")
     file.write("NBackground: " + str(self.nBackground) + "\n")
     file.write("NBackgroundErr: " + str(self.nBackgroundErr) + "\n")
@@ -68,6 +69,12 @@ class ModelPoint:
     latexLine='\t\t'+str(self.coupling)+' & '+str(int(self.mass))+' & '
     minMass = self.mass - numsigmas * self.halfWidth
     maxMass = self.mass + numsigmas * self.halfWidth
+    #print 'numsigmas = ',numsigmas
+    #print 'halfWidth = ',self.halfWidth
+    #print 'mass = ',self.mass
+    #print 'self.mass - numsigmas * self.halfWidth',(self.mass - numsigmas * self.halfWidth)
+    #print 'minMass = ',minMass
+    #print 'maxMass = ',maxMass
     latexLine+=str(int(minMass))+' to '+str(int(maxMass))+' & '
     latexLine+='%.2f'%self.totalEff+' & '
     expectedSignalEvents = lumi * self.totalXSec * self.totalEff
