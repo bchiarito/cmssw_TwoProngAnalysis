@@ -278,13 +278,28 @@ void MakeCombinedMCHistos()
   //const
 
   TString inputmcfiles[inputfiles];
-  inputmcfiles[0]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt25To250_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBorn_Pt25To250_Summer12_Sept10th.root";
-  inputmcfiles[1]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt250ToInf_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBorn_Pt250ToInf_Summer12_Sept10th.root";
-  inputmcfiles[2]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th.root";	
-  inputmcfiles[3]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th.root";
-  //   inputmcfiles[0]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th.root";	
-  //   inputmcfiles[1]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th.root";
-  //   inputmcfiles[2]= HistogramFileLocation+"ExoDiPhotonAnalyzer_DiPhotonJetsMadGraph/histograms_ExoDiPhotonAnalyzer_DiPhotonJetsMadGraph.root";
+
+  //     inputmcfiles[0]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt25To250_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBorn_Pt25To250_Summer12_Sept10th.root";
+  //     inputmcfiles[1]= HistogramFileLocation+"diphoton_tree_DiPhotonBorn_Pt250ToInf_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBorn_Pt250ToInf_Summer12_Sept10th.root";
+  //     inputmcfiles[2]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBox_Pt25To250_Summer12_Sept10th.root";	
+  //     inputmcfiles[3]= HistogramFileLocation+"diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th/histograms_diphoton_tree_DiPhotonBox_Pt250ToInf_Summer12_Sept10th.root";
+
+//     inputmcfiles[0]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFDec14th_53X_BornPt25To250/histograms_ExoDiPhotonAnalyzer_PFDec14th_53X_BornPt25To250.root";
+//     inputmcfiles[1]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFDec14th_53X_BornPt250ToInf/histograms_ExoDiPhotonAnalyzer_PFDec14th_53X_BornPt250ToInf.root";
+//     inputmcfiles[2]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFDec14th_53X_BoxPt25To250/histograms_ExoDiPhotonAnalyzer_PFDec14th_53X_BoxPt25To250.root";
+//     inputmcfiles[3]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFDec14th_53X_BoxPt250ToInf/histograms_ExoDiPhotonAnalyzer_PFDec14th_53X_BoxPt250ToInf.root";
+  
+  inputmcfiles[0]= HistogramFileLocation+"ExoDiPhotonAnalyzer_DETDec14th_53X_BornPt25To250/histograms_ExoDiPhotonAnalyzer_DETDec14th_53X_BornPt25To250.root";
+  inputmcfiles[1]= HistogramFileLocation+"ExoDiPhotonAnalyzer_DETDec14th_53X_BornPt250ToInf/histograms_ExoDiPhotonAnalyzer_DETDec14th_53X_BornPt250ToInf.root";
+  inputmcfiles[2]= HistogramFileLocation+"ExoDiPhotonAnalyzer_DETDec14th_53X_BoxPt25To250/histograms_ExoDiPhotonAnalyzer_DETDec14th_53X_BoxPt25To250.root";
+  inputmcfiles[3]= HistogramFileLocation+"ExoDiPhotonAnalyzer_DETDec14th_53X_BoxPt250ToInf/histograms_ExoDiPhotonAnalyzer_DETDec14th_53X_BoxPt250ToInf.root";
+  
+//   inputmcfiles[0]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFAug10th_52X_BornPt25To250/histograms_ExoDiPhotonAnalyzer_PFAug10th_52X_BornPt25To250.root";
+//   inputmcfiles[1]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFAug10th_52X_BornPt250ToInf/histograms_ExoDiPhotonAnalyzer_PFAug10th_52X_BornPt250ToInf.root";
+//   inputmcfiles[2]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFAug10th_52X_BoxPt25To250/histograms_ExoDiPhotonAnalyzer_PFAug10th_52X_BoxPt25To250.root";
+//   inputmcfiles[3]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFAug10th_52X_BoxPt250ToInf/histograms_ExoDiPhotonAnalyzer_PFAug10th_52X_BoxPt250ToInf.root";
+  
+
 
   cout << "Input MC ROOT files: " <<endl;
 
@@ -694,16 +709,16 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
   h_GammaJet_eta2 = new TH1F("h_GammaJet_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_GammaJet_phi2 = new TH1F("h_GammaJet_phi2","#gamma_{1} #phi;#gamma_{1} #phi",36,-3.14159,3.14159);
   //   h_GammaJet_minv         = new TH1F("h_GammaJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",43,140,1000);
-  h_GammaJet_minv         = new TH1F("h_GammaJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",149,20.,3000.);
+  h_GammaJet_minv         = new TH1F("h_GammaJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",199,20.,4000.);
   h_GammaJet_qt           = new TH1F("h_GammaJet_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_GammaJet_deltaPhi     = new TH1F("h_GammaJet_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
   h_GammaJet_deltaEta     = new TH1F("h_GammaJet_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
   h_GammaJet_deltaR       = new TH1F("h_GammaJet_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
   h_GammaJet_cosThetaStar = new TH1F("h_GammaJet_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);
-  h_GammaJet_minv_UpperBand         = new TH1F("h_GammaJet_minv_UpperBand",        "Diphoton Invariant Mass Upper Syst. Band;M_{#gamma#gamma} [GeV]",149,20.,3000.);
-  h_GammaJet_minv_LowerBand         = new TH1F("h_GammaJet_minv_LowerBand",        "Diphoton Invariant Mass Lower Syst. Band;M_{#gamma#gamma} [GeV]",149,20.,3000.);
-  h_GammaJet_minv_UpperError         = new TH1F("h_GammaJet_minv_UpperError",        "Diphoton Invariant Mass Upper Syst. Error;M_{#gamma#gamma} [GeV]",149,20.,3000.);
-  h_GammaJet_minv_LowerError         = new TH1F("h_GammaJet_minv_LowerError",        "Diphoton Invariant Mass Lower Syst. Error;M_{#gamma#gamma} [GeV]",149,20.,3000.);
+  h_GammaJet_minv_UpperBand         = new TH1F("h_GammaJet_minv_UpperBand",        "Diphoton Invariant Mass Upper Syst. Band;M_{#gamma#gamma} [GeV]",199,20.,4000.);
+  h_GammaJet_minv_LowerBand         = new TH1F("h_GammaJet_minv_LowerBand",        "Diphoton Invariant Mass Lower Syst. Band;M_{#gamma#gamma} [GeV]",199,20.,4000.);
+  h_GammaJet_minv_UpperError         = new TH1F("h_GammaJet_minv_UpperError",        "Diphoton Invariant Mass Upper Syst. Error;M_{#gamma#gamma} [GeV]",199,20.,4000.);
+  h_GammaJet_minv_LowerError         = new TH1F("h_GammaJet_minv_LowerError",        "Diphoton Invariant Mass Lower Syst. Error;M_{#gamma#gamma} [GeV]",199,20.,4000.);
 
 
   h_JetJet_pt1  = new TH1F("h_JetJet_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",42,60.,900.);
@@ -713,16 +728,16 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
   h_JetJet_eta2 = new TH1F("h_JetJet_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_JetJet_phi2 = new TH1F("h_JetJet_phi2","#gamma_{1} #phi;#gamma_{1} #phi",36,-3.14159,3.14159);
   //   h_JetJet_minv         = new TH1F("h_JetJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",43,140,1000);
-  h_JetJet_minv         = new TH1F("h_JetJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",149,20.,3000.);
+  h_JetJet_minv         = new TH1F("h_JetJet_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV]",199,20.,4000.);
   h_JetJet_qt           = new TH1F("h_JetJet_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_JetJet_deltaPhi     = new TH1F("h_JetJet_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
   h_JetJet_deltaEta     = new TH1F("h_JetJet_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
   h_JetJet_deltaR       = new TH1F("h_JetJet_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
   h_JetJet_cosThetaStar = new TH1F("h_JetJet_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);
-  h_JetJet_minv_UpperBand         = new TH1F("h_JetJet_minv_UpperBand",        "Diphoton Invariant Mass Upper Syst. Band;M_{#gamma#gamma} [GeV]",149,20.,3000.);
-  h_JetJet_minv_LowerBand         = new TH1F("h_JetJet_minv_LowerBand",        "Diphoton Invariant Mass Lower Syst. Band;M_{#gamma#gamma} [GeV]",149,20.,3000.);
-  h_JetJet_minv_UpperError         = new TH1F("h_JetJet_minv_UpperError",        "Diphoton Invariant Mass Upper Syst. Error;M_{#gamma#gamma} [GeV]",149,20.,3000.);
-  h_JetJet_minv_LowerError         = new TH1F("h_JetJet_minv_LowerError",        "Diphoton Invariant Mass Lower Syst. Error;M_{#gamma#gamma} [GeV]",149,20.,3000.);
+  h_JetJet_minv_UpperBand         = new TH1F("h_JetJet_minv_UpperBand",        "Diphoton Invariant Mass Upper Syst. Band;M_{#gamma#gamma} [GeV]",199,20.,4000.);
+  h_JetJet_minv_LowerBand         = new TH1F("h_JetJet_minv_LowerBand",        "Diphoton Invariant Mass Lower Syst. Band;M_{#gamma#gamma} [GeV]",199,20.,4000.);
+  h_JetJet_minv_UpperError         = new TH1F("h_JetJet_minv_UpperError",        "Diphoton Invariant Mass Upper Syst. Error;M_{#gamma#gamma} [GeV]",199,20.,4000.);
+  h_JetJet_minv_LowerError         = new TH1F("h_JetJet_minv_LowerError",        "Diphoton Invariant Mass Lower Syst. Error;M_{#gamma#gamma} [GeV]",199,20.,4000.);
 
   TString histoTFlocation=HistogramFileLocation.Data()+Sample+"/histograms_"+Sample+"_TF.root";
   TString histoFFlocation=HistogramFileLocation.Data()+Sample+"/histograms_"+Sample+"_FF.root";
@@ -930,14 +945,14 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
 
       LumiLabel->Draw();
 
-      cgj[in]->SaveAs(GammaJetHists[in]+"_"+Sample+".C");
-      cgj[in]->SaveAs(GammaJetHists[in]+"_"+Sample+".png");
-      cgj[in]->SaveAs(GammaJetHists[in]+"_"+Sample+".pdf");
-      cgj[in]->SaveAs(GammaJetHists[in]+"_"+Sample+".eps");
-      cjj[in]->SaveAs(JetJetHists[in]+"_"+Sample+".C");
-      cjj[in]->SaveAs(JetJetHists[in]+"_"+Sample+".png");
-      cjj[in]->SaveAs(JetJetHists[in]+"_"+Sample+".pdf");
-      cjj[in]->SaveAs(JetJetHists[in]+"_"+Sample+".eps");
+      //cgj[in]->SaveAs(GammaJetHists[in]+"_"+Sample+".C");
+      //cgj[in]->SaveAs(GammaJetHists[in]+"_"+Sample+".png");
+      //cgj[in]->SaveAs(GammaJetHists[in]+"_"+Sample+".pdf");
+      //cgj[in]->SaveAs(GammaJetHists[in]+"_"+Sample+".eps");
+      //cjj[in]->SaveAs(JetJetHists[in]+"_"+Sample+".C");
+      //cjj[in]->SaveAs(JetJetHists[in]+"_"+Sample+".png");
+      //cjj[in]->SaveAs(JetJetHists[in]+"_"+Sample+".pdf");
+      //cjj[in]->SaveAs(JetJetHists[in]+"_"+Sample+".eps");
 
     }//end of loop over histograms
 
@@ -963,10 +978,10 @@ void OverlayMCFake(TString Sample = "Diphoton", TString lumi = "1", TString JSON
   LumiLabelCumm->AddText(LuminosityCumm.Data());
   LumiLabelCumm->AddText(JSONFile.Data());
 
-  TH1F* h_DatadivBack = new TH1F("h_DatadivBack","",149,20.,3000.); 
-  TH1F* h_DataMinusBack = new TH1F("h_DataMinusBack","",149,20.,3000.); 
-  TH1F* h_DataMinusBackdivBack = new TH1F("h_DataMinusBackdivBack","",149,20.,3000.); 
-  TH1F* h_TotalBackground = new TH1F("h_TotalBackground","",149,20.,3000.);
+  TH1F* h_DatadivBack = new TH1F("h_DatadivBack","",199,20.,4000.); 
+  TH1F* h_DataMinusBack = new TH1F("h_DataMinusBack","",199,20.,4000.); 
+  TH1F* h_DataMinusBackdivBack = new TH1F("h_DataMinusBackdivBack","",199,20.,4000.); 
+  TH1F* h_TotalBackground = new TH1F("h_TotalBackground","",199,20.,4000.);
 
   h_DatadivBack->Sumw2();
   h_DataMinusBack->Sumw2();
@@ -2280,6 +2295,169 @@ void MakeYieldsTableForMassRanges(TString Sample, Float_t lumiNumber, std::vecto
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+void MakeYieldsTableForMassRangesForSignal(std::vector<TString> Samples, std::vector<Float_t> minmasses, std::vector<Float_t> maxmasses)
+{
+
+  gStyle->SetOptStat("ourmei");
+
+  std::vector<TFile*> fsamplehists;
+  for(int index=0;index<Samples.size();index++){
+    TString histogramsample = HistogramFileLocation+Samples[index]+"/histograms_"+Samples[index]+".root";
+    TFile *filetempo = TFile::Open(histogramsample.Data());
+    fsamplehists.push_back(filetempo);
+  }
+
+  std::vector<TH1F*> histossample;
+  for(int index=0;index<Samples.size();index++){
+    cout<<"Getting sample histogram "<<endl;
+    TH1F *histotempo = (TH1F*)fsamplehists[index]->Get("h_Diphoton_Minv");
+    histossample.push_back(histotempo);
+    cout<<"histo "<<histossample[index]->GetName()<<" "
+	<<histossample[index]->GetEntries()<<" entries"
+	<<histossample[index]->Integral()<<" (integral)"
+	<<endl;
+  }
+
+  //special part to calculate integrals in different mass ranges
+
+  //They all have the same binning
+  //Let's take the sample one
+  std::vector<Int_t> binminnumbers;
+  std::vector<Int_t> binmaxnumbers;
+
+  Int_t nbinsX = histossample[0]->GetNbinsX();
+  Int_t binnr = nbinsX;
+
+  cout<<"---------------Mass intervals to seek----------------"<<endl;
+  for(int index = 0;index < minmasses.size();index++){
+    cout<<"interval ["<<minmasses[index]<<","<<maxmasses[index]<<"]"<<endl;
+  }
+
+  for(unsigned int index = 0;index < minmasses.size();index++) {
+    binnr = nbinsX;
+    for(int nbin = 0; nbin <  histossample[index]->GetNbinsX(); nbin++) {
+      Float_t binlowedge = histossample[index]->GetBinLowEdge(nbin);
+      if(binlowedge >= minmasses[index] && binnr == nbinsX ) {binnr = nbin;}
+    }
+    //cout<<" binnr "<<binnr<<endl;
+    binminnumbers.push_back(binnr);
+  }
+
+  for(unsigned int index = 0;index < maxmasses.size();index++) {
+    binnr = nbinsX;
+    for(int nbin = 0; nbin <  histossample[index]->GetNbinsX(); nbin++) {
+      Float_t binlowedge = histossample[index]->GetBinLowEdge(nbin);
+      if(binlowedge >= maxmasses[index] && binnr == nbinsX ) {binnr = nbin;}
+    }
+    //cout<<" binnr-1 "<<binnr-1<<endl;
+    binmaxnumbers.push_back(binnr-1);
+  }
+
+  //Once we have the bin numbers
+  //we compute the integrals
+  //and their stat uncertainties
+  //and their syst uncertainties
+
+  for(unsigned int index = 0;index < binminnumbers.size();index++) {
+    cout<<binminnumbers[index]<<"---"<<binmaxnumbers[index]<<endl;
+  }
+
+  //For each contribution, we take nbinsX+1 to have the overflow
+
+  std::vector<Float_t> entriesSamples;
+  std::vector<Float_t> errorsSamples;
+
+  for(unsigned int index=0;index<binminnumbers.size();index++){
+    entriesSamples.push_back(histossample[index]->Integral(binminnumbers[index],binmaxnumbers[index]));
+    errorsSamples.push_back(0.);
+  }
+
+  printf("%s","Samples #entries = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",entriesSamples[index]);
+  }
+  printf("}; \n");
+	
+  printf("%s","Samples stat = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",sqrt(entriesSamples[index]));
+  }
+  printf("}; \n");
+	
+  printf("%s","Samples syst = {");
+  for(unsigned int index=0; index < binmaxnumbers.size(); index ++) {
+    printf("%.5f,",errorsSamples[index]);
+  }
+  printf("}; \n");
+
+
+}//end of method MakeYieldsTable
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void CalculateYieldsInMassRanges(Int_t couplingValue = 1, Int_t numsigmas = 2)
 {
 
@@ -2292,6 +2470,8 @@ void CalculateYieldsInMassRanges(Int_t couplingValue = 1, Int_t numsigmas = 2)
   const Int_t n5=5;
   const Int_t n10=6;
 
+  std::vector<TString> sampleNames;
+
   Float_t mass1[n1] = {750, 1000, 1250, 1500, 1750, 2000, 3000 };
   Float_t mass5[n5] = { 1750, 2000, 2500, 2750, 3000 };
   Float_t mass10[n10] = { 2250, 2500, 2750, 3000, 3250, 3500 };
@@ -2300,17 +2480,55 @@ void CalculateYieldsInMassRanges(Int_t couplingValue = 1, Int_t numsigmas = 2)
   Float_t sigma5[n5] = { 13.7476, 16.795, 20.4539, 22.7374, 25.2982 };    
   Float_t sigma10[n10] = { 26.3803, 30.8038, 35.9283, 38.7399, 41.8178, 40.2991 };
 
+  std::vector<TString> sampleNames1;
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-750_TuneZ2star_8TeV-pythia6");
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-1000_TuneZ2star_8TeV-pythia6");
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-1000_TuneZ2star_8TeV-pythia6");
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-1500_TuneZ2star_8TeV-pythia6");
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-1500_TuneZ2star_8TeV-pythia6");
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-2000_TuneZ2star_8TeV-pythia6");
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-3000_TuneZ2star_8TeV-pythia6");
+
+  std::vector<TString> sampleNames5;
+  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-2000_TuneZ2star_8TeV-pythia6");
+  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-2000_TuneZ2star_8TeV-pythia6");
+  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-2500_TuneZ2star_8TeV-pythia6");
+  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-2750_TuneZ2star_8TeV-pythia6");
+  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-3000_TuneZ2star_8TeV-pythia6");
+
+  std::vector<TString> sampleNames10;
+  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-1500_TuneZ2star_8TeV-pythia6");
+  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-2500_TuneZ2star_8TeV-pythia6");
+  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-2750_TuneZ2star_8TeV-pythia6");
+  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-3000_TuneZ2star_8TeV-pythia6");
+  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-3250_TuneZ2star_8TeV-pythia6");
+  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-3500_TuneZ2star_8TeV-pythia6");
+
   std::vector<Float_t> masses;
   std::vector<Float_t> sigmas;
 
   if(couplingValue == 1){
-    for(int index = 0;index < n1;index++){masses.push_back(mass1[index]);sigmas.push_back(sigma1[index]);}
+    for(int index = 0;index < n1;index++){
+      masses.push_back(mass1[index]);
+      sigmas.push_back(sigma1[index]);
+      sampleNames.push_back(sampleNames1[index]);
+    }
   }
+
   if(couplingValue == 5){
-    for(int index = 0;index < n5;index++){masses.push_back(mass5[index]);sigmas.push_back(sigma5[index]);}
+    for(int index = 0;index < n5;index++){
+      masses.push_back(mass5[index]);
+      sigmas.push_back(sigma5[index]);
+      sampleNames.push_back(sampleNames5[index]);
+    }
   }
+
   if(couplingValue == 10){
-    for(int index = 0;index < n10;index++){masses.push_back(mass10[index]);sigmas.push_back(sigma10[index]);}
+    for(int index = 0;index < n10;index++){
+      masses.push_back(mass10[index]);
+      sigmas.push_back(sigma10[index]);
+      sampleNames.push_back(sampleNames10[index]);
+    }
   }
 
   std::vector<Float_t> minmasses;
@@ -2320,10 +2538,13 @@ void CalculateYieldsInMassRanges(Int_t couplingValue = 1, Int_t numsigmas = 2)
     minmasses.push_back(masses[index] - numsigmas * sigmas[index]);
     maxmasses.push_back(masses[index] + numsigmas * sigmas[index]);
   }
-  
-  
-  MakeYieldsTableForMassRanges("ExoDiPhotonAnalyzer_DataABC",10252,minmasses,maxmasses);
 
+
+  //MakeYieldsTableForMassRanges("ExoDiPhotonAnalyzer_DataABC",10252,minmasses,maxmasses;)
+  MakeYieldsTableForMassRanges("ExoDiPhotonAnalyzer_DataABC",19620,minmasses,maxmasses);
+
+  //For the signal points
+  //MakeYieldsTableForMassRangesForSignal(sampleNames,minmasses,maxmasses);
 }
 
 

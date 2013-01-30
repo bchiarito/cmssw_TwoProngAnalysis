@@ -31,6 +31,11 @@ void PlottingCodeLoop::Loop()
   FRparams.push_back(344.3);
   FRparams.push_back(2.336);
   
+//     //Jet dataset PF ID (sinin with pixel seed veto)                                                                                               
+//   FRparams.push_back(-0.01327);
+//   FRparams.push_back(1.051);
+//   FRparams.push_back(0.7728);
+
   //     //Photon dataset
   //     FRparams.push_back(0.06529);
   //     FRparams.push_back(2.749E5);
@@ -71,6 +76,15 @@ void PlottingCodeLoop::Loop()
     if((Photon1_isEB) && (Photon2_isEB) && (Photon1_pt>=80.) && (Photon2_pt>=80.) ){
        
       if(Diphoton_Minv < 200.) continue;
+
+      //if(fabs(Diphoton_deltaPhi) < 2.8) continue;
+      //if(fabs(Diphoton_deltaPhi) < 3.0) continue;
+      //if(Diphoton_qt > 100.) continue;
+
+
+      //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) continue;
+      //if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) continue;
+
 
       //set it to true by default
       Bool_t triggerPass = true;

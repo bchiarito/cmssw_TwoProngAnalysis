@@ -1,7 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Tue Sep 25 18:35:26 2012 by ROOT version 5.32/00
-// from TChain diphotonAnalyzer/fTree/
+// Mon Jan  7 13:49:25 2013 by ROOT version 5.32/00
+// from TTree fTree/PhotonTree
+// found on file: /afs/cern.ch/work/c/charaf/private/DiPhotonTrees/ExoDiPhotonAnalyzer_PF_DataABC.root
 //////////////////////////////////////////////////////////
 
 #ifndef PlottingCodeLoop_h
@@ -10,13 +11,6 @@
 #include <TROOT.h>
 #include <TChain.h>
 #include <TFile.h>
-#include <TH1F.h>
-#include <iostream>
-#include <iomanip>
-#include <math.h>
-#include <string.h>
-#include <TSystem.h>
-
 
 // Header file for the classes stored in the TTree if any.
 
@@ -408,6 +402,7 @@ class PlottingCodeLoop {
   Double_t        Photon1_e2e9;
   Double_t        Photon1_maxRecHitTime;
   Double_t        Photon1_hadOverEm;
+  Double_t        Photon1_hadTowerOverEm;
   Double_t        Photon1_hadDepth1OverEm;
   Double_t        Photon1_hadDepth2OverEm;
   Double_t        Photon1_hcalIso04;
@@ -418,6 +413,30 @@ class PlottingCodeLoop {
   Double_t        Photon1_trkIsoSumPtSolid04;
   Double_t        Photon1_trkIsoSumPtHollow03;
   Double_t        Photon1_trkIsoSumPtSolid03;
+  Double_t        Photon1_PFIsoCharged04;
+  Double_t        Photon1_PFIsoNeutral04;
+  Double_t        Photon1_PFIsoPhoton04;
+  Double_t        Photon1_PFIsoAll04;
+  Double_t        Photon1_PFIsoCharged03;
+  Double_t        Photon1_PFIsoNeutral03;
+  Double_t        Photon1_PFIsoPhoton03;
+  Double_t        Photon1_PFIsoAll03;
+  Double_t        Photon1_PFIsoCharged02;
+  Double_t        Photon1_PFIsoNeutral02;
+  Double_t        Photon1_PFIsoPhoton02;
+  Double_t        Photon1_PFIsoAll02;
+  Double_t        Photon1_rhocorPFIsoCharged04;
+  Double_t        Photon1_rhocorPFIsoNeutral04;
+  Double_t        Photon1_rhocorPFIsoPhoton04;
+  Double_t        Photon1_rhocorPFIsoAll04;
+  Double_t        Photon1_rhocorPFIsoCharged03;
+  Double_t        Photon1_rhocorPFIsoNeutral03;
+  Double_t        Photon1_rhocorPFIsoPhoton03;
+  Double_t        Photon1_rhocorPFIsoAll03;
+  Double_t        Photon1_rhocorPFIsoCharged02;
+  Double_t        Photon1_rhocorPFIsoNeutral02;
+  Double_t        Photon1_rhocorPFIsoPhoton02;
+  Double_t        Photon1_rhocorPFIsoAll02;
   Double_t        Photon1_esRatio;
   Double_t        Photon1_scRawEnergy;
   Double_t        Photon1_scPreshowerEnergy;
@@ -441,6 +460,7 @@ class PlottingCodeLoop {
   Bool_t          Photon1_isEEDeeGap;
   Bool_t          Photon1_isEBEEGap;
   Bool_t          Photon1_hasPixelSeed;
+  Bool_t          Photon1_hasMatchedPromptElec;
   Bool_t          Photon1_isFakeable;
   Double_t        Photon2_pt;
   Double_t        Photon2_eta;
@@ -471,6 +491,7 @@ class PlottingCodeLoop {
   Double_t        Photon2_e2e9;
   Double_t        Photon2_maxRecHitTime;
   Double_t        Photon2_hadOverEm;
+  Double_t        Photon2_hadTowerOverEm;
   Double_t        Photon2_hadDepth1OverEm;
   Double_t        Photon2_hadDepth2OverEm;
   Double_t        Photon2_hcalIso04;
@@ -481,6 +502,30 @@ class PlottingCodeLoop {
   Double_t        Photon2_trkIsoSumPtSolid04;
   Double_t        Photon2_trkIsoSumPtHollow03;
   Double_t        Photon2_trkIsoSumPtSolid03;
+  Double_t        Photon2_PFIsoCharged04;
+  Double_t        Photon2_PFIsoNeutral04;
+  Double_t        Photon2_PFIsoPhoton04;
+  Double_t        Photon2_PFIsoAll04;
+  Double_t        Photon2_PFIsoCharged03;
+  Double_t        Photon2_PFIsoNeutral03;
+  Double_t        Photon2_PFIsoPhoton03;
+  Double_t        Photon2_PFIsoAll03;
+  Double_t        Photon2_PFIsoCharged02;
+  Double_t        Photon2_PFIsoNeutral02;
+  Double_t        Photon2_PFIsoPhoton02;
+  Double_t        Photon2_PFIsoAll02;
+  Double_t        Photon2_rhocorPFIsoCharged04;
+  Double_t        Photon2_rhocorPFIsoNeutral04;
+  Double_t        Photon2_rhocorPFIsoPhoton04;
+  Double_t        Photon2_rhocorPFIsoAll04;
+  Double_t        Photon2_rhocorPFIsoCharged03;
+  Double_t        Photon2_rhocorPFIsoNeutral03;
+  Double_t        Photon2_rhocorPFIsoPhoton03;
+  Double_t        Photon2_rhocorPFIsoAll03;
+  Double_t        Photon2_rhocorPFIsoCharged02;
+  Double_t        Photon2_rhocorPFIsoNeutral02;
+  Double_t        Photon2_rhocorPFIsoPhoton02;
+  Double_t        Photon2_rhocorPFIsoAll02;
   Double_t        Photon2_esRatio;
   Double_t        Photon2_scRawEnergy;
   Double_t        Photon2_scPreshowerEnergy;
@@ -504,6 +549,7 @@ class PlottingCodeLoop {
   Bool_t          Photon2_isEEDeeGap;
   Bool_t          Photon2_isEBEEGap;
   Bool_t          Photon2_hasPixelSeed;
+  Bool_t          Photon2_hasMatchedPromptElec;
   Bool_t          Photon2_isFakeable;
   Double_t        Diphoton_Minv;
   Double_t        Diphoton_qt;
@@ -787,7 +833,7 @@ PlottingCodeLoop::PlottingCodeLoop(TTree *tree)
       // The following code should be used if you want this class to access a chain
       // of trees.
     TChain * chain = new TChain("diphotonAnalyzer/fTree","");
-    chain->Add("/afs/cern.ch/work/c/charaf/private/DiPhotonTrees/ExoDiPhotonAnalyzer_DataABC.root/diphotonAnalyzer/fTree");
+    chain->Add("/afs/cern.ch/work/c/charaf/private/DiPhotonTrees/ExoDiPhotonAnalyzer_PF_DataABC.root/diphotonAnalyzer/fTree");
     tree = chain;
 #endif // SINGLE_TREE
 
@@ -865,8 +911,8 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_Photon1_pt = new TH1F("h_Photon1_pt","Photon1 pt;#gamma_{1} p_{t} [GeV]",42,60.,900.);
   h_Photon1_pt_log = new TH1F("h_Photon1_pt_log","Photon1 pt;#gamma_{1} p_{t} [GeV]",42,60.,900.);
   h_Photon1_phi = new TH1F ("h_Photon1_phi","Photon1 #phi;#gamma_{1} #phi",36,-3.14159,3.14159);
-  h_Diphoton_Minv = new TH1F("h_Diphoton_Minv","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^{2}]",149,20.,3000.);
-  h_Diphoton_Minv_log = new TH1F("h_Diphoton_Minv_log","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^{2}]",149,20.,3000.);
+  h_Diphoton_Minv = new TH1F("h_Diphoton_Minv","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^{2}]",199,20.,4000.);
+  h_Diphoton_Minv_log = new TH1F("h_Diphoton_Minv_log","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^{2}]",199,20.,4000.);
   h_Diphoton_qt = new TH1F("h_Diphoton_qt","Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_Diphoton_qt_log = new TH1F("h_Diphoton_qt_log","Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_Diphoton_deltaR = new TH1F("h_Diphoton_deltaR","Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
@@ -921,7 +967,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_FakeRate_tt_eta2 = new TH1F("h_FakeRate_tt_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_FakeRate_tt_phi2 = new TH1F("h_FakeRate_tt_phi2","#gamma_{2} #phi;#gamma_{2} #phi",36,-3.14159,3.14159); 
   //   h_FakeRate_tt_minv         = new TH1F("h_FakeRate_tt_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);    
-  h_FakeRate_tt_minv         = new TH1F("h_FakeRate_tt_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",149,20.,3000.);    
+  h_FakeRate_tt_minv         = new TH1F("h_FakeRate_tt_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",199,20.,4000.);    
   h_FakeRate_tt_minv_high         = new TH1F("h_FakeRate_tt_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
   h_FakeRate_tt_qt           = new TH1F("h_FakeRate_tt_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);    
   h_FakeRate_tt_deltaPhi     = new TH1F("h_FakeRate_tt_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159); 
@@ -939,7 +985,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_FakeRate_ft_eta2 = new TH1F("h_FakeRate_ft_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_FakeRate_ft_phi2 = new TH1F("h_FakeRate_ft_phi2","#gamma_{2} #phi;#gamma_{2} #phi",36,-3.14159,3.14159);
   //   h_FakeRate_ft_minv         = new TH1F("h_FakeRate_ft_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);
-  h_FakeRate_ft_minv         = new TH1F("h_FakeRate_ft_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",149,20.,3000.);
+  h_FakeRate_ft_minv         = new TH1F("h_FakeRate_ft_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",199,20.,4000.);
   h_FakeRate_ft_minv_high         = new TH1F("h_FakeRate_ft_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
   h_FakeRate_ft_qt           = new TH1F("h_FakeRate_ft_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_FakeRate_ft_deltaPhi     = new TH1F("h_FakeRate_ft_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
@@ -961,7 +1007,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_FakeRate_tf_eta2 = new TH1F("h_FakeRate_tf_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_FakeRate_tf_phi2 = new TH1F("h_FakeRate_tf_phi2","#gamma_{2} #phi;#gamma_{2} #phi",36,-3.14159,3.14159);
   //   h_FakeRate_tf_minv         = new TH1F("h_FakeRate_tf_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);
-  h_FakeRate_tf_minv         = new TH1F("h_FakeRate_tf_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",149,20.,3000.);
+  h_FakeRate_tf_minv         = new TH1F("h_FakeRate_tf_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",199,20.,4000.);
   h_FakeRate_tf_minv_high         = new TH1F("h_FakeRate_tf_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
   h_FakeRate_tf_qt           = new TH1F("h_FakeRate_tf_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_FakeRate_tf_deltaPhi     = new TH1F("h_FakeRate_tf_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
@@ -984,7 +1030,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_FakeRate_ff_eta2 = new TH1F("h_FakeRate_ff_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_FakeRate_ff_phi2 = new TH1F("h_FakeRate_ff_phi2","#gamma_{2} #phi;#gamma_{2} #phi",36,-3.14159,3.14159);
   //   h_FakeRate_ff_minv         = new TH1F("h_FakeRate_ff_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);
-  h_FakeRate_ff_minv         = new TH1F("h_FakeRate_ff_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",149,20.,3000.);
+  h_FakeRate_ff_minv         = new TH1F("h_FakeRate_ff_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",199,20.,4000.);
   h_FakeRate_ff_minv_high         = new TH1F("h_FakeRate_ff_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
   h_FakeRate_ff_qt           = new TH1F("h_FakeRate_ff_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_FakeRate_ff_deltaPhi     = new TH1F("h_FakeRate_ff_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
