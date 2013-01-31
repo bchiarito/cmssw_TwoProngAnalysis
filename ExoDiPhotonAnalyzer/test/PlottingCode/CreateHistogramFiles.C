@@ -2481,28 +2481,35 @@ void CalculateYieldsInMassRanges(Int_t couplingValue = 1, Int_t numsigmas = 2)
   Float_t sigma10[n10] = { 26.3803, 30.8038, 35.9283, 38.7399, 41.8178, 40.2991 };
 
   std::vector<TString> sampleNames1;
-  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-750_TuneZ2star_8TeV-pythia6");
-  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-1000_TuneZ2star_8TeV-pythia6");
-  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-1000_TuneZ2star_8TeV-pythia6");
-  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-1500_TuneZ2star_8TeV-pythia6");
-  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-1500_TuneZ2star_8TeV-pythia6");
-  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-2000_TuneZ2star_8TeV-pythia6");
-  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-3000_TuneZ2star_8TeV-pythia6");
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-750_TuneZ2star_8TeV-pythia_merged");
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-1000_TuneZ2star_8TeV-pythia_merged");
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-1250_TuneZ2star_8TeV-pythia_merged");
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-1500_TuneZ2star_8TeV-pythia_merged");
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-1750_TuneZ2star_8TeV-pythia_merged");
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-2000_TuneZ2star_8TeV-pythia_merged");
+  //sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-2250_TuneZ2star_8TeV-pythia_merged");
+  //sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-2500_TuneZ2star_8TeV-pythia_merged");
+  sampleNames1.push_back("diphoton_tree_RSGravToGG_kMpl-001_M-3000_TuneZ2star_8TeV-pythia_merged");
 
   std::vector<TString> sampleNames5;
-  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-2000_TuneZ2star_8TeV-pythia6");
-  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-2000_TuneZ2star_8TeV-pythia6");
-  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-2500_TuneZ2star_8TeV-pythia6");
-  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-2750_TuneZ2star_8TeV-pythia6");
-  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-3000_TuneZ2star_8TeV-pythia6");
+  //sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-1250_TuneZ2star_8TeV-pythia_merged");
+  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-1750_TuneZ2star_8TeV-pythia_merged");
+  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-2000_TuneZ2star_8TeV-pythia_merged");
+  //sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-2250_TuneZ2star_8TeV-pythia_merged");
+  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-2500_TuneZ2star_8TeV-pythia_merged");
+  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-2750_TuneZ2star_8TeV-pythia_merged");
+  sampleNames5.push_back("diphoton_tree_RSGravToGG_kMpl-005_M-3000_TuneZ2star_8TeV-pythia_merged");
 
   std::vector<TString> sampleNames10;
-  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-1500_TuneZ2star_8TeV-pythia6");
-  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-2500_TuneZ2star_8TeV-pythia6");
-  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-2750_TuneZ2star_8TeV-pythia6");
-  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-3000_TuneZ2star_8TeV-pythia6");
-  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-3250_TuneZ2star_8TeV-pythia6");
-  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-3500_TuneZ2star_8TeV-pythia6");
+  //sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-1500_TuneZ2star_8TeV-pythia_merged");
+  //sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-1750_TuneZ2star_8TeV-pythia_merged");
+  //sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-2000_TuneZ2star_8TeV-pythia_merged");
+  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-2250_TuneZ2star_8TeV-pythia_merged");
+  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-2500_TuneZ2star_8TeV-pythia_merged");
+  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-2750_TuneZ2star_8TeV-pythia_merged");
+  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-3000_TuneZ2star_8TeV-pythia_merged");
+  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-3250_TuneZ2star_8TeV-pythia_merged");
+  sampleNames10.push_back("diphoton_tree_RSGravToGG_kMpl-01_M-3500_TuneZ2star_8TeV-pythia_merged");
 
   std::vector<Float_t> masses;
   std::vector<Float_t> sigmas;
@@ -2541,10 +2548,10 @@ void CalculateYieldsInMassRanges(Int_t couplingValue = 1, Int_t numsigmas = 2)
 
 
   //MakeYieldsTableForMassRanges("ExoDiPhotonAnalyzer_DataABC",10252,minmasses,maxmasses;)
-  MakeYieldsTableForMassRanges("ExoDiPhotonAnalyzer_DataABC",19620,minmasses,maxmasses);
+  //MakeYieldsTableForMassRanges("ExoDiPhotonAnalyzer_DataABC",19620,minmasses,maxmasses);
 
   //For the signal points
-  //MakeYieldsTableForMassRangesForSignal(sampleNames,minmasses,maxmasses);
+  MakeYieldsTableForMassRangesForSignal(sampleNames,minmasses,maxmasses);
 }
 
 
