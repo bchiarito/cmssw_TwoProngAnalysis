@@ -546,6 +546,7 @@ class PlottingCodeLoop {
   TH1F* h_TrigHLT;
 
   TH1F* h_Diphoton_Minv;
+  TH1F* h_Diphoton_Minv_FineBinning;
   //   TH1* h_Diphoton_Minv_add;
   TH1F* h_Diphoton_Minv_log;
   TH1F* h_Diphoton_qt;
@@ -664,6 +665,7 @@ class PlottingCodeLoop {
   TH1F* h_FakeRate_tt_eta2;
   TH1F* h_FakeRate_tt_phi2;
   TH1F* h_FakeRate_tt_minv;
+  TH1F* h_FakeRate_tt_minv_FineBinning;
   TH1F* h_FakeRate_tt_minv_high;
   TH1F* h_FakeRate_tt_qt;
   TH1F* h_FakeRate_tt_deltaPhi;
@@ -681,6 +683,7 @@ class PlottingCodeLoop {
   TH1F* h_FakeRate_tf_eta2;
   TH1F* h_FakeRate_tf_phi2;
   TH1F* h_FakeRate_tf_minv;
+  TH1F* h_FakeRate_tf_minv_FineBinning;
   TH1F* h_FakeRate_tf_minv_high;
   TH1F* h_FakeRate_tf_qt;
   TH1F* h_FakeRate_tf_deltaPhi;
@@ -703,6 +706,7 @@ class PlottingCodeLoop {
   TH1F* h_FakeRate_ff_eta2;
   TH1F* h_FakeRate_ff_phi2;
   TH1F* h_FakeRate_ff_minv;   
+  TH1F* h_FakeRate_ff_minv_FineBinning;   
   TH1F* h_FakeRate_ff_minv_high;   
   TH1F* h_FakeRate_ff_qt;
   TH1F* h_FakeRate_ff_deltaPhi;
@@ -724,6 +728,7 @@ class PlottingCodeLoop {
   TH1F* h_FakeRate_ft_eta2;
   TH1F* h_FakeRate_ft_phi2;
   TH1F* h_FakeRate_ft_minv;
+  TH1F* h_FakeRate_ft_minv_FineBinning;
   TH1F* h_FakeRate_ft_minv_high;
   TH1F* h_FakeRate_ft_qt;
   TH1F* h_FakeRate_ft_deltaPhi;
@@ -861,8 +866,9 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_Photon1_pt = new TH1F("h_Photon1_pt","Photon1 pt;#gamma_{1} p_{t} [GeV]",42,60.,900.);
   h_Photon1_pt_log = new TH1F("h_Photon1_pt_log","Photon1 pt;#gamma_{1} p_{t} [GeV]",42,60.,900.);
   h_Photon1_phi = new TH1F ("h_Photon1_phi","Photon1 #phi;#gamma_{1} #phi",36,-3.14159,3.14159);
-  h_Diphoton_Minv = new TH1F("h_Diphoton_Minv","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^{2}]",149,20.,3000.);
-  h_Diphoton_Minv_log = new TH1F("h_Diphoton_Minv_log","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^{2}]",149,20.,3000.);
+  h_Diphoton_Minv = new TH1F("h_Diphoton_Minv","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^{2}]",199,20.,4000.);
+  h_Diphoton_Minv_FineBinning = new TH1F("h_Diphoton_Minv_FineBinning","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^{2}]",3980,20.,4000.);
+  h_Diphoton_Minv_log = new TH1F("h_Diphoton_Minv_log","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^{2}]",199,20.,4000.);
   h_Diphoton_qt = new TH1F("h_Diphoton_qt","Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_Diphoton_qt_log = new TH1F("h_Diphoton_qt_log","Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_Diphoton_deltaR = new TH1F("h_Diphoton_deltaR","Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
@@ -908,92 +914,97 @@ void PlottingCodeLoop::Init(TTree *tree)
   //fakerate histos//
    
   // tight-tight ie signal sample
-  h_FakeRate_tt_pt1  = new TH1F("h_FakeRate_tt_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",42,60.,900.);
-  h_FakeRate_tt_pt1_zoom  = new TH1F("h_FakeRate_tt_pt1_zoom","#gamma_{1} p_{T};#gamma_{1} p_{T}",30,0.,150.);
+  h_FakeRate_tt_pt1 = new TH1F("h_FakeRate_tt_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",42,60.,900.);
+  h_FakeRate_tt_pt1_zoom = new TH1F("h_FakeRate_tt_pt1_zoom","#gamma_{1} p_{T};#gamma_{1} p_{T}",30,0.,150.);
   h_FakeRate_tt_eta1 = new TH1F("h_FakeRate_tt_eta1","#gamma_{1} #eta;#gamma_{1} #eta",60,-3.,3.);
   h_FakeRate_tt_phi1 = new TH1F("h_FakeRate_tt_phi1","#gamma_{1} #phi;#gamma_{1} #phi",36,-3.14159,3.14159); 
-  h_FakeRate_tt_pt2  = new TH1F("h_FakeRate_tt_pt2","#gamma_{2} p_{T};#gamma_{2} p_{T}",42,60.,900.);
-  h_FakeRate_tt_pt2_zoom  = new TH1F("h_FakeRate_tt_pt2_zoom","#gamma_{2} p_{T};#gamma_{2} p_{T}",30,0.,150.);
+  h_FakeRate_tt_pt2 = new TH1F("h_FakeRate_tt_pt2","#gamma_{2} p_{T};#gamma_{2} p_{T}",42,60.,900.);
+  h_FakeRate_tt_pt2_zoom = new TH1F("h_FakeRate_tt_pt2_zoom","#gamma_{2} p_{T};#gamma_{2} p_{T}",30,0.,150.);
   h_FakeRate_tt_eta2 = new TH1F("h_FakeRate_tt_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_FakeRate_tt_phi2 = new TH1F("h_FakeRate_tt_phi2","#gamma_{2} #phi;#gamma_{2} #phi",36,-3.14159,3.14159); 
-  //   h_FakeRate_tt_minv         = new TH1F("h_FakeRate_tt_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);    
-  h_FakeRate_tt_minv         = new TH1F("h_FakeRate_tt_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",149,20.,3000.);    
-  h_FakeRate_tt_minv_high         = new TH1F("h_FakeRate_tt_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
-  h_FakeRate_tt_qt           = new TH1F("h_FakeRate_tt_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);    
-  h_FakeRate_tt_deltaPhi     = new TH1F("h_FakeRate_tt_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159); 
-  h_FakeRate_tt_deltaEta     = new TH1F("h_FakeRate_tt_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);     
-  h_FakeRate_tt_deltaR       = new TH1F("h_FakeRate_tt_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);     
+  //   h_FakeRate_tt_minv = new TH1F("h_FakeRate_tt_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);    
+  h_FakeRate_tt_minv = new TH1F("h_FakeRate_tt_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",199,20.,4000.);    
+  h_FakeRate_tt_minv_FineBinning = new TH1F("h_FakeRate_tt_minv_FineBinning",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",3980,20.,4000.);    
+  h_FakeRate_tt_minv_high = new TH1F("h_FakeRate_tt_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
+  h_FakeRate_tt_qt = new TH1F("h_FakeRate_tt_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);    
+  h_FakeRate_tt_deltaPhi = new TH1F("h_FakeRate_tt_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159); 
+  h_FakeRate_tt_deltaEta = new TH1F("h_FakeRate_tt_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);     
+  h_FakeRate_tt_deltaR = new TH1F("h_FakeRate_tt_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);     
   h_FakeRate_tt_cosThetaStar = new TH1F("h_FakeRate_tt_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);      
 
                                                                                                                          
-  h_FakeRate_ft_pt1  = new TH1F("h_FakeRate_ft_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",42,60.,900.);
-  h_FakeRate_ft_pt1_zoom  = new TH1F("h_FakeRate_ft_pt1_zoom","#gamma_{1} p_{T};#gamma_{1} p_{T}",30,0.,150.);
+  h_FakeRate_ft_pt1 = new TH1F("h_FakeRate_ft_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",42,60.,900.);
+  h_FakeRate_ft_pt1_zoom = new TH1F("h_FakeRate_ft_pt1_zoom","#gamma_{1} p_{T};#gamma_{1} p_{T}",30,0.,150.);
   h_FakeRate_ft_eta1 = new TH1F("h_FakeRate_ft_eta1","#gamma_{1} #eta;#gamma_{1} #eta",60,-3.,3.);
   h_FakeRate_ft_phi1 = new TH1F("h_FakeRate_ft_phi1","#gamma_{1} #phi;#gamma_{1} #phi",36,-3.14159,3.14159);
-  h_FakeRate_ft_pt2  = new TH1F("h_FakeRate_ft_pt2","#gamma_{2} p_{T};#gamma_{2} p_{T}",42,60.,900.);
-  h_FakeRate_ft_pt2_zoom  = new TH1F("h_FakeRate_ft_pt2_zoom","#gamma_{2} p_{T};#gamma_{2} p_{T}",30,0.,150.);
+  h_FakeRate_ft_pt2 = new TH1F("h_FakeRate_ft_pt2","#gamma_{2} p_{T};#gamma_{2} p_{T}",42,60.,900.);
+  h_FakeRate_ft_pt2_zoom = new TH1F("h_FakeRate_ft_pt2_zoom","#gamma_{2} p_{T};#gamma_{2} p_{T}",30,0.,150.);
   h_FakeRate_ft_eta2 = new TH1F("h_FakeRate_ft_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_FakeRate_ft_phi2 = new TH1F("h_FakeRate_ft_phi2","#gamma_{2} #phi;#gamma_{2} #phi",36,-3.14159,3.14159);
-  //   h_FakeRate_ft_minv         = new TH1F("h_FakeRate_ft_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);
-  h_FakeRate_ft_minv         = new TH1F("h_FakeRate_ft_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",149,20.,3000.);
-  h_FakeRate_ft_minv_high         = new TH1F("h_FakeRate_ft_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
-  h_FakeRate_ft_qt           = new TH1F("h_FakeRate_ft_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
-  h_FakeRate_ft_deltaPhi     = new TH1F("h_FakeRate_ft_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
-  h_FakeRate_ft_deltaEta     = new TH1F("h_FakeRate_ft_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
-  h_FakeRate_ft_deltaR       = new TH1F("h_FakeRate_ft_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
+  //   h_FakeRate_ft_minv = new TH1F("h_FakeRate_ft_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);
+  h_FakeRate_ft_minv = new TH1F("h_FakeRate_ft_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",199,20.,4000.);
+  h_FakeRate_ft_minv_FineBinning = new TH1F("h_FakeRate_ft_minv_FineBinning",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",3980,20.,4000.);
+  h_FakeRate_ft_minv_high = new TH1F("h_FakeRate_ft_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
+  h_FakeRate_ft_qt = new TH1F("h_FakeRate_ft_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
+  h_FakeRate_ft_deltaPhi = new TH1F("h_FakeRate_ft_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
+  h_FakeRate_ft_deltaEta = new TH1F("h_FakeRate_ft_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
+  h_FakeRate_ft_deltaR = new TH1F("h_FakeRate_ft_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
   h_FakeRate_ft_cosThetaStar = new TH1F("h_FakeRate_ft_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);
 
-  h_FakeRate_ft_pt1_noweight  = new TH1F("h_FakeRate_ft_pt1_noweight","FT #gamma_{1} (fake) p_{T}",45,0.,900.);
-  h_FakeRate_ft_pt2_noweight  = new TH1F("h_FakeRate_ft_pt2_noweight","FT #gamma_{2} (tight) p_{T}",45,0.,900.);
+  h_FakeRate_ft_pt1_noweight = new TH1F("h_FakeRate_ft_pt1_noweight","FT #gamma_{1} (fake) p_{T}",45,0.,900.);
+  h_FakeRate_ft_pt2_noweight = new TH1F("h_FakeRate_ft_pt2_noweight","FT #gamma_{2} (tight) p_{T}",45,0.,900.);
    
   // tight-fake
 
-  h_FakeRate_tf_pt1  = new TH1F("h_FakeRate_tf_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",42,60.,900.);
-  h_FakeRate_tf_pt1_zoom  = new TH1F("h_FakeRate_tf_pt1_zoom","#gamma_{1} p_{T};#gamma_{1} p_{T}",30,0.,150.);
+  h_FakeRate_tf_pt1 = new TH1F("h_FakeRate_tf_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",42,60.,900.);
+  h_FakeRate_tf_pt1_zoom = new TH1F("h_FakeRate_tf_pt1_zoom","#gamma_{1} p_{T};#gamma_{1} p_{T}",30,0.,150.);
   h_FakeRate_tf_eta1 = new TH1F("h_FakeRate_tf_eta1","#gamma_{1} #eta;#gamma_{1} #eta",60,-3.,3.);
   h_FakeRate_tf_phi1 = new TH1F("h_FakeRate_tf_phi1","#gamma_{1} #phi;#gamma_{1} #phi",36,-3.14159,3.14159);
-  h_FakeRate_tf_pt2  = new TH1F("h_FakeRate_tf_pt2","#gamma_{2} p_{T};#gamma_{2} p_{T}",42,60.,900.);
-  h_FakeRate_tf_pt2_zoom  = new TH1F("h_FakeRate_tf_pt2_zoom","#gamma_{2} p_{T};#gamma_{2} p_{T}",30,0.,150.);
+  h_FakeRate_tf_pt2 = new TH1F("h_FakeRate_tf_pt2","#gamma_{2} p_{T};#gamma_{2} p_{T}",42,60.,900.);
+  h_FakeRate_tf_pt2_zoom = new TH1F("h_FakeRate_tf_pt2_zoom","#gamma_{2} p_{T};#gamma_{2} p_{T}",30,0.,150.);
   h_FakeRate_tf_eta2 = new TH1F("h_FakeRate_tf_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_FakeRate_tf_phi2 = new TH1F("h_FakeRate_tf_phi2","#gamma_{2} #phi;#gamma_{2} #phi",36,-3.14159,3.14159);
-  //   h_FakeRate_tf_minv         = new TH1F("h_FakeRate_tf_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);
-  h_FakeRate_tf_minv         = new TH1F("h_FakeRate_tf_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",149,20.,3000.);
-  h_FakeRate_tf_minv_high         = new TH1F("h_FakeRate_tf_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
-  h_FakeRate_tf_qt           = new TH1F("h_FakeRate_tf_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
-  h_FakeRate_tf_deltaPhi     = new TH1F("h_FakeRate_tf_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
-  h_FakeRate_tf_deltaEta     = new TH1F("h_FakeRate_tf_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
-  h_FakeRate_tf_deltaR       = new TH1F("h_FakeRate_tf_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
+  //   h_FakeRate_tf_minv = new TH1F("h_FakeRate_tf_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);
+  h_FakeRate_tf_minv = new TH1F("h_FakeRate_tf_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",199,20.,4000.);
+  h_FakeRate_tf_minv_FineBinning = new TH1F("h_FakeRate_tf_minv_FineBinning",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",3980,20.,4000.);
+  h_FakeRate_tf_minv_high = new TH1F("h_FakeRate_tf_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
+  h_FakeRate_tf_qt = new TH1F("h_FakeRate_tf_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
+  h_FakeRate_tf_deltaPhi = new TH1F("h_FakeRate_tf_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
+  h_FakeRate_tf_deltaEta = new TH1F("h_FakeRate_tf_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
+  h_FakeRate_tf_deltaR = new TH1F("h_FakeRate_tf_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
   h_FakeRate_tf_cosThetaStar = new TH1F("h_FakeRate_tf_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);
 
-  h_FakeRate_tf_pt1_noweight  = new TH1F("h_FakeRate_tf_pt1_noweight","FT #gamma_{1} (fake) p_{T}",45,0.,900.);
-  h_FakeRate_tf_pt2_noweight  = new TH1F("h_FakeRate_tf_pt2_noweight","FT #gamma_{2} (tight) p_{T}",45,0.,900.);
+  h_FakeRate_tf_pt1_noweight = new TH1F("h_FakeRate_tf_pt1_noweight","FT #gamma_{1} (fake) p_{T}",45,0.,900.);
+  h_FakeRate_tf_pt2_noweight = new TH1F("h_FakeRate_tf_pt2_noweight","FT #gamma_{2} (tight) p_{T}",45,0.,900.);
 
 
 
 
-  h_FakeRate_ff_pt1  = new TH1F("h_FakeRate_ff_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",42,60.,900.);
-  h_FakeRate_ff_pt1_zoom  = new TH1F("h_FakeRate_ff_pt1_zoom","#gamma_{1} p_{T};#gamma_{1} p_{T}",30,0.,150.);
+  h_FakeRate_ff_pt1 = new TH1F("h_FakeRate_ff_pt1","#gamma_{1} p_{T};#gamma_{1} p_{T}",42,60.,900.);
+  h_FakeRate_ff_pt1_zoom = new TH1F("h_FakeRate_ff_pt1_zoom","#gamma_{1} p_{T};#gamma_{1} p_{T}",30,0.,150.);
   h_FakeRate_ff_eta1 = new TH1F("h_FakeRate_ff_eta1","#gamma_{1} #eta;#gamma_{1} #eta",60,-3.,3.);
   h_FakeRate_ff_phi1 = new TH1F("h_FakeRate_ff_phi1","#gamma_{1} #phi;#gamma_{1} #phi",36,-3.14159,3.14159);
-  h_FakeRate_ff_pt2  = new TH1F("h_FakeRate_ff_pt2","#gamma_{2} p_{T};#gamma_{2} p_{T}",42,60.,900.);
-  h_FakeRate_ff_pt2_zoom  = new TH1F("h_FakeRate_ff_pt2_zoom","#gamma_{2} p_{T};#gamma_{2} p_{T}",30,0.,150.);
+  h_FakeRate_ff_pt2 = new TH1F("h_FakeRate_ff_pt2","#gamma_{2} p_{T};#gamma_{2} p_{T}",42,60.,900.);
+  h_FakeRate_ff_pt2_zoom = new TH1F("h_FakeRate_ff_pt2_zoom","#gamma_{2} p_{T};#gamma_{2} p_{T}",30,0.,150.);
   h_FakeRate_ff_eta2 = new TH1F("h_FakeRate_ff_eta2","#gamma_{2} #eta;#gamma_{2} #eta",60,-3.,3.);
   h_FakeRate_ff_phi2 = new TH1F("h_FakeRate_ff_phi2","#gamma_{2} #phi;#gamma_{2} #phi",36,-3.14159,3.14159);
-  //   h_FakeRate_ff_minv         = new TH1F("h_FakeRate_ff_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);
-  h_FakeRate_ff_minv         = new TH1F("h_FakeRate_ff_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",149,20.,3000.);
-  h_FakeRate_ff_minv_high         = new TH1F("h_FakeRate_ff_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
-  h_FakeRate_ff_qt           = new TH1F("h_FakeRate_ff_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
-  h_FakeRate_ff_deltaPhi     = new TH1F("h_FakeRate_ff_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
-  h_FakeRate_ff_deltaEta     = new TH1F("h_FakeRate_ff_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
-  h_FakeRate_ff_deltaR       = new TH1F("h_FakeRate_ff_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
+  //   h_FakeRate_ff_minv = new TH1F("h_FakeRate_ff_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",43,140,1000);
+  h_FakeRate_ff_minv = new TH1F("h_FakeRate_ff_minv",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",199,20.,4000.);
+  h_FakeRate_ff_minv_FineBinning = new TH1F("h_FakeRate_ff_minv_FineBinning",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",3980,20.,4000.);
+  h_FakeRate_ff_minv_high = new TH1F("h_FakeRate_ff_minv_high",        "Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^2]",35,500.,1200.);
+  h_FakeRate_ff_qt = new TH1F("h_FakeRate_ff_qt ",         "Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
+  h_FakeRate_ff_deltaPhi = new TH1F("h_FakeRate_ff_deltaPhi",    "Diphoton #Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
+  h_FakeRate_ff_deltaEta = new TH1F("h_FakeRate_ff_deltaEta",    "Diphoton #Delta#eta;#gamma#gamma #Delta#eta",60,-6.,6.);
+  h_FakeRate_ff_deltaR = new TH1F("h_FakeRate_ff_deltaR",      "Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);
   h_FakeRate_ff_cosThetaStar = new TH1F("h_FakeRate_ff_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.);
 
-  h_FakeRate_ff_pt1_noweight  = new TH1F("h_FakeRate_ff_pt1_noweight","FT #gamma_{1} (fake) p_{T}",45,0.,900.);
-  h_FakeRate_ff_pt2_noweight  = new TH1F("h_FakeRate_ff_pt2_noweight","FT #gamma_{2} (tight) p_{T}",45,0.,900.);
+  h_FakeRate_ff_pt1_noweight = new TH1F("h_FakeRate_ff_pt1_noweight","FT #gamma_{1} (fake) p_{T}",45,0.,900.);
+  h_FakeRate_ff_pt2_noweight = new TH1F("h_FakeRate_ff_pt2_noweight","FT #gamma_{2} (tight) p_{T}",45,0.,900.);
 
   cout<<"After Fake Rate Plotticode.h"<<endl; 
   
   h_Diphoton_Minv->Sumw2();
+  h_Diphoton_Minv_FineBinning->Sumw2();
   h_FakeRate_tt_pt1->Sumw2();
   h_FakeRate_tt_pt1_zoom->Sumw2();
   h_FakeRate_tt_eta1->Sumw2();
@@ -1003,6 +1014,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_FakeRate_tt_eta2->Sumw2();
   h_FakeRate_tt_phi2->Sumw2();
   h_FakeRate_tt_minv->Sumw2();
+  h_FakeRate_tt_minv_FineBinning->Sumw2();
   h_FakeRate_tt_minv_high->Sumw2();
   h_FakeRate_tt_qt->Sumw2();
   h_FakeRate_tt_deltaPhi->Sumw2();
@@ -1019,6 +1031,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_FakeRate_tf_eta2->Sumw2();
   h_FakeRate_tf_phi2->Sumw2();
   h_FakeRate_tf_minv->Sumw2();
+  h_FakeRate_tf_minv_FineBinning->Sumw2();
   h_FakeRate_tf_minv_high->Sumw2();
   h_FakeRate_tf_qt->Sumw2();
   h_FakeRate_tf_deltaPhi->Sumw2();
@@ -1043,6 +1056,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_FakeRate_ff_eta2->Sumw2();
   h_FakeRate_ff_phi2->Sumw2();
   h_FakeRate_ff_minv->Sumw2();   
+  h_FakeRate_ff_minv_FineBinning->Sumw2();   
   h_FakeRate_ff_minv_high->Sumw2();   
   h_FakeRate_ff_qt->Sumw2();
   h_FakeRate_ff_deltaPhi->Sumw2();
@@ -1051,6 +1065,8 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_FakeRate_ff_cosThetaStar->Sumw2();
   h_FakeRate_ff_pt1_noweight->Sumw2();
   h_FakeRate_ff_pt2_noweight->Sumw2();
+
+  h_FakeRate_ft_minv_FineBinning->Sumw2();   
 
   cout<<"end"<<endl;
    

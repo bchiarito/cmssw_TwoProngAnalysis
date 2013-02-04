@@ -86,7 +86,7 @@ void PlottingCodeLoop::Loop()
       //by default in the ntuples
 
       //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) continue;
-      //if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) continue;
+      if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) continue;
 
 
       //set it to true by default
@@ -121,6 +121,7 @@ void PlottingCodeLoop::Loop()
 	h_Photon2_phi->Fill(Photon2_phi,PUweight*KFactorweight);
 	h_Photon2_eta->Fill(Photon2_eta,PUweight*KFactorweight);
 	h_Diphoton_Minv->Fill(Diphoton_Minv,PUweight*KFactorweight);
+	h_Diphoton_Minv_FineBinning->Fill(Diphoton_Minv,PUweight*KFactorweight);
 	h_Diphoton_Minv_log->Fill(Diphoton_Minv,PUweight*KFactorweight);
 	h_Diphoton_qt->Fill(Diphoton_qt,PUweight*KFactorweight);
 	h_Diphoton_qt_log->Fill(Diphoton_qt,PUweight*KFactorweight);
@@ -166,6 +167,7 @@ void PlottingCodeLoop::Loop()
 	h_FakeRate_tt_eta2->Fill(Photon2_eta,weightFake*PUweight*KFactorweight);
 	h_FakeRate_tt_phi2->Fill(Photon2_phi,weightFake*PUweight*KFactorweight);
 	h_FakeRate_tt_minv->Fill(Diphoton_Minv,weightFake*PUweight*KFactorweight);
+	h_FakeRate_tt_minv_FineBinning->Fill(Diphoton_Minv,weightFake*PUweight*KFactorweight);
 	if (Diphoton_Minv>200) h_FakeRate_tt_minv_high->Fill(Diphoton_Minv,weightFake*PUweight*KFactorweight);
 	h_FakeRate_tt_qt->Fill(Diphoton_qt,weightFake*PUweight*KFactorweight);
 	h_FakeRate_tt_deltaPhi->Fill(Diphoton_deltaPhi,weightFake*PUweight*KFactorweight);
@@ -191,6 +193,7 @@ void PlottingCodeLoop::Loop()
 	  h_FakeRate_ft_eta2->Fill(Photon2_eta,weightFake);  
 	  h_FakeRate_ft_phi2->Fill(Photon2_phi,weightFake);  
 	  h_FakeRate_ft_minv->Fill(Diphoton_Minv,weightFake);
+	  h_FakeRate_ft_minv_FineBinning->Fill(Diphoton_Minv,weightFake);
 	  if (Diphoton_Minv>200) h_FakeRate_ft_minv_high->Fill(Diphoton_Minv,weightFake);  
 	  h_FakeRate_ft_qt->Fill(Diphoton_qt,weightFake);
 	  h_FakeRate_ft_deltaPhi->Fill(Diphoton_deltaPhi,weightFake);
@@ -214,6 +217,7 @@ void PlottingCodeLoop::Loop()
 	  h_FakeRate_tf_eta2->Fill(Photon2_eta,weightFake);  
 	  h_FakeRate_tf_phi2->Fill(Photon2_phi,weightFake);  
 	  h_FakeRate_tf_minv->Fill(Diphoton_Minv,weightFake);
+	  h_FakeRate_tf_minv_FineBinning->Fill(Diphoton_Minv,weightFake);
 	  if (Diphoton_Minv>200) h_FakeRate_tf_minv_high->Fill(Diphoton_Minv,weightFake);  
 	  h_FakeRate_tf_qt->Fill(Diphoton_qt,weightFake);
 	  h_FakeRate_tf_deltaPhi->Fill(Diphoton_deltaPhi,weightFake);
@@ -237,6 +241,7 @@ void PlottingCodeLoop::Loop()
 	  h_FakeRate_ff_eta2->Fill(Photon2_eta,weightFake);  
 	  h_FakeRate_ff_phi2->Fill(Photon2_phi,weightFake);  
 	  h_FakeRate_ff_minv->Fill(Diphoton_Minv,weightFake);
+	  h_FakeRate_ff_minv_FineBinning->Fill(Diphoton_Minv,weightFake);
 	  if (Diphoton_Minv>200) h_FakeRate_ff_minv_high->Fill(Diphoton_Minv,weightFake);  
 	  h_FakeRate_ff_qt->Fill(Diphoton_qt,weightFake);
 	  h_FakeRate_ff_deltaPhi->Fill(Diphoton_deltaPhi,weightFake);
@@ -266,6 +271,7 @@ void PlottingCodeLoop::Loop()
     h_Photon2_phi->Write();
     h_Photon2_eta->Write();
     h_Diphoton_Minv->Write();
+    h_Diphoton_Minv_FineBinning->Write();
     h_Diphoton_Minv_log->Write();
     h_Diphoton_qt->Write();
     h_Diphoton_qt_log->Write();
@@ -308,6 +314,7 @@ void PlottingCodeLoop::Loop()
     h_FakeRate_tt_eta2->Write();
     h_FakeRate_tt_phi2->Write();
     h_FakeRate_tt_minv->Write();   
+    h_FakeRate_tt_minv_FineBinning->Write();   
     h_FakeRate_tt_minv_high->Write();   
     h_FakeRate_tt_qt->Write();
     h_FakeRate_tt_deltaPhi->Write();
@@ -326,6 +333,7 @@ void PlottingCodeLoop::Loop()
     h_FakeRate_tf_eta2->Write();
     h_FakeRate_tf_phi2->Write();
     h_FakeRate_tf_minv->Write();
+    h_FakeRate_tf_minv_FineBinning->Write();
     h_FakeRate_tf_minv_high->Write();
     h_FakeRate_tf_qt->Write();
     h_FakeRate_tf_deltaPhi->Write();
@@ -346,6 +354,7 @@ void PlottingCodeLoop::Loop()
     h_FakeRate_ft_eta2->Write();
     h_FakeRate_ft_phi2->Write();
     h_FakeRate_ft_minv->Write();
+    h_FakeRate_ft_minv_FineBinning->Write();
     h_FakeRate_ft_minv_high->Write();
     h_FakeRate_ft_qt->Write();
     h_FakeRate_ft_deltaPhi->Write();
@@ -366,6 +375,7 @@ void PlottingCodeLoop::Loop()
     h_FakeRate_ff_eta2->Write();
     h_FakeRate_ff_phi2->Write();
     h_FakeRate_ff_minv->Write();
+    h_FakeRate_ff_minv_FineBinning->Write();
     h_FakeRate_ff_minv_high->Write();
     h_FakeRate_ff_qt->Write();
     h_FakeRate_ff_deltaPhi->Write();
