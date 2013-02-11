@@ -71,8 +71,8 @@ void CreateHistogramFiles(TString Sample = "Diphoton", TString SampleType = "dat
 
   TString  inputfile= TreeFileLocation+Sample+".root";
    
-  //TChain *chain_tt = new TChain("diphotonAnalyzer/fTree");
-  TChain *chain_tt = new TChain("diphotonSignalMCAnalyzer/fTree");
+  TChain *chain_tt = new TChain("diphotonAnalyzer/fTree");
+  //TChain *chain_tt = new TChain("diphotonSignalMCAnalyzer/fTree");
 
   //if(answer == "n") chain_tt = new TChain("diphotonAnalyzer/fTree");
   //if(answer == "y") chain_tt = new TChain("diphotonSignalMCAnalyzer/fTree");

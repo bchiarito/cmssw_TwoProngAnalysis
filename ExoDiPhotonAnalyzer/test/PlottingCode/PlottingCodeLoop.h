@@ -1,8 +1,8 @@
 //////////////////////////////////////////////////////////
 // This class has been automatically generated on
-// Wed Jan 30 13:09:29 2013 by ROOT version 5.32/00
+// Mon Jan  7 13:49:25 2013 by ROOT version 5.32/00
 // from TTree fTree/PhotonTree
-// found on file: /afs/cern.ch/user/s/scooper/work/public/4Otman/dec28_privateProduction/diphoton_tree_RSGravToGG_kMpl-001_M-1000_TuneZ2star_8TeV-pythia6.root
+// found on file: /afs/cern.ch/work/c/charaf/private/DiPhotonTrees/ExoDiPhotonAnalyzer_PF_DataABC.root
 //////////////////////////////////////////////////////////
 
 #ifndef PlottingCodeLoop_h
@@ -34,6 +34,37 @@ class PlottingCodeLoop {
   Int_t           Vtx_Nvtx;
   Int_t           Vtx_Ntracks;
   Bool_t          Vtx_isFake;
+  Double_t        Vtx2_vx;
+  Double_t        Vtx2_vy;
+  Double_t        Vtx2_vz;
+  Double_t        Vtx2_sumPtTracks;
+  Double_t        Vtx2_ndof;
+  Double_t        Vtx2_d0;
+  Int_t           Vtx2_Nvtx;
+  Int_t           Vtx2_Ntracks;
+  Bool_t          Vtx2_isFake;
+  Double_t        Vtx3_vx;
+  Double_t        Vtx3_vy;
+  Double_t        Vtx3_vz;
+  Double_t        Vtx3_sumPtTracks;
+  Double_t        Vtx3_ndof;
+  Double_t        Vtx3_d0;
+  Int_t           Vtx3_Nvtx;
+  Int_t           Vtx3_Ntracks;
+  Bool_t          Vtx3_isFake;
+  Double_t        VtxGEN_vx;
+  Double_t        VtxGEN_vy;
+  Double_t        VtxGEN_vz;
+  Double_t        VtxGEN_sumPtTracks;
+  Double_t        VtxGEN_ndof;
+  Double_t        VtxGEN_d0;
+  Int_t           VtxGEN_Nvtx;
+  Int_t           VtxGEN_Ntracks;
+  Bool_t          VtxGEN_isFake;
+  Double_t        rho25;
+  Int_t           pu_n;
+  Int_t           old_pu_n;
+  Double_t        MCPUWeight;
   Double_t        BeamSpot_x0;
   Double_t        BeamSpot_y0;
   Double_t        BeamSpot_z0;
@@ -42,6 +73,18 @@ class PlottingCodeLoop {
   Double_t        BeamSpot_y0error;
   Double_t        BeamSpot_z0error;
   Double_t        BeamSpot_sigmaZ0error;
+  Bool_t          L1trg_L1_Tech0;
+  Bool_t          L1trg_L1_Tech36;
+  Bool_t          L1trg_L1_Tech37;
+  Bool_t          L1trg_L1_Tech38;
+  Bool_t          L1trg_L1_Tech39;
+  Bool_t          L1trg_L1_Tech40;
+  Bool_t          L1trg_L1_Tech41;
+  Bool_t          L1trg_L1_Tech42;
+  Bool_t          L1trg_L1_Tech43;
+  Bool_t          L1trg_L1_EG2;
+  Bool_t          L1trg_L1_EG5;
+  Bool_t          L1trg_L1_EG8;
   Int_t           TrigHLT_HLT_MinBiasBSC;
   Int_t           TrigHLT_HLT_MinBiasBSC_NoBPTX;
   Int_t           TrigHLT_HLT_MinBiasBSC_OR;
@@ -328,20 +371,8 @@ class PlottingCodeLoop {
   Int_t           TrigHLT_HLT_DoublePhoton80_v5;
   Int_t           TrigHLT_HLT_DoublePhoton80_v6;
   Int_t           TrigHLT_HLT_DoublePhoton80_v7;
-  Int_t           GenPhoton1_status;
-  Int_t           GenPhoton1_PdgId;
-  Int_t           GenPhoton1_MotherPdgId;
-  Int_t           GenPhoton1_GrandmotherPdgId;
-  Double_t        GenPhoton1_pt;
-  Double_t        GenPhoton1_eta;
-  Double_t        GenPhoton1_phi;
-  Int_t           GenPhoton2_status;
-  Int_t           GenPhoton2_PdgId;
-  Int_t           GenPhoton2_MotherPdgId;
-  Int_t           GenPhoton2_GrandmotherPdgId;
-  Double_t        GenPhoton2_pt;
-  Double_t        GenPhoton2_eta;
-  Double_t        GenPhoton2_phi;
+  Int_t           nTightPhotons;
+  Int_t           nFakeablePhotons;
   Double_t        Photon1_pt;
   Double_t        Photon1_eta;
   Double_t        Photon1_phi;
@@ -431,8 +462,6 @@ class PlottingCodeLoop {
   Bool_t          Photon1_hasPixelSeed;
   Bool_t          Photon1_hasMatchedPromptElec;
   Bool_t          Photon1_isFakeable;
-  Bool_t          Photon1_isTightDetPhoton;
-  Bool_t          Photon1_isTightPFPhoton;
   Double_t        Photon2_pt;
   Double_t        Photon2_eta;
   Double_t        Photon2_phi;
@@ -522,38 +551,46 @@ class PlottingCodeLoop {
   Bool_t          Photon2_hasPixelSeed;
   Bool_t          Photon2_hasMatchedPromptElec;
   Bool_t          Photon2_isFakeable;
-  Bool_t          Photon2_isTightDetPhoton;
-  Bool_t          Photon2_isTightPFPhoton;
-  Double_t        DiphotonGen_Minv;
-  Double_t        DiphotonGen_qt;
-  Double_t        DiphotonGen_deltaPhi;
-  Double_t        DiphotonGen_deltaEta;
-  Double_t        DiphotonGen_deltaR;
-  Double_t        DiphotonGen_cosThetaStar;
   Double_t        Diphoton_Minv;
   Double_t        Diphoton_qt;
   Double_t        Diphoton_deltaPhi;
   Double_t        Diphoton_deltaEta;
   Double_t        Diphoton_deltaR;
   Double_t        Diphoton_cosThetaStar;
-  Double_t        rho25;
-  Int_t           pu_n;
-  Double_t        MCPUWeight;
+  Double_t        DiphotonVtx2_Minv;
+  Double_t        DiphotonVtx2_qt;
+  Double_t        DiphotonVtx2_deltaPhi;
+  Double_t        DiphotonVtx2_deltaEta;
+  Double_t        DiphotonVtx2_deltaR;
+  Double_t        DiphotonVtx2_cosThetaStar;
+  Double_t        DiphotonVtx3_Minv;
+  Double_t        DiphotonVtx3_qt;
+  Double_t        DiphotonVtx3_deltaPhi;
+  Double_t        DiphotonVtx3_deltaEta;
+  Double_t        DiphotonVtx3_deltaR;
+  Double_t        DiphotonVtx3_cosThetaStar;
 
   // List of branches
   TBranch        *b_Event;   //!
   TBranch        *b_Vtx;   //!
-  TBranch        *b_BeamSpot;   //!
-  TBranch        *b_TrigHLT;   //!
-  TBranch        *b_GenPhoton1;   //!
-  TBranch        *b_GenPhoton2;   //!
-  TBranch        *b_Photon1;   //!
-  TBranch        *b_Photon2;   //!
-  TBranch        *b_DiphotonGen;   //!
-  TBranch        *b_Diphoton;   //!
+  TBranch        *b_Vtx2;   //!
+  TBranch        *b_Vtx3;   //!
+  TBranch        *b_VtxGEN;   //!
   TBranch        *b_rho25;   //!
   TBranch        *b_pu_n;   //!
+  TBranch        *b_old_pu_n;   //!
   TBranch        *b_MCPUWeight;   //!
+  TBranch        *b_BeamSpot;   //!
+  TBranch        *b_L1trg;   //!
+  TBranch        *b_TrigHLT;   //!
+  TBranch        *b_nTightPhotons;   //!
+  TBranch        *b_nFakeablePhotons;   //!
+  TBranch        *b_Photon1;   //!
+  TBranch        *b_Photon2;   //!
+  TBranch        *b_Diphoton;   //!
+  TBranch        *b_DiphotonVtx2;   //!
+  TBranch        *b_DiphotonVtx3;   //!
+
 
   TH1F* h_Nvtx;
   TH1F* h_TrigHLT;
@@ -852,17 +889,23 @@ void PlottingCodeLoop::Init(TTree *tree)
 
   fChain->SetBranchAddress("Event", &Event_run, &b_Event);
   fChain->SetBranchAddress("Vtx", &Vtx_vx, &b_Vtx);
-  fChain->SetBranchAddress("BeamSpot", &BeamSpot_x0, &b_BeamSpot);
-  fChain->SetBranchAddress("TrigHLT", &TrigHLT_HLT_MinBiasBSC, &b_TrigHLT);
-  fChain->SetBranchAddress("GenPhoton1", &GenPhoton1_status, &b_GenPhoton1);
-  fChain->SetBranchAddress("GenPhoton2", &GenPhoton2_status, &b_GenPhoton2);
-  fChain->SetBranchAddress("Photon1", &Photon1_pt, &b_Photon1);
-  fChain->SetBranchAddress("Photon2", &Photon2_pt, &b_Photon2);
-  fChain->SetBranchAddress("DiphotonGen", &DiphotonGen_Minv, &b_DiphotonGen);
-  fChain->SetBranchAddress("Diphoton", &Diphoton_Minv, &b_Diphoton);
+  fChain->SetBranchAddress("Vtx2", &Vtx2_vx, &b_Vtx2);
+  fChain->SetBranchAddress("Vtx3", &Vtx3_vx, &b_Vtx3);
+  fChain->SetBranchAddress("VtxGEN", &VtxGEN_vx, &b_VtxGEN);
   fChain->SetBranchAddress("rho25", &rho25, &b_rho25);
   fChain->SetBranchAddress("pu_n", &pu_n, &b_pu_n);
+  fChain->SetBranchAddress("old_pu_n", &old_pu_n, &b_old_pu_n);
   fChain->SetBranchAddress("MCPUWeight", &MCPUWeight, &b_MCPUWeight);
+  fChain->SetBranchAddress("BeamSpot", &BeamSpot_x0, &b_BeamSpot);
+  fChain->SetBranchAddress("L1trg", &L1trg_L1_Tech0, &b_L1trg);
+  fChain->SetBranchAddress("TrigHLT", &TrigHLT_HLT_MinBiasBSC, &b_TrigHLT);
+  fChain->SetBranchAddress("nTightPhotons", &nTightPhotons, &b_nTightPhotons);
+  fChain->SetBranchAddress("nFakeablePhotons", &nFakeablePhotons, &b_nFakeablePhotons);
+  fChain->SetBranchAddress("Photon1", &Photon1_pt, &b_Photon1);
+  fChain->SetBranchAddress("Photon2", &Photon2_pt, &b_Photon2);
+  fChain->SetBranchAddress("Diphoton", &Diphoton_Minv, &b_Diphoton);
+  fChain->SetBranchAddress("DiphotonVtx2", &DiphotonVtx2_Minv, &b_DiphotonVtx2);
+  fChain->SetBranchAddress("DiphotonVtx3", &DiphotonVtx3_Minv, &b_DiphotonVtx3);
  
   //datamchistos// 
   h_Photon2_pt = new TH1F("h_Photon2_pt","Photon2 pt;#gamma_{2} p_{t} [GeV]",42,60.,900.);
