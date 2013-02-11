@@ -21,12 +21,20 @@ namespace ExoDiPhotons
   // event info 
 
   struct eventInfo_t{
+    Float_t pthat;
+    Float_t alphaqcd;
+    Float_t alphaqed;
+    Float_t qscale;
+    Float_t weight;
+
     Int_t run;
     Int_t LS;
     Int_t evnum;
+    Int_t processid;
+
   };
 
-  std::string eventInfoBranchDefString("run/I:LS:evnum");
+  std::string eventInfoBranchDefString("pthat/F:alphaqcd:alphaqed:qscale:weight:run/I:LS:evnum:processid");
 
   void FillEventInfo(eventInfo_t &eventInfo,const edm::Event& iEvent) {
     
@@ -36,6 +44,20 @@ namespace ExoDiPhotons
     
   }
 
+  void InitEventInfo(eventInfo_t &eventInfo, float value) {
+    
+    eventInfo.run = (int)value;
+    eventInfo.LS = (int)value;
+    eventInfo.evnum = (int)value;
+    
+    eventInfo.processid = (int)value;
+    eventInfo.pthat = value;
+    eventInfo.alphaqcd = value;
+    eventInfo.alphaqed = value;
+    eventInfo.qscale = value;
+    eventInfo.weight = value;
+
+  }
 
   // vertex info
 
@@ -63,7 +85,7 @@ namespace ExoDiPhotons
   // simple function to get sumPtTracks for vtx
   double calcVtxSumPtTracks(const reco::Vertex *vtx) {
 
-     // loop over assoc tracks to get sum pt
+    // loop over assoc tracks to get sum pt
     double sumPtTracks = 0.0;
     for(reco::Vertex::trackRef_iterator vtxTracks=vtx->tracks_begin(); vtxTracks!=vtx->tracks_end();vtxTracks++) {
 
@@ -80,11 +102,11 @@ namespace ExoDiPhotons
     vtxInfo.vz = (double) vertex->z();
     vtxInfo.isFake =  vertex->isFake(); 
     vtxInfo.Ntracks =  vertex->tracksSize();
-     vtxInfo.ndof = (double) vertex->ndof();
-     vtxInfo.d0 = (double) vertex->position().rho();
+    vtxInfo.ndof = (double) vertex->ndof();
+    vtxInfo.d0 = (double) vertex->position().rho();
 
-     // now I have a function to get sumPtTracks
-     vtxInfo.sumPtTracks = calcVtxSumPtTracks(vertex);
+    // now I have a function to get sumPtTracks
+    vtxInfo.sumPtTracks = calcVtxSumPtTracks(vertex);
 
   }
 
@@ -122,14 +144,14 @@ namespace ExoDiPhotons
 
   void FillBeamSpotInfo(beamSpotInfo_t &beamSpotInfo, reco::BeamSpot beamSpot) {
 
-     beamSpotInfo.x0 = beamSpot.x0();
-     beamSpotInfo.y0 = beamSpot.y0();
-     beamSpotInfo.z0 = beamSpot.z0();
-     beamSpotInfo.sigmaZ = beamSpot.sigmaZ();
-     beamSpotInfo.x0error = beamSpot.x0Error();
-     beamSpotInfo.y0error = beamSpot.y0Error();
-     beamSpotInfo.z0error = beamSpot.z0Error();
-     beamSpotInfo.sigmaZ0error = beamSpot.sigmaZ0Error();
+    beamSpotInfo.x0 = beamSpot.x0();
+    beamSpotInfo.y0 = beamSpot.y0();
+    beamSpotInfo.z0 = beamSpot.z0();
+    beamSpotInfo.sigmaZ = beamSpot.sigmaZ();
+    beamSpotInfo.x0error = beamSpot.x0Error();
+    beamSpotInfo.y0error = beamSpot.y0Error();
+    beamSpotInfo.z0error = beamSpot.z0Error();
+    beamSpotInfo.sigmaZ0error = beamSpot.sigmaZ0Error();
   }
 
 

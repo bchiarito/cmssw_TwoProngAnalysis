@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.30 2012/08/31 16:44:44 jcarson Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.31 2013/01/15 21:26:24 charaf Exp $
 //
 //
 
@@ -118,6 +118,8 @@ Implementation:
 //new for PFIsolation code
 #include "EGamma/EGammaAnalysisTools/src/PFIsolationEstimator.cc"
 
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+
 using namespace std;
 
 
@@ -151,6 +153,7 @@ private:
   
   bool               fkRemoveSpikes;   // option to remove spikes before filling tree
   bool               fkRequireTightPhotons;  // option to require tight photon id in tree
+  bool               fkRequireGenEventInfo;  // generated information for RS graviton files
   bool               fisMC;  //option to decide if MC or Data     
   string             fPUMCFileName;
   string             fPUDataFileName;
@@ -251,6 +254,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fpileupCollectionTag(iConfig.getUntrackedParameter<edm::InputTag>("pileupCorrection")),
     fkRemoveSpikes(iConfig.getUntrackedParameter<bool>("removeSpikes")),
     fkRequireTightPhotons(iConfig.getUntrackedParameter<bool>("requireTightPhotons")),
+    fkRequireGenEventInfo(iConfig.getUntrackedParameter<bool>("requireGenEventInfo")),
     fisMC(iConfig.getUntrackedParameter<bool>("isMC")),
     fPUMCFileName(iConfig.getUntrackedParameter<string>("PUMCFileName")),
     fPUDataFileName(iConfig.getUntrackedParameter<string>("PUDataFileName")), 
@@ -387,8 +391,21 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //   cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
   // basic event info
+  ExoDiPhotons::InitEventInfo(fEventInfo,-5000.);
   ExoDiPhotons::FillEventInfo(fEventInfo,iEvent);
    
+  edm::Handle<GenEventInfoProduct> GenInfoHandle;
+  if(fkRequireGenEventInfo) iEvent.getByLabel("generator",GenInfoHandle);
+
+  if(fkRequireGenEventInfo) {
+    fEventInfo.pthat = GenInfoHandle->hasBinningValues() ? (GenInfoHandle->binningValues())[0] : 0.0 ;
+    fEventInfo.alphaqcd = GenInfoHandle->alphaQCD();
+    fEventInfo.alphaqed = GenInfoHandle->alphaQED();
+    fEventInfo.qscale = GenInfoHandle->qScale();
+    fEventInfo.processid = GenInfoHandle->signalProcessID();
+    fEventInfo.weight = GenInfoHandle->weight();
+  }
+
   // get the vertex collection
   Handle<reco::VertexCollection> vertexColl;
   iEvent.getByLabel("offlinePrimaryVertices",vertexColl);
@@ -446,6 +463,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fVtxGENInfo.sumPtTracks = -99999.99;
   fVtxGENInfo.ndof = -99999.99;
   fVtxGENInfo.d0 = -99999.99;
+
 
   //    // note for higher lumi, may want to also store second vertex, for pileup studies
   //    // to allow scalability for many vertices, use a vector and sort later
