@@ -544,6 +544,7 @@ class PlottingCodeLoop {
 
   TH1F* h_Nvtx;
   TH1F* h_TrigHLT;
+  TH1F* h_nEvents;
 
   TH1F* h_Diphoton_Minv;
   TH1F* h_Diphoton_Minv_FineBinning;
@@ -857,6 +858,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   fChain->SetBranchAddress("DiphotonVtx2", &DiphotonVtx2_Minv, &b_DiphotonVtx2);
   fChain->SetBranchAddress("DiphotonVtx3", &DiphotonVtx3_Minv, &b_DiphotonVtx3);
  
+  h_nEvents = new TH1F("h_nEvents","Reweighted number of events in sample",1,0,1);
   //datamchistos// 
   h_Photon2_pt = new TH1F("h_Photon2_pt","Photon2 pt;#gamma_{2} p_{t} [GeV]",42,60.,900.);
   h_Photon2_pt_log =  new TH1F("h_Photon2_pt_log","Photon2 pt;#gamma_{2} p_{t} [GeV]",42,60.,900.);
@@ -1003,6 +1005,8 @@ void PlottingCodeLoop::Init(TTree *tree)
 
   cout<<"After Fake Rate Plotticode.h"<<endl; 
   
+  h_nEvents->Sumw2();
+
   h_Diphoton_Minv->Sumw2();
   h_Diphoton_Minv_FineBinning->Sumw2();
   h_FakeRate_tt_pt1->Sumw2();
