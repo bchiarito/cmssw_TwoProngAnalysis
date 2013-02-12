@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-void storePUHisto(TString inputfilepath, TString outputfilepath, TString histoname){
+void storePUHisto(TString inputfilepath, TString outputfilepath, TString histoname = "MCPileUpHisto"){
 
   TFile *inputFile = TFile::Open(inputfilepath.Data());
   //This should have always the same name

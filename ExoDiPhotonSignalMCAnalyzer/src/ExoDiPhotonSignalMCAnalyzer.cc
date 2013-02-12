@@ -102,6 +102,8 @@
 #include "DiPhotonAnalysis/CommonClasses/interface/PhotonID.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/EventAndVertexInfo.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/DiphotonInfo.h"
+//new for PF ID definition
+#include "DiPhotonAnalysis/CommonClasses/interface/PFPhotonID.h"
 
 //new for PU gen
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
@@ -109,6 +111,11 @@
 // new for LumiReweighting
 #include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 
+//for conversion safe electron veto
+#include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
+
+//new for PFIsolation code
+#include "EGamma/EGammaAnalysisTools/src/PFIsolationEstimator.cc"
 
 using namespace std;
 
@@ -144,6 +151,7 @@ class ExoDiPhotonSignalMCAnalyzer : public edm::EDAnalyzer {
       string             PUDataFileName;
       string             PUDataHistName;
       string             PUMCHistName;
+      string             PFIDCategory;   
 
 
     
@@ -179,6 +187,11 @@ class ExoDiPhotonSignalMCAnalyzer : public edm::EDAnalyzer {
   TH1F* fpu_n_BeforeCuts;
   TH1F* fpu_n_BeforeCutsAfterReWeight;
 
+  // SIC add
+  //for PFIsolation Code
+  PFIsolationEstimator isolator04;
+  PFIsolationEstimator isolator03;
+  PFIsolationEstimator isolator02;
 
 
 };
@@ -207,7 +220,8 @@ ExoDiPhotonSignalMCAnalyzer::ExoDiPhotonSignalMCAnalyzer(const edm::ParameterSet
     PUMCFileName(iConfig.getUntrackedParameter<string>("PUMCFileName")),
     PUDataFileName(iConfig.getUntrackedParameter<string>("PUDataFileName")),
     PUDataHistName(iConfig.getUntrackedParameter<string>("PUDataHistName")),
-    PUMCHistName(iConfig.getUntrackedParameter<string>("PUMCHistName"))
+    PUMCHistName(iConfig.getUntrackedParameter<string>("PUMCHistName")),
+    PFIDCategory(iConfig.getUntrackedParameter<string>("PFIDCategory"))
 
 {
    //now do what ever initialization is needed
@@ -243,6 +257,14 @@ ExoDiPhotonSignalMCAnalyzer::ExoDiPhotonSignalMCAnalyzer(const edm::ParameterSet
    fTree->Branch("MCPUWeight",&fMCPUWeight,"MCPUWeight/D");
   
 
+  // SIC add
+  //new PFIsolation code
+  isolator04.initializePhotonIsolation(kTRUE);
+  isolator04.setConeSize(0.4);
+  isolator03.initializePhotonIsolation(kTRUE);
+  isolator03.setConeSize(0.3);
+  isolator02.initializePhotonIsolation(kTRUE);
+  isolator02.setConeSize(0.2);
 
 }
 
@@ -296,6 +318,10 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    fVtxInfo.sumPtTracks = -99999.99;
    fVtxInfo.ndof = -99999.99;
    fVtxInfo.d0 = -99999.99;
+
+    //get the reference to 1st vertex for use in fGetIsolation
+    //for PFIsolation calculation
+    reco::VertexRef firstVtx(vertexColl,0);
 
    const reco::Vertex *vertex1 = NULL; // best vertex (by trk SumPt)
    // note for higher lumi, may want to also store second vertex, for pileup studies
@@ -357,7 +383,18 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      ExoDiPhotons::FillBeamSpotInfo(fBeamSpotInfo,beamSpot);
    }
    
+  //for PFIsolation code
+  Handle<PFCandidateCollection> pfCandidatesColl;
+  iEvent.getByLabel("particleFlow",pfCandidatesColl);
+  const PFCandidateCollection * pfCandidates = pfCandidatesColl.product();
 
+  //for conversion safe electron veto
+  edm::Handle<reco::ConversionCollection> hConversions;
+  iEvent.getByLabel("allConversions", hConversions);
+  
+  edm::Handle<reco::GsfElectronCollection> hElectrons;
+  iEvent.getByLabel("gsfElectrons", hElectrons);
+  
    // L1 info
 
    // HLT info
@@ -460,22 +497,24 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      return;
    }
    
-      cout << "N photons = " << photonColl->size() <<endl;
+   //cout << "N photons = " << photonColl->size() <<endl;
+
+   TString CategoryPFID(PFIDCategory.c_str());
 
 //      //   photon loop
-    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
-
-   //  cout << "Reco photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
-     cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
-      cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
-      cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
-      cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
-      cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
-      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
-//      cout << endl;
-
-
-    } // end reco photon loop
+//    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
+//
+//   //  cout << "Reco photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+//   //  cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
+//   //   cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
+//   //   cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
+//   //   cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
+//   //   cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
+//   //   cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
+////      cout << endl;
+//
+//
+//    } // end reco photon loop
 
    
 
@@ -524,16 +563,16 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    const reco::Photon *matchPhoton1 = NULL;
    const reco::Photon *matchPhoton2 = NULL;
 
-   cout<<"HereGenLoop"<<endl;
+   //cout<<"HereGenLoop"<<endl;
    for(reco::GenParticleCollection::const_iterator genParticle = genParticles->begin(); genParticle != genParticles->end(); ++genParticle) {
 
      
      // identify the status 1 (ie no further decay) photons
      // which came from the hard-scatt photons (status 3)
      // because I know they're there     
-     cout<<genParticle->status()<<endl;
-     cout<<genParticle->pdgId()<<endl;
-     cout<<"ROLLTIDE"<<endl;
+     //cout<<genParticle->status()<<endl;
+     //cout<<genParticle->pdgId()<<endl;
+     //cout<<"ROLLTIDE"<<endl;
    
           if(genParticle->status()==1&&genParticle->pdgId()==22) {
      //cout<<"1"<<endl;
@@ -547,9 +586,9 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 
 	      if(genParticle->mother()->mother()->pdgId()==5000039) {
 	       
-		   cout<<genParticle->mother()->mother()->pdgId()<<endl;
+		   //cout<<genParticle->mother()->mother()->pdgId()<<endl;
 	       
-		      cout << "MC particle: Status = "<< genParticle->status() << "; pdg id = "<< genParticle->pdgId() << "; pt, eta, phi = " << genParticle->pt() << ", "<< genParticle->eta() << ", " << genParticle->phi() << endl;	   	       
+		      //cout << "MC particle: Status = "<< genParticle->status() << "; pdg id = "<< genParticle->pdgId() << "; pt, eta, phi = " << genParticle->pt() << ", "<< genParticle->eta() << ", " << genParticle->phi() << endl;	   	       
 	       
 
 	       // now match this signal photon to best recoPhoton
@@ -577,7 +616,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 	       if(!signalPhoton1) {
 		 // then we havent found the first one yet, so this is it
 		 signalPhoton1 = &(*genParticle);
-                 cout<<signalPhoton1<<endl;
+                 //cout<<signalPhoton1<<endl;
 		 matchPhoton1 = tempMatchPhoton;
 	       }
 	       else {
@@ -597,7 +636,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      // identify other real photons in event
      // what about ISR photons? 
      
-          cout << "MC particle: Status = "<< genParticle->status() << "; pdg id = "<< genParticle->pdgId() << "; pt, eta, phi = " << genParticle->pt() << ", "<< genParticle->eta() << ", " << genParticle->phi() << endl;	   
+          //cout << "MC particle: Status = "<< genParticle->status() << "; pdg id = "<< genParticle->pdgId() << "; pt, eta, phi = " << genParticle->pt() << ", "<< genParticle->eta() << ", " << genParticle->phi() << endl;	   
 
      // what about a photon which converts late in detector?
      // (or, similarly, an electron which brems a photon)
@@ -676,16 +715,89 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 //      cout << "Matched to signal photon!" <<endl;
 //      cout << "Reco photon et, eta, phi = " << matchPhoton1->et() <<", "<<matchPhoton1->eta()<< ", "<< matchPhoton1->phi();
 //      cout << "; eMax/e3x3 = " << matchPhoton1->maxEnergyXtal()/matchPhoton1->e3x3();
-//      cout << "; hadOverEm = " << matchPhoton1->hadronicOverEm();
-//      cout << "; trkIso = " << matchPhoton1->trkSumPtHollowConeDR04();
-//      cout << "; ecalIso = " << matchPhoton1->ecalRecHitSumEtConeDR04();
-//      cout << "; hcalIso = " << matchPhoton1->hcalTowerSumEtConeDR04();
-//      cout << "; pixelSeed = " << matchPhoton1->hasPixelSeed();
-//      cout << endl;
+     //if(iEvent.id().event()==19486)
+     //{
+     //  cout << "MatchPhoton1: Event number: " << iEvent.id().event();
+     // cout << "; et = " << matchPhoton1->et() << endl;
+     // cout << "; hadOverEm = " << matchPhoton1->hadronicOverEm() << endl;
+     // cout << "; trkIso = " << matchPhoton1->trkSumPtHollowConeDR04() << endl;
+     // cout << "; trkIsoCut = " << (2.0+0.001*matchPhoton1->pt()+0.0167*fRho25) << endl;
+     // cout << "; ecalIso = " << matchPhoton1->ecalRecHitSumEtConeDR04() << endl;
+     // cout << "; ecalIsoCut = " << (4.2 + 0.006*matchPhoton1->pt()+0.183*fRho25) << endl;
+     // cout << "; hcalIso = " << matchPhoton1->hcalTowerSumEtConeDR04() << endl;
+     // cout << "; hcalIsoCut = " << (2.2 + 0.0025*matchPhoton1->pt()+0.062*fRho25) << endl;
+     // cout << "; pixelSeed = " << matchPhoton1->hasPixelSeed() << endl;
+     // cout << "; sigmaIetaIeta = " << matchPhoton1->sigmaIetaIeta() << endl;
+     // cout << "; isGap = " <<  ExoDiPhotons::isGapPhoton(&(*matchPhoton1)) << endl;
+     // cout << "; isSpike = " <<  ExoDiPhotons::isASpike(&(*matchPhoton1)) << endl; 
+     // cout << "; passesHadOverEm = " << ExoDiPhotons::passesHadOverEmCut(matchPhoton1) << endl;
+     // cout << ": passesTrkIso = " << ExoDiPhotons::passesTrkIsoCut(matchPhoton1,fRho25) << endl;
+     // cout << "; passesEcalIsoCut = " << ExoDiPhotons::passesEcalIsoCut(matchPhoton1,fRho25) << endl;
+     // cout << "; passesHcalIsoCut = " << ExoDiPhotons::passesHcalIsoCut(matchPhoton1,fRho25) << endl;
+     // cout << "; passesSigmaIetaIetaCut = " << ExoDiPhotons::passesSigmaIetaIetaCut(matchPhoton1) << endl;
+     // cout << endl << endl;
+     //}
 
      // fill info into tree
-     
      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,matchPhoton1,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+     // SIC add all this to the function above?
+     fRecoPhotonInfo1.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron(matchPhoton1->superCluster(), hElectrons, hConversions, beamSpot.position());
+    //we retrieve the effective areas
+    //Remember effareaCH = 1st, effareaNH = 2nd, effareaPH = 3rd
+    //std::vector<double> effareas = ExoDiPhotons::EffectiveAreas(&(*matchPhoton1));
+    std::vector<double> photon1TorFEffAreas = ExoDiPhotons::EffectiveAreas(matchPhoton1);
+    //double pfisoall = isolator03.fGetIsolation(&(*matchPhoton1),pfCandidates,firstVtx,vertexColl);
+    double rhocorPFIsoCH = max(isolator03.getIsolationCharged()-fRho25*photon1TorFEffAreas[0],0.);
+    double rhocorPFIsoNH = max(isolator03.getIsolationNeutral()-fRho25*photon1TorFEffAreas[1],0.);
+    double rhocorPFIsoPH = max(isolator03.getIsolationPhoton()-fRho25*photon1TorFEffAreas[2],0.);
+     
+    fRecoPhotonInfo1.PFIsoAll04 = isolator04.fGetIsolation(matchPhoton1,pfCandidates,firstVtx,vertexColl);
+    fRecoPhotonInfo1.PFIsoCharged04 = isolator04.getIsolationCharged();
+    fRecoPhotonInfo1.PFIsoNeutral04 = isolator04.getIsolationNeutral();
+    fRecoPhotonInfo1.PFIsoPhoton04 = isolator04.getIsolationPhoton();      
+
+    fRecoPhotonInfo1.PFIsoAll03 = isolator03.fGetIsolation(matchPhoton1,pfCandidates,firstVtx,vertexColl);
+    fRecoPhotonInfo1.PFIsoCharged03 = isolator03.getIsolationCharged();
+    fRecoPhotonInfo1.PFIsoNeutral03 = isolator03.getIsolationNeutral();
+    fRecoPhotonInfo1.PFIsoPhoton03 = isolator03.getIsolationPhoton();      
+    
+    fRecoPhotonInfo1.PFIsoAll02 = isolator02.fGetIsolation(matchPhoton1,pfCandidates,firstVtx,vertexColl);
+    fRecoPhotonInfo1.PFIsoCharged02 = isolator02.getIsolationCharged();
+    fRecoPhotonInfo1.PFIsoNeutral02 = isolator02.getIsolationNeutral();
+    fRecoPhotonInfo1.PFIsoPhoton02 = isolator02.getIsolationPhoton();      
+
+    //now the corrected PF isolation variables
+    fRecoPhotonInfo1.rhocorPFIsoCharged04 = max(fRecoPhotonInfo1.PFIsoCharged04-fRho25*photon1TorFEffAreas[0],0.);
+    fRecoPhotonInfo1.rhocorPFIsoNeutral04 = max(fRecoPhotonInfo1.PFIsoNeutral04-fRho25*photon1TorFEffAreas[1],0.);
+    fRecoPhotonInfo1.rhocorPFIsoPhoton04 = max(fRecoPhotonInfo1.PFIsoPhoton04-fRho25*photon1TorFEffAreas[2],0.);
+    fRecoPhotonInfo1.rhocorPFIsoAll04 = fRecoPhotonInfo1.rhocorPFIsoCharged04 + fRecoPhotonInfo1.rhocorPFIsoNeutral04 + fRecoPhotonInfo1.rhocorPFIsoPhoton04;
+
+    fRecoPhotonInfo1.rhocorPFIsoCharged03 = max(fRecoPhotonInfo1.PFIsoCharged03-fRho25*photon1TorFEffAreas[0],0.);
+    fRecoPhotonInfo1.rhocorPFIsoNeutral03 = max(fRecoPhotonInfo1.PFIsoNeutral03-fRho25*photon1TorFEffAreas[1],0.);
+    fRecoPhotonInfo1.rhocorPFIsoPhoton03 = max(fRecoPhotonInfo1.PFIsoPhoton03-fRho25*photon1TorFEffAreas[2],0.);
+    fRecoPhotonInfo1.rhocorPFIsoAll03 = fRecoPhotonInfo1.rhocorPFIsoCharged03 + fRecoPhotonInfo1.rhocorPFIsoNeutral03 + fRecoPhotonInfo1.rhocorPFIsoPhoton03;
+
+    fRecoPhotonInfo1.rhocorPFIsoCharged02 = max(fRecoPhotonInfo1.PFIsoCharged02-fRho25*photon1TorFEffAreas[0],0.);
+    fRecoPhotonInfo1.rhocorPFIsoNeutral02 = max(fRecoPhotonInfo1.PFIsoNeutral02-fRho25*photon1TorFEffAreas[1],0.);
+    fRecoPhotonInfo1.rhocorPFIsoPhoton02 = max(fRecoPhotonInfo1.PFIsoPhoton02-fRho25*photon1TorFEffAreas[2],0.);
+    fRecoPhotonInfo1.rhocorPFIsoAll02 = fRecoPhotonInfo1.rhocorPFIsoCharged02 + fRecoPhotonInfo1.rhocorPFIsoNeutral02 + fRecoPhotonInfo1.rhocorPFIsoPhoton02;
+
+    // now we fill the ID variables for det and PFID
+    if(ExoDiPhotons::isTightPhoton(&(*matchPhoton1),fRho25) &&
+        !ExoDiPhotons::isGapPhoton(&(*matchPhoton1)) &&
+        !ExoDiPhotons::isASpike(&(*matchPhoton1))  )
+      fRecoPhotonInfo1.isTightDetPhoton = true;
+    else
+      fRecoPhotonInfo1.isTightDetPhoton = false;
+    
+    // test the conversion safe electron veto
+    bool passElecVeto = !ConversionTools::hasMatchedPromptElectron(matchPhoton1->superCluster(), hElectrons, hConversions, beamSpot.position());
+    if(ExoDiPhotons::isPFTightPhoton(&(*matchPhoton1),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,passElecVeto,CategoryPFID) && 
+    !ExoDiPhotons::isGapPhoton(&(*matchPhoton1)) && 
+    !ExoDiPhotons::isASpike(&(*matchPhoton1))  )
+      fRecoPhotonInfo1.isTightPFPhoton = true;
+    else
+      fRecoPhotonInfo1.isTightPFPhoton = false;
 
 
    }
@@ -700,16 +812,92 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 //      cout << "Matched to signal photon!" <<endl;
 //      cout << "Reco photon et, eta, phi = " << matchPhoton2->et() <<", "<<matchPhoton2->eta()<< ", "<< matchPhoton2->phi();
 //      cout << "; eMax/e3x3 = " << matchPhoton2->maxEnergyXtal()/matchPhoton2->e3x3();
-//      cout << "; hadOverEm = " << matchPhoton2->hadronicOverEm();
-//      cout << "; trkIso = " << matchPhoton2->trkSumPtHollowConeDR04();
-//      cout << "; ecalIso = " << matchPhoton2->ecalRecHitSumEtConeDR04();
-//      cout << "; hcalIso = " << matchPhoton2->hcalTowerSumEtConeDR04();
-//      cout << "; pixelSeed = " << matchPhoton2->hasPixelSeed();
-//      cout << endl;
+     //if(iEvent.id().event()==19486)
+     //{
+     //  cout << "MatchPhoton2: Event number: " << iEvent.id().event();
+     // cout << "; et = " << matchPhoton2->et() << endl;
+     // cout << "; hadOverEm = " << matchPhoton2->hadronicOverEm() << endl;
+     // cout << "; trkIso = " << matchPhoton2->trkSumPtHollowConeDR04() << endl;
+     // cout << "; trkIsoCut = " << (2.0+0.001*matchPhoton2->pt()+0.0167*fRho25) << endl;
+     // cout << "; ecalIso = " << matchPhoton2->ecalRecHitSumEtConeDR04() << endl;
+     // cout << "; ecalIsoCut = " << (4.2 + 0.006*matchPhoton2->pt()+0.183*fRho25) << endl;
+     // cout << "; hcalIso = " << matchPhoton2->hcalTowerSumEtConeDR04() << endl;
+     // cout << "; hcalIsoCut = " << (2.2 + 0.0025*matchPhoton2->pt()+0.062*fRho25) << endl;
+     // cout << "; pixelSeed = " << matchPhoton2->hasPixelSeed() << endl;
+     // cout << "; sigmaIetaIeta = " << matchPhoton2->sigmaIetaIeta() << endl;
+     // cout << "; isGap = " <<  ExoDiPhotons::isGapPhoton(&(*matchPhoton2)) << endl;
+     // cout << "; isSpike = " <<  ExoDiPhotons::isASpike(&(*matchPhoton2)) << endl; 
+     // cout << "; passesHadOverEm = " << ExoDiPhotons::passesHadOverEmCut(matchPhoton2) << endl;
+     // cout << ": passesTrkIso = " << ExoDiPhotons::passesTrkIsoCut(matchPhoton2,fRho25) << endl;
+     // cout << "; passesEcalIsoCut = " << ExoDiPhotons::passesEcalIsoCut(matchPhoton2,fRho25) << endl;
+     // cout << "; passesHcalIsoCut = " << ExoDiPhotons::passesHcalIsoCut(matchPhoton2,fRho25) << endl;
+     // cout << "; passesSigmaIetaIetaCut = " << ExoDiPhotons::passesSigmaIetaIetaCut(matchPhoton2) << endl;
+     // cout << endl << endl;
+     //}
 
-     // fill info into tree
-     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,matchPhoton2,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
 
+    // fill info into tree
+    ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,matchPhoton2,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+     // SIC add all this to the function above?
+    fRecoPhotonInfo2.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron(matchPhoton2->superCluster(), hElectrons, hConversions, beamSpot.position());
+    //we retrieve the effective areas
+    //Remember effareaCH = 1st, effareaNH = 2nd, effareaPH = 3rd
+    //std::vector<double> effareas = ExoDiPhotons::EffectiveAreas(&(*recoPhoton));
+    //Now we store all PF isolation variables for the 2nd photon
+    std::vector<double> photon2TorFEffAreas = ExoDiPhotons::EffectiveAreas(matchPhoton2);
+    //double pfisoall = isolator03.fGetIsolation(matchPhoton2,pfCandidates,firstVtx,vertexColl);
+    double rhocorPFIsoCH = max(isolator03.getIsolationCharged()-fRho25*photon2TorFEffAreas[0],0.);
+    double rhocorPFIsoNH = max(isolator03.getIsolationNeutral()-fRho25*photon2TorFEffAreas[1],0.);
+    double rhocorPFIsoPH = max(isolator03.getIsolationPhoton()-fRho25*photon2TorFEffAreas[2],0.);
+     
+    fRecoPhotonInfo2.PFIsoAll04 = isolator04.fGetIsolation(matchPhoton2,pfCandidates,firstVtx,vertexColl);
+    fRecoPhotonInfo2.PFIsoCharged04 = isolator04.getIsolationCharged();
+    fRecoPhotonInfo2.PFIsoNeutral04 = isolator04.getIsolationNeutral();
+    fRecoPhotonInfo2.PFIsoPhoton04 = isolator04.getIsolationPhoton();      
+
+    fRecoPhotonInfo2.PFIsoAll03 = isolator03.fGetIsolation(matchPhoton2,pfCandidates,firstVtx,vertexColl);
+    fRecoPhotonInfo2.PFIsoCharged03 = isolator03.getIsolationCharged();
+    fRecoPhotonInfo2.PFIsoNeutral03 = isolator03.getIsolationNeutral();
+    fRecoPhotonInfo2.PFIsoPhoton03 = isolator03.getIsolationPhoton();      
+    
+    fRecoPhotonInfo2.PFIsoAll02 = isolator02.fGetIsolation(matchPhoton2,pfCandidates,firstVtx,vertexColl);
+    fRecoPhotonInfo2.PFIsoCharged02 = isolator02.getIsolationCharged();
+    fRecoPhotonInfo2.PFIsoNeutral02 = isolator02.getIsolationNeutral();
+    fRecoPhotonInfo2.PFIsoPhoton02 = isolator02.getIsolationPhoton();      
+
+    //now the corrected PF isolation variables
+    fRecoPhotonInfo2.rhocorPFIsoCharged04 = max(fRecoPhotonInfo2.PFIsoCharged04-fRho25*photon2TorFEffAreas[0],0.);
+    fRecoPhotonInfo2.rhocorPFIsoNeutral04 = max(fRecoPhotonInfo2.PFIsoNeutral04-fRho25*photon2TorFEffAreas[1],0.);
+    fRecoPhotonInfo2.rhocorPFIsoPhoton04 = max(fRecoPhotonInfo2.PFIsoPhoton04-fRho25*photon2TorFEffAreas[2],0.);
+    fRecoPhotonInfo2.rhocorPFIsoAll04 = fRecoPhotonInfo2.rhocorPFIsoCharged04 + fRecoPhotonInfo2.rhocorPFIsoNeutral04 + fRecoPhotonInfo2.rhocorPFIsoPhoton04;
+
+    fRecoPhotonInfo2.rhocorPFIsoCharged03 = max(fRecoPhotonInfo2.PFIsoCharged03-fRho25*photon2TorFEffAreas[0],0.);
+    fRecoPhotonInfo2.rhocorPFIsoNeutral03 = max(fRecoPhotonInfo2.PFIsoNeutral03-fRho25*photon2TorFEffAreas[1],0.);
+    fRecoPhotonInfo2.rhocorPFIsoPhoton03 = max(fRecoPhotonInfo2.PFIsoPhoton03-fRho25*photon2TorFEffAreas[2],0.);
+    fRecoPhotonInfo2.rhocorPFIsoAll03 = fRecoPhotonInfo2.rhocorPFIsoCharged03 + fRecoPhotonInfo2.rhocorPFIsoNeutral03 + fRecoPhotonInfo2.rhocorPFIsoPhoton03;
+
+    fRecoPhotonInfo2.rhocorPFIsoCharged02 = max(fRecoPhotonInfo2.PFIsoCharged02-fRho25*photon2TorFEffAreas[0],0.);
+    fRecoPhotonInfo2.rhocorPFIsoNeutral02 = max(fRecoPhotonInfo2.PFIsoNeutral02-fRho25*photon2TorFEffAreas[1],0.);
+    fRecoPhotonInfo2.rhocorPFIsoPhoton02 = max(fRecoPhotonInfo2.PFIsoPhoton02-fRho25*photon2TorFEffAreas[2],0.);
+    fRecoPhotonInfo2.rhocorPFIsoAll02 = fRecoPhotonInfo2.rhocorPFIsoCharged02 + fRecoPhotonInfo2.rhocorPFIsoNeutral02 + fRecoPhotonInfo2.rhocorPFIsoPhoton02;
+
+    // now we fill the ID variables for det and PFID
+    if(ExoDiPhotons::isTightPhoton(matchPhoton2,fRho25) &&
+        !ExoDiPhotons::isGapPhoton(matchPhoton2) &&
+        !ExoDiPhotons::isASpike(matchPhoton2)  )
+      fRecoPhotonInfo2.isTightDetPhoton = true;
+    else
+      fRecoPhotonInfo2.isTightDetPhoton = false;
+    
+    // test the conversion safe electron veto
+    bool passElecVeto = !ConversionTools::hasMatchedPromptElectron(matchPhoton2->superCluster(), hElectrons, hConversions, beamSpot.position());
+
+    if(ExoDiPhotons::isPFTightPhoton(matchPhoton2,rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,passElecVeto,CategoryPFID) && 
+    !ExoDiPhotons::isGapPhoton(matchPhoton2) && 
+    !ExoDiPhotons::isASpike(matchPhoton2)  )
+      fRecoPhotonInfo2.isTightPFPhoton = true;
+    else
+      fRecoPhotonInfo2.isTightPFPhoton = false;
    }
    else {
      //     cout << "No match to signal photon2!" <<endl;
