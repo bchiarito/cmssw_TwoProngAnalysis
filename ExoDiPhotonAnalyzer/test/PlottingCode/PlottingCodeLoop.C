@@ -77,7 +77,7 @@ void PlottingCodeLoop::Loop()
        
       if(Diphoton_Minv < 200.) continue;
 
-      //if(fabs(Diphoton_deltaPhi) < 2.8) continue;
+      if(fabs(Diphoton_deltaPhi) < 2.8) continue;
       //if(fabs(Diphoton_deltaPhi) < 3.0) continue;
       //if(Diphoton_qt > 100.) continue;
 
@@ -86,7 +86,7 @@ void PlottingCodeLoop::Loop()
       //by default in the ntuples
 
       //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) continue;
-      //if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) continue;
+      if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) continue;
 
 
       //set it to true by default
@@ -103,10 +103,10 @@ void PlottingCodeLoop::Loop()
 	KFactorweight = 1.; 
 
 	if (_SampleType == "mc"){                      
-// 	  PUweight = MCPUWeight;
-// 	  // 	  if(Diphoton_Minv < 320.) KFactorweight = 1.73405;
-// 	  // 	  if(Diphoton_Minv >= 320.) KFactorweight = KFactorFunction->Eval(Diphoton_Minv);	  
-// 	  KFactorweight = KFactorFunction->Eval(Diphoton_Minv);
+	  PUweight = MCPUWeight;
+	  // 	  if(Diphoton_Minv < 320.) KFactorweight = 1.73405;
+	  // 	  if(Diphoton_Minv >= 320.) KFactorweight = KFactorFunction->Eval(Diphoton_Minv);	  
+	  KFactorweight = KFactorFunction->Eval(Diphoton_Minv);
 	}//end of if sampletype == mc					
 
 	//cout<<"Pileup weight "<<PUweight<<" K factor "<<KFactorweight<<endl;	
