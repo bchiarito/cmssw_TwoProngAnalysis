@@ -40,16 +40,17 @@ ton1_hcalIso04","h_Photon1_ecalIso04","h_Photon1_detEta","h_Photon2_sigmaIetaIet
 
 TString fNames[12] = {"h_Diphoton_Minv","h_Diphoton_qt","h_Diphoton_deltaPhi","h_Diphoton_deltaEta","h_Diphoton_deltaR","h_Diphoton_cosThetaStar","h_Photon1_pt","h_Photon1_eta","h_Photon1_phi","h_Photon2_pt","h_Photon2_eta","h_Photon2_phi"};
 
-TString TreeFileLocation = "/afs/cern.ch/work/c/charaf/private/DiPhotonTrees/";
-TString HistogramFileLocation = "/afs/cern.ch/work/c/charaf/private/DiPhotonTrees/Histograms/";
+//TString TreeFileLocation = "/afs/cern.ch/user/s/scooper/work/private/data/diPhotonTrees/";
+TString TreeFileLocation = "/afs/cern.ch/work/s/scooper/public/4Otman/DiPhotonTrees/";
+TString HistogramFileLocation = "/afs/cern.ch/user/s/scooper/work/private/results/diPhotonHistogramsPF/";
 
-// int inputfiles=4;
-// double xsec[4]={25.41,1.079e-2,15.53,3.202e-4};
-// int ngenevents[4]={500254,500038,500050,500352};
+int inputfiles=4;
+double xsec[4]={25.41,1.079e-2,15.53,3.202e-4};
+int ngenevents[4]={500254,500038,500050,500352};
 
-int inputfiles=3;
-double xsec[4]={15.53,3.202e-4,75.39};
-int ngenevents[4]={500050,500352,1154970};
+//int inputfiles=3;
+//double xsec[4]={15.53,3.202e-4,75.39};
+//int ngenevents[4]={500050,500352,1154970};
 
 TFile* ftemp[4];
 
@@ -62,21 +63,15 @@ void CreateHistogramFiles(TString Sample = "Diphoton", TString SampleType = "dat
       <<" JSON: "<<JSON.Data()
       <<endl;
 
-  //   char *answer = "n";
-  //   cout<<"signal Sample RS Graviton y/n ";
-  //   cin>>answer;
-
   TString outName;
   TFile *outfilename;
 
   TString  inputfile= TreeFileLocation+Sample+".root";
    
-  TChain *chain_tt = new TChain("diphotonAnalyzer/fTree");
-  //TChain *chain_tt = new TChain("diphotonSignalMCAnalyzer/fTree");
+  std::string treePath = SampleType=="signal" ? "diphotonSignalMCAnalyzer/fTree" : "diphotonAnalyzer/fTree";
+  TChain *chain_tt = new TChain(treePath.c_str());
 
-  //if(answer == "n") chain_tt = new TChain("diphotonAnalyzer/fTree");
-  //if(answer == "y") chain_tt = new TChain("diphotonSignalMCAnalyzer/fTree");
-
+  cout << "inputfile: " << inputfile.Data() << endl;
   chain_tt->Add(inputfile.Data());
   cout << "TT entries = " << chain_tt->GetEntries() <<endl;
   
@@ -299,9 +294,11 @@ void MakeCombinedMCHistos()
 //   inputmcfiles[2]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFAug10th_52X_BoxPt25To250/histograms_ExoDiPhotonAnalyzer_PFAug10th_52X_BoxPt25To250.root";
 //   inputmcfiles[3]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFAug10th_52X_BoxPt250ToInf/histograms_ExoDiPhotonAnalyzer_PFAug10th_52X_BoxPt250ToInf.root";
   
-    inputmcfiles[0]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFDec14th_53X_BoxPt25To250/histograms_ExoDiPhotonAnalyzer_PFDec14th_53X_BoxPt25To250.root";
-    inputmcfiles[1]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFDec14th_53X_BoxPt250ToInf/histograms_ExoDiPhotonAnalyzer_PFDec14th_53X_BoxPt250ToInf.root";
-    inputmcfiles[2]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFDec14th_53X_DiPhotonJetsMadGraph/histograms_ExoDiPhotonAnalyzer_PFDec14th_53X_DiPhotonJetsMadGraph.root";
+    inputmcfiles[0]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFDec14th_53X_BornPt25To250/histograms_ExoDiPhotonAnalyzer_PFDec14th_53X_BornPt25To250.root";
+    inputmcfiles[1]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFDec14th_53X_BornPt250ToInf/histograms_ExoDiPhotonAnalyzer_PFDec14th_53X_BornPt250ToInf.root";
+    inputmcfiles[2]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFDec14th_53X_BoxPt25To250/histograms_ExoDiPhotonAnalyzer_PFDec14th_53X_BoxPt25To250.root";
+    inputmcfiles[3]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFDec14th_53X_BoxPt250ToInf/histograms_ExoDiPhotonAnalyzer_PFDec14th_53X_BoxPt250ToInf.root";
+    //inputmcfiles[2]= HistogramFileLocation+"ExoDiPhotonAnalyzer_PFDec14th_53X_DiPhotonJetsMadGraph/histograms_ExoDiPhotonAnalyzer_PFDec14th_53X_DiPhotonJetsMadGraph.root";
   
 
 
@@ -751,9 +748,9 @@ void fakeratehistos(TString Sample = "Diphoton",TString lumi = "1", TString JSON
   TString histoFFlocation=HistogramFileLocation.Data()+Sample+"/histograms_"+Sample+"_FF.root";
   TString histoFTlocation=HistogramFileLocation.Data()+Sample+"/histograms_"+Sample+"_FT.root";
     
-  cout<<"Tight Fake Histogram Location"<<histoTFlocation<<endl;
-  cout<<"Fake Tight Histogram Location"<<histoFTlocation<<endl;
-  cout<<"Tight Tight Histogram Location"<<histoFFlocation<<endl;
+  cout<<"Tight Fake Histogram Location: "<<histoTFlocation<<endl;
+  cout<<"Fake Tight Histogram Location: "<<histoFTlocation<<endl;
+  cout<<"Tight Tight Histogram Location: "<<histoFFlocation<<endl;
 
   TFile* histoFF = TFile::Open(histoFFlocation.Data());
   TFile* histoFT = TFile::Open(histoFTlocation.Data()); 
@@ -1715,7 +1712,7 @@ void MakeYieldsTable(TString Sample = "Diphoton", Float_t lumiNumber = 1.)
   Float_t errors1000GammaJet = histosGammaJetUpperError->Integral(binnr1000,nbinsX+1);
   Float_t errors1250GammaJet = histosGammaJetUpperError->Integral(binnr1250,nbinsX+1);
 	
-  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","\Gamma+Jet & ",entriesGammaJet," & "
+  printf("%s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s %.2f %s \n","Gamma+Jet & ",entriesGammaJet," & "
 	 ,entries200GammaJet," & "
 	 ,entries500GammaJet," & "
 	 ,entries750GammaJet," & "
