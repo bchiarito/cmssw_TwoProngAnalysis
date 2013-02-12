@@ -73,6 +73,9 @@ void PlottingCodeLoop::Loop()
     if (ientry < 0) break;
     nb = fChain->GetEntry(jentry);   nbytes += nb;
     
+    // fill all events hist here
+    h_nEvents->Fill(0.5,MCPUWeight);
+
     if((Photon1_isEB) && (Photon2_isEB) && (Photon1_pt>=80.) && (Photon2_pt>=80.) ){
        
       if(Diphoton_Minv < 200.) continue;
@@ -80,14 +83,6 @@ void PlottingCodeLoop::Loop()
       if(fabs(Diphoton_deltaPhi) < 2.8) continue;
       //if(fabs(Diphoton_deltaPhi) < 3.0) continue;
       //if(Diphoton_qt > 100.) continue;
-
-      //This is to be used in the case of RS signal ntuples
-      //since in this case the selection is not applied
-      //by default in the ntuples
-
-      //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) continue;
-      if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) continue;
-
 
       //set it to true by default
       Bool_t triggerPass = true;
@@ -102,12 +97,12 @@ void PlottingCodeLoop::Loop()
 	PUweight = 1.;
 	KFactorweight = 1.; 
 
-	if (_SampleType == "mc"){                      
+	if (_SampleType == "mc"){ 
 	  PUweight = MCPUWeight;
 	  // 	  if(Diphoton_Minv < 320.) KFactorweight = 1.73405;
 	  // 	  if(Diphoton_Minv >= 320.) KFactorweight = KFactorFunction->Eval(Diphoton_Minv);	  
 	  KFactorweight = KFactorFunction->Eval(Diphoton_Minv);
-	}//end of if sampletype == mc					
+	}//end of if sampletype == mc
 
 	//cout<<"Pileup weight "<<PUweight<<" K factor "<<KFactorweight<<endl;	
 	//cout<<"Filling TT histograms "<<endl;
@@ -262,6 +257,7 @@ void PlottingCodeLoop::Loop()
   _outputfile->cd();
 
   if (_fakeStatus=="TightTight"){
+    h_nEvents->Write();
     h_Photon1_pt->Write();
     h_Photon1_pt_log->Write();
     h_Photon1_eta->Write();
