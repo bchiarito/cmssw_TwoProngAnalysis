@@ -68,10 +68,20 @@ def PrintInfo(name, listEntries, listErrors):
   print "}"
   print name,"stat = {",
   for entry in listEntries:
-    print "%.5f,"%math.sqrt(entry),
+    if entry >= 0:
+      print "%.5f,"%math.sqrt(entry),
+    else:
+      print "NaN,",
   print "}"
   print name,"syst = {",
   for entry in listErrors:
+    print "%.5f,"%entry,
+  print "}"
+
+
+def PrintEntries(name, listEntries):
+  print name,"#entries = {",
+  for entry in listEntries:
     print "%.5f,"%entry,
   print "}"
 
@@ -84,31 +94,45 @@ def GetMinMaxMassArrays(modelPointArray, numsigmas = 3):
 
 
 # import of yield-calculating code from ExoDiPhotonAnalyzer/test/PlottingCode/CreateHistogramFiles.C
-def MakeYieldsTableForMassRanges(HistogramFileLocation, modelPointArray, lumi, numsigmas = 3):
+def CalculateYieldsForMassRanges(HistogramFileLocation, modelPointArray, lumi, numsigmas = 3):
   gStyle.SetOptStat("ourmei")
-  Sample = "ExoDiPhotonAnalyzer_DataABC"
+  #Sample = "ExoDiPhotonAnalyzer_DataABC"
+  Sample = "ExoDiPhotonAnalyzer_PFDec14th_DataABCD"
 
   # FIXME hardcoded names/locations
-  histogramdata = HistogramFileLocation+Sample+"/histograms_"+Sample+".root"
-  histogramJetJet = HistogramFileLocation+Sample+"/histograms_"+Sample+"_JetJet.root"
-  histogramGammaJet = HistogramFileLocation+Sample+"/histograms_"+Sample+"_GammaJet.root"	
-  histogramMC = HistogramFileLocation+"/diphoton_tree_MC_all/histograms_diphoton_tree_MC_all.root"
-  fdatahists = TFile.Open(histogramdata)
-  fJetJethists = TFile.Open(histogramJetJet)
-  fGammaJethists = TFile.Open(histogramGammaJet)
-  fMChists = TFile.Open(histogramMC)
+  # background
+  histogramFileData = HistogramFileLocation+Sample+"/histograms_"+Sample+".root"
+  histogramFileJetJet = HistogramFileLocation+Sample+"/histograms_"+Sample+"_JetJet.root"
+  histogramFileGammaJet = HistogramFileLocation+Sample+"/histograms_"+Sample+"_GammaJet.root"	
+  histogramFileMC = HistogramFileLocation+"/diphoton_tree_MC_all/histograms_diphoton_tree_MC_all.root"
+  fdatahists = TFile.Open(histogramFileData)
+  if not fdatahists:
+    print 'file:',histogramFileData,'not found; quitting'
+    return
+  fJetJethists = TFile.Open(histogramFileJetJet)
+  if not fJetJethists:
+    print 'file:',histogramFileJetJet,'not found; quitting'
+    return
+  fGammaJethists = TFile.Open(histogramFileGammaJet)
+  if not fGammaJethists:
+    print 'file:',histogramFileGammaJet,'not found; quitting'
+    return
+  fMChists = TFile.Open(histogramFileMC)
+  if not fMChists:
+    print 'file:',histogramFileMC,'not found; quitting'
+    return
 
   print "Getting data histogram"
-  histosdata = fdatahists.Get("h_Diphoton_Minv")
+  histosdata = fdatahists.Get("h_Diphoton_Minv_FineBinning")
   print "histo",histosdata.GetName(),histosdata.GetEntries(),"entries",histosdata.Integral(),"(integral)"
 
   print "Getting MC histogram"
-  histosmc = fMChists.Get("h_Diphoton_Minv")
+  histosmc = fMChists.Get("h_Diphoton_Minv_FineBinning")
   histosmc.Scale(lumi)
   print "histo",histosmc.GetName(),histosmc.GetEntries(),"entries",histosmc.Integral(),"(integral)"
 
   print "Getting Jet+Jet histograms"
-  histosJetJet = fJetJethists.Get("h_JetJet_minv")
+  histosJetJet = fJetJethists.Get("h_JetJet_minv_FineBinning")
   histosJetJetUpperError = fJetJethists.Get("h_JetJet_minv_UpperError")
   histosJetJetLowerError = fJetJethists.Get("h_JetJet_minv_LowerError")
   print "histo",histosJetJet.GetName(),histosJetJet.GetEntries(),"entries",histosJetJet.Integral(),"(integral)"
@@ -116,7 +140,7 @@ def MakeYieldsTableForMassRanges(HistogramFileLocation, modelPointArray, lumi, n
   print "histo",histosJetJetLowerError.GetName(),histosJetJetLowerError.GetEntries(),"entries",histosJetJetLowerError.Integral(),"(integral)"
 
   print "Getting Gamma+Jet histograms"
-  histosGammaJet = fGammaJethists.Get("h_GammaJet_minv")
+  histosGammaJet = fGammaJethists.Get("h_GammaJet_minv_FineBinning")
   histosGammaJetUpperError = fGammaJethists.Get("h_GammaJet_minv_UpperError")
   histosGammaJetLowerError = fGammaJethists.Get("h_GammaJet_minv_LowerError")
   print "histo",histosGammaJet.GetName(),histosGammaJet.GetEntries(),"entries",histosGammaJet.Integral(),"(integral)"
@@ -124,7 +148,7 @@ def MakeYieldsTableForMassRanges(HistogramFileLocation, modelPointArray, lumi, n
   print "histo",histosGammaJetLowerError.GetName(),histosGammaJetLowerError.GetEntries(),"entries",histosGammaJetLowerError.Integral(),"(integral)"
 
   ## make list of lower/upper edges of mass windows
-  minMasses,maxMasses = GetMinMaxMassArrays(modelPointsArray, numsigmas)
+  minMasses,maxMasses = GetMinMaxMassArrays(modelPointArray, numsigmas)
 
   # calculate integrals in different mass ranges
   # They all have the same binning
@@ -136,15 +160,12 @@ def MakeYieldsTableForMassRanges(HistogramFileLocation, modelPointArray, lumi, n
 
   print "---------------Mass intervals to seek----------------"
 # debug
-#  print 'nBins',histosdata.GetNbinsX()
   for minMass,maxMass in itertools.izip(minMasses,maxMasses):
     print "interval [",minMass,",",maxMass,"]"
-#    print 'minMass',minMass,'binLowEdge',histosdata.GetBinLowEdge(histosdata.FindBin(minMass)),'binNr',histosdata.FindBin(minMass)
     binminnumbers.append(histosdata.FindBin(minMass)+1)
     maxMassBin = histosdata.FindBin(maxMass)
     if maxMassBin == histosdata.GetNbinsX()+1: # is it the overflow bin?
       maxMassBin = histosdata.GetNbinsX()
-#    print 'maxMass',maxMass,'binLowEdge',histosdata.GetBinLowEdge(maxMassBin),'binNr',maxMassBin
     binmaxnumbers.append(maxMassBin)
 
   #Once we have the bin numbers
@@ -180,18 +201,45 @@ def MakeYieldsTableForMassRanges(HistogramFileLocation, modelPointArray, lumi, n
   errorsData = [0]*len(binminnumbers)
   PrintInfo('Data',entriesData,errorsData)
 
-  entriesDataOverBackground = [entData/entBg for entData,entBg in zip(entriesData,entriesBackground)]
+  entriesDataOverBackground = [entData/entBg if entBg > 0 else 'bg=0' for entData,entBg in zip(entriesData,entriesBackground)]
   errorsDataOverBackground = []
   for entData,entBg,errData,errBg in itertools.izip(entriesData,entriesBackground,errorsData,errorsBackground):
     if entData != 0:
       errorsDataOverBackground.append(entData/entBg * sqrt( (errData/entData)*(errData/entData) + (errBg/entBg)*(errBg/entBg) ))
     else:
       errorsDataOverBackground.append(-1)
-  PrintInfo('Data/Background',entriesDataOverBackground,errorsDataOverBackground)
+  # note: printinfo doesn't work here since 'bg=0' isn't a float
+  #PrintInfo('Data/Background',entriesDataOverBackground,errorsDataOverBackground)
+  
+  entriesSignalInWindow = []
+  entriesSignalTotal = []
+  signalCouplings = []
+  signalMasses = []
 
   # Now put the info into the ModelPoints
-  for mp, entryData, entryBG, errorBG in itertools.izip(modelPointArray,entriesData,entriesBackground,errorsBackground):
+  for mp, entryData, entryBG, errorBG, binMin, binMax, minMass, maxMass in itertools.izip(modelPointArray,entriesData,entriesBackground,errorsBackground,binminnumbers,binmaxnumbers,minMasses,maxMasses):
     mp.nDataObs = entryData
     mp.nBackground = entryBG
     mp.nBackgroundErr = math.sqrt(entryBG) 
+    # signal
+    histogramSignalFile = TFile.Open(mp.fileName)
+    if not histogramSignalFile:
+      print 'file:',mp.fileName,'not found; quitting'
+      return
+    signalHistogram = histogramSignalFile.Get("h_Diphoton_Minv_FineBinning")
+    signalEntriesInWindow = signalHistogram.Integral(binMin,binMax)
+    signalTotalEventsHistogram = histogramSignalFile.Get("h_nEvents")
+    signalEntriesTotal = signalTotalEventsHistogram.Integral()
+    histogramSignalFile.Close()
+    mp.totalEff = 1.0*signalEntriesInWindow/signalEntriesTotal
+    entriesSignalInWindow.append(signalEntriesInWindow)
+    entriesSignalTotal.append(signalEntriesTotal)
+    signalCouplings.append(mp.coupling)
+    signalMasses.append(mp.mass)
+
+  PrintEntries('Signal couplings',signalCouplings)
+  PrintEntries('Signal Masses',signalMasses)
+  PrintEntries('signalEntriesInWindow',entriesSignalInWindow)
+  PrintEntries('signalEntriesTotal',entriesSignalTotal)
+
 
