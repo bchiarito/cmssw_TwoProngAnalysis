@@ -29,7 +29,10 @@ void ComputeLimit(float lumi, float lumiError, float totalEff, float nBackground
 {
   using namespace std;
   
-  cout <<  "Compute limit for coupling=" << coupling << " mass= " << mass << endl;
+  cout << "Compute limit for coupling= " << coupling << " mass= " << mass << endl;
+  cout << "Efficiency*Acceptance= " << totalEff << " nBackground= " << nBackground << " +/- " << nBackgroundErr << endl;
+  cout << "nDataObs= " << nDataObs << " halfWidth= " << halfWidth << " totalXSec= " << totalXSec << endl;
+
   string cmsswBase;
   cmsswBase = string(getenv("CMSSW_BASE"));
   string cl95MacroPath = cmsswBase;
