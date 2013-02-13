@@ -29,6 +29,100 @@ from MakePlots import *
 from MakeLimits import *
 
 
+# mapping of couplings/masses to halfWidths --> taken as input from fits
+halfWidths0p01 = dict()
+halfWidths0p01[750]  = 5.2041
+halfWidths0p01[1000] = 6.50326
+halfWidths0p01[1250] = 8.53237
+halfWidths0p01[1500] = 10.0917
+halfWidths0p01[1750] = 11.5976
+halfWidths0p01[2000] = 13.6845
+halfWidths0p01[3000] = 22.4852
+# 0.05
+halfWidths0p05 = dict()
+halfWidths0p05[1750] = 13.7476
+halfWidths0p05[2000] = 16.795
+halfWidths0p05[2500] = 20.4539
+halfWidths0p05[2750] = 22.7374
+halfWidths0p05[3000] = 25.2982
+# 0.1
+halfWidths0p1 = dict()
+halfWidths0p1[2250] = 26.3803
+halfWidths0p1[2500] = 30.8038
+halfWidths0p1[2750] = 35.9283
+halfWidths0p1[3000] = 38.7399
+halfWidths0p1[3250] = 41.8178
+halfWidths0p1[3500] = 40.2991
+# mapping of couplings/masses to crossSections --> taken as input from theoretical calc.
+totalXSecs0p01 = dict()
+totalXSecs0p01[750] = 1.023e-02
+totalXSecs0p01[1000] = 2.072e-03
+totalXSecs0p01[1250] = 5.21e-04
+totalXSecs0p01[1500] = 1.604e-04
+totalXSecs0p01[1750] = 5.408e-05
+totalXSecs0p01[2000] = 1.853e-05
+totalXSecs0p01[3000] = 4.703e-07
+# 0.05
+totalXSecs0p05 = dict()
+totalXSecs0p05[1750] = 1.331e-03
+totalXSecs0p05[2000] = 4.665e-04
+totalXSecs0p05[2500] = 7.226e-05
+totalXSecs0p05[2750] = 2.803e-05
+totalXSecs0p05[3000] = 1.169e-05
+# 0.1
+totalXSecs0p1 = dict()
+totalXSecs0p1[2250] = 7.04e-04
+totalXSecs0p1[2500] = 2.79e-04
+totalXSecs0p1[2750] = 1.14e-04
+totalXSecs0p1[3000] = 4.68e-05
+totalXSecs0p1[3250] = 1.19e-05
+totalXSecs0p1[3500] = 7.7e-06
+
+
+def GetHalfWidth(coupling,mass):
+  if coupling==0.01:
+    dict = halfWidths0p01
+  elif coupling==0.05:
+    dict = halfWidths0p05
+  elif coupling==0.1:
+    dict = halfWidths0p1
+  else:
+    dict = dict()
+  if mass in dict:
+    return dict[mass]
+  else:
+    print 'GetHalfWidth: Coupling',coupling,'mass',mass,'not recognized; quitting'
+    exit()
+
+
+def GetXSec(coupling,mass):
+  if coupling==0.01:
+    dict = totalXSecs0p01
+  elif coupling==0.05:
+    dict = totalXSecs0p05
+  elif coupling==0.1:
+    dict = totalXSecs0p1
+  else:
+    dict = dict()
+  if mass in dict:
+    return dict[mass]
+  else:
+    print 'GetXSec: Coupling',coupling,'mass',mass,'not recognized; quitting'
+    exit()
+
+
+def GetSignalFileName(template,coupling,mass):
+  if coupling==0.01:
+    couplingStr = '001'
+  elif coupling==0.05:
+    couplingStr = '005'
+  elif coupling==0.1:
+    couplingStr = '01'
+  else:
+    print 'GetSignalFileName: Coupling',coupling,'not recognized; quitting'
+    exit()
+  massStr = str(mass)
+  return template.format(coupling=couplingStr,mass=massStr)
 
 
 # TODO: remove hardcoding; instead use list of couplings to run over
@@ -105,7 +199,7 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   mLimObs = [m0p01,m0p05,m0p1]
   mLimExp = [mExp0p01,mExp0p05,mExp0p1]
   couplings = [0.01,0.05,0.1]
-  CouplingVsMassPlot(couplings,mLimExp,mLimObs,rootFile)
+  CouplingVsMassPlot(couplings,mLimExp,mLimObs,rootFile,lumi)
   # efficiencies for all couplings/masses on same axes
   PlotAllEfficiencies([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile)
   # half widths
@@ -199,97 +293,74 @@ def DoTablesAllPoints(lumi,numsigmas):
 
 def Usage():
   print 'Usage: python RunLimitsAndPlots.py [arg] where arg can be:'
-  print '    all --> run limits and plots (see below)'
+  print '    all    --> run yields, limits, and plots (see below)'
   print '    limits --> Compute limits for all model points & write out results'
   print '    plots  --> Read limit results from text files and make limit plots'
-  print '    yields --> Calculate event yields from histograms in root file'
+  print '    tables --> Read limit results from text files and make results tables (text/latex)'
+  print '    yields --> Calculate event yields from histograms in root files (from CreateHistogramFiles)'
 
 
-gROOT.Reset()
-# get path to tdrStyle script (should always be in LimitScripts, but we don't hardcode it anyway)
-abspath = os.path.abspath(__file__)
-dname = os.path.dirname(abspath)
-pathToTDRStyle = dname+'/tdrStyle.C'
-#gROOT.ProcessLine('.L '+)
-# Define RooStats macro path and name
-cl95MacroPath = os.environ['CMSSW_BASE']+'/src/StatisticalTools/RooStatsRoutines/root/'
-cl95MacroName = 'roostats_cl95.C'
-# location of root files from CreateHistogramFiles code
-rootFileLocation = '/afs/cern.ch/user/s/scooper/work/private/results/diPhotonHistograms/'
-# limit results file base name
-limitsFileNameBase = 'results_limits_k_'
-# Declarations of Lumi and model points
-lumi = 10252.
-lumiErr = lumi*0.044
-# root file for plots
-plotFileName = 'plots.root'
-rootFile = TFile(plotFileName,'recreate')
 
-# No Cuts -- updated signal eff.
-#                              coupling, mass, totalXSec, totalEff, width, nDataObs, nBG, nBGerr
-##c = 0.01
-#modelPointsC0p01 = []
-#modelPointsC0p01.append(ModelPoint(0.01, 750,  1.023e-02, 0.300598, 5.2041,  4, 3.47787, 1.86490))
-#modelPointsC0p01.append(ModelPoint(0.01, 1000, 2.072e-03, 0.346988, 6.50326, 0, 0.46004, 0.67826))
-#modelPointsC0p01.append(ModelPoint(0.01, 1250, 5.21e-04,  0.387196, 8.53237, 0, 0.21650, 0.46530))
-#modelPointsC0p01.append(ModelPoint(0.01, 1500, 1.604e-04, 0.424459, 10.0917, 0, 0.11362, 0.33708))
-#modelPointsC0p01.append(ModelPoint(0.01, 1750, 5.408e-05, 0.466624, 11.5976, 0, 0.04732, 0.21752))
-#modelPointsC0p01.append(ModelPoint(0.01, 2000, 1.853e-05, 0.491459, 13.6845, 0, 0.02484, 0.15760))
-#modelPointsC0p01.append(ModelPoint(0.01, 3000, 4.703e-07, 0.545592, 22.4852, 0, 0.00193, 0.04389))
-##c = 0.05
-#modelPointsC0p05 = []
-#modelPointsC0p05.append(ModelPoint(0.05, 1750, 1.331e-03, 0.46056,  13.7476, 0, 0.04732, 0.21752))
-#modelPointsC0p05.append(ModelPoint(0.05, 2000, 4.665e-04, 0.490243, 16.795,  0, 0.02484, 0.15760))
-#modelPointsC0p05.append(ModelPoint(0.05, 2500, 7.226e-05, 0.528822, 20.4539, 0, 0.00456, 0.06750))
-#modelPointsC0p05.append(ModelPoint(0.05, 2750, 2.803e-05, 0.5364,   22.7374, 0, 0.00182, 0.04265))
-#modelPointsC0p05.append(ModelPoint(0.05, 3000, 1.169e-05, 0.535603, 25.2982, 0, 0.00193, 0.04389))
-##c = 0.1
-#modelPointsC0p1 = []
-#modelPointsC0p1.append(ModelPoint(0.1, 2250, 7.04e-04, 0.514227, 26.3803, 0, 0.01617, 0.12718))
-#modelPointsC0p1.append(ModelPoint(0.1, 2500, 2.79e-04, 0.528942, 30.8038, 0, 0.00674, 0.08211))
-#modelPointsC0p1.append(ModelPoint(0.1, 2750, 1.14e-04, 0.536109, 35.9283, 0, 0.00321, 0.05667))
-#modelPointsC0p1.append(ModelPoint(0.1, 3000, 4.68e-05, 0.53504,  38.7399, 0, 0.00193, 0.04390))
-#modelPointsC0p1.append(ModelPoint(0.1, 3250, 1.19e-05, 0.534551, 41.8178, 0, 0.00326, 0.05711))
-#modelPointsC0p1.append(ModelPoint(0.1, 3500, 7.7e-06,  0.529164, 40.2991, 0, 0.00326, 0.05711))
-
-# With DeltaPhi 2.8 cut, updated efficiencies
-# coupling, mass, totalXSec, totalEff, width, nDataObs, nBG, nBGerr
-#c = 0.01
-modelPointsC0p01 = []
-modelPointsC0p01.append(ModelPoint(0.01, 750,  1.023e-02, 0.245853, 5.2041,  4, 3.29455, 1.81509))
-modelPointsC0p01.append(ModelPoint(0.01, 1000, 2.072e-03, 0.302633, 6.50326, 0, 0.44277, 0.66541))
-modelPointsC0p01.append(ModelPoint(0.01, 1250, 5.21e-04,  0.349581, 8.53237, 0, 0.21078, 0.45911))
-modelPointsC0p01.append(ModelPoint(0.01, 1500, 1.604e-04, 0.395791, 10.0917, 0, 0.10940, 0.33076))
-modelPointsC0p01.append(ModelPoint(0.01, 1750, 5.408e-05, 0.444453, 11.5976, 0, 0.04682, 0.21638))
-modelPointsC0p01.append(ModelPoint(0.01, 2000, 1.853e-05, 0.47302,  13.6845, 0, 0.02463, 0.15695))
-modelPointsC0p01.append(ModelPoint(0.01, 3000, 4.703e-07, 0.53921,  22.4852, 0, 0.00193, 0.04389))
-#c = 0.05
-modelPointsC0p05 = []
-modelPointsC0p05.append(ModelPoint(0.05, 1750, 1.331e-03, 0.437371, 13.7476, 0, 0.04682, 0.21638))
-modelPointsC0p05.append(ModelPoint(0.05, 2000, 4.665e-04, 0.471764, 16.795,  0, 0.02463, 0.15695))
-modelPointsC0p05.append(ModelPoint(0.05, 2500, 7.226e-05, 0.517763, 20.4539, 0, 0.00445, 0.06668))
-modelPointsC0p05.append(ModelPoint(0.05, 2750, 2.803e-05, 0.528236, 22.7374, 0, 0.00182, 0.04265))
-modelPointsC0p05.append(ModelPoint(0.05, 3000, 1.169e-05, 0.529311, 25.2982, 0, 0.00193, 0.04389))
-#c = 0.1
-modelPointsC0p1 = []
-modelPointsC0p1.append(ModelPoint(0.1, 2250, 7.04e-04, 0.499742, 26.3803, 0, 0.01589, 0.12605))
-modelPointsC0p1.append(ModelPoint(0.1, 2500, 2.79e-04, 0.517166, 30.8038, 0, 0.00663, 0.08143))
-modelPointsC0p1.append(ModelPoint(0.1, 2750, 1.14e-04, 0.527167, 35.9283, 0, 0.00321, 0.05667))
-modelPointsC0p1.append(ModelPoint(0.1, 3000, 4.68e-05, 0.527422, 38.7399, 0, 0.00193, 0.04390))
-modelPointsC0p1.append(ModelPoint(0.1, 3250, 1.19e-05, 0.529048, 41.8178, 0, 0.00326, 0.05711))
-modelPointsC0p1.append(ModelPoint(0.1, 3500, 7.7e-06,  0.524787, 40.2991, 0, 0.00326, 0.05711))
 
 #
 #
 # RUN
 #
+gROOT.Reset()
+# get path to tdrStyle script (should always be in LimitScripts, but we don't hardcode it anyway)
+abspath = os.path.abspath(__file__)
+dname = os.path.dirname(abspath)
+pathToTDRStyle = dname+'/tdrStyle.C'
+# Define RooStats macro path and name
+cl95MacroPath = os.environ['CMSSW_BASE']+'/src/StatisticalTools/RooStatsRoutines/root/'
+cl95MacroName = 'roostats_cl95.C'
+
+
+# Configurable stuff here
+# limit results file base name
+limitsFileNameBase = 'results_limits_k_'
+# location of backgroundMC/data root files from CreateHistogramFiles code
+rootFileLocation = '/afs/cern.ch/user/s/scooper/work/private/results/diPhotonHistogramsPF/'
+# Declarations of Lumi and model points to consider
+lumi = 19620.
+lumiErr = lumi*0.044
+masses0p01 = [750,1000,1250,1500,1750,2000,3000]
+masses0p05 = [1750,2000,2500,2750,3000]
+masses0p1 = [2250,2500,2750,3000,3250,3500]
+# root file for plots
+plotFileName = 'plots.root'
+rootFile = TFile(plotFileName,'recreate')
+
+
+# List signal histogram file template; rest of quantities are filled from functions (xsec, width, etc.) or histograms in the files
+signalHistogramFilesPathTemplate = rootFileLocation+'diphoton_tree_RSGravToGG_kMpl-{coupling}_M-{mass}_TuneZ2star_8TeV-pythia_merged/histograms_diphoton_tree_RSGravToGG_kMpl-{coupling}_M-{mass}_TuneZ2star_8TeV-pythia_merged.root'
+# for now, we use the directory structure that the CreateHistogramFiles.C code uses
+# setup k=0.01
+modelPointsC0p01 = []
+for mass in masses0p01:
+  k = 0.01
+  modelPointsC0p01.append(ModelPoint(coupling=k,mass=mass,totalXSec=GetXSec(k,mass),halfWidth=GetHalfWidth(k,mass),
+    fileName=GetSignalFileName(signalHistogramFilesPathTemplate,k,mass))) 
+# setup k=0.05
+modelPointsC0p05 = []
+for mass in masses0p05:
+  k = 0.05
+  modelPointsC0p05.append(ModelPoint(coupling=k,mass=mass,totalXSec=GetXSec(k,mass),halfWidth=GetHalfWidth(k,mass),
+    fileName=GetSignalFileName(signalHistogramFilesPathTemplate,k,mass))) 
+# setup k=0.1
+modelPointsC0p1 = []
+for mass in masses0p1:
+  k = 0.1
+  modelPointsC0p1.append(ModelPoint(coupling=k,mass=mass,totalXSec=GetXSec(k,mass),halfWidth=GetHalfWidth(k,mass),
+    fileName=GetSignalFileName(signalHistogramFilesPathTemplate,k,mass))) 
+
 # Parse arguments
 if len(sys.argv)==1:
   Usage()
   sys.exit()
 elif sys.argv[1]=='yields':
-  print 'yields: MakeYieldsTableForMassRanges'
-  MakeYieldsTableForMassRanges(rootFileLocation, modelPointsC0p01, lumi, 3)
+  print 'yields: CalculateYieldsForMassRanges'
+  CalculateYieldsForMassRanges(rootFileLocation, modelPointsC0p01+modelPointsC0p05+modelPointsC0p1, lumi, 3)
 elif sys.argv[1]=='limits':
   print 'limits: DoLimitsAllPoints'
   DoLimitsAllPoints(cl95MacroPath+cl95MacroName,lumi,lumiErr,limitsFileNameBase)
@@ -299,10 +370,10 @@ elif sys.argv[1]=='plots':
 elif sys.argv[1]=='tables':
   print 'tables: DoTablesAllPoints'
   DoTablesAllPoints(lumi,3)
-# TODO: add yield calculation into all
-# TODO: calculate signal efficiency from here
 elif sys.argv[1]=='all':
-  print 'all: limits+plots'
+  print 'all: yields+limits+plots'
+  print 'yields: CalculateYieldsForMassRanges'
+  CalculateYieldsForMassRanges(rootFileLocation, modelPointsC0p01+modelPointsC0p05+modelPointsC0p1, lumi, 3)
   print 'limits: DoLimitsAllPoints'
   DoLimitsAllPoints(cl95MacroPath+cl95MacroName,lumi,lumiErr,limitsFileNameBase)
   print 'plots: DoPlotsAllPoints'
@@ -315,6 +386,7 @@ else:
   sys.exit()
 
 rootFile.Close()
+
 
 ### wait for input to keep the GUI (which lives on a ROOT event dispatcher) alive
 #if __name__ == '__main__':
