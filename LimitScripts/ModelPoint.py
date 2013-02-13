@@ -9,21 +9,22 @@
 import string
 
 class ModelPoint:
-  def __init__(self,coupling=-1,mass=-1,totalXSec=-1,totalEff=-1,halfWidth=-1,nDataObs=-1,bg=-1,bgErr=-1):
-    self.coupling = coupling
-    self.mass = mass
-    self.totalXSec = totalXSec
-    self.totalEff = totalEff
-    self.halfWidth = halfWidth
-    self.nDataObs = nDataObs
-    self.nBackground = bg
-    self.nBackgroundErr = bgErr
-    self.expLimit = -1
-    self.expLimitOneSigmaHigh = -1
-    self.expLimitOneSigmaLow = -1
-    self.expLimitTwoSigmaHigh = -1
-    self.expLimitTwoSigmaLow = -1
-    self.obsLimit = -1
+  def __init__(self, *args, **kwargs):
+    self.coupling             = kwargs.get('coupling',None)
+    self.mass                 = kwargs.get('mass',None)
+    self.totalXSec            = kwargs.get('totalXSec',None)
+    self.totalEff             = kwargs.get('totalEff',0.0)
+    self.halfWidth            = kwargs.get('halfWidth',None)
+    self.nDataObs             = kwargs.get('nDataObs',None)
+    self.nBackground          = kwargs.get('nBg',0.0)
+    self.nBackgroundErr       = kwargs.get('nBgErr',0.0)
+    self.expLimit             = kwargs.get('expLimit',None)
+    self.expLimitOneSigmaHigh = kwargs.get('expLimitOneSigmaHigh',None)
+    self.expLimitOneSigmaLow  = kwargs.get('expLimitOneSigmaLow',None)
+    self.expLimitTwoSigmaHigh = kwargs.get('expLimitTwoSigmaHigh',None)
+    self.expLimitTwoSigmaLow  = kwargs.get('expLimitTwoSigmaLow',None)
+    self.obsLimit             = kwargs.get('obsLimit',None)
+    self.fileName             = kwargs.get('fileName',None)
 
   def AddLimitResult(self,lr):
     self.expLimit = lr.GetExpectedLimit()
@@ -41,11 +42,10 @@ class ModelPoint:
     print "HalfWidth: " , self.halfWidth
     print "NDataObs: " , self.nDataObs
     print "NBackground: %.5f"%self.nBackground , " +/- %.5f"%self.nBackgroundErr
+    print "Filename:",self.fileName
     print "Expected Limit:" , self.expLimit , " + " , self.expLimitOneSigmaHigh , " - " , self.expLimitOneSigmaLow
     print "Expected Limit2SigmaBounds: + " , self.expLimitTwoSigmaHigh , " - " , self.expLimitTwoSigmaLow
     print "Observed Limit: " , self.obsLimit
-    print
-    print
 
 
   def Write(self,file):
