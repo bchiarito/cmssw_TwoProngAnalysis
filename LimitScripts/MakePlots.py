@@ -621,7 +621,7 @@ def GetMassLimit(modelPointArray):
   return m,xs,mExp,xsExp
 
 
-def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile):
+def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile, lumi):
   rootFile.cd()
   cLimit = TCanvas("cLimit","cLimit",800,600)
   gStyle.SetOptStat(0)
@@ -782,13 +782,13 @@ def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile):
   entry.SetMarkerSize(1.3)
   entry=leg.AddEntry("LambdaPi","M_{D} > 10TeV","lf")
   leg.Draw()
-  # 10.3/fb
+  # lumi
   pt = TPaveText(0.629397,0.798951,0.8002513,0.8653846,"blNDC")
   pt.SetFillColor(0)
   pt.SetBorderSize(1)
   pt.SetLineColor(0)
   pt.SetTextSize(0.06)
-  text = pt.AddText("10.3 fb^{-1} at 8 TeV")
+  text = pt.AddText("%.1f" % (lumi/1000)+" fb^{-1} at 8 TeV")
   pt.Draw()
   # CMS
   ptCMS = TPaveText(0.2236181,0.7884615,0.4736181,0.8583916,"blNDC")
