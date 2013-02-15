@@ -52,8 +52,11 @@ def GetRooStatsMacroCVSTag(cl95MacroPath):
   cl95MacroName = cl95Split[len(cl95Split)-1]
   cl95MacroDir = cl95MacroPath.rstrip(cl95Split[len(cl95Split)-1])
   proc = subprocess.Popen(['cvs','status',cl95MacroName],cwd=cl95MacroDir,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+  proc.wait()
+  #proc = subprocess.call(['cvs','status',cl95MacroName],cwd=cl95MacroDir,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
   out,err = proc.communicate()
   split = out.split()
+  tagVersion = 'unknown'
   for i in range(0,len(split)):
     if 'Tag' in split[i]:
       tagVersion = split[i+1]
@@ -241,5 +244,7 @@ def CalculateYieldsForMassRanges(HistogramFileLocation, modelPointArray, lumi, n
   PrintEntries('Signal Masses',signalMasses)
   PrintEntries('signalEntriesInWindow',entriesSignalInWindow)
   PrintEntries('signalEntriesTotal',entriesSignalTotal)
+  signalEffs = [sigEvtsWindow/sigEvtsTotal for sigEvtsWindow,sigEvtsTotal in itertools.izip(entriesSignalInWindow,entriesSignalTotal)]
+  PrintEntries('Signal efficiencies*acceptances',signalEffs)
 
 
