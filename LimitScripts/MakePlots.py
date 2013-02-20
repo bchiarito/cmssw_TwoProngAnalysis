@@ -861,7 +861,7 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile):
 
 
   # To make the separate graphs share the same axes
-  h = TH1F("test","test",10,750,3500)
+  h = TH1F("test","",10,750,3500)
   h.SetStats(False)
   h.GetYaxis().SetRangeUser(0.2,0.7)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
