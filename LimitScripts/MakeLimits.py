@@ -89,6 +89,132 @@ def PrintEntries(name, listEntries):
   print "}"
 
 
+def OptimizeWindow(HistogramFileLocation, modelPoint, lumi):
+  #Sample = "ExoDiPhotonAnalyzer_DataABC"
+  Sample = "ExoDiPhotonAnalyzer_PFDec14th_DataABCD"
+
+  # FIXME hardcoded names/locations
+  # background
+  histogramFileJetJet = HistogramFileLocation+Sample+"/histograms_"+Sample+"_JetJet.root"
+  histogramFileGammaJet = HistogramFileLocation+Sample+"/histograms_"+Sample+"_GammaJet.root"	
+  histogramFileMC = HistogramFileLocation+"/diphoton_tree_MC_all/histograms_diphoton_tree_MC_all.root"
+  fJetJethists = TFile.Open(histogramFileJetJet)
+  if not fJetJethists:
+    print 'file:',histogramFileJetJet,'not found; quitting'
+    return
+  fGammaJethists = TFile.Open(histogramFileGammaJet)
+  if not fGammaJethists:
+    print 'file:',histogramFileGammaJet,'not found; quitting'
+    return
+  fMChists = TFile.Open(histogramFileMC)
+  if not fMChists:
+    print 'file:',histogramFileMC,'not found; quitting'
+    return
+
+  #print "Getting MC histogram"
+  histosmc = fMChists.Get("h_Diphoton_Minv_FineBinning")
+  histosmc.Scale(lumi)
+  #print "histo",histosmc.GetName(),histosmc.GetEntries(),"entries",histosmc.Integral(),"(integral)"
+
+  #print "Getting Jet+Jet histograms"
+  histosJetJet = fJetJethists.Get("h_JetJet_minv_FineBinning")
+  histosJetJetUpperError = fJetJethists.Get("h_JetJet_minv_UpperError")
+  histosJetJetLowerError = fJetJethists.Get("h_JetJet_minv_LowerError")
+  #print "histo",histosJetJet.GetName(),histosJetJet.GetEntries(),"entries",histosJetJet.Integral(),"(integral)"
+  #print "histo",histosJetJetUpperError.GetName(),histosJetJetUpperError.GetEntries(),"entries",histosJetJetUpperError.Integral(),"(integral)"
+  #print "histo",histosJetJetLowerError.GetName(),histosJetJetLowerError.GetEntries(),"entries",histosJetJetLowerError.Integral(),"(integral)"
+
+  #print "Getting Gamma+Jet histograms"
+  histosGammaJet = fGammaJethists.Get("h_GammaJet_minv_FineBinning")
+  histosGammaJetUpperError = fGammaJethists.Get("h_GammaJet_minv_UpperError")
+  histosGammaJetLowerError = fGammaJethists.Get("h_GammaJet_minv_LowerError")
+  #print "histo",histosGammaJet.GetName(),histosGammaJet.GetEntries(),"entries",histosGammaJet.Integral(),"(integral)"
+  #print "histo",histosGammaJetUpperError.GetName(),histosGammaJetUpperError.GetEntries(),"entries",histosGammaJetUpperError.Integral(),"(integral)"
+  #print "histo",histosGammaJetLowerError.GetName(),histosGammaJetLowerError.GetEntries(),"entries",histosGammaJetLowerError.Integral(),"(integral)"
+
+  # signal
+  histogramSignalFile = TFile.Open(modelPoint.fileName)
+  if not histogramSignalFile:
+    print 'file:',modelPoint.fileName,'not found; quitting'
+    return
+  signalHistogram = histogramSignalFile.Get("h_Diphoton_Minv_FineBinning")
+  signalTotalEventsHistogram = histogramSignalFile.Get("h_nEvents")
+  signalEntriesTotal = signalTotalEventsHistogram.Integral()
+
+  # compute optimization variable for various window sizes
+  minHalfWindowSize = 10 # bins
+  nBinsUsedForWindow = []
+  sOverSqrtBForWindow = []
+  ssbForWindow = []
+  peakBin = signalHistogram.FindBin(signalHistogram.GetMaximumBin())
+  maxSOverSqrtB = -1
+  nBinsForMaxSOverSqrtB = 0
+  maxSsb = -1
+  nBinsForMaxSsb = 0
+  for nBins in xrange(0,500):
+    minBin = peakBin-nBins # for now, use symmetric window
+    maxBin = peakBin+nBins #
+    entGamJet = histosGammaJet.Integral(minBin,maxBin)
+    entJetJet = histosJetJet.Integral(minBin,maxBin)
+    entMC = histosmc.Integral(minBin,maxBin)
+    background = entGamJet+entJetJet+entMC
+    # signal events = (eff*acc)*lumi*crossSec
+    signal = (signalHistogram.Integral(minBin,maxBin)/signalEntriesTotal)*lumi*modelPoint.totalXSec
+    if background > 0:
+      sOverRootB = signal/math.sqrt(background)
+    else:
+      sOverRootB = -1
+    ssb = signal/math.sqrt(signal+background)
+    nBinsUsedForWindow.append(nBins)
+    sOverSqrtBForWindow.append(sOverRootB)
+    ssbForWindow.append(ssb)
+    if nBins >= minHalfWindowSize and sOverRootB > maxSOverSqrtB:
+      maxSOverSqrtB = sOverRootB
+      nBinsForMaxSOverSqrtB = nBins
+    if nBins >= minHalfWindowSize and ssb > maxSsb:
+      maxSsb = ssb
+      nBinsForMaxSsb = nBins
+    # INFO
+    ##print 'nBins=',nBins,'binMin=',minBin,'binMax=',maxBin
+    ##print 'mass range=',histosmc.FindBin(minBin),'-',histosmc.FindBin(maxBin)
+    #print 'entGamJet=',entGamJet,'entJetJet=',entJetJet,'entMC',entMC
+    #print 'background=',background,'signal=',signal,'s/sqrt(b)=',sOverRootB
+    ##print 'background=',background,'signal=',signal,'Z_Bi=',zbi
+    #if modelPoint.mass==3000:
+    #  print 'background=',background,'signal=',signal,'s/sqrt(s+b)=',ssb
+
+  # INFO
+  #print 'modelPoint k=',modelPoint.coupling,'mass=',modelPoint.mass
+  #print 'Opt. window halfsize =',nBinsForMaxSsb
+  #print 'Opt. mass range',histosmc.GetBinLowEdge(histosmc.FindBin(modelPoint.mass)-nBinsForMaxSOverSqrtB),'-',histosmc.GetBinLowEdge(histosmc.FindBin(modelPoint.mass)+nBinsForMaxSOverSqrtB)
+  #print 'Opt. mass range',histosmc.GetBinLowEdge(peakBin-nBinsForMaxSsb),'-',histosmc.GetBinLowEdge(peakBin+nBinsForMaxSsb)
+
+  # now get data yields
+  histogramFileData = HistogramFileLocation+Sample+"/histograms_"+Sample+".root"
+  fdatahists = TFile.Open(histogramFileData)
+  if not fdatahists:
+    print 'file:',histogramFileData,'not found; quitting'
+    return
+  #print "Getting data histogram"
+  histosdata = fdatahists.Get("h_Diphoton_Minv_FineBinning")
+  #print "histo",histosdata.GetName(),histosdata.GetEntries(),"entries",histosdata.Integral(),"(integral)"
+  minBin = peakBin-nBinsForMaxSsb
+  maxBin = peakBin+nBinsForMaxSsb
+  entriesData = histosdata.Integral(minBin,maxBin)
+  entGamJet = histosGammaJet.Integral(minBin,maxBin)
+  entJetJet = histosJetJet.Integral(minBin,maxBin)
+  entMC = histosmc.Integral(minBin,maxBin)
+  entryBG = entGamJet+entJetJet+entMC
+  # Fill the model point
+  modelPoint.nDataObs = entriesData
+  modelPoint.nBackground = entryBG
+  modelPoint.nBackgroundErr = math.sqrt(entryBG) 
+  modelPoint.totalEff = 1.0*signalHistogram.Integral(minBin,maxBin)/signalEntriesTotal
+
+  #return nBinsForMaxSOverSqrtB, maxSOverSqrtB, nBinsUsedForWindow, sOverSqrtBForWindow
+  return nBinsForMaxSsb, maxSsb, nBinsUsedForWindow, ssbForWindow
+
+
 def GetMinMaxMassArrays(modelPointArray, numsigmas = 3):
   # make list of lower/upper edges of mass windows
   minMasses = [(modelPoint.mass - numsigmas * modelPoint.halfWidth) for modelPoint in modelPointArray]
@@ -125,30 +251,30 @@ def CalculateYieldsForMassRanges(HistogramFileLocation, modelPointArray, lumi, n
     print 'file:',histogramFileMC,'not found; quitting'
     return
 
-  print "Getting data histogram"
+  #print "Getting data histogram"
   histosdata = fdatahists.Get("h_Diphoton_Minv_FineBinning")
-  print "histo",histosdata.GetName(),histosdata.GetEntries(),"entries",histosdata.Integral(),"(integral)"
+  #print "histo",histosdata.GetName(),histosdata.GetEntries(),"entries",histosdata.Integral(),"(integral)"
 
-  print "Getting MC histogram"
+  #print "Getting MC histogram"
   histosmc = fMChists.Get("h_Diphoton_Minv_FineBinning")
   histosmc.Scale(lumi)
-  print "histo",histosmc.GetName(),histosmc.GetEntries(),"entries",histosmc.Integral(),"(integral)"
+  #print "histo",histosmc.GetName(),histosmc.GetEntries(),"entries",histosmc.Integral(),"(integral)"
 
-  print "Getting Jet+Jet histograms"
+  #print "Getting Jet+Jet histograms"
   histosJetJet = fJetJethists.Get("h_JetJet_minv_FineBinning")
   histosJetJetUpperError = fJetJethists.Get("h_JetJet_minv_UpperError")
   histosJetJetLowerError = fJetJethists.Get("h_JetJet_minv_LowerError")
-  print "histo",histosJetJet.GetName(),histosJetJet.GetEntries(),"entries",histosJetJet.Integral(),"(integral)"
-  print "histo",histosJetJetUpperError.GetName(),histosJetJetUpperError.GetEntries(),"entries",histosJetJetUpperError.Integral(),"(integral)"
-  print "histo",histosJetJetLowerError.GetName(),histosJetJetLowerError.GetEntries(),"entries",histosJetJetLowerError.Integral(),"(integral)"
+  #print "histo",histosJetJet.GetName(),histosJetJet.GetEntries(),"entries",histosJetJet.Integral(),"(integral)"
+  #print "histo",histosJetJetUpperError.GetName(),histosJetJetUpperError.GetEntries(),"entries",histosJetJetUpperError.Integral(),"(integral)"
+  #print "histo",histosJetJetLowerError.GetName(),histosJetJetLowerError.GetEntries(),"entries",histosJetJetLowerError.Integral(),"(integral)"
 
-  print "Getting Gamma+Jet histograms"
+  #print "Getting Gamma+Jet histograms"
   histosGammaJet = fGammaJethists.Get("h_GammaJet_minv_FineBinning")
   histosGammaJetUpperError = fGammaJethists.Get("h_GammaJet_minv_UpperError")
   histosGammaJetLowerError = fGammaJethists.Get("h_GammaJet_minv_LowerError")
-  print "histo",histosGammaJet.GetName(),histosGammaJet.GetEntries(),"entries",histosGammaJet.Integral(),"(integral)"
-  print "histo",histosGammaJetUpperError.GetName(),histosGammaJetUpperError.GetEntries(),"entries",histosGammaJetUpperError.Integral(),"(integral)"
-  print "histo",histosGammaJetLowerError.GetName(),histosGammaJetLowerError.GetEntries(),"entries",histosGammaJetLowerError.Integral(),"(integral)"
+  #print "histo",histosGammaJet.GetName(),histosGammaJet.GetEntries(),"entries",histosGammaJet.Integral(),"(integral)"
+  #print "histo",histosGammaJetUpperError.GetName(),histosGammaJetUpperError.GetEntries(),"entries",histosGammaJetUpperError.Integral(),"(integral)"
+  #print "histo",histosGammaJetLowerError.GetName(),histosGammaJetLowerError.GetEntries(),"entries",histosGammaJetLowerError.Integral(),"(integral)"
 
   ## make list of lower/upper edges of mass windows
   minMasses,maxMasses = GetMinMaxMassArrays(modelPointArray, numsigmas)

@@ -291,6 +291,35 @@ def DoTablesAllPoints(lumi,numsigmas):
   print '\\end{table}'
   
 
+def OptimizeSignalMassWindows(rootFileLocation,modelPointArray,lumi):
+  for mp in modelPointArray:
+    optNBins, optSsb, nBinsTried, ssbTried = OptimizeWindow(rootFileLocation,mp,lumi)
+    print 'ModelPoint: coupling=',mp.coupling,'mass=',mp.mass
+    print 'opt halfWindowSize=',optNBins,'opt s/sqrt(s+b)=',optSsb
+    print 'massRange=',mp.mass-optNBins,'-',mp.mass+optNBins
+    #ssbPrev = 0
+    #nbinsSsbPrev = -1
+    #for i,ssb in enumerate(ssbTried):
+    #  if nBinsTried[i] > optNBins:
+    #    break
+    #  if ssb <= ssbPrev:
+    #    print 'ssb for nbinsTried=',nBinsTried[i],',',ssb,' <= previousSSB =',ssbPrev,'with nbins=',nbinsSsbPrev
+    #  else:
+    #    ssbPrev = ssb
+    #    nbinsSsbPrev = nBinsTried[i]
+    rootFile.cd()
+    graph = TGraph(len(nBinsTried), array.array("f",nBinsTried),array.array("f",ssbTried))
+    c = TCanvas()
+    c.cd()
+    graph.SetTitle('Optimization for RS Graviton mass='+str(mp.mass)+'GeV, coupling='+str(mp.coupling))
+    graph.SetName('ssbOpt_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass))
+    graph.GetXaxis().SetTitle('Half window size [GeV]')
+    graph.GetYaxis().SetTitle('S/#sqrt{S+B}')
+    graph.Draw('ap')
+    #c.Print('optimize_k'+str(mp.coupling)+'_m'+str(mp.mass)+'_ssb.C')
+    graph.Write()
+
+
 def Usage():
   print 'Usage: python RunLimitsAndPlots.py [arg] where arg can be:'
   print '    all    --> run yields, limits, and plots (see below)'
@@ -298,6 +327,7 @@ def Usage():
   print '    plots  --> Read limit results from text files and make limit plots'
   print '    tables --> Read limit results from text files and make results tables (text/latex)'
   print '    yields --> Calculate event yields from histograms in root files (from CreateHistogramFiles)'
+  print '    optimize --> Calculate optimal inv. mass windows using histograms in root files (from CreateHistogramFiles)'
 
 
 
@@ -320,7 +350,7 @@ cl95MacroName = 'roostats_cl95.C'
 # limit results file base name
 limitsFileNameBase = 'results_limits_k_'
 # location of backgroundMC/data root files from CreateHistogramFiles code
-rootFileLocation = '/afs/cern.ch/user/s/scooper/work/private/results/diPhotonHistogramsPF/'
+rootFileLocation = '/afs/cern.ch/user/s/scooper/work/private/results/diPhotonHistogramsPF_deltaPhi2p8_19p6invFb/'
 # Declarations of Lumi and model points to consider
 lumi = 19620.
 lumiErr = lumi*0.044
@@ -358,6 +388,11 @@ for mass in masses0p1:
 if len(sys.argv)==1:
   Usage()
   sys.exit()
+elif sys.argv[1]=='optimize':
+  print 'optimize: OptimizeSignalMassWindows'
+  OptimizeSignalMassWindows(rootFileLocation, modelPointsC0p01+modelPointsC0p05+modelPointsC0p1, lumi)
+  #OptimizeSignalMassWindows(rootFileLocation, modelPointsC0p1, lumi)
+  PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile)
 elif sys.argv[1]=='yields':
   print 'yields: CalculateYieldsForMassRanges'
   CalculateYieldsForMassRanges(rootFileLocation, modelPointsC0p01+modelPointsC0p05+modelPointsC0p1, lumi, 3)
