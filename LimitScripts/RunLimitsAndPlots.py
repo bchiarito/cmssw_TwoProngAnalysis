@@ -293,10 +293,12 @@ def DoTablesAllPoints(lumi,numsigmas):
 
 def OptimizeSignalMassWindows(rootFileLocation,modelPointArray,lumi):
   for mp in modelPointArray:
-    optNBins, optSsb, nBinsTried, ssbTried = OptimizeWindow(rootFileLocation,mp,lumi)
-    print 'ModelPoint: coupling=',mp.coupling,'mass=',mp.mass
-    print 'opt halfWindowSize=',optNBins,'opt s/sqrt(s+b)=',optSsb
-    print 'massRange=',mp.mass-optNBins,'-',mp.mass+optNBins
+    print 'Optimize: ModelPoint: coupling=',mp.coupling,'mass=',mp.mass
+    massLow, massHigh, optSsbIndex, nBinsTried, ssbTried = OptimizeWindow(rootFileLocation,mp,lumi)
+    print 'opt halfWindowSize=',(massHigh-massLow-1)/2,'opt s/sqrt(s+b)=',ssbTried[optSsbIndex]
+    #                     #  -1, since we get the top edge of the maxBin as the upper mass limit
+    print 'massRange=',massLow,'-',massHigh
+    print 'opt nBinsLow=',nBinsTried[optSsbIndex][0],'nBinsHigh=',nBinsTried[optSsbIndex][1]
     #ssbPrev = 0
     #nbinsSsbPrev = -1
     #for i,ssb in enumerate(ssbTried):
@@ -308,25 +310,31 @@ def OptimizeSignalMassWindows(rootFileLocation,modelPointArray,lumi):
     #    ssbPrev = ssb
     #    nbinsSsbPrev = nBinsTried[i]
     rootFile.cd()
-    graph = TGraph(len(nBinsTried), array.array("f",nBinsTried),array.array("f",ssbTried))
+    #graph = TGraph(len(nBinsTried), array.array("f",nBinsTried),array.array("f",ssbTried))
+    #graph = TGraph2D(len(nLowBinsTried), array.array("f",nLowBinsTried),array.array("f",nHighBinsTried),array.array("f",ssbTried))
+    graph = TH2F('test','test',400,0,400,400,0,400)
+    for nbins,ssb in itertools.izip(nBinsTried,ssbTried):
+      graph.Fill(nbins[0],nbins[1],ssb)
     c = TCanvas()
     c.cd()
     graph.SetTitle('Optimization for RS Graviton mass='+str(mp.mass)+'GeV, coupling='+str(mp.coupling))
     graph.SetName('ssbOpt_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass))
-    graph.GetXaxis().SetTitle('Half window size [GeV]')
-    graph.GetYaxis().SetTitle('S/#sqrt{S+B}')
-    graph.Draw('ap')
+    graph.GetXaxis().SetTitle('Window size low [GeV]')
+    graph.GetYaxis().SetTitle('Window size high [GeV]')
+    #graph.GetZaxis().SetTitle('S/#sqrt{S+B}')
     #c.Print('optimize_k'+str(mp.coupling)+'_m'+str(mp.mass)+'_ssb.C')
     graph.Write()
+    # TEST
+    #break
 
 
 def Usage():
   print 'Usage: python RunLimitsAndPlots.py [arg] where arg can be:'
-  print '    all    --> run yields, limits, and plots (see below)'
-  print '    limits --> Compute limits for all model points & write out results'
-  print '    plots  --> Read limit results from text files and make limit plots'
-  print '    tables --> Read limit results from text files and make results tables (text/latex)'
-  print '    yields --> Calculate event yields from histograms in root files (from CreateHistogramFiles)'
+  print '    all      --> run yields, limits, and plots (see below)'
+  print '    limits   --> Compute limits for all model points & write out results'
+  print '    plots    --> Read limit results from text files and make limit plots'
+  print '    tables   --> Read limit results from text files and make results tables (text/latex)'
+  print '    yields   --> Calculate event yields from histograms in root files (from CreateHistogramFiles)'
   print '    optimize --> Calculate optimal inv. mass windows using histograms in root files (from CreateHistogramFiles)'
 
 

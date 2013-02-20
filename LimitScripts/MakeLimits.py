@@ -142,46 +142,53 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi):
   signalEntriesTotal = signalTotalEventsHistogram.Integral()
 
   # compute optimization variable for various window sizes
+  useAsymmetricWindow = False
   minHalfWindowSize = 10 # bins
+  maxBinRangeToUse = 400 # bins
   nBinsUsedForWindow = []
   sOverSqrtBForWindow = []
   ssbForWindow = []
   peakBin = signalHistogram.FindBin(signalHistogram.GetMaximumBin())
   maxSOverSqrtB = -1
-  nBinsForMaxSOverSqrtB = 0
+  indexMaxSOverSqrtB = -1
   maxSsb = -1
-  nBinsForMaxSsb = 0
-  for nBins in xrange(0,500):
-    minBin = peakBin-nBins # for now, use symmetric window
-    maxBin = peakBin+nBins #
-    entGamJet = histosGammaJet.Integral(minBin,maxBin)
-    entJetJet = histosJetJet.Integral(minBin,maxBin)
-    entMC = histosmc.Integral(minBin,maxBin)
-    background = entGamJet+entJetJet+entMC
-    # signal events = (eff*acc)*lumi*crossSec
-    signal = (signalHistogram.Integral(minBin,maxBin)/signalEntriesTotal)*lumi*modelPoint.totalXSec
-    if background > 0:
-      sOverRootB = signal/math.sqrt(background)
-    else:
-      sOverRootB = -1
-    ssb = signal/math.sqrt(signal+background)
-    nBinsUsedForWindow.append(nBins)
-    sOverSqrtBForWindow.append(sOverRootB)
-    ssbForWindow.append(ssb)
-    if nBins >= minHalfWindowSize and sOverRootB > maxSOverSqrtB:
-      maxSOverSqrtB = sOverRootB
-      nBinsForMaxSOverSqrtB = nBins
-    if nBins >= minHalfWindowSize and ssb > maxSsb:
-      maxSsb = ssb
-      nBinsForMaxSsb = nBins
-    # INFO
-    ##print 'nBins=',nBins,'binMin=',minBin,'binMax=',maxBin
-    ##print 'mass range=',histosmc.FindBin(minBin),'-',histosmc.FindBin(maxBin)
-    #print 'entGamJet=',entGamJet,'entJetJet=',entJetJet,'entMC',entMC
-    #print 'background=',background,'signal=',signal,'s/sqrt(b)=',sOverRootB
-    ##print 'background=',background,'signal=',signal,'Z_Bi=',zbi
-    #if modelPoint.mass==3000:
-    #  print 'background=',background,'signal=',signal,'s/sqrt(s+b)=',ssb
+  indexMaxSsb = -1
+  for nBinsMin in xrange(0,maxBinRangeToUse):
+    minBin = peakBin-nBinsMin
+    for nBinsMax in xrange(0,maxBinRangeToUse):
+      if useAsymmetricWindow:
+        maxBin = peakBin+nBinsMax
+      else:
+        maxBin = peakBin+nBinsMin
+        # loop is redundant here
+      entGamJet = histosGammaJet.Integral(minBin,maxBin)
+      entJetJet = histosJetJet.Integral(minBin,maxBin)
+      entMC = histosmc.Integral(minBin,maxBin)
+      background = entGamJet+entJetJet+entMC
+      # signal events = (eff*acc)*lumi*crossSec
+      signal = (signalHistogram.Integral(minBin,maxBin)/signalEntriesTotal)*lumi*modelPoint.totalXSec
+      if background > 0:
+        sOverRootB = signal/math.sqrt(background)
+      else:
+        sOverRootB = -1
+      ssb = signal/math.sqrt(signal+background)
+      nBinsUsedForWindow.append((nBinsMin,maxBin-peakBin))
+      sOverSqrtBForWindow.append(sOverRootB)
+      ssbForWindow.append(ssb)
+      if (nBinsMin+maxBin-peakBin)/2 >= minHalfWindowSize and sOverRootB > maxSOverSqrtB:
+        maxSOverSqrtB = sOverRootB
+        indexMaxSOverSqrtB = len(nBinsUsedForWindow)-1
+      if (nBinsMin+maxBin-peakBin)/2 >= minHalfWindowSize and ssb > maxSsb:
+        maxSsb = ssb
+        indexMaxSsb = len(nBinsUsedForWindow)-1
+      # INFO
+      ##print 'nBins=',nBins,'binMin=',minBin,'binMax=',maxBin
+      ##print 'mass range=',histosmc.FindBin(minBin),'-',histosmc.FindBin(maxBin)
+      #print 'entGamJet=',entGamJet,'entJetJet=',entJetJet,'entMC',entMC
+      #print 'background=',background,'signal=',signal,'s/sqrt(b)=',sOverRootB
+      ##print 'background=',background,'signal=',signal,'Z_Bi=',zbi
+      #if modelPoint.mass==3000:
+      #  print 'background=',background,'signal=',signal,'s/sqrt(s+b)=',ssb
 
   # INFO
   #print 'modelPoint k=',modelPoint.coupling,'mass=',modelPoint.mass
@@ -198,8 +205,8 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi):
   #print "Getting data histogram"
   histosdata = fdatahists.Get("h_Diphoton_Minv_FineBinning")
   #print "histo",histosdata.GetName(),histosdata.GetEntries(),"entries",histosdata.Integral(),"(integral)"
-  minBin = peakBin-nBinsForMaxSsb
-  maxBin = peakBin+nBinsForMaxSsb
+  minBin = peakBin-nBinsUsedForWindow[indexMaxSsb][0]
+  maxBin = peakBin+nBinsUsedForWindow[indexMaxSsb][1]
   entriesData = histosdata.Integral(minBin,maxBin)
   entGamJet = histosGammaJet.Integral(minBin,maxBin)
   entJetJet = histosJetJet.Integral(minBin,maxBin)
@@ -211,8 +218,10 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi):
   modelPoint.nBackgroundErr = math.sqrt(entryBG) 
   modelPoint.totalEff = 1.0*signalHistogram.Integral(minBin,maxBin)/signalEntriesTotal
 
+  massRangeLow = signalHistogram.GetBinLowEdge(minBin)
+  massRangeHigh = signalHistogram.GetBinLowEdge(maxBin)+signalHistogram.GetBinWidth(maxBin)
   #return nBinsForMaxSOverSqrtB, maxSOverSqrtB, nBinsUsedForWindow, sOverSqrtBForWindow
-  return nBinsForMaxSsb, maxSsb, nBinsUsedForWindow, ssbForWindow
+  return massRangeLow, massRangeHigh, indexMaxSsb, nBinsUsedForWindow, ssbForWindow
 
 
 def GetMinMaxMassArrays(modelPointArray, numsigmas = 3):
