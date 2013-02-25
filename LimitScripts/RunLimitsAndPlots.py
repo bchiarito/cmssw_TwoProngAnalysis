@@ -292,40 +292,99 @@ def DoTablesAllPoints(lumi,numsigmas):
   
 
 def OptimizeSignalMassWindows(rootFileLocation,modelPointArray,lumi):
+  optHalfWindowSizesC0p01 = []
+  massesC0p01 = []
+  optHalfWindowSizesC0p05 = []
+  massesC0p05 = []
+  optHalfWindowSizesC0p1 = []
+  massesC0p1 = []
   for mp in modelPointArray:
     print 'Optimize: ModelPoint: coupling=',mp.coupling,'mass=',mp.mass
-    massLow, massHigh, optSsbIndex, nBinsTried, ssbTried = OptimizeWindow(rootFileLocation,mp,lumi)
-    print 'opt halfWindowSize=',(massHigh-massLow-1)/2,'opt s/sqrt(s+b)=',ssbTried[optSsbIndex]
-    #                     #  -1, since we get the top edge of the maxBin as the upper mass limit
-    print 'massRange=',massLow,'-',massHigh
-    print 'opt nBinsLow=',nBinsTried[optSsbIndex][0],'nBinsHigh=',nBinsTried[optSsbIndex][1]
+    maxWindowRange = 600 # bins/GeV
+    useAsymmWindow = False
+    peakMass, optSsbIndex, massRangesTried, ssbTried = OptimizeWindow(rootFileLocation,mp,lumi,maxWindowRange,useAsymmWindow)
+    massLow = massRangesTried[optSsbIndex][0]
+    massHigh = massRangesTried[optSsbIndex][1]
+    optHalfWindowSize = (massHigh-massLow-1)/2
+    #                   # -1, since we get the top edge of the maxBin as the upper mass limit
+    print 'Mass peak:',peakMass
+    print 'opt massRange=',massLow,'-',massHigh
+    print 'opt halfWindowSize=',optHalfWindowSize,'opt s/sqrt(s+b)=',ssbTried[optSsbIndex]
+    if str(mp.coupling)=='0.01':
+      optHalfWindowSizesC0p01.append(optHalfWindowSize)
+      massesC0p01.append(mp.mass)
+    elif str(mp.coupling)=='0.05':
+      optHalfWindowSizesC0p05.append(optHalfWindowSize)
+      massesC0p05.append(mp.mass)
+    elif str(mp.coupling)=='0.1':
+      optHalfWindowSizesC0p1.append(optHalfWindowSize)
+      massesC0p1.append(mp.mass)
+    #print 'opt nBinsLow=',,'nBinsHigh=',
     #ssbPrev = 0
     #nbinsSsbPrev = -1
     #for i,ssb in enumerate(ssbTried):
-    #  if nBinsTried[i] > optNBins:
+    #  if massRangesTried[i] > optNBins:
     #    break
     #  if ssb <= ssbPrev:
-    #    print 'ssb for nbinsTried=',nBinsTried[i],',',ssb,' <= previousSSB =',ssbPrev,'with nbins=',nbinsSsbPrev
+    #    print 'ssb for nbinsTried=',massRangesTried[i],',',ssb,' <= previousSSB =',ssbPrev,'with nbins=',nbinsSsbPrev
     #  else:
     #    ssbPrev = ssb
-    #    nbinsSsbPrev = nBinsTried[i]
+    #    nbinsSsbPrev = massRangesTried[i]
     rootFile.cd()
-    #graph = TGraph(len(nBinsTried), array.array("f",nBinsTried),array.array("f",ssbTried))
-    #graph = TGraph2D(len(nLowBinsTried), array.array("f",nLowBinsTried),array.array("f",nHighBinsTried),array.array("f",ssbTried))
-    graph = TH2F('test','test',400,0,400,400,0,400)
-    for nbins,ssb in itertools.izip(nBinsTried,ssbTried):
-      graph.Fill(nbins[0],nbins[1],ssb)
-    c = TCanvas()
-    c.cd()
-    graph.SetTitle('Optimization for RS Graviton mass='+str(mp.mass)+'GeV, coupling='+str(mp.coupling))
-    graph.SetName('ssbOpt_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass))
-    graph.GetXaxis().SetTitle('Window size low [GeV]')
-    graph.GetYaxis().SetTitle('Window size high [GeV]')
-    #graph.GetZaxis().SetTitle('S/#sqrt{S+B}')
+    minMassTried = min(zip(*massRangesTried)[0])
+    maxMassTried = max(zip(*massRangesTried)[1])
+    #print 'minMassTried=',minMassTried,'maxMassTried=',maxMassTried
+    if useAsymmWindow:
+      graph = TH2F('test','test',int(peakMass-minMassTried)+1,minMassTried,peakMass+1,int(maxMassTried-peakMass),peakMass,maxMassTried)
+      for massRange,ssb in itertools.izip(massRangesTried,ssbTried):
+        graph.Fill(massRange[0],massRange[1]-1,ssb)
+      c = TCanvas()
+      c.cd()
+      graph.SetTitle('Optimization for RS Graviton mass='+str(mp.mass)+'GeV, coupling='+str(mp.coupling))
+      graph.SetName('ssbOpt_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass))
+      graph.GetXaxis().SetTitle('Mass window low [GeV]')
+      graph.GetYaxis().SetTitle('Mass window high [GeV]')
+      #graph.GetZaxis().SetTitle('S/#sqrt{S+B}')
+    else:
+      halfWindowSizesTried = [(massRangeTried[1]-massRangeTried[0])/2.0 for massRangeTried in massRangesTried]
+      graph = TGraph(len(halfWindowSizesTried), array.array("f",halfWindowSizesTried),array.array("f",ssbTried))
+      graph.SetTitle('Optimization for RS Graviton mass='+str(mp.mass)+'GeV, coupling='+str(mp.coupling))
+      graph.SetName('ssbOpt_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass))
+      graph.GetXaxis().SetTitle('Mass window half size [GeV]')
+      graph.GetYaxis().SetTitle('S/#sqrt{S+B}')
+      #print 'massRange:',massRange[0],'-',massRange[1]-1,'; ssb=',ssb
+      #print 'xbin=',graph.GetXaxis().FindBin(massRange[0]),'ybin=',graph.GetYaxis().FindBin(massRange[1]-1)
     #c.Print('optimize_k'+str(mp.coupling)+'_m'+str(mp.mass)+'_ssb.C')
     graph.Write()
-    # TEST
-    #break
+  # after loop
+  graph0p01 = TGraph(len(massesC0p01), array.array("f",massesC0p01),array.array("f",optHalfWindowSizesC0p01))
+  graph0p01.SetName('optHalfWindowVsMassK0p01')
+  graph0p01.Write()
+  graph0p05 = TGraph(len(massesC0p05), array.array("f",massesC0p05),array.array("f",optHalfWindowSizesC0p05))
+  graph0p05.SetName('optHalfWindowVsMassK0p05')
+  graph0p05.SetMarkerColor(2)
+  graph0p05.SetLineColor(2)
+  graph0p05.Write()
+  graph0p1 = TGraph(len(massesC0p1), array.array("f",massesC0p1),array.array("f",optHalfWindowSizesC0p1))
+  graph0p1.SetName('optHalfWindowVsMassK0p1')
+  graph0p1.SetMarkerColor(4)
+  graph0p1.SetLineColor(4)
+  graph0p1.Write()
+  mg = TMultiGraph()
+  mg.Add(graph0p01)
+  mg.Add(graph0p05)
+  mg.Add(graph0p1)
+  mg.Draw('ap')
+  mg.GetXaxis().SetTitle("Mass [GeV]")
+  mg.GetYaxis().SetTitle("Opt. HalfWindow size [GeV]")
+  mg.SetName('optHalfWindowsVsMassAll')
+  legend = TLegend(0.42,0.71,0.73,0.92)
+  legend.AddEntry(graph0p01," #tilde{k} = "+str(0.01),"l")
+  legend.AddEntry(graph0p05," #tilde{k} = "+str(0.05),"l")
+  legend.AddEntry(graph0p1," #tilde{k} = "+str(0.1),"l")
+  legend.Draw()
+  mg.Write()
+
 
 
 def Usage():
