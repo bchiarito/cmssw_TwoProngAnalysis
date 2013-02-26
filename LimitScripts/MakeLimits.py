@@ -146,8 +146,6 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useA
   useAsymmetricWindow = useAsymmWindow
   maxLowBinRangeToUse = maxWindowRange # bins/GeV
   maxHighBinRangeToUse = signalHistogram.GetNbinsX()-peakBin+1
-  #print 'peakBin=',peakBin,'nBins=',signalHistogram.
-  #print 'maxLowBinRangeToUse=',maxLowBinRangeToUse,'maxHighBinRangeToUse',maxHighBinRangeToUse
   minHalfWindowSize = 10 # bins
   massRangesUsedForWindow = []
   sOverSqrtBForWindow = []
@@ -188,17 +186,8 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useA
         indexMaxSsb = len(massRangesUsedForWindow)-1
       # INFO
       massRangeHigh = signalHistogram.GetBinLowEdge(maxBin)+signalHistogram.GetBinWidth(maxBin)
-      #if massRangeHigh==3909:
-      
       ##print 'mass range=',histosmc.GetBinLowEdge(minBin),'-',histosmc.GetBinLowEdge(maxBin)+histosmc.GetBinWidth(maxBin),'signal=%.16f'%signal,'bgnd=%.16f'%background,'ssb=%.15f'%ssb
-      
       #print 'binMin=',minBin,'binMax=',maxBin
-      #print 'mass range=',histosmc.GetBinLowEdge(minBin),'-',histosmc.GetBinLowEdge(maxBin)+histosmc.GetBinWidth(maxBin)
-      #print 'entGamJet=',entGamJet,'entJetJet=',entJetJet,'entMC',entMC
-      #print 'background=',background,'signal=',signal,'s/sqrt(b)=',sOverRootB
-      ##print 'background=',background,'signal=',signal,'Z_Bi=',zbi
-      #if modelPoint.mass==3000:
-      #  print 'background=',background,'signal=',signal,'s/sqrt(s+b)=',ssb
       if maxBin >= signalHistogram.GetNbinsX():
         break # don't let it go to overflow bin or beyond
 
@@ -229,9 +218,6 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useA
   modelPoint.nBackground = entryBG
   modelPoint.nBackgroundErr = math.sqrt(entryBG) 
   modelPoint.totalEff = 1.0*signalHistogram.Integral(minBin,maxBin)/signalEntriesTotal
-
-  #massRangeLow = signalHistogram.GetBinLowEdge(minBin)
-  #massRangeHigh = signalHistogram.GetBinLowEdge(maxBin)+signalHistogram.GetBinWidth(maxBin)
   peakMass = signalHistogram.GetBinLowEdge(peakBin)
   return peakMass, indexMaxSsb, massRangesUsedForWindow, ssbForWindow
 
