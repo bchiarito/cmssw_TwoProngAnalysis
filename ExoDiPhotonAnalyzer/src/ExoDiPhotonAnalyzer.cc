@@ -13,7 +13,7 @@ Implementation:
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.31 2013/01/15 21:26:24 charaf Exp $
+// $Id: ExoDiPhotonAnalyzer.cc,v 1.32 2013/02/11 15:07:42 charaf Exp $
 //
 //
 
@@ -229,7 +229,8 @@ private:
 
   TH1F* fpu_n_BeforeCuts; 
   TH1F* fpu_n_BeforeCutsAfterReWeight;
-  
+  TH1F *fNumTotalEvents;
+  TH1F *fNumTotalWeightedEvents;
 
 };
 
@@ -273,6 +274,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   edm::Service<TFileService> fs;
   fpu_n_BeforeCuts = fs->make<TH1F>("fpu_n_BeforeCuts","PileUpBeforeCuts",300,0,300);
   fpu_n_BeforeCutsAfterReWeight = fs->make<TH1F>("fpu_n_BeforeCutsAfterReWeight","PileUpBeforeCuts",300,0,300);
+  fNumTotalEvents = fs->make<TH1F>("NumTotalEvents","Total number of events",4,0.,2.);
+  fNumTotalWeightedEvents = fs->make<TH1F>("NumTotalWeightedEvents","Total weighted number of events",4,0.,2.);
   fTree = fs->make<TTree>("fTree","PhotonTree");
 
   fTree->Branch("Event",&fEventInfo,ExoDiPhotons::eventInfoBranchDefString.c_str());
@@ -403,8 +406,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     fEventInfo.alphaqed = GenInfoHandle->alphaQED();
     fEventInfo.qscale = GenInfoHandle->qScale();
     fEventInfo.processid = GenInfoHandle->signalProcessID();
-    fEventInfo.weight = GenInfoHandle->weight();
+    fEventInfo.weight = GenInfoHandle->weights()[0];
   }
+
+  fNumTotalEvents->Fill(1.);
+  fNumTotalWeightedEvents->Fill(1.,fEventInfo.weight);
 
   // get the vertex collection
   Handle<reco::VertexCollection> vertexColl;
