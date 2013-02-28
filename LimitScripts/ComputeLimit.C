@@ -25,7 +25,8 @@ std::string intToString(int num)
 
 
 void ComputeLimit(float lumi, float lumiError, float totalEff, float nBackground, float nBackgroundErr,
-    float nDataObs, int mass, float coupling, float halfWidth, float totalXSec, std::string fileName)
+    float nDataObs, int mass, float coupling, float halfWidth, float totalXSec, int massWindowLow, int massWindowHigh,
+    std::string fileName)
 {
   using namespace std;
   
@@ -79,6 +80,8 @@ void ComputeLimit(float lumi, float lumiError, float totalEff, float nBackground
    myfile << "TotalXSection: " << totalXSec << "\n";
    myfile << "TotalEff: " << totalEff << "\n";
    myfile << "HalfWidth: " << halfWidth << "\n";
+   myfile << "OptMassWindowLow: " << massWindowLow << "\n";
+   myfile << "OptMassWindowHigh: " << massWindowHigh << "\n";
    myfile << "NDataObs: " << nDataObs << "\n";
    myfile << "NBackground: " << nBackground << "\n";
    myfile << "NBackgroundErr: " << nBackgroundErr << "\n";

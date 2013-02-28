@@ -127,21 +127,18 @@ def GetSignalFileName(template,coupling,mass):
 
 # TODO: remove hardcoding; instead use list of couplings to run over
 def DoLimitsAllPoints(cl95MacroPathAndName,lumi,lumiErr,limitsFileNameBase):
-  #print 'Run for coupling 0.01'
-  #with open(limitsFileNameBase+'0p01.txt', 'w') as file:
-  #  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p01,file)
-  #print 'Run for coupling 0.05'
-  #with open(limitsFileNameBase+'0p05.txt', 'w') as file:
-  #  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p05,file)
-  #print 'Run for coupling 0.1'
-  #with open(limitsFileNameBase+'0p1.txt', 'w') as file:
-  #  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p1,file)
   print 'Run for coupling 0.01'
-  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p01,limitsFileNameBase+'0p01.txt')
+  with open(limitsFileNameBase+'0p01.txt', 'r') as file:
+    readModelPoints0p01 = ReadFromFile(file)
+  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p01,limitsFileNameBase+'0p01.txt')
   print 'Run for coupling 0.05'
-  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p05,limitsFileNameBase+'0p05.txt')
+  with open(limitsFileNameBase+'0p05.txt', 'r') as file:
+    readModelPoints0p05 = ReadFromFile(file)
+  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p05,limitsFileNameBase+'0p05.txt')
   print 'Run for coupling 0.1'
-  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,modelPointsC0p1,limitsFileNameBase+'0p1.txt')
+  with open(limitsFileNameBase+'0p1.txt', 'r') as file:
+    readModelPoints0p1 = ReadFromFile(file)
+  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p1,limitsFileNameBase+'0p1.txt')
 
 
 ## TODO
@@ -209,10 +206,10 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   # limit plot for all couplings on same axes
   PlotAllBands([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile)
   # make table
-  DoTablesAllPoints(lumi,3)
+  DoTablesAllPoints(lumi)
 
 
-def DoTablesAllPoints(lumi,numsigmas):
+def DoTablesAllPoints(lumi):
   with open(limitsFileNameBase+'0p01.txt', 'r') as file:
     readModelPoints0p01 = ReadFromFile(file)
   # 0.05
@@ -240,7 +237,7 @@ def DoTablesAllPoints(lumi,numsigmas):
   print '\t\t$\\tilde{k}$ & $M_1$ & Window & Sig. Eff. & Exp. Sig. Evts. & Exp. Bg. Evts. & Obs. \\\\'
   print '\t\t\\hline'
   for modelPoint in readModelPoints0p01+readModelPoints0p05+readModelPoints0p1:
-    print modelPoint.LatexTableLine(lumi,numsigmas) # numsigmas for mass windows
+    print modelPoint.LatexTableLine(lumi)
   print '\t\t\\hline'
   print '\t\t\\end{tabular}'
   captionLine="\t\t\\caption[Event Yields]{Event yields of signal and data after selection.  "
@@ -291,100 +288,27 @@ def DoTablesAllPoints(lumi,numsigmas):
   print '\\end{table}'
   
 
-def OptimizeSignalMassWindows(rootFileLocation,modelPointArray,lumi):
-  optHalfWindowSizesC0p01 = []
-  massesC0p01 = []
-  optHalfWindowSizesC0p05 = []
-  massesC0p05 = []
-  optHalfWindowSizesC0p1 = []
-  massesC0p1 = []
-  for mp in modelPointArray:
-    print 'Optimize: ModelPoint: coupling=',mp.coupling,'mass=',mp.mass
-    maxWindowRange = 600 # bins/GeV
-    useAsymmWindow = False
-    peakMass, optSsbIndex, massRangesTried, ssbTried = OptimizeWindow(rootFileLocation,mp,lumi,maxWindowRange,useAsymmWindow)
-    massLow = massRangesTried[optSsbIndex][0]
-    massHigh = massRangesTried[optSsbIndex][1]
-    optHalfWindowSize = (massHigh-massLow-1)/2
-    #                   # -1, since we get the top edge of the maxBin as the upper mass limit
-    print 'Mass peak:',peakMass
-    print 'opt massRange=',massLow,'-',massHigh
-    print 'opt halfWindowSize=',optHalfWindowSize,'opt s/sqrt(s+b)=',ssbTried[optSsbIndex]
-    if str(mp.coupling)=='0.01':
-      optHalfWindowSizesC0p01.append(optHalfWindowSize)
-      massesC0p01.append(mp.mass)
-    elif str(mp.coupling)=='0.05':
-      optHalfWindowSizesC0p05.append(optHalfWindowSize)
-      massesC0p05.append(mp.mass)
-    elif str(mp.coupling)=='0.1':
-      optHalfWindowSizesC0p1.append(optHalfWindowSize)
-      massesC0p1.append(mp.mass)
-    #print 'opt nBinsLow=',,'nBinsHigh=',
-    #ssbPrev = 0
-    #nbinsSsbPrev = -1
-    #for i,ssb in enumerate(ssbTried):
-    #  if massRangesTried[i] > optNBins:
-    #    break
-    #  if ssb <= ssbPrev:
-    #    print 'ssb for nbinsTried=',massRangesTried[i],',',ssb,' <= previousSSB =',ssbPrev,'with nbins=',nbinsSsbPrev
-    #  else:
-    #    ssbPrev = ssb
-    #    nbinsSsbPrev = massRangesTried[i]
-    rootFile.cd()
-    minMassTried = min(zip(*massRangesTried)[0])
-    maxMassTried = max(zip(*massRangesTried)[1])
-    #print 'minMassTried=',minMassTried,'maxMassTried=',maxMassTried
-    if useAsymmWindow:
-      graph = TH2F('test','test',int(peakMass-minMassTried)+1,minMassTried,peakMass+1,int(maxMassTried-peakMass),peakMass,maxMassTried)
-      for massRange,ssb in itertools.izip(massRangesTried,ssbTried):
-        graph.Fill(massRange[0],massRange[1]-1,ssb)
-      c = TCanvas()
-      c.cd()
-      graph.SetTitle('Optimization for RS Graviton mass='+str(mp.mass)+'GeV, coupling='+str(mp.coupling))
-      graph.SetName('ssbOpt_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass))
-      graph.GetXaxis().SetTitle('Mass window low [GeV]')
-      graph.GetYaxis().SetTitle('Mass window high [GeV]')
-      #graph.GetZaxis().SetTitle('S/#sqrt{S+B}')
-    else:
-      halfWindowSizesTried = [(massRangeTried[1]-massRangeTried[0])/2.0 for massRangeTried in massRangesTried]
-      graph = TGraph(len(halfWindowSizesTried), array.array("f",halfWindowSizesTried),array.array("f",ssbTried))
-      graph.SetTitle('Optimization for RS Graviton mass='+str(mp.mass)+'GeV, coupling='+str(mp.coupling))
-      graph.SetName('ssbOpt_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass))
-      graph.GetXaxis().SetTitle('Mass window half size [GeV]')
-      graph.GetYaxis().SetTitle('S/#sqrt{S+B}')
-      #print 'massRange:',massRange[0],'-',massRange[1]-1,'; ssb=',ssb
-      #print 'xbin=',graph.GetXaxis().FindBin(massRange[0]),'ybin=',graph.GetYaxis().FindBin(massRange[1]-1)
-    #c.Print('optimize_k'+str(mp.coupling)+'_m'+str(mp.mass)+'_ssb.C')
-    graph.Write()
-  # after loop
-  graph0p01 = TGraph(len(massesC0p01), array.array("f",massesC0p01),array.array("f",optHalfWindowSizesC0p01))
-  graph0p01.SetName('optHalfWindowVsMassK0p01')
-  graph0p01.Write()
-  graph0p05 = TGraph(len(massesC0p05), array.array("f",massesC0p05),array.array("f",optHalfWindowSizesC0p05))
-  graph0p05.SetName('optHalfWindowVsMassK0p05')
-  graph0p05.SetMarkerColor(2)
-  graph0p05.SetLineColor(2)
-  graph0p05.Write()
-  graph0p1 = TGraph(len(massesC0p1), array.array("f",massesC0p1),array.array("f",optHalfWindowSizesC0p1))
-  graph0p1.SetName('optHalfWindowVsMassK0p1')
-  graph0p1.SetMarkerColor(4)
-  graph0p1.SetLineColor(4)
-  graph0p1.Write()
-  mg = TMultiGraph()
-  mg.Add(graph0p01)
-  mg.Add(graph0p05)
-  mg.Add(graph0p1)
-  mg.Draw('ap')
-  mg.GetXaxis().SetTitle("Mass [GeV]")
-  mg.GetYaxis().SetTitle("Opt. HalfWindow size [GeV]")
-  mg.SetName('optHalfWindowsVsMassAll')
-  legend = TLegend(0.42,0.71,0.73,0.92)
-  legend.AddEntry(graph0p01," #tilde{k} = "+str(0.01),"l")
-  legend.AddEntry(graph0p05," #tilde{k} = "+str(0.05),"l")
-  legend.AddEntry(graph0p1," #tilde{k} = "+str(0.1),"l")
-  legend.Draw()
-  mg.Write()
-
+def DoOptimizeAllPoints():
+  maxWindowRange = 600 # bins/GeV
+  useAsymmWindow = True
+  print 'Run for coupling 0.01'
+  colorIndex = 2 #TODO add this into modelpoint itself?
+  with open(limitsFileNameBase+'0p01.txt', 'w') as file:
+    graphOptHalfWindowsVsMass0p01,graphOptMinMaxWindowsVsMass0p01 = OptimizeSignalMassWindows(
+        rootFileLocation,modelPointsC0p01,lumi,useAsymmWindow,maxWindowRange,file,rootFile,colorIndex)
+  print 'Run for coupling 0.05'
+  colorIndex = 4
+  with open(limitsFileNameBase+'0p05.txt', 'w') as file:
+    graphOptHalfWindowsVsMass0p05,graphOptMinMaxWindowsVsMass0p05 = OptimizeSignalMassWindows(
+        rootFileLocation,modelPointsC0p05,lumi,useAsymmWindow,maxWindowRange,file,rootFile,colorIndex)
+  print 'Run for coupling 0.1'
+  colorIndex = 8
+  with open(limitsFileNameBase+'0p1.txt', 'w') as file:
+    graphOptHalfWindowsVsMass0p1,graphOptMinMaxWindowsVsMass0p1 = OptimizeSignalMassWindows(
+        rootFileLocation,modelPointsC0p1,lumi,useAsymmWindow,maxWindowRange,file,rootFile,colorIndex)
+  # make multigraphs for all masses/couplings
+  MakeOptHalfWindowVsMassMultigraph(graphOptHalfWindowsVsMass0p01,graphOptHalfWindowsVsMass0p05,graphOptHalfWindowsVsMass0p1,rootFile)
+  MakeOptMassWindowsVsMassMultiGraph(graphOptMinMaxWindowsVsMass0p01,graphOptMinMaxWindowsVsMass0p05,graphOptMinMaxWindowsVsMass0p1,rootFile)
 
 
 def Usage():
@@ -457,8 +381,7 @@ if len(sys.argv)==1:
   sys.exit()
 elif sys.argv[1]=='optimize':
   print 'optimize: OptimizeSignalMassWindows'
-  OptimizeSignalMassWindows(rootFileLocation, modelPointsC0p01+modelPointsC0p05+modelPointsC0p1, lumi)
-  #OptimizeSignalMassWindows(rootFileLocation, modelPointsC0p1, lumi)
+  DoOptimizeAllPoints()
   PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile)
 elif sys.argv[1]=='yields':
   print 'yields: CalculateYieldsForMassRanges'
@@ -471,7 +394,7 @@ elif sys.argv[1]=='plots':
   DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle)
 elif sys.argv[1]=='tables':
   print 'tables: DoTablesAllPoints'
-  DoTablesAllPoints(lumi,3)
+  DoTablesAllPoints(lumi)
 elif sys.argv[1]=='all':
   print 'all: yields+limits+plots'
   print 'yields: CalculateYieldsForMassRanges'
@@ -481,7 +404,7 @@ elif sys.argv[1]=='all':
   print 'plots: DoPlotsAllPoints'
   DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle)
   print 'tables: DoTablesAllPoints'
-  DoTablesAllPoints(lumi,3)
+  DoTablesAllPoints(lumi)
 else:
   print 'Did not understand input.'
   Usage()

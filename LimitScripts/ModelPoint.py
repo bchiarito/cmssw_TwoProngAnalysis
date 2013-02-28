@@ -15,6 +15,8 @@ class ModelPoint:
     self.totalXSec            = kwargs.get('totalXSec',None)
     self.totalEff             = kwargs.get('totalEff',0.0)
     self.halfWidth            = kwargs.get('halfWidth',None)
+    self.optMassWindowLow     = kwargs.get('optMassWindowLow',None)
+    self.optMassWindowHigh    = kwargs.get('optMassWindowHigh',None)
     self.nDataObs             = kwargs.get('nDataObs',None)
     self.nBackground          = kwargs.get('nBg',0.0)
     self.nBackgroundErr       = kwargs.get('nBgErr',0.0)
@@ -40,6 +42,7 @@ class ModelPoint:
     print "TotalXSection: " , self.totalXSec
     print "TotalEff: %.5f"%self.totalEff
     print "HalfWidth: " , self.halfWidth
+    print "OptMassWindow: ", self.optMassWindowLow,"-",self.optMassWindowHigh
     print "NDataObs: " , self.nDataObs
     print "NBackground: %.5f"%self.nBackground , " +/- %.5f"%self.nBackgroundErr
     print "Filename:",self.fileName
@@ -54,6 +57,8 @@ class ModelPoint:
     file.write("TotalXSection: " + str(self.totalXSec) + "\n")
     file.write("TotalEff: " + str(self.totalEff) + "\n")
     file.write("HalfWidth: " + str(self.halfWidth) + "\n")
+    file.write("OptMassWindowLow: " + str(self.optMassWindowLow) + "\n")
+    file.write("OptMassWindowHigh: " + str(self.optMassWindowHigh) + "\n")
     file.write("NDataObs: " + str(self.nDataObs) + "\n")
     file.write("NBackground: " + str(self.nBackground) + "\n")
     file.write("NBackgroundErr: " + str(self.nBackgroundErr) + "\n")
@@ -65,17 +70,15 @@ class ModelPoint:
     file.write("ObservedLimit: " + str(self.obsLimit) + "\n\n")
 
 
-  def LatexTableLine(self,lumi,numsigmas):
+  def LatexTableLine(self,lumi):
     latexLine='\t\t'+str(self.coupling)+' & '+str(int(self.mass))+' & '
-    minMass = self.mass - numsigmas * self.halfWidth
-    maxMass = self.mass + numsigmas * self.halfWidth
     #print 'numsigmas = ',numsigmas
     #print 'halfWidth = ',self.halfWidth
     #print 'mass = ',self.mass
     #print 'self.mass - numsigmas * self.halfWidth',(self.mass - numsigmas * self.halfWidth)
     #print 'minMass = ',minMass
     #print 'maxMass = ',maxMass
-    latexLine+=str(int(minMass))+' to '+str(int(maxMass))+' & '
+    latexLine+=str(int(self.optMassWindowLow))+' to '+str(int(self.optMassWindowHigh))+' & '
     latexLine+='%.2f'%self.totalEff+' & '
     expectedSignalEvents = lumi * self.totalXSec * self.totalEff
     latexLine+='%.2f'%float(expectedSignalEvents)+' & '
@@ -97,3 +100,7 @@ class ModelPoint:
     tableString+=string.center('%.1E'%float(self.totalXSec),10)+string.center(str(round(self.expLimit,6)),10)
     tableString+=string.center(str(round(self.obsLimit,5)),12)
     return tableString
+
+
+
+

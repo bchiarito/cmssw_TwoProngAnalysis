@@ -34,6 +34,10 @@ def ReadFromFile(file):
       mp.totalEff = float(line.split(': ')[1])
     elif "HalfWidth" in line:
       mp.halfWidth = float(line.split(': ')[1])
+    elif "OptMassWindowLow" in line:
+      mp.optMassWindowLow = float(line.split(': ')[1])
+    elif "OptMassWindowHigh" in line:
+      mp.optMassWindowHigh = float(line.split(': ')[1])
     elif "NDataObs" in line:
       mp.nDataObs = float(line.split(': ')[1])
     elif "NBackground" in line and not "Err" in line:
@@ -136,6 +140,171 @@ def SetCustomGStyle():
   gStyle.SetLabelSize(0.073)
   gStyle.SetOptStat(0)
   gStyle.SetOptFit(111111)
+
+
+def MakeOptimizationGraph(peakMass,modelPoint,minMassTried,maxMassTried,massRangesTried,ssbTried,useAsymmWindow,rootFile):
+  rootFile.cd()
+  # make optimization graph (1-D for symm window; 2-D for asymm window)
+  if useAsymmWindow:
+    graph = TH2F('test','test',int(peakMass-minMassTried)+1,minMassTried,peakMass+1,int(maxMassTried-peakMass),peakMass,maxMassTried)
+    for massRange,ssb in itertools.izip(massRangesTried,ssbTried):
+      graph.Fill(massRange[0],massRange[1]-1,ssb)
+    graph.SetTitle('Optimization for RS Graviton mass='+str(modelPoint.mass)+'GeV, coupling='+str(modelPoint.coupling))
+    graph.SetName('ssbOpt_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass))
+    graph.GetXaxis().SetTitle('Mass window low [GeV]')
+    graph.GetYaxis().SetTitle('Mass window high [GeV]')
+    #graph.GetZaxis().SetTitle('S/#sqrt{S+B}')
+  else:
+    halfWindowSizesTried = [(massRangeTried[1]-massRangeTried[0])/2.0 for massRangeTried in massRangesTried]
+    graph = TGraph(len(halfWindowSizesTried), array.array("f",halfWindowSizesTried),array.array("f",ssbTried))
+    graph.SetTitle('Optimization for RS Graviton mass='+str(modelPoint.mass)+'GeV, coupling='+str(modelPoint.coupling))
+    graph.SetName('ssbOpt_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass))
+    graph.GetXaxis().SetTitle('Mass window half size [GeV]')
+    graph.GetYaxis().SetTitle('S/#sqrt{S+B}')
+  graph.Write()
+
+
+def MakeOptHalfWindowVsMassPlot(coupling,masses,optMinMasses,optMaxMasses,colorIndex,rootFile):
+  # make plot of opt. halfWindowSize vs. mass/coupling
+  optHalfWindowSizes = [(optMassHigh-optMassLow-1)/2 for optMassHigh,optMassLow in itertools.izip(optMaxMasses,optMinMasses)]
+  #                   # -1, since we get the top edge of the maxBin as the upper mass limit
+  graph = TGraph(len(masses), array.array("f",masses),array.array("f",optHalfWindowSizes))
+  plotname = "optHalfWindowVsMassK%.2f" % coupling
+  savename = TString(plotname)
+  indexstring = savename.Index(".")
+  savename.Replace(indexstring,1,"p")
+  graph.SetName(savename.Data())
+  graph.SetMarkerColor(colorIndex)
+  graph.SetLineColor(colorIndex)
+  graph.Write()
+  return graph
+
+
+def MakeOptHalfWindowVsMassMultigraph(graph0p01,graph0p05,graph0p1,rootFile):
+  rootFile.cd()
+  c = TCanvas()
+  c.SetName('optHalfWindowsVsMassAllCanvas')
+  c.SetTitle('')
+  c.cd()
+  mg = TMultiGraph()
+  mg.Add(graph0p01)
+  mg.Add(graph0p05)
+  mg.Add(graph0p1)
+  mg.Draw('ap')
+  mg.GetXaxis().SetTitle("Mass [GeV]")
+  mg.GetYaxis().SetTitle("Opt. HalfWindow size [GeV]")
+  mg.SetName('optHalfWindowsVsMassAll')
+  legend = TLegend(0.42,0.71,0.73,0.92)
+  legend.AddEntry(graph0p01," #tilde{k} = "+str(0.01),"l")
+  legend.AddEntry(graph0p05," #tilde{k} = "+str(0.05),"l")
+  legend.AddEntry(graph0p1," #tilde{k} = "+str(0.1),"l")
+  legend.SetBorderSize(0)
+  legend.SetFillColor(0)
+  legend.Draw()
+  c.Write()
+  mg.Write()
+
+
+#def MakeOptMassLowHighVsMassMultigraph():
+#def MakeOptMassLowGraph():
+  ## make plot of low/high opt. mass window values vs. mass/coupling
+  #graph0p01min = TGraph(len(massesC0p01), array.array("f",massesC0p01),array.array("f",optMinMassC0p01))
+  #graph0p01min.SetName('optMinMassVsMassK0p01')
+  #graph0p01min.SetMarkerColor(2)
+  #graph0p01min.SetLineColor(2)
+  #graph0p01min.Write()
+  #graph0p01max = TGraph(len(massesC0p01), array.array("f",massesC0p01),array.array("f",optMaxMassC0p01))
+  #graph0p01max.SetName('optMaxMassVsMassK0p01')
+  #graph0p01max.SetMarkerColor(2)
+  #graph0p01max.SetLineColor(2)
+  #graph0p01max.Write()
+  #graph0p05min = TGraph(len(massesC0p05), array.array("f",massesC0p05),array.array("f",optMinMassC0p05))
+  #graph0p05min.SetName('optMinMassVsMassK0p05')
+  #graph0p05min.SetMarkerColor(4)
+  #graph0p05min.SetLineColor(4)
+  #graph0p05min.Write()
+  #graph0p05max = TGraph(len(massesC0p05), array.array("f",massesC0p05),array.array("f",optMaxMassC0p05))
+  #graph0p05max.SetName('optMaxMassVsMassK0p05')
+  #graph0p05max.SetMarkerColor(4)
+  #graph0p05max.SetLineColor(4)
+  #graph0p05max.Write()
+  #graph0p1min = TGraph(len(massesC0p1), array.array("f",massesC0p1),array.array("f",optMinMassC0p1))
+  #graph0p1min.SetName('optMinMassVsMassK0p1')
+  #graph0p1min.SetMarkerColor(8)
+  #graph0p1min.SetLineColor(8)
+  #graph0p1min.Write()
+  #graph0p1max = TGraph(len(massesC0p1), array.array("f",massesC0p1),array.array("f",optMaxMassC0p1))
+  #graph0p1max.SetName('optMaxMassVsMassK0p1')
+  #graph0p1max.SetMarkerColor(8)
+  #graph0p1max.SetLineColor(8)
+  #graph0p1max.Write()
+  #c = TCanvas()
+  #c.SetName('optMinMaxMassWindowsVsMassAllCanvas')
+  #c.SetTitle('')
+  #c.cd()
+  #mg = TMultiGraph()
+  #mg.Add(graph0p01min)
+  #mg.Add(graph0p01max)
+  #mg.Add(graph0p05min)
+  #mg.Add(graph0p05max)
+  #mg.Add(graph0p1min)
+  #mg.Add(graph0p1max)
+  #mg.Draw('ap')
+  #mg.GetXaxis().SetTitle("Mass [GeV]")
+  #mg.GetYaxis().SetTitle("Opt. mass window [GeV]")
+  #mg.SetName('optMinMaxMassWindowsVsMassAll')
+  #legend = TLegend(0.42,0.71,0.73,0.92)
+  #legend.AddEntry(graph0p01min," #tilde{k} = "+str(0.01),"l")
+  #legend.AddEntry(graph0p05min," #tilde{k} = "+str(0.05),"l")
+  #legend.AddEntry(graph0p1min," #tilde{k} = "+str(0.1),"l")
+  #legend.Draw()
+  #c.Write()
+  #mg.Write()
+
+
+def MakeOptMassWindowGraph(coupling,masses,optMinMasses,optMaxMasses,peakMasses,colorIndex,rootFile):
+  # filled graphs
+  rootFile.cd()
+  massErrs = [0]*len(masses)
+  massWindErrsUp= [optMaxMass-peakMass for optMaxMass,peakMass in itertools.izip(optMaxMasses,peakMasses)]
+  massWindErrsDown = [peakMass-optMinMass for optMinMass,peakMass in itertools.izip(optMinMasses,peakMasses)]
+  graphErrs = TGraphAsymmErrors(len(masses),array.array("f",masses),array.array("f",peakMasses),array.array("f",massErrs),array.array("f",massErrs),array.array("f",massWindErrsDown),array.array("f",massWindErrsUp))
+  plotname = "optMassWindowsVsMassK%.2f" % coupling
+  savename = TString(plotname)
+  indexstring = savename.Index(".")
+  savename.Replace(indexstring,1,"p")
+  graphErrs.SetName(savename.Data())
+  graphErrs.SetMarkerColor(colorIndex)
+  graphErrs.SetLineColor(colorIndex)
+  graphErrs.SetFillColor(colorIndex)
+  graphErrs.SetFillStyle(3003)
+  graphErrs.Write()
+  return graphErrs
+
+
+def MakeOptMassWindowsVsMassMultiGraph(graph0p01Errs,graph0p05Errs,graph0p1Errs,rootFile):
+  rootFile.cd()
+  c = TCanvas()
+  c.SetName('optMassWindowsVsMassAllCanvas')
+  c.SetTitle('')
+  c.cd()
+  mg = TMultiGraph()
+  mg.Add(graph0p01Errs,'3')
+  mg.Add(graph0p05Errs,'3')
+  mg.Add(graph0p1Errs,'3')
+  mg.Draw('ap')
+  mg.GetXaxis().SetTitle("Mass [GeV]")
+  mg.GetYaxis().SetTitle("Opt. mass window [GeV]")
+  mg.SetName('optMassWindowsVsMassAll')
+  legend = TLegend(0.42,0.71,0.73,0.92)
+  legend.AddEntry(graph0p01Errs," #tilde{k} = "+str(0.01),"l")
+  legend.AddEntry(graph0p05Errs," #tilde{k} = "+str(0.05),"l")
+  legend.AddEntry(graph0p1Errs," #tilde{k} = "+str(0.1),"l")
+  legend.SetBorderSize(0)
+  legend.SetFillColor(0)
+  legend.Draw()
+  c.Write()
+  mg.Write()
 
 
 def PlotAllBands(modelPointArrays, lumi, rootFile):

@@ -19,6 +19,7 @@ import itertools
 sys.argv.append('-b')
 from ROOT import *
 from ModelPoint import *
+from MakePlots import *
 
 
 def ComputeLimits(cl95MacroPath,lumi,lumiErr,modelPointArray,fileName):
@@ -34,6 +35,7 @@ def ComputeLimits(cl95MacroPath,lumi,lumiErr,modelPointArray,fileName):
     command = 'ComputeLimit.C('+str(lumi)+','+str(lumiErr)+','+str(modelPoint.totalEff)+','+str(modelPoint.nBackground)+','
     command+=str(modelPoint.nBackgroundErr)+','+str(modelPoint.nDataObs)+','+str(modelPoint.mass)+','
     command+=str(modelPoint.coupling)+','+str(modelPoint.halfWidth)+','+str(modelPoint.totalXSec)+','
+    command+=str(modelPoint.optMassWindowLow)+','+str(modelPoint.optMassWindowHigh)+','
     command+='\"'+fileName+'\"'
     command+=')'
     subprocess.call(['root','-b','-q',command]) # wait for each one to finish
@@ -92,7 +94,6 @@ def PrintEntries(name, listEntries):
 def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useAsymmWindow):
   #Sample = "ExoDiPhotonAnalyzer_DataABC"
   Sample = "ExoDiPhotonAnalyzer_PFDec14th_DataABCD"
-
   # FIXME hardcoded names/locations
   # background
   histogramFileJetJet = HistogramFileLocation+Sample+"/histograms_"+Sample+"_JetJet.root"
@@ -110,12 +111,10 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useA
   if not fMChists:
     print 'file:',histogramFileMC,'not found; quitting'
     return
-
   #print "Getting MC histogram"
   histosmc = fMChists.Get("h_Diphoton_Minv_FineBinning")
   histosmc.Scale(lumi)
   #print "histo",histosmc.GetName(),histosmc.GetEntries(),"entries",histosmc.Integral(),"(integral)"
-
   #print "Getting Jet+Jet histograms"
   histosJetJet = fJetJethists.Get("h_JetJet_minv_FineBinning")
   histosJetJetUpperError = fJetJethists.Get("h_JetJet_minv_UpperError")
@@ -123,7 +122,6 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useA
   #print "histo",histosJetJet.GetName(),histosJetJet.GetEntries(),"entries",histosJetJet.Integral(),"(integral)"
   #print "histo",histosJetJetUpperError.GetName(),histosJetJetUpperError.GetEntries(),"entries",histosJetJetUpperError.Integral(),"(integral)"
   #print "histo",histosJetJetLowerError.GetName(),histosJetJetLowerError.GetEntries(),"entries",histosJetJetLowerError.Integral(),"(integral)"
-
   #print "Getting Gamma+Jet histograms"
   histosGammaJet = fGammaJethists.Get("h_GammaJet_minv_FineBinning")
   histosGammaJetUpperError = fGammaJethists.Get("h_GammaJet_minv_UpperError")
@@ -131,7 +129,6 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useA
   #print "histo",histosGammaJet.GetName(),histosGammaJet.GetEntries(),"entries",histosGammaJet.Integral(),"(integral)"
   #print "histo",histosGammaJetUpperError.GetName(),histosGammaJetUpperError.GetEntries(),"entries",histosGammaJetUpperError.Integral(),"(integral)"
   #print "histo",histosGammaJetLowerError.GetName(),histosGammaJetLowerError.GetEntries(),"entries",histosGammaJetLowerError.Integral(),"(integral)"
-
   # signal
   histogramSignalFile = TFile.Open(modelPoint.fileName)
   if not histogramSignalFile:
@@ -140,7 +137,6 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useA
   signalHistogram = histogramSignalFile.Get("h_Diphoton_Minv_FineBinning")
   signalTotalEventsHistogram = histogramSignalFile.Get("h_nEvents")
   signalEntriesTotal = signalTotalEventsHistogram.Integral()
-
   # compute optimization variable for various window sizes
   peakBin = signalHistogram.FindBin(signalHistogram.GetMaximumBin())
   useAsymmetricWindow = useAsymmWindow
@@ -185,18 +181,16 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useA
         maxSsb = ssb
         indexMaxSsb = len(massRangesUsedForWindow)-1
       # INFO
-      massRangeHigh = signalHistogram.GetBinLowEdge(maxBin)+signalHistogram.GetBinWidth(maxBin)
+      #massRangeHigh = signalHistogram.GetBinLowEdge(maxBin)+signalHistogram.GetBinWidth(maxBin)
       ##print 'mass range=',histosmc.GetBinLowEdge(minBin),'-',histosmc.GetBinLowEdge(maxBin)+histosmc.GetBinWidth(maxBin),'signal=%.16f'%signal,'bgnd=%.16f'%background,'ssb=%.15f'%ssb
       #print 'binMin=',minBin,'binMax=',maxBin
       if maxBin >= signalHistogram.GetNbinsX():
         break # don't let it go to overflow bin or beyond
-
   # INFO
   #print 'modelPoint k=',modelPoint.coupling,'mass=',modelPoint.mass
   #print 'Opt. window halfsize =',nBinsForMaxSsb
   #print 'Opt. mass range',histosmc.GetBinLowEdge(histosmc.FindBin(modelPoint.mass)-nBinsForMaxSOverSqrtB),'-',histosmc.GetBinLowEdge(histosmc.FindBin(modelPoint.mass)+nBinsForMaxSOverSqrtB)
   #print 'Opt. mass range',histosmc.GetBinLowEdge(peakBin-nBinsForMaxSsb),'-',histosmc.GetBinLowEdge(peakBin+nBinsForMaxSsb)
-
   # now get data yields
   histogramFileData = HistogramFileLocation+Sample+"/histograms_"+Sample+".root"
   fdatahists = TFile.Open(histogramFileData)
@@ -218,8 +212,37 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useA
   modelPoint.nBackground = entryBG
   modelPoint.nBackgroundErr = math.sqrt(entryBG) 
   modelPoint.totalEff = 1.0*signalHistogram.Integral(minBin,maxBin)/signalEntriesTotal
+  modelPoint.optMassWindowLow = massRangesUsedForWindow[indexMaxSsb][0]
+  modelPoint.optMassWindowHigh = massRangesUsedForWindow[indexMaxSsb][1]
   peakMass = signalHistogram.GetBinLowEdge(peakBin)
   return peakMass, indexMaxSsb, massRangesUsedForWindow, ssbForWindow
+
+
+def OptimizeSignalMassWindows(rootFileLocation,modelPointArray,lumi,useAsymmWindow,maxWindowRange,txtFile,rootFile,colorIndex):
+  optMinMasses = []
+  optMaxMasses = []
+  peakMasses = []
+  masses = []
+  for mp in modelPointArray:
+    print 'Optimize: ModelPoint: coupling=',mp.coupling,'mass=',mp.mass
+    peakMass, optSsbIndex, massRangesTried, ssbTried = OptimizeWindow(rootFileLocation,mp,lumi,maxWindowRange,useAsymmWindow)
+    mp.Write(txtFile)
+    optMassLow = massRangesTried[optSsbIndex][0]
+    optMassHigh = massRangesTried[optSsbIndex][1]
+    print 'Mass peak:',peakMass
+    print 'opt massRange=',optMassLow,'-',optMassHigh
+    print 'opt s/sqrt(s+b)=',ssbTried[optSsbIndex]
+    optMinMasses.append(optMassLow)
+    optMaxMasses.append(optMassHigh)
+    peakMasses.append(peakMass)
+    masses.append(mp.mass)
+    rootFile.cd()
+    minMassTried = min(zip(*massRangesTried)[0])
+    maxMassTried = max(zip(*massRangesTried)[1])
+    MakeOptimizationGraph(peakMass,mp,minMassTried,maxMassTried,massRangesTried,ssbTried,useAsymmWindow,rootFile)
+  graphOptHalfWindow = MakeOptHalfWindowVsMassPlot(modelPointArray[0].coupling,masses,optMinMasses,optMaxMasses,colorIndex,rootFile)
+  graphHighLowMassFilled = MakeOptMassWindowGraph(modelPointArray[0].coupling,masses,optMinMasses,optMaxMasses,peakMasses,colorIndex,rootFile)
+  return graphOptHalfWindow,graphHighLowMassFilled
 
 
 def GetMinMaxMassArrays(modelPointArray, numsigmas = 3):
