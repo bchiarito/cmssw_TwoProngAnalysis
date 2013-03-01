@@ -294,21 +294,22 @@ def DoOptimizeAllPoints():
   print 'Run for coupling 0.01'
   colorIndex = 2 #TODO add this into modelpoint itself?
   with open(limitsFileNameBase+'0p01.txt', 'w') as file:
-    graphOptHalfWindowsVsMass0p01,graphOptMinMaxWindowsVsMass0p01 = OptimizeSignalMassWindows(
+    OptimizeSignalMassWindows(
         rootFileLocation,modelPointsC0p01,lumi,useAsymmWindow,maxWindowRange,file,rootFile,colorIndex)
   print 'Run for coupling 0.05'
   colorIndex = 4
   with open(limitsFileNameBase+'0p05.txt', 'w') as file:
-    graphOptHalfWindowsVsMass0p05,graphOptMinMaxWindowsVsMass0p05 = OptimizeSignalMassWindows(
+    OptimizeSignalMassWindows(
         rootFileLocation,modelPointsC0p05,lumi,useAsymmWindow,maxWindowRange,file,rootFile,colorIndex)
   print 'Run for coupling 0.1'
   colorIndex = 8
   with open(limitsFileNameBase+'0p1.txt', 'w') as file:
-    graphOptHalfWindowsVsMass0p1,graphOptMinMaxWindowsVsMass0p1 = OptimizeSignalMassWindows(
+    OptimizeSignalMassWindows(
         rootFileLocation,modelPointsC0p1,lumi,useAsymmWindow,maxWindowRange,file,rootFile,colorIndex)
   # make multigraphs for all masses/couplings
-  MakeOptHalfWindowVsMassMultigraph(graphOptHalfWindowsVsMass0p01,graphOptHalfWindowsVsMass0p05,graphOptHalfWindowsVsMass0p1,rootFile)
-  MakeOptMassWindowsVsMassMultiGraph(graphOptMinMaxWindowsVsMass0p01,graphOptMinMaxWindowsVsMass0p05,graphOptMinMaxWindowsVsMass0p1,rootFile)
+  MakeOptHalfWindowVsMassMultigraph(rootFile)
+  MakeOptMassWindowsVsMassMultiGraph(rootFile)
+  MakeOptSSBValueVsMassMultigraph(rootFile)
 
 
 def Usage():

@@ -169,7 +169,7 @@ def MakeOptHalfWindowVsMassPlot(coupling,masses,optMinMasses,optMaxMasses,colorI
   optHalfWindowSizes = [(optMassHigh-optMassLow-1)/2 for optMassHigh,optMassLow in itertools.izip(optMaxMasses,optMinMasses)]
   #                   # -1, since we get the top edge of the maxBin as the upper mass limit
   graph = TGraph(len(masses), array.array("f",masses),array.array("f",optHalfWindowSizes))
-  plotname = "optHalfWindowVsMassK%.2f" % coupling
+  plotname = "optHalfWindowVsMassK"+str(coupling)
   savename = TString(plotname)
   indexstring = savename.Index(".")
   savename.Replace(indexstring,1,"p")
@@ -177,11 +177,13 @@ def MakeOptHalfWindowVsMassPlot(coupling,masses,optMinMasses,optMaxMasses,colorI
   graph.SetMarkerColor(colorIndex)
   graph.SetLineColor(colorIndex)
   graph.Write()
-  return graph
 
 
-def MakeOptHalfWindowVsMassMultigraph(graph0p01,graph0p05,graph0p1,rootFile):
+def MakeOptHalfWindowVsMassMultigraph(rootFile):
   rootFile.cd()
+  graph0p01 = rootFile.Get('optHalfWindowVsMassK0p01')
+  graph0p05 = rootFile.Get('optHalfWindowVsMassK0p05')
+  graph0p1 = rootFile.Get('optHalfWindowVsMassK0p1')
   c = TCanvas()
   c.SetName('optHalfWindowsVsMassAllCanvas')
   c.SetTitle('')
@@ -269,7 +271,7 @@ def MakeOptMassWindowGraph(coupling,masses,optMinMasses,optMaxMasses,peakMasses,
   massWindErrsUp= [optMaxMass-peakMass for optMaxMass,peakMass in itertools.izip(optMaxMasses,peakMasses)]
   massWindErrsDown = [peakMass-optMinMass for optMinMass,peakMass in itertools.izip(optMinMasses,peakMasses)]
   graphErrs = TGraphAsymmErrors(len(masses),array.array("f",masses),array.array("f",peakMasses),array.array("f",massErrs),array.array("f",massErrs),array.array("f",massWindErrsDown),array.array("f",massWindErrsUp))
-  plotname = "optMassWindowsVsMassK%.2f" % coupling
+  plotname = "optMassWindowsVsMassK"+str(coupling)
   savename = TString(plotname)
   indexstring = savename.Index(".")
   savename.Replace(indexstring,1,"p")
@@ -279,11 +281,13 @@ def MakeOptMassWindowGraph(coupling,masses,optMinMasses,optMaxMasses,peakMasses,
   graphErrs.SetFillColor(colorIndex)
   graphErrs.SetFillStyle(3003)
   graphErrs.Write()
-  return graphErrs
 
 
-def MakeOptMassWindowsVsMassMultiGraph(graph0p01Errs,graph0p05Errs,graph0p1Errs,rootFile):
+def MakeOptMassWindowsVsMassMultiGraph(rootFile):
   rootFile.cd()
+  graph0p01Errs = rootFile.Get('optMassWindowsVsMassK0p01')
+  graph0p05Errs = rootFile.Get('optMassWindowsVsMassK0p05')
+  graph0p1Errs = rootFile.Get('optMassWindowsVsMassK0p1')
   c = TCanvas()
   c.SetName('optMassWindowsVsMassAllCanvas')
   c.SetTitle('')
@@ -300,6 +304,47 @@ def MakeOptMassWindowsVsMassMultiGraph(graph0p01Errs,graph0p05Errs,graph0p1Errs,
   legend.AddEntry(graph0p01Errs," #tilde{k} = "+str(0.01),"l")
   legend.AddEntry(graph0p05Errs," #tilde{k} = "+str(0.05),"l")
   legend.AddEntry(graph0p1Errs," #tilde{k} = "+str(0.1),"l")
+  legend.SetBorderSize(0)
+  legend.SetFillColor(0)
+  legend.Draw()
+  c.Write()
+  mg.Write()
+
+
+def MakeOptSSBValuesGraph(coupling,masses,optSSBValues,colorIndex,rootFile):
+  # make plot of opt. SSB vs. mass/coupling
+  graph = TGraph(len(masses), array.array("f",masses),array.array("f",optSSBValues))
+  plotname = "optSSBVsMassK"+str(coupling)
+  savename = TString(plotname)
+  indexstring = savename.Index(".")
+  savename.Replace(indexstring,1,"p")
+  graph.SetName(savename.Data())
+  graph.SetMarkerColor(colorIndex)
+  graph.SetLineColor(colorIndex)
+  graph.Write()
+
+
+def MakeOptSSBValueVsMassMultigraph(rootFile):
+  rootFile.cd()
+  graph0p01 = rootFile.Get('optSSBVsMassK0p01')
+  graph0p05 = rootFile.Get('optSSBVsMassK0p05')
+  graph0p1 = rootFile.Get('optSSBVsMassK0p1')
+  c = TCanvas()
+  c.SetName('optSSBVsMassAllCanvas')
+  c.SetTitle('')
+  c.cd()
+  mg = TMultiGraph()
+  mg.Add(graph0p01)
+  mg.Add(graph0p05)
+  mg.Add(graph0p1)
+  mg.Draw('ap')
+  mg.GetXaxis().SetTitle("Mass [GeV]")
+  mg.GetYaxis().SetTitle("Opt. S/#sqrt{S+B}")
+  mg.SetName('optSSBVsMassAll')
+  legend = TLegend(0.42,0.71,0.73,0.92)
+  legend.AddEntry(graph0p01," #tilde{k} = "+str(0.01),"l")
+  legend.AddEntry(graph0p05," #tilde{k} = "+str(0.05),"l")
+  legend.AddEntry(graph0p1," #tilde{k} = "+str(0.1),"l")
   legend.SetBorderSize(0)
   legend.SetFillColor(0)
   legend.Draw()
