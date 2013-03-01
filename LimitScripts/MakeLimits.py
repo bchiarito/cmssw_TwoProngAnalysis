@@ -222,6 +222,7 @@ def OptimizeSignalMassWindows(rootFileLocation,modelPointArray,lumi,useAsymmWind
   optMinMasses = []
   optMaxMasses = []
   peakMasses = []
+  optSSBValues = []
   masses = []
   for mp in modelPointArray:
     print 'Optimize: ModelPoint: coupling=',mp.coupling,'mass=',mp.mass
@@ -235,14 +236,17 @@ def OptimizeSignalMassWindows(rootFileLocation,modelPointArray,lumi,useAsymmWind
     optMinMasses.append(optMassLow)
     optMaxMasses.append(optMassHigh)
     peakMasses.append(peakMass)
+    optSSBValues.append(ssbTried[optSsbIndex])
     masses.append(mp.mass)
     rootFile.cd()
     minMassTried = min(zip(*massRangesTried)[0])
     maxMassTried = max(zip(*massRangesTried)[1])
     MakeOptimizationGraph(peakMass,mp,minMassTried,maxMassTried,massRangesTried,ssbTried,useAsymmWindow,rootFile)
-  graphOptHalfWindow = MakeOptHalfWindowVsMassPlot(modelPointArray[0].coupling,masses,optMinMasses,optMaxMasses,colorIndex,rootFile)
-  graphHighLowMassFilled = MakeOptMassWindowGraph(modelPointArray[0].coupling,masses,optMinMasses,optMaxMasses,peakMasses,colorIndex,rootFile)
-  return graphOptHalfWindow,graphHighLowMassFilled
+  # make graphs and save to file
+  coupling = modelPointArray[0].coupling
+  MakeOptHalfWindowVsMassPlot(coupling,masses,optMinMasses,optMaxMasses,colorIndex,rootFile)
+  MakeOptMassWindowGraph(coupling,masses,optMinMasses,optMaxMasses,peakMasses,colorIndex,rootFile)
+  MakeOptSSBValuesGraph(coupling,masses,optSSBValues,colorIndex,rootFile)
 
 
 def GetMinMaxMassArrays(modelPointArray, numsigmas = 3):
