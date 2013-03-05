@@ -290,7 +290,7 @@ def DoTablesAllPoints(lumi):
 
 def DoOptimizeAllPoints():
   maxWindowRange = 600 # bins/GeV
-  useAsymmWindow = True
+  useAsymmWindow = False
   print 'Run for coupling 0.01'
   colorIndex = 2 #TODO add this into modelpoint itself?
   with open(limitsFileNameBase+'0p01.txt', 'w') as file:
@@ -310,6 +310,21 @@ def DoOptimizeAllPoints():
   MakeOptHalfWindowVsMassMultigraph(rootFile)
   MakeOptMassWindowsVsMassMultiGraph(rootFile)
   MakeOptSSBValueVsMassMultigraph(rootFile)
+  # print wiki-style table with links to plots (made/copied later by plotting script)
+  print 'Twiki-style table of mass windows'
+  print
+  print '| *Coupling* | *Mass (GeV)* | *Mass Window Low* | *Mass Window High* | *Mass Window Half-Width* | *Optimization Plot* | *PDF* |'
+  for mp in modelPointsC0p01:
+    print '|',mp.coupling,'|',mp.mass,'|',mp.optMassWindowLow,'|',mp.optMassWindowHigh,'|',(mp.optMassWindowHigh-mp.optMassWindowLow)/2+0.5,'|',
+    print '<a href="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/ssbOpt_k0p01_m'+str(mp.mass)+'.png"><img src="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/ssbOpt_k0p01_m'+str(mp.mass)+'.png" alt="optimization_K0p01_m'+str(mp.mass)+'" width="400" /></a>|<a href=http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/ssbOpt_k0p01_m'+str(mp.mass)+'.pdf>PDF Version</a>|'
+  print '| |||||'
+  for mp in modelPointsC0p05:
+    print '|',mp.coupling,'|',mp.mass,'|',mp.optMassWindowLow,'|',mp.optMassWindowHigh,'|',(mp.optMassWindowHigh-mp.optMassWindowLow)/2+0.5,'|',
+    print '<a href="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/ssbOpt_k0p05_m'+str(mp.mass)+'.png"><img src="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/ssbOpt_k0p05_m'+str(mp.mass)+'.png" alt="optimization_K0p05_m'+str(mp.mass)+'" width="400" /></a>|<a href=http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/ssbOpt_k0p05_m'+str(mp.mass)+'.pdf>PDF Version</a>|'
+  print '| |||||'
+  for mp in modelPointsC0p1:
+    print '|',mp.coupling,'|',mp.mass,'|',mp.optMassWindowLow,'|',mp.optMassWindowHigh,'|',(mp.optMassWindowHigh-mp.optMassWindowLow)/2+0.5,'|',
+    print '<a href="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/ssbOpt_k0p1_m'+str(mp.mass)+'.png"><img src="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/ssbOpt_k0p1_m'+str(mp.mass)+'.png" alt="optimization_K0p1_m'+str(mp.mass)+'" width="400" /></a>|<a href=http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/ssbOpt_k0p1_m'+str(mp.mass)+'.pdf>PDF Version</a>|'
 
 
 def Usage():
