@@ -91,7 +91,7 @@ def PrintEntries(name, listEntries):
   print "}"
 
 
-def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useAsymmWindow):
+def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useAsymmWindow, rootPlotFile):
   #Sample = "ExoDiPhotonAnalyzer_DataABC"
   Sample = "ExoDiPhotonAnalyzer_PFDec14th_DataABCD"
   # FIXME hardcoded names/locations
@@ -215,6 +215,16 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useA
   modelPoint.optMassWindowLow = massRangesUsedForWindow[indexMaxSsb][0]
   modelPoint.optMassWindowHigh = massRangesUsedForWindow[indexMaxSsb][1]
   peakMass = signalHistogram.GetBinLowEdge(peakBin)
+  backgroundHist = histosGammaJet.Clone()
+  backgroundHist.Add(histosJetJet)
+  backgroundHist.Add(histosmc)
+  backgroundHist.SetName('backgroundHist')
+  rootPlotFile.cd()
+  if not rootPlotFile.Get('backgroundHist'):
+    backgroundHist.Write()
+  signalHistogram.SetName('diPhotonMinv_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass))
+  signalHistogram.Write()
+  MakeOptMassWindowSignalBackgroundPlot(rootPlotFile,signalHistogram,backgroundHist,massRangesUsedForWindow[indexMaxSsb][0],massRangesUsedForWindow[indexMaxSsb][1],modelPoint)
   return peakMass, indexMaxSsb, massRangesUsedForWindow, ssbForWindow
 
 
@@ -226,7 +236,7 @@ def OptimizeSignalMassWindows(rootFileLocation,modelPointArray,lumi,useAsymmWind
   masses = []
   for mp in modelPointArray:
     print 'Optimize: ModelPoint: coupling=',mp.coupling,'mass=',mp.mass
-    peakMass, optSsbIndex, massRangesTried, ssbTried = OptimizeWindow(rootFileLocation,mp,lumi,maxWindowRange,useAsymmWindow)
+    peakMass, optSsbIndex, massRangesTried, ssbTried = OptimizeWindow(rootFileLocation,mp,lumi,maxWindowRange,useAsymmWindow,rootFile)
     mp.Write(txtFile)
     optMassLow = massRangesTried[optSsbIndex][0]
     optMassHigh = massRangesTried[optSsbIndex][1]
@@ -241,7 +251,7 @@ def OptimizeSignalMassWindows(rootFileLocation,modelPointArray,lumi,useAsymmWind
     rootFile.cd()
     minMassTried = min(zip(*massRangesTried)[0])
     maxMassTried = max(zip(*massRangesTried)[1])
-    MakeOptimizationGraph(peakMass,mp,minMassTried,maxMassTried,massRangesTried,ssbTried,useAsymmWindow,rootFile)
+    MakeOptimizationGraph(peakMass,mp,minMassTried,maxMassTried,massRangesTried,ssbTried,optSsbIndex,useAsymmWindow,rootFile)
   # make graphs and save to file
   coupling = modelPointArray[0].coupling
   MakeOptHalfWindowVsMassPlot(coupling,masses,optMinMasses,optMaxMasses,colorIndex,rootFile)

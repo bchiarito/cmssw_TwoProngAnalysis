@@ -142,7 +142,7 @@ def SetCustomGStyle():
   gStyle.SetOptFit(111111)
 
 
-def MakeOptimizationGraph(peakMass,modelPoint,minMassTried,maxMassTried,massRangesTried,ssbTried,useAsymmWindow,rootFile):
+def MakeOptimizationGraph(peakMass,modelPoint,minMassTried,maxMassTried,massRangesTried,ssbTried,optSSBIndex,useAsymmWindow,rootFile):
   rootFile.cd()
   # make optimization graph (1-D for symm window; 2-D for asymm window)
   if useAsymmWindow:
@@ -161,6 +161,9 @@ def MakeOptimizationGraph(peakMass,modelPoint,minMassTried,maxMassTried,massRang
     graph.SetName('ssbOpt_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass))
     graph.GetXaxis().SetTitle('Mass window half size [GeV]')
     graph.GetYaxis().SetTitle('S/#sqrt{S+B}')
+    graphOpt = TGraph(1, array.array("f",[halfWindowSizesTried[optSSBIndex]]),array.array("f",[ssbTried[optSSBIndex]]))
+    graphOpt.SetName('ssbOptPoint_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass))
+    graphOpt.Write()
   graph.Write()
 
 
@@ -334,9 +337,9 @@ def MakeOptSSBValueVsMassMultigraph(rootFile):
   c.SetTitle('')
   c.cd()
   mg = TMultiGraph()
-  mg.Add(graph0p01)
-  mg.Add(graph0p05)
-  mg.Add(graph0p1)
+  mg.Add(graph0p01,'lp')
+  mg.Add(graph0p05,'lp')
+  mg.Add(graph0p1,'lp')
   mg.Draw('ap')
   mg.GetXaxis().SetTitle("Mass [GeV]")
   mg.GetYaxis().SetTitle("Opt. S/#sqrt{S+B}")
@@ -350,6 +353,26 @@ def MakeOptSSBValueVsMassMultigraph(rootFile):
   legend.Draw()
   c.Write()
   mg.Write()
+
+
+def MakeOptMassWindowSignalBackgroundPlot(rootFile,signalHistogram,backgroundHist,optMassLow,optMassHigh,modelPoint):
+  rootFile.cd()
+  c = TCanvas()
+  c.SetName('signalBackgroundOptWindowsCanvas_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass))
+  c.SetTitle('')
+  c.cd()
+  signalHistogram.SetStats(False)
+  signalHistogram.SetLineColor(2)
+  signalHistogram.SetMarkerColor(2)
+  signalHistogram.Draw()
+  backgroundHist.Draw('same')
+  lineLow = TLine(optMassLow,0,optMassLow,signalHistogram.GetMaximum())
+  lineLow.SetLineColor(4)
+  lineLow.Draw()
+  lineHigh = TLine(optMassHigh,0,optMassHigh,signalHistogram.GetMaximum())
+  lineHigh.SetLineColor(4)
+  lineHigh.Draw()
+  c.Write()
 
 
 def PlotAllBands(modelPointArrays, lumi, rootFile):
