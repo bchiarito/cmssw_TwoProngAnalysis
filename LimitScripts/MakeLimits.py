@@ -91,7 +91,7 @@ def PrintEntries(name, listEntries):
   print "}"
 
 
-def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useAsymmWindow, rootPlotFile):
+def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useAsymmWindow, rootPlotFile, imageDir):
   #Sample = "ExoDiPhotonAnalyzer_DataABC"
   Sample = "ExoDiPhotonAnalyzer_PFDec14th_DataABCD"
   # FIXME hardcoded names/locations
@@ -224,11 +224,11 @@ def OptimizeWindow(HistogramFileLocation, modelPoint, lumi, maxWindowRange, useA
     backgroundHist.Write()
   signalHistogram.SetName('diPhotonMinv_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass))
   signalHistogram.Write()
-  MakeOptMassWindowSignalBackgroundPlot(rootPlotFile,signalHistogram,backgroundHist,massRangesUsedForWindow[indexMaxSsb][0],massRangesUsedForWindow[indexMaxSsb][1],modelPoint)
+  MakeOptMassWindowSignalBackgroundPlot(rootPlotFile,signalHistogram,backgroundHist,massRangesUsedForWindow[indexMaxSsb][0],massRangesUsedForWindow[indexMaxSsb][1],modelPoint,imageDir)
   return peakMass, indexMaxSsb, massRangesUsedForWindow, ssbForWindow
 
 
-def OptimizeSignalMassWindows(rootFileLocation,modelPointArray,lumi,useAsymmWindow,maxWindowRange,txtFile,rootFile,colorIndex):
+def OptimizeSignalMassWindows(rootFileLocation,modelPointArray,lumi,useAsymmWindow,maxWindowRange,txtFile,rootFile,colorIndex,imageDir):
   optMinMasses = []
   optMaxMasses = []
   peakMasses = []
@@ -236,7 +236,7 @@ def OptimizeSignalMassWindows(rootFileLocation,modelPointArray,lumi,useAsymmWind
   masses = []
   for mp in modelPointArray:
     print 'Optimize: ModelPoint: coupling=',mp.coupling,'mass=',mp.mass
-    peakMass, optSsbIndex, massRangesTried, ssbTried = OptimizeWindow(rootFileLocation,mp,lumi,maxWindowRange,useAsymmWindow,rootFile)
+    peakMass, optSsbIndex, massRangesTried, ssbTried = OptimizeWindow(rootFileLocation,mp,lumi,maxWindowRange,useAsymmWindow,rootFile,imageDir)
     mp.Write(txtFile)
     optMassLow = massRangesTried[optSsbIndex][0]
     optMassHigh = massRangesTried[optSsbIndex][1]
