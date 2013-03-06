@@ -13,13 +13,13 @@ class ModelPoint:
     self.coupling             = kwargs.get('coupling',None)
     self.mass                 = kwargs.get('mass',None)
     self.totalXSec            = kwargs.get('totalXSec',None)
-    self.totalEff             = kwargs.get('totalEff',0.0)
+    self.totalEff             = kwargs.get('totalEff',None)
     self.halfWidth            = kwargs.get('halfWidth',None)
     self.optMassWindowLow     = kwargs.get('optMassWindowLow',None)
     self.optMassWindowHigh    = kwargs.get('optMassWindowHigh',None)
     self.nDataObs             = kwargs.get('nDataObs',None)
-    self.nBackground          = kwargs.get('nBg',0.0)
-    self.nBackgroundErr       = kwargs.get('nBgErr',0.0)
+    self.nBackground          = kwargs.get('nBg',None)
+    self.nBackgroundErr       = kwargs.get('nBgErr',None)
     self.expLimit             = kwargs.get('expLimit',None)
     self.expLimitOneSigmaHigh = kwargs.get('expLimitOneSigmaHigh',None)
     self.expLimitOneSigmaLow  = kwargs.get('expLimitOneSigmaLow',None)
@@ -78,7 +78,10 @@ class ModelPoint:
     #print 'self.mass - numsigmas * self.halfWidth',(self.mass - numsigmas * self.halfWidth)
     #print 'minMass = ',minMass
     #print 'maxMass = ',maxMass
-    latexLine+=str(int(self.optMassWindowLow))+' to '+str(int(self.optMassWindowHigh))+' & '
+    if not self.optMassWindowLow is None:
+      latexLine+=str(int(self.optMassWindowLow))+' to '+str(int(self.optMassWindowHigh))+' & '
+    else:
+      latexLine+=str(int(self.mass-3*self.halfWidth))+' to '+str(int(self.mass+3*self.halfWidth))+' & '
     latexLine+='%.2f'%self.totalEff+' & '
     expectedSignalEvents = lumi * self.totalXSec * self.totalEff
     latexLine+='%.2f'%float(expectedSignalEvents)+' & '
@@ -100,6 +103,53 @@ class ModelPoint:
     tableString+=string.center('%.1E'%float(self.totalXSec),10)+string.center(str(round(self.expLimit,6)),10)
     tableString+=string.center(str(round(self.obsLimit,5)),12)
     return tableString
+
+
+def ReadFromFile(file):
+  outputModelPoints = []
+  for line in file:
+    if len(line) < 2:
+      continue
+    try:
+      value = float(line.split(': ')[1])
+    except ValueError:
+      value = None
+    if "Coupling:" in line:
+      mp = ModelPoint()
+      mp.coupling = value
+    elif "Mass:" in line:
+      mp.mass = value
+    elif "TotalXSection:" in line:
+      mp.totalXSec = value
+    elif "TotalEff:" in line:
+      mp.totalEff = value
+    elif "HalfWidth:" in line:
+      mp.halfWidth = value
+    elif "OptMassWindowLow:" in line:
+      mp.optMassWindowLow = value
+    elif "OptMassWindowHigh:" in line:
+      mp.optMassWindowHigh = value
+    elif "NDataObs:" in line:
+      mp.nDataObs = value
+    elif "NBackground:" in line and not "Err" in line:
+      mp.nBackground = value
+    elif "NBackgroundErr:" in line:
+      mp.nBackgroundErr = value
+    elif "ExpectedLimit:" in line and not "Sigma" in line:
+      mp.expLimit = value
+    elif "ExpectedLimitOneSigmaHigh:" in line:
+      mp.expLimitOneSigmaHigh = value
+    elif "ExpectedLimitOneSigmaLow:" in line:
+      mp.expLimitOneSigmaLow = value
+    elif "ExpectedLimitTwoSigmaHigh:" in line:
+      mp.expLimitTwoSigmaHigh = value
+    elif "ExpectedLimitTwoSigmaLow:" in line:
+      mp.expLimitTwoSigmaLow = value
+    elif "ObservedLimit:" in line:
+      mp.obsLimit = value
+      outputModelPoints.append(mp)
+  return outputModelPoints
+
 
 
 
