@@ -19,45 +19,9 @@ from ROOT import *
 from ModelPoint import *
 
 
-def ReadFromFile(file):
-  outputModelPoints = []
-  for line in file:
-    #print line,
-    if "Coupling" in line:
-      mp = ModelPoint()
-      mp.coupling = float(line.split(': ')[1])
-    elif "Mass" in line:
-      mp.mass = float(line.split(': ')[1])
-    elif "TotalXSection" in line:
-      mp.totalXSec = float(line.split(': ')[1])
-    elif "TotalEff" in line:
-      mp.totalEff = float(line.split(': ')[1])
-    elif "HalfWidth" in line:
-      mp.halfWidth = float(line.split(': ')[1])
-    elif "OptMassWindowLow" in line:
-      mp.optMassWindowLow = float(line.split(': ')[1])
-    elif "OptMassWindowHigh" in line:
-      mp.optMassWindowHigh = float(line.split(': ')[1])
-    elif "NDataObs" in line:
-      mp.nDataObs = float(line.split(': ')[1])
-    elif "NBackground" in line and not "Err" in line:
-      mp.nBackground = float(line.split(': ')[1])
-    elif "NBackgroundErr" in line:
-      mp.nBackgroundErr = float(line.split(': ')[1])
-    elif "ExpectedLimit" in line and not "Sigma" in line:
-      mp.expLimit = float(line.split(': ')[1])
-    elif "ExpectedLimitOneSigmaHigh" in line:
-      mp.expLimitOneSigmaHigh = float(line.split(': ')[1])
-    elif "ExpectedLimitOneSigmaLow" in line:
-      mp.expLimitOneSigmaLow = float(line.split(': ')[1])
-    elif "ExpectedLimitTwoSigmaHigh" in line:
-      mp.expLimitTwoSigmaHigh = float(line.split(': ')[1])
-    elif "ExpectedLimitTwoSigmaLow" in line:
-      mp.expLimitTwoSigmaLow = float(line.split(': ')[1])
-    elif "ObservedLimit" in line:
-      mp.obsLimit = float(line.split(': ')[1])
-      outputModelPoints.append(mp)
-  return outputModelPoints
+def ConvertToPng(baseName):
+  subprocess.call(['gs','-dBATCH','-dNOPAUSE','-dQUIET','-dEPSCrop','-sDEVICE=png16m','-sOutputFile='+baseName+'.png',baseName+'.eps'])
+  print 'file',baseName+'.png','created.'
 
 
 def makeExpBGArrays(modelPointArray):
@@ -355,7 +319,10 @@ def MakeOptSSBValueVsMassMultigraph(rootFile):
   mg.Write()
 
 
-def MakeOptMassWindowSignalBackgroundPlot(rootFile,signalHistogram,backgroundHist,optMassLow,optMassHigh,modelPoint):
+def MakeOptMassWindowSignalBackgroundPlot(rootFile,signalHistogram,backgroundHist,optMassLow,optMassHigh,modelPoint,outputDir):
+  # mkdir if not there already
+  if not os.path.isdir(outputDir):
+    os.mkdir(outputDir)
   rootFile.cd()
   c = TCanvas()
   c.SetName('signalBackgroundOptWindowsCanvas_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass))
@@ -373,9 +340,326 @@ def MakeOptMassWindowSignalBackgroundPlot(rootFile,signalHistogram,backgroundHis
   lineHigh.SetLineColor(4)
   lineHigh.Draw()
   c.Write()
+  fileName = 'signalBackgroundOptWindows_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass)
+  savePath = outputDir+'/'+fileName
+  c.Print(savePath+'.pdf')
+  c.Print(savePath+'.eps')
+  ConvertToPng(savePath)
 
 
-def PlotAllBands(modelPointArrays, lumi, rootFile):
+def MakeOptGraphImages(rootFile,outputDir,modelPointArray):
+  # mkdir if not there already
+  if not os.path.isdir(outputDir):
+    os.mkdir(outputDir)
+  gStyle.SetOptFit(1)
+  gStyle.SetOptStat(0)
+  gStyle.SetOptTitle(0)
+  c = TCanvas("c", "c",0,0,600,600)
+  c.SetHighLightColor(2)
+  c.Range(200,-3.536669,3637.5,-2.469521)
+  c.SetFillColor(0)
+  c.SetBorderMode(0)
+  c.SetBorderSize(2)
+  c.SetTickx(1)
+  c.SetTicky(1)
+  c.SetLeftMargin(0.18)
+  c.SetRightMargin(0.04)
+  c.SetTopMargin(0.05)
+  c.SetBottomMargin(0.15)
+  c.SetFrameFillStyle(0)
+  c.SetFrameLineWidth(2)
+  c.SetFrameBorderMode(0)
+  c.SetFrameFillStyle(0)
+  c.SetFrameLineWidth(2)
+  c.SetFrameBorderMode(0)
+  c.cd()
+  for mp in modelPointArray:
+    graphName = 'ssbOpt_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass)
+    #print 'Get graph',graphName,'from',rootFile.GetName()
+    optGraph = rootFile.Get(graphName)
+    optPtGraphName = 'ssbOptPoint_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass)
+    optPtGraph = rootFile.Get(optPtGraphName)
+    optPtGraph.SetMarkerColor(2)
+    optPtGraph.SetLineColor(2)
+    optPtGraph.SetMarkerStyle(3)
+    optPtGraph.SetMarkerSize(1.4)
+    mg = TMultiGraph()
+    drawOpt = 'p'
+    mg.Add(optGraph,drawOpt)
+    mg.Add(optPtGraph,drawOpt)
+    mg.Draw('a')
+    mg.GetXaxis().SetTitle('Window Size (GeV)')
+    mg.GetYaxis().SetTitle('s/#sqrt{s+b}')
+    #
+    savePath = outputDir+'/'+graphName
+    c.Print(savePath+'.pdf')
+    c.Print(savePath+'.eps')
+    #c.Print(savePath+'.C')
+    # png output looks strange, so convert from pdf instead
+    ConvertToPng(savePath)
+    # eps too big
+    os.unlink(savePath+'.eps')
+
+
+def MakeOptMassWindowVsMassImages(rootFile,imageDir):
+  # mkdir if not there already
+  if not os.path.isdir(imageDir):
+    os.mkdir(imageDir)
+  c = TCanvas("c", "c",0,0,600,600)
+  gStyle.SetOptFit(1)
+  gStyle.SetOptStat(0)
+  gStyle.SetOptTitle(0)
+  c.SetHighLightColor(2)
+  c.Range(200,-3.536669,3637.5,-2.469521)
+  c.SetFillColor(0)
+  c.SetBorderMode(0)
+  c.SetBorderSize(2)
+  c.SetTickx(1)
+  c.SetTicky(1)
+  c.SetLeftMargin(0.18)
+  c.SetRightMargin(0.04)
+  c.SetTopMargin(0.05)
+  c.SetBottomMargin(0.15)
+  c.SetFrameFillStyle(0)
+  c.SetFrameLineWidth(2)
+  c.SetFrameBorderMode(0)
+  c.SetFrameFillStyle(0)
+  c.SetFrameLineWidth(2)
+  c.SetFrameBorderMode(0)
+  #
+  symmWindowOptGraphk0p01 = rootFile.Get('optMassWindowsVsMassK0p01')
+  symmWindowOptGraphk0p01.SetFillStyle(3002)
+  symmWindowOptGraphk0p05 = rootFile.Get('optMassWindowsVsMassK0p05')
+  symmWindowOptGraphk0p05.SetFillStyle(3007)
+  symmWindowOptGraphk0p1 = rootFile.Get('optMassWindowsVsMassK0p1')
+  symmWindowOptGraphk0p1.SetFillStyle(3006)
+  test = TH1F("test","test",10,750,3500)
+  test.SetMinimum(600)
+  test.SetMaximum(4100)
+  test.SetStats(0)
+  test.SetLineStyle(0)
+  test.SetLineWidth(2)
+  test.SetMarkerStyle(20)
+  test.SetMarkerSize(0.8)
+  test.GetXaxis().SetTitle("M_{1} [GeV]")
+  test.GetXaxis().SetLabelFont(42)
+  test.GetXaxis().SetLabelOffset(0.007)
+  test.GetXaxis().SetTitleOffset(1.2)
+  test.GetXaxis().SetTitleFont(42)
+  test.GetYaxis().SetTitle("Mass window [GeV]")
+  test.GetYaxis().SetLabelFont(42)
+  test.GetYaxis().SetLabelOffset(0.007)
+  test.GetYaxis().SetTitleOffset(1.5)
+  test.GetYaxis().SetTitleFont(42)
+  test.GetZaxis().SetLabelFont(42)
+  test.GetZaxis().SetLabelOffset(0.007)
+  test.GetZaxis().SetLabelSize(0.05)
+  test.GetZaxis().SetTitleSize(0.06)
+  test.GetZaxis().SetTitleOffset(1.1)
+  test.GetZaxis().SetTitleFont(42)
+  test.Draw()
+  #
+  mg = TMultiGraph()
+  mg.Add(symmWindowOptGraphk0p01,"3")
+  mg.Add(symmWindowOptGraphk0p05,"3")
+  mg.Add(symmWindowOptGraphk0p1,"3")
+  mg.Draw("l")
+  #
+  leg = TLegend(0.18,0.65,0.5,0.86)
+  leg.SetBorderSize(0)
+  leg.SetLineColor(1)
+  leg.SetLineStyle(1)
+  leg.SetLineWidth(2)
+  leg.SetFillColor(0)
+  leg.SetFillStyle(0)
+  legDrawOpt = 'f'
+  entry=leg.AddEntry(symmWindowOptGraphk0p01,"Opt. Symm. Windows #tilde{k} = 0.01",legDrawOpt)
+  entry.SetLineColor(2)
+  entry.SetLineStyle(2)
+  entry.SetLineWidth(4)
+  entry.SetMarkerColor(2)
+  entry.SetMarkerStyle(21)
+  entry.SetMarkerSize(1)
+  entry=leg.AddEntry(symmWindowOptGraphk0p05,"Opt. Symm. Windows #tilde{k} = 0.05",legDrawOpt)
+  entry.SetLineColor(4)
+  entry.SetLineStyle(2)
+  entry.SetLineWidth(4)
+  entry.SetMarkerColor(4)
+  entry.SetMarkerStyle(21)
+  entry.SetMarkerSize(1)
+  entry=leg.AddEntry(symmWindowOptGraphk0p1,"Opt. Symm. Windows #tilde{k} = 0.1",legDrawOpt)
+  entry.SetLineColor(8)
+  entry.SetLineStyle(2)
+  entry.SetLineWidth(4)
+  entry.SetMarkerColor(8)
+  entry.SetMarkerStyle(21)
+  entry.SetMarkerSize(1)
+  leg.Draw()
+  #
+  test__6 = TH1F("test__6","test",10,750,3500)
+  test__6.SetMinimum(600)
+  test__6.SetMaximum(4100)
+  test__6.SetDirectory(0)
+  test__6.SetStats(0)
+  test__6.SetLineStyle(0)
+  test__6.SetLineWidth(2)
+  test__6.SetMarkerStyle(20)
+  test__6.SetMarkerSize(0.8)
+  test__6.GetXaxis().SetTitle("M_{1} [GeV]")
+  test__6.GetXaxis().SetLabelFont(42)
+  test__6.GetXaxis().SetLabelOffset(0.007)
+  test__6.GetXaxis().SetTitleOffset(1.2)
+  test__6.GetXaxis().SetTitleFont(42)
+  test__6.GetYaxis().SetTitle("Mass Window [GeV]")
+  test__6.GetYaxis().SetLabelFont(42)
+  test__6.GetYaxis().SetLabelOffset(0.007)
+  test__6.GetYaxis().SetTitleOffset(1.5)
+  test__6.GetYaxis().SetTitleFont(42)
+  test__6.GetZaxis().SetLabelFont(42)
+  test__6.GetZaxis().SetLabelOffset(0.007)
+  test__6.GetZaxis().SetLabelSize(0.05)
+  test__6.GetZaxis().SetTitleSize(0.06)
+  test__6.GetZaxis().SetTitleOffset(1.1)
+  test__6.GetZaxis().SetTitleFont(42)
+  test__6.Draw("sameaxis")
+  fileName = 'optimizedMassWindowsVsMass'
+  savePath = imageDir+'/'+fileName
+  c.Print(savePath+'.pdf')
+  c.Print(savePath+'.eps')
+  c.Print(savePath+'.C')
+  ConvertToPng(savePath)
+
+
+def MakeOptSSBVsMassImages(rootFile, outputDir):
+  symmWindowOptGraphk0p01 = rootFile.Get('optSSBVsMassK0p01')
+  symmWindowOptGraphk0p05 = rootFile.Get('optSSBVsMassK0p05')
+  symmWindowOptGraphk0p1 = rootFile.Get('optSSBVsMassK0p1')
+  #
+  c = TCanvas("c", "c",0,0,600,600)
+  gStyle.SetOptFit(1)
+  gStyle.SetOptStat(0)
+  gStyle.SetOptTitle(0)
+  c.SetHighLightColor(2)
+  c.Range(200,-3.536669,3637.5,-2.469521)
+  c.SetFillColor(0)
+  c.SetBorderMode(0)
+  c.SetBorderSize(2)
+  c.SetTickx(1)
+  c.SetTicky(1)
+  c.SetLeftMargin(0.18)
+  c.SetRightMargin(0.04)
+  c.SetTopMargin(0.05)
+  c.SetBottomMargin(0.15)
+  c.SetFrameFillStyle(0)
+  c.SetFrameLineWidth(2)
+  c.SetFrameBorderMode(0)
+  c.SetFrameFillStyle(0)
+  c.SetFrameLineWidth(2)
+  c.SetFrameBorderMode(0)
+  c.SetLogy()
+  #
+  minYrange = 1e-1
+  maxYrange = 8
+  test = TH1F("test","test",10,750,3500)
+  test.SetMinimum(minYrange)
+  test.SetMaximum(maxYrange)
+  test.SetStats(0)
+  test.SetLineStyle(0)
+  test.SetLineWidth(2)
+  test.SetMarkerStyle(20)
+  test.SetMarkerSize(0.8)
+  test.GetXaxis().SetTitle("M_{1} [GeV]")
+  test.GetXaxis().SetLabelFont(42)
+  test.GetXaxis().SetLabelOffset(0.007)
+  test.GetXaxis().SetTitleOffset(1.2)
+  test.GetXaxis().SetTitleFont(42)
+  test.GetYaxis().SetTitle("Opt. S/#sqrt{S+B}")
+  test.GetYaxis().SetLabelFont(42)
+  test.GetYaxis().SetLabelOffset(0.007)
+  test.GetYaxis().SetTitleOffset(1.5)
+  test.GetYaxis().SetTitleFont(42)
+  test.GetZaxis().SetLabelFont(42)
+  test.GetZaxis().SetLabelOffset(0.007)
+  test.GetZaxis().SetLabelSize(0.05)
+  test.GetZaxis().SetTitleSize(0.06)
+  test.GetZaxis().SetTitleOffset(1.1)
+  test.GetZaxis().SetTitleFont(42)
+  test.Draw()
+  #
+  mg = TMultiGraph()
+  drawOpt = 'pl'
+  mg.Add(symmWindowOptGraphk0p01,drawOpt)
+  mg.Add(symmWindowOptGraphk0p05,drawOpt)
+  mg.Add(symmWindowOptGraphk0p1,drawOpt)
+  mg.Draw("l")
+  #
+  leg = TLegend(0.6,0.7,0.8,0.9)
+  leg.SetBorderSize(0)
+  leg.SetLineColor(1)
+  leg.SetLineStyle(1)
+  leg.SetLineWidth(2)
+  leg.SetFillColor(0)
+  leg.SetFillStyle(0)
+  legDrawOpt = 'lp'
+  entry=leg.AddEntry(symmWindowOptGraphk0p01,"Symm. Window #tilde{k} = 0.01",legDrawOpt)
+  entry.SetLineColor(2)
+  entry.SetLineStyle(2)
+  entry.SetLineWidth(4)
+  entry.SetMarkerColor(2)
+  entry.SetMarkerStyle(21)
+  entry.SetMarkerSize(1)
+  entry=leg.AddEntry(symmWindowOptGraphk0p05,"Symm. Window #tilde{k} = 0.05",legDrawOpt)
+  entry.SetLineColor(4)
+  entry.SetLineStyle(2)
+  entry.SetLineWidth(4)
+  entry.SetMarkerColor(4)
+  entry.SetMarkerStyle(21)
+  entry.SetMarkerSize(1)
+  entry=leg.AddEntry(symmWindowOptGraphk0p1,"Symm. Window #tilde{k} = 0.1",legDrawOpt)
+  entry.SetLineColor(8)
+  entry.SetLineStyle(2)
+  entry.SetLineWidth(4)
+  entry.SetMarkerColor(8)
+  entry.SetMarkerStyle(21)
+  entry.SetMarkerSize(1)
+  leg.Draw()
+  #
+  test__6 = TH1F("test__6","test",10,750,3500)
+  test__6.SetMinimum(minYrange)
+  test__6.SetMaximum(maxYrange)
+  test__6.SetDirectory(0)
+  test__6.SetStats(0)
+  test__6.SetLineStyle(0)
+  test__6.SetLineWidth(2)
+  test__6.SetMarkerStyle(20)
+  test__6.SetMarkerSize(0.8)
+  test__6.GetXaxis().SetTitle("M_{1} [GeV]")
+  test__6.GetXaxis().SetLabelFont(42)
+  test__6.GetXaxis().SetLabelOffset(0.007)
+  test__6.GetXaxis().SetTitleOffset(1.2)
+  test__6.GetXaxis().SetTitleFont(42)
+  test__6.GetYaxis().SetTitle("Opt. S/#sqrt{S+B}")
+  test__6.GetYaxis().SetLabelFont(42)
+  test__6.GetYaxis().SetLabelOffset(0.007)
+  test__6.GetYaxis().SetTitleOffset(1.5)
+  test__6.GetYaxis().SetTitleFont(42)
+  test__6.GetZaxis().SetLabelFont(42)
+  test__6.GetZaxis().SetLabelOffset(0.007)
+  test__6.GetZaxis().SetLabelSize(0.05)
+  test__6.GetZaxis().SetTitleSize(0.06)
+  test__6.GetZaxis().SetTitleOffset(1.1)
+  test__6.GetZaxis().SetTitleFont(42)
+  test__6.Draw("sameaxis")
+  #
+  fileName = 'optSSBVsMassAll'
+  savePath = outputDir+'/'+fileName
+  c.Print(savePath+'.pdf')
+  c.Print(savePath+'.eps')
+  c.Print(savePath+'.C')
+  ConvertToPng(savePath)
+
+
+def PlotAllBands(modelPointArrays, lumi, rootFile, imageDir):
   # this function takes a list of modelPointArrays: [mpsCoupling0.01, mpsCoupling0.05, ...]
   # fill arrays that we care about
   # TODO reuse this code in the plotbands section
@@ -453,7 +737,7 @@ def PlotAllBands(modelPointArrays, lumi, rootFile):
   # To make the separate graphs share the same axes
   h = TH1F("test","test",10,750,3500)
   h.SetStats(False)
-  h.GetYaxis().SetRangeUser(4e-4,3e-3)
+  h.GetYaxis().SetRangeUser(3e-4,3e-3)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
   h.GetYaxis().SetTitle("RS graviton #sigma [pb]     ")
   h.GetXaxis().SetLabelFont(42)
@@ -495,20 +779,20 @@ def PlotAllBands(modelPointArrays, lumi, rootFile):
   plotname = "allLimits.pdf"
   savename = TString(plotname)
   pdfName = savename.Data()
-  c.SaveAs(savename.Data())
+  c.SaveAs(imageDir+'/'+savename.Data())
   plotname = "allLimits.C"
   savename = TString(plotname)
-  c.SaveAs(savename.Data())
+  c.SaveAs(imageDir+'/'+savename.Data())
   # png output looks strange, so convert from pdf instead
   plotname = "allLimits.png"
   savename = TString(plotname)
-  subprocess.Popen(['convert','-trim',pdfName,savename.Data()])
+  subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
   # write
   mg.SetName("limitsAllCouplingsMultiGraph")
   mg.Write()
 
 
-def PlotBands(modelPointArray, lumi, rootFile):
+def PlotBands(modelPointArray, lumi, rootFile, imageDir):
   #print '----- PlotBands -----'
   #print 'Coupling:',modelPointArray[0].coupling
   # fill arrays
@@ -664,8 +948,8 @@ def PlotBands(modelPointArray, lumi, rootFile):
   #g01_exp.Draw("C")
 
 
-  #  g01_obs.SetMarkerStyle(20)
-  g01_obs.SetMarkerSize(0.4)
+  g01_obs.SetMarkerStyle(21)
+  g01_obs.SetMarkerSize(1)
   g01_obs.SetMarkerColor(1)
   g01_obs.SetLineColor(1)
   g01_obs.SetLineWidth(4)
@@ -695,7 +979,7 @@ def PlotBands(modelPointArray, lumi, rootFile):
   mg.Add(g01_exp_2s,"3C")
   mg.Add(g01_exp_1s,"3C")
   mg.Add(g01_exp,"C")
-  mg.Add(g01_obs,"L")
+  mg.Add(g01_obs,"LP")
   mg.Add(g01_theory,"L")
   mg.Draw("AL")
   # To have diff. x-axes for each limit graph (TMultiGraph doesn't exactly respect zoomed x-axis)
@@ -772,18 +1056,18 @@ def PlotBands(modelPointArray, lumi, rootFile):
   indexstring = savename.Index(".")
   savename.Replace(indexstring,1,"p")
   pdfName = savename.Data()
-  c.SaveAs(savename.Data())
+  c.SaveAs(imageDir+'/'+savename.Data())
   plotname = "limit_k_%.2f.C" % modelPointArray[0].coupling
   savename = TString(plotname)
   indexstring = savename.Index(".")
   savename.Replace(indexstring,1,"p")
-  c.SaveAs(savename.Data())
+  c.SaveAs(imageDir+'/'+savename.Data())
   # png output looks strange, so convert from pdf instead
   plotname = "limit_k_%.2f.png" % modelPointArray[0].coupling
   savename = TString(plotname)
   indexstring = savename.Index(".")
   savename.Replace(indexstring,1,"p")
-  subprocess.Popen(['convert','-trim',pdfName,savename.Data()])
+  subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
   # write
   mg.SetName("limit_k_%.2f_MultiGraph" % modelPointArray[0].coupling)
   mg.Write()
@@ -858,7 +1142,7 @@ def GetMassLimit(modelPointArray):
   return m,xs,mExp,xsExp
 
 
-def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile, lumi):
+def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile, lumi, imageDir):
   rootFile.cd()
   cLimit = TCanvas("cLimit","cLimit",800,600)
   gStyle.SetOptStat(0)
@@ -1042,14 +1326,14 @@ def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile, l
   cLimit.cd()
   cLimit.SetSelected(cLimit)
   cLimit.Update()
-  cLimit.Print("RSMassVsCouplingLimits.C")
-  cLimit.Print("RSMassVsCouplingLimits.png")
-  cLimit.Print("RSMassVsCouplingLimits.pdf")
+  cLimit.Print(imageDir+'/'+"RSMassVsCouplingLimits.C")
+  cLimit.Print(imageDir+'/'+"RSMassVsCouplingLimits.png")
+  cLimit.Print(imageDir+'/'+"RSMassVsCouplingLimits.pdf")
   cLimit.SetName("RSMassVsCouplingLimits")
   cLimit.Write()
 
 
-def PlotAllEfficiencies(modelPointArrays, lumi, rootFile):
+def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   # this function takes a list of modelPointArrays: [mpsCoupling0.01, mpsCoupling0.05, ...]
   # fill arrays that we care about
   # TODO reuse this code in the plotbands section
@@ -1142,20 +1426,20 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile):
   plotname = "allEfficiencies.pdf"
   savename = TString(plotname)
   pdfName = savename.Data()
-  c.SaveAs(savename.Data())
+  c.SaveAs(imageDir+'/'+savename.Data())
   plotname = "allEfficiencies.C"
   savename = TString(plotname)
-  c.SaveAs(savename.Data())
+  c.SaveAs(imageDir+'/'+savename.Data())
   # png output looks strange, so convert from pdf instead
   plotname = "allEfficiencies.png"
   savename = TString(plotname)
-  subprocess.Popen(['convert','-trim',pdfName,savename.Data()])
+  subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
   # write
   mg.SetName("allEfficiencies")
   mg.Write()
 
 
-def PlotAllHalfWidths(modelPointArrays, lumi, rootFile):
+def PlotAllHalfWidths(modelPointArrays, lumi, rootFile, imageDir):
   # this function takes a list of modelPointArrays: [mpsCoupling0.01, mpsCoupling0.05, ...]
   # fill arrays that we care about
   # TODO reuse this code in the plotbands section
@@ -1248,20 +1532,20 @@ def PlotAllHalfWidths(modelPointArrays, lumi, rootFile):
   plotname = "allHalfWidths.pdf"
   savename = TString(plotname)
   pdfName = savename.Data()
-  c.SaveAs(savename.Data())
+  c.SaveAs(imageDir+'/'+savename.Data())
   plotname = "allHalfWidths.C"
   savename = TString(plotname)
-  c.SaveAs(savename.Data())
+  c.SaveAs(imageDir+'/'+savename.Data())
   # png output looks strange, so convert from pdf instead
   plotname = "allHalfWidths.png"
   savename = TString(plotname)
-  subprocess.Popen(['convert','-trim',pdfName,savename.Data()])
+  subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
   # write
   mg.SetName("allHalfWidths")
   mg.Write()
 
 
-def PlotAllExpBGs(modelPointArrays, lumi, rootFile):
+def PlotAllExpBGs(modelPointArrays, lumi, rootFile, imageDir):
   # this function takes a list of modelPointArrays: [mpsCoupling0.01, mpsCoupling0.05, ...]
   # fill arrays that we care about
   # TODO reuse this code in the plotbands section
@@ -1354,14 +1638,14 @@ def PlotAllExpBGs(modelPointArrays, lumi, rootFile):
   plotname = "allExpBGs.pdf"
   savename = TString(plotname)
   pdfName = savename.Data()
-  c.SaveAs(savename.Data())
+  c.SaveAs(imageDir+'/'+savename.Data())
   plotname = "allExpBGs.C"
   savename = TString(plotname)
-  c.SaveAs(savename.Data())
+  c.SaveAs(imageDir+'/'+savename.Data())
   # png output looks strange, so convert from pdf instead
   plotname = "allExpBGs.png"
   savename = TString(plotname)
-  subprocess.Popen(['convert','-trim',pdfName,savename.Data()])
+  subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
   # write
   mg.SetName("allExpBGs")
   mg.Write()
