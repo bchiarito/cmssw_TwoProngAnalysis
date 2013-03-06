@@ -20,6 +20,7 @@ import glob
 import math
 import array
 import subprocess
+import datetime
 
 # run root in batch
 sys.argv.append('-b')
@@ -126,19 +127,20 @@ def GetSignalFileName(template,coupling,mass):
 
 
 # TODO: remove hardcoding; instead use list of couplings to run over
-def DoLimitsAllPoints(cl95MacroPathAndName,lumi,lumiErr,limitsFileNameBase):
+def DoLimitsAllPoints(cl95MacroPathAndName,lumi,lumiErr,limitsFileName):
   print 'Run for coupling 0.01'
-  with open(limitsFileNameBase+'0p01.txt', 'r') as file:
-    readModelPoints0p01 = ReadFromFile(file)
-  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p01,limitsFileNameBase+'0p01.txt')
+  with open(limitsFileName+'0p01.txt', 'r') as file:
+    readModelPointsC0p01 = ReadFromFile(file)
+  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p01,limitsFileName+'0p01.txt')
   print 'Run for coupling 0.05'
-  with open(limitsFileNameBase+'0p05.txt', 'r') as file:
-    readModelPoints0p05 = ReadFromFile(file)
-  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p05,limitsFileNameBase+'0p05.txt')
+  with open(limitsFileName+'0p05.txt', 'r') as file:
+    readModelPointsC0p05 = ReadFromFile(file)
+  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p05,limitsFileName+'0p05.txt')
   print 'Run for coupling 0.1'
-  with open(limitsFileNameBase+'0p1.txt', 'r') as file:
-    readModelPoints0p1 = ReadFromFile(file)
-  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p1,limitsFileNameBase+'0p1.txt')
+  with open(limitsFileName+'0p1.txt', 'r') as file:
+    readModelPointsC0p1 = ReadFromFile(file)
+  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p1,limitsFileName+'0p1.txt')
+  subprocess.call(['mv','cls_plots',outputDir])
 
 
 ## TODO
@@ -148,7 +150,7 @@ def DoLimitsAllPoints(cl95MacroPathAndName,lumi,lumiErr,limitsFileNameBase):
 #  for c in couplingsToRunOver:
 #    # make coupling string
 #    couplingString = f(c)
-#    with open(limitsFileNameBase+couplingString+'.txt', 'r') as file:
+#    with open(limitsFileName+couplingString+'.txt', 'r') as file:
 #      readModelPoints = ReadFromFile(file)
 #    resultsByCoupling[c] = readModelPoints
 #  return resultsByCoupling
@@ -159,11 +161,11 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   gROOT.ProcessLine('.L '+pathToTDRStyle)
   gROOT.ProcessLine('setTDRStyle()')
   print 'Run for coupling 0.01'
-  with open(limitsFileNameBase+'0p01.txt', 'r') as file:
+  with open(limitsFileName+'0p01.txt', 'r') as file:
     readModelPoints0p01 = ReadFromFile(file)
   for modelPoint in readModelPoints0p01:
     modelPoint.Print()
-  PlotBands(readModelPoints0p01,lumi,rootFile)
+  PlotBands(readModelPoints0p01,lumi,rootFile,outputDir)
   m0p01,xs,mExp0p01,xsE = GetMassLimit(readModelPoints0p01)
   print string.ljust('Coupling: '+str(readModelPoints0p01[0].coupling),14),
   print ' Observed limit mass: %0.2f'%m0p01
@@ -172,9 +174,9 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   print '                Expected XSec limit: %0.6f'%xsE
   # 0.05
   print 'Run for coupling 0.05'
-  with open(limitsFileNameBase+'0p05.txt', 'r') as file:
+  with open(limitsFileName+'0p05.txt', 'r') as file:
     readModelPoints0p05 = ReadFromFile(file)
-  PlotBands(readModelPoints0p05,lumi,rootFile)
+  PlotBands(readModelPoints0p05,lumi,rootFile,outputDir)
   m0p05,xs,mExp0p05,xsE = GetMassLimit(readModelPoints0p05)
   print string.ljust('Coupling: '+str(readModelPoints0p05[0].coupling),14),
   print ' Observed limit mass: %0.2f'%m0p05
@@ -183,9 +185,9 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   print '                Expected XSec limit: %0.6f'%xsE
   # 0.1
   print 'Run for coupling 0.1'
-  with open(limitsFileNameBase+'0p1.txt', 'r') as file:
+  with open(limitsFileName+'0p1.txt', 'r') as file:
     readModelPoints0p1 = ReadFromFile(file)
-  PlotBands(readModelPoints0p1,lumi,rootFile)
+  PlotBands(readModelPoints0p1,lumi,rootFile,outputDir)
   m0p1,xs,mExp0p1,xsE = GetMassLimit(readModelPoints0p1)
   print string.ljust('Coupling: '+str(readModelPoints0p1[0].coupling),14),
   print ' Observed limit mass: %0.2f'%m0p1
@@ -196,27 +198,27 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   mLimObs = [m0p01,m0p05,m0p1]
   mLimExp = [mExp0p01,mExp0p05,mExp0p1]
   couplings = [0.01,0.05,0.1]
-  CouplingVsMassPlot(couplings,mLimExp,mLimObs,rootFile,lumi)
+  CouplingVsMassPlot(couplings,mLimExp,mLimObs,rootFile,lumi,outputDir)
   # efficiencies for all couplings/masses on same axes
-  PlotAllEfficiencies([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile)
+  PlotAllEfficiencies([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,outputDir)
   # half widths
-  PlotAllHalfWidths([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile)
+  PlotAllHalfWidths([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,outputDir)
   # exp BG
-  PlotAllExpBGs([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile)
+  PlotAllExpBGs([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,outputDir)
   # limit plot for all couplings on same axes
-  PlotAllBands([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile)
+  PlotAllBands([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,outputDir)
   # make table
   DoTablesAllPoints(lumi)
 
 
 def DoTablesAllPoints(lumi):
-  with open(limitsFileNameBase+'0p01.txt', 'r') as file:
+  with open(limitsFileName+'0p01.txt', 'r') as file:
     readModelPoints0p01 = ReadFromFile(file)
   # 0.05
-  with open(limitsFileNameBase+'0p05.txt', 'r') as file:
+  with open(limitsFileName+'0p05.txt', 'r') as file:
     readModelPoints0p05 = ReadFromFile(file)
   # 0.1
-  with open(limitsFileNameBase+'0p1.txt', 'r') as file:
+  with open(limitsFileName+'0p1.txt', 'r') as file:
     readModelPoints0p1 = ReadFromFile(file)
   # now make table output
   tableTitleString=string.ljust('Coupling',9)+string.ljust('Mass',6)+string.ljust('Eff.',8)
@@ -293,19 +295,19 @@ def DoOptimizeAllPoints():
   useAsymmWindow = False
   print 'Run for coupling 0.01'
   colorIndex = 2 #TODO add this into modelpoint itself?
-  with open(limitsFileNameBase+'0p01.txt', 'w') as file:
+  with open(limitsFileName+'0p01.txt', 'w') as file:
     OptimizeSignalMassWindows(
-        rootFileLocation,modelPointsC0p01,lumi,useAsymmWindow,maxWindowRange,file,rootFile,colorIndex)
+        rootFileLocation,modelPointsC0p01,lumi,useAsymmWindow,maxWindowRange,file,rootFile,colorIndex,outputDir)
   print 'Run for coupling 0.05'
   colorIndex = 4
-  with open(limitsFileNameBase+'0p05.txt', 'w') as file:
+  with open(limitsFileName+'0p05.txt', 'w') as file:
     OptimizeSignalMassWindows(
-        rootFileLocation,modelPointsC0p05,lumi,useAsymmWindow,maxWindowRange,file,rootFile,colorIndex)
+        rootFileLocation,modelPointsC0p05,lumi,useAsymmWindow,maxWindowRange,file,rootFile,colorIndex,outputDir)
   print 'Run for coupling 0.1'
   colorIndex = 8
-  with open(limitsFileNameBase+'0p1.txt', 'w') as file:
+  with open(limitsFileName+'0p1.txt', 'w') as file:
     OptimizeSignalMassWindows(
-        rootFileLocation,modelPointsC0p1,lumi,useAsymmWindow,maxWindowRange,file,rootFile,colorIndex)
+        rootFileLocation,modelPointsC0p1,lumi,useAsymmWindow,maxWindowRange,file,rootFile,colorIndex,outputDir)
   # make multigraphs for all masses/couplings
   MakeOptHalfWindowVsMassMultigraph(rootFile)
   MakeOptMassWindowsVsMassMultiGraph(rootFile)
@@ -325,16 +327,37 @@ def DoOptimizeAllPoints():
   for mp in modelPointsC0p1:
     print '|',mp.coupling,'|',mp.mass,'|',mp.optMassWindowLow,'|',mp.optMassWindowHigh,'|',(mp.optMassWindowHigh-mp.optMassWindowLow)/2+0.5,'|',
     print '<a href="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/ssbOpt_k0p1_m'+str(mp.mass)+'.png"><img src="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/ssbOpt_k0p1_m'+str(mp.mass)+'.png" alt="optimization_K0p1_m'+str(mp.mass)+'" width="400" /></a>|<a href=http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/ssbOpt_k0p1_m'+str(mp.mass)+'.pdf>PDF Version</a>|'
+  # print out signal/background mass window plot code for twiki
+  print 'Twiki-style table of signal/background mass plot'
+  print '| *Coupling* | *Mass (!GeV)* | *Plot* | *PDF* |'
+  for mp in modelPointsC0p01:
+    print '|0.01|',mp.mass,'|',
+    print '<a href="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/signalBackgroundOptWindows_k0p01_m'+str(mp.mass)+'.png"><img src="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/signalBackgroundOptWindows_k0p01_m'+str(mp.mass)+'.png" alt="optimization_K0p01_m'+str(mp.mass)+'" width="600" /></a>|<a href=http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/signalBackgroundOptWindows_k0p01_m'+str(mp.mass)+'.pdf>PDF Version</a>|'
+  print '| ||||'
+  for mp in modelPointsC0p05:
+    print '|0.05|',mp.mass,'|',
+    print '<a href="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/signalBackgroundOptWindows_k0p05_m'+str(mp.mass)+'.png"><img src="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/signalBackgroundOptWindows_k0p05_m'+str(mp.mass)+'.png" alt="optimization_K0p05_m'+str(mp.mass)+'" width="600" /></a>|<a href=http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/signalBackgroundOptWindows_k0p05_m'+str(mp.mass)+'.pdf>PDF Version</a>|'
+  print '| ||||'
+  for mp in modelPointsC0p1:
+    print '|0.1|',mp.mass,'|',
+    print '<a href="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/signalBackgroundOptWindows_k0p1_m'+str(mp.mass)+'.png"><img src="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/signalBackgroundOptWindows_k0p1_m'+str(mp.mass)+'.png" alt="optimization_K0p1_m'+str(mp.mass)+'" width="600" /></a>|<a href=http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/signalBackgroundOptWindows_k0p1_m'+str(mp.mass)+'.pdf>PDF Version</a>|'
+
+
+def DoOptimizationPlots():
+  MakeOptGraphImages(rootFile,outputDir,modelPointsC0p01+modelPointsC0p05+modelPointsC0p1)
+  MakeOptMassWindowVsMassImages(rootFile,outputDir)
+  MakeOptSSBVsMassImages(rootFile, outputDir)
 
 
 def Usage():
   print 'Usage: python RunLimitsAndPlots.py [arg] where arg can be:'
-  print '    all      --> run yields, limits, and plots (see below)'
-  print '    limits   --> Compute limits for all model points & write out results'
-  print '    plots    --> Read limit results from text files and make limit plots'
-  print '    tables   --> Read limit results from text files and make results tables (text/latex)'
-  print '    yields   --> Calculate event yields from histograms in root files (from CreateHistogramFiles)'
-  print '    optimize --> Calculate optimal inv. mass windows using histograms in root files (from CreateHistogramFiles)'
+  print '    all           --> run yields, limits, and plots (see below)'
+  print '    limits        --> Compute limits for all model points & write out results'
+  print '    plots         --> Read limit results from text files and make limit plots'
+  print '    tables        --> Read limit results from text files and make results tables (text/latex)'
+  print '    yields        --> Calculate event yields from histograms in root files (from CreateHistogramFiles)'
+  print '    optimize      --> Calculate optimal inv. mass windows using histograms in root files (from CreateHistogramFiles)'
+  print '    optimizePlots --> Print optimization graphs as images (use after optimize has been run)'
 
 
 
@@ -354,19 +377,24 @@ cl95MacroName = 'roostats_cl95.C'
 
 
 # Configurable stuff here
+now = datetime.datetime.now()
+Date = now.strftime("%b%d")
+outputDir = Date+'_results'
+#outputDir = 'results_all2012_PFID_fineBins_deltaPhi2p8_feb13'
+if not os.path.isdir(outputDir):
+  os.mkdir(outputDir)
 # limit results file base name
 limitsFileNameBase = 'results_limits_k_'
+limitsFileName = outputDir+'/'+limitsFileNameBase
+plotFileName = outputDir+'/plots.root'
 # location of backgroundMC/data root files from CreateHistogramFiles code
 rootFileLocation = '/afs/cern.ch/user/s/scooper/work/private/results/diPhotonHistogramsPF_deltaPhi2p8_19p6invFb/'
-# Declarations of Lumi and model points to consider
+# Declarations of Lumi and model points to consider -- must have xsec, etc. defined above
 lumi = 19620.
 lumiErr = lumi*0.044
 masses0p01 = [750,1000,1250,1500,1750,2000,3000]
 masses0p05 = [1750,2000,2500,2750,3000]
 masses0p1 = [2250,2500,2750,3000,3250,3500]
-# root file for plots
-plotFileName = 'plots.root'
-rootFile = TFile(plotFileName,'recreate')
 
 
 # List signal histogram file template; rest of quantities are filled from functions (xsec, width, etc.) or histograms in the files
@@ -395,28 +423,46 @@ for mass in masses0p1:
 if len(sys.argv)==1:
   Usage()
   sys.exit()
+elif sys.argv[1]=='optimizePlots':
+  print 'optimizePlots: print plot images from optimization'
+  rootFile = TFile(plotFileName)
+  DoOptimizationPlots()
 elif sys.argv[1]=='optimize':
   print 'optimize: OptimizeSignalMassWindows'
+  print 'warning: will overwrite file',plotFileName,'if it already exists.'
+  # recreate tfile for optimize step
+  rootFile = TFile(plotFileName,'recreate')
   DoOptimizeAllPoints()
-  PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile)
+  DoOptimizationPlots()
+  PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,outputDir)
 elif sys.argv[1]=='yields':
   print 'yields: CalculateYieldsForMassRanges'
+  rootFile = TFile(plotFileName,'update')
   CalculateYieldsForMassRanges(rootFileLocation, modelPointsC0p01+modelPointsC0p05+modelPointsC0p1, lumi, 3)
 elif sys.argv[1]=='limits':
   print 'limits: DoLimitsAllPoints'
-  DoLimitsAllPoints(cl95MacroPath+cl95MacroName,lumi,lumiErr,limitsFileNameBase)
+  rootFile = TFile(plotFileName,'update')
+  DoLimitsAllPoints(cl95MacroPath+cl95MacroName,lumi,lumiErr,limitsFileName)
 elif sys.argv[1]=='plots':
   print 'plots: DoPlotsAllPoints'
+  rootFile = TFile(plotFileName,'update')
   DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle)
 elif sys.argv[1]=='tables':
   print 'tables: DoTablesAllPoints'
+  rootFile = TFile(plotFileName,'update')
   DoTablesAllPoints(lumi)
 elif sys.argv[1]=='all':
-  print 'all: yields+limits+plots'
-  print 'yields: CalculateYieldsForMassRanges'
-  CalculateYieldsForMassRanges(rootFileLocation, modelPointsC0p01+modelPointsC0p05+modelPointsC0p1, lumi, 3)
+  print 'all: optimize+limits+plots'
+  print 'optimize: OptimizeSignalMassWindows'
+  print 'warning: will overwrite file',plotFileName,'if it already exists.'
+  # recreate tfile for optimize step
+  rootFile = TFile(plotFileName,'recreate')
+  DoOptimizeAllPoints()
+  DoOptimizationPlots()
+  PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,outputDir)
   print 'limits: DoLimitsAllPoints'
-  DoLimitsAllPoints(cl95MacroPath+cl95MacroName,lumi,lumiErr,limitsFileNameBase)
+  rootFile = TFile(plotFileName,'update')
+  DoLimitsAllPoints(cl95MacroPath+cl95MacroName,lumi,lumiErr,limitsFileName)
   print 'plots: DoPlotsAllPoints'
   DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle)
   print 'tables: DoTablesAllPoints'
