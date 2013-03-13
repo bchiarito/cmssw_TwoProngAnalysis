@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Wed Jun 16 17:06:28 CEST 2010
-// $Id: ExoDiPhotonSignalMCAnalyzer.cc,v 1.7 2012/09/11 22:15:17 jcarson Exp $
+// $Id: ExoDiPhotonSignalMCAnalyzer.cc,v 1.10 2013/02/12 14:01:15 scooper Exp $
 //
 //
 
@@ -744,23 +744,22 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      fRecoPhotonInfo1.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron(matchPhoton1->superCluster(), hElectrons, hConversions, beamSpot.position());
     //we retrieve the effective areas
     //Remember effareaCH = 1st, effareaNH = 2nd, effareaPH = 3rd
-    //std::vector<double> effareas = ExoDiPhotons::EffectiveAreas(&(*matchPhoton1));
     std::vector<double> photon1TorFEffAreas = ExoDiPhotons::EffectiveAreas(matchPhoton1);
-    //double pfisoall = isolator03.fGetIsolation(&(*matchPhoton1),pfCandidates,firstVtx,vertexColl);
+    double pfisoall = isolator03.fGetIsolation(matchPhoton1,pfCandidates,firstVtx,vertexColl);
     double rhocorPFIsoCH = max(isolator03.getIsolationCharged()-fRho25*photon1TorFEffAreas[0],0.);
     double rhocorPFIsoNH = max(isolator03.getIsolationNeutral()-fRho25*photon1TorFEffAreas[1],0.);
     double rhocorPFIsoPH = max(isolator03.getIsolationPhoton()-fRho25*photon1TorFEffAreas[2],0.);
      
+    fRecoPhotonInfo1.PFIsoAll03 = pfisoall;
+    fRecoPhotonInfo1.PFIsoCharged03 = isolator03.getIsolationCharged();
+    fRecoPhotonInfo1.PFIsoNeutral03 = isolator03.getIsolationNeutral();
+    fRecoPhotonInfo1.PFIsoPhoton03 = isolator03.getIsolationPhoton();      
+
     fRecoPhotonInfo1.PFIsoAll04 = isolator04.fGetIsolation(matchPhoton1,pfCandidates,firstVtx,vertexColl);
     fRecoPhotonInfo1.PFIsoCharged04 = isolator04.getIsolationCharged();
     fRecoPhotonInfo1.PFIsoNeutral04 = isolator04.getIsolationNeutral();
     fRecoPhotonInfo1.PFIsoPhoton04 = isolator04.getIsolationPhoton();      
 
-    fRecoPhotonInfo1.PFIsoAll03 = isolator03.fGetIsolation(matchPhoton1,pfCandidates,firstVtx,vertexColl);
-    fRecoPhotonInfo1.PFIsoCharged03 = isolator03.getIsolationCharged();
-    fRecoPhotonInfo1.PFIsoNeutral03 = isolator03.getIsolationNeutral();
-    fRecoPhotonInfo1.PFIsoPhoton03 = isolator03.getIsolationPhoton();      
-    
     fRecoPhotonInfo1.PFIsoAll02 = isolator02.fGetIsolation(matchPhoton1,pfCandidates,firstVtx,vertexColl);
     fRecoPhotonInfo1.PFIsoCharged02 = isolator02.getIsolationCharged();
     fRecoPhotonInfo1.PFIsoNeutral02 = isolator02.getIsolationNeutral();
@@ -772,9 +771,9 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
     fRecoPhotonInfo1.rhocorPFIsoPhoton04 = max(fRecoPhotonInfo1.PFIsoPhoton04-fRho25*photon1TorFEffAreas[2],0.);
     fRecoPhotonInfo1.rhocorPFIsoAll04 = fRecoPhotonInfo1.rhocorPFIsoCharged04 + fRecoPhotonInfo1.rhocorPFIsoNeutral04 + fRecoPhotonInfo1.rhocorPFIsoPhoton04;
 
-    fRecoPhotonInfo1.rhocorPFIsoCharged03 = max(fRecoPhotonInfo1.PFIsoCharged03-fRho25*photon1TorFEffAreas[0],0.);
-    fRecoPhotonInfo1.rhocorPFIsoNeutral03 = max(fRecoPhotonInfo1.PFIsoNeutral03-fRho25*photon1TorFEffAreas[1],0.);
-    fRecoPhotonInfo1.rhocorPFIsoPhoton03 = max(fRecoPhotonInfo1.PFIsoPhoton03-fRho25*photon1TorFEffAreas[2],0.);
+    fRecoPhotonInfo1.rhocorPFIsoCharged03 = rhocorPFIsoCH;
+    fRecoPhotonInfo1.rhocorPFIsoNeutral03 = rhocorPFIsoNH;
+    fRecoPhotonInfo1.rhocorPFIsoPhoton03 = rhocorPFIsoPH;
     fRecoPhotonInfo1.rhocorPFIsoAll03 = fRecoPhotonInfo1.rhocorPFIsoCharged03 + fRecoPhotonInfo1.rhocorPFIsoNeutral03 + fRecoPhotonInfo1.rhocorPFIsoPhoton03;
 
     fRecoPhotonInfo1.rhocorPFIsoCharged02 = max(fRecoPhotonInfo1.PFIsoCharged02-fRho25*photon1TorFEffAreas[0],0.);
@@ -798,8 +797,6 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
       fRecoPhotonInfo1.isTightPFPhoton = true;
     else
       fRecoPhotonInfo1.isTightPFPhoton = false;
-
-
    }
    else {
      //     cout << "No match to signal photon1!" <<endl;
@@ -842,10 +839,9 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
     fRecoPhotonInfo2.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron(matchPhoton2->superCluster(), hElectrons, hConversions, beamSpot.position());
     //we retrieve the effective areas
     //Remember effareaCH = 1st, effareaNH = 2nd, effareaPH = 3rd
-    //std::vector<double> effareas = ExoDiPhotons::EffectiveAreas(&(*recoPhoton));
     //Now we store all PF isolation variables for the 2nd photon
     std::vector<double> photon2TorFEffAreas = ExoDiPhotons::EffectiveAreas(matchPhoton2);
-    //double pfisoall = isolator03.fGetIsolation(matchPhoton2,pfCandidates,firstVtx,vertexColl);
+    double pfisoall = isolator03.fGetIsolation(matchPhoton2,pfCandidates,firstVtx,vertexColl);
     double rhocorPFIsoCH = max(isolator03.getIsolationCharged()-fRho25*photon2TorFEffAreas[0],0.);
     double rhocorPFIsoNH = max(isolator03.getIsolationNeutral()-fRho25*photon2TorFEffAreas[1],0.);
     double rhocorPFIsoPH = max(isolator03.getIsolationPhoton()-fRho25*photon2TorFEffAreas[2],0.);
@@ -855,7 +851,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
     fRecoPhotonInfo2.PFIsoNeutral04 = isolator04.getIsolationNeutral();
     fRecoPhotonInfo2.PFIsoPhoton04 = isolator04.getIsolationPhoton();      
 
-    fRecoPhotonInfo2.PFIsoAll03 = isolator03.fGetIsolation(matchPhoton2,pfCandidates,firstVtx,vertexColl);
+    fRecoPhotonInfo2.PFIsoAll03 = pfisoall;
     fRecoPhotonInfo2.PFIsoCharged03 = isolator03.getIsolationCharged();
     fRecoPhotonInfo2.PFIsoNeutral03 = isolator03.getIsolationNeutral();
     fRecoPhotonInfo2.PFIsoPhoton03 = isolator03.getIsolationPhoton();      
@@ -871,9 +867,9 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
     fRecoPhotonInfo2.rhocorPFIsoPhoton04 = max(fRecoPhotonInfo2.PFIsoPhoton04-fRho25*photon2TorFEffAreas[2],0.);
     fRecoPhotonInfo2.rhocorPFIsoAll04 = fRecoPhotonInfo2.rhocorPFIsoCharged04 + fRecoPhotonInfo2.rhocorPFIsoNeutral04 + fRecoPhotonInfo2.rhocorPFIsoPhoton04;
 
-    fRecoPhotonInfo2.rhocorPFIsoCharged03 = max(fRecoPhotonInfo2.PFIsoCharged03-fRho25*photon2TorFEffAreas[0],0.);
-    fRecoPhotonInfo2.rhocorPFIsoNeutral03 = max(fRecoPhotonInfo2.PFIsoNeutral03-fRho25*photon2TorFEffAreas[1],0.);
-    fRecoPhotonInfo2.rhocorPFIsoPhoton03 = max(fRecoPhotonInfo2.PFIsoPhoton03-fRho25*photon2TorFEffAreas[2],0.);
+    fRecoPhotonInfo2.rhocorPFIsoCharged03 = rhocorPFIsoCH;
+    fRecoPhotonInfo2.rhocorPFIsoNeutral03 = rhocorPFIsoNH;
+    fRecoPhotonInfo2.rhocorPFIsoPhoton03 = rhocorPFIsoPH;
     fRecoPhotonInfo2.rhocorPFIsoAll03 = fRecoPhotonInfo2.rhocorPFIsoCharged03 + fRecoPhotonInfo2.rhocorPFIsoNeutral03 + fRecoPhotonInfo2.rhocorPFIsoPhoton03;
 
     fRecoPhotonInfo2.rhocorPFIsoCharged02 = max(fRecoPhotonInfo2.PFIsoCharged02-fRho25*photon2TorFEffAreas[0],0.);
