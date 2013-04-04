@@ -98,10 +98,34 @@ class ModelPoint:
     tableString=string.ljust(str(self.coupling),9)+string.ljust(str(int(self.mass)),6)+string.ljust('%0.3f'%self.totalEff,8)
     expectedSignalEvents = lumi * self.totalXSec * self.totalEff
     tableString+=string.center(str(round(expectedSignalEvents,2)),9)
-    backExpString = '%0.2f'%self.nBackground+'+/-'+'%0.2f'%self.nBackgroundErr
+    #backExpString = '%0.4f'%self.nBackground+'+/-'+'%0.4f'%self.nBackgroundErr
+    #backExpString = str(self.nBackground)+'+/-'+str(self.nBackgroundErr)
+    if(self.nBackground < 1):
+      backExpString = '%s' % float('%.2g' % self.nBackground)+'+/-'+'%s'%float('%.2g' % self.nBackgroundErr)
+    else:
+      backExpString = '%0.2f'%self.nBackground+'+/-'+'%0.2f'%self.nBackgroundErr
     tableString+=string.center(backExpString,18)+string.center(str(self.nDataObs),10)
     tableString+=string.center('%.1E'%float(self.totalXSec),10)+string.center(str(round(self.expLimit,6)),10)
     tableString+=string.center(str(round(self.obsLimit,5)),12)
+    return tableString
+
+
+  def TwikiTableLine(self,lumi):
+    tableString='|'+string.ljust(str(self.coupling),9)+'|'+string.ljust(str(int(self.mass)),6)+'|'
+    if not self.optMassWindowLow is None:
+      tableString+=str(int(self.optMassWindowLow))+' to '+str(int(self.optMassWindowHigh))
+    else:
+      tableString+=str(int(self.mass-3*self.halfWidth))+' to '+str(int(self.mass+3*self.halfWidth))
+    tableString+='|'+string.ljust('%0.3f'%self.totalEff,8)+'|'
+    expectedSignalEvents = lumi * self.totalXSec * self.totalEff
+    tableString+=string.center(str(round(expectedSignalEvents,2)),9)+'|'
+    if(self.nBackground < 1):
+      backExpString = '%s' % float('%.2g' % self.nBackground)+'+/-'+'%s'%float('%.2g' % self.nBackgroundErr)
+    else:
+      backExpString = '%0.2f'%self.nBackground+'+/-'+'%0.2f'%self.nBackgroundErr
+    tableString+=string.center(backExpString,18)+'|'+string.center(str(self.nDataObs),10)+'|'
+    tableString+=string.center(str(round(self.expLimit,6)),10)+'|'
+    tableString+=string.center(str(round(self.obsLimit,5)),12)+'|'
     return tableString
 
 
