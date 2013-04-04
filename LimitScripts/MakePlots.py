@@ -131,8 +131,35 @@ def MakeOptimizationGraph(peakMass,modelPoint,minMassTried,maxMassTried,massRang
   graph.Write()
 
 
+def MakeOptimizationGraphSRootB(peakMass,modelPoint,minMassTried,maxMassTried,massRangesTried,sRootBTried,optSRootBIndex,useAsymmWindow,rootFile):
+  rootFile.cd()
+  # make optimization graph (1-D for symm window; 2-D for asymm window)
+  if useAsymmWindow:
+    graph = TH2F('test','test',int(peakMass-minMassTried)+1,minMassTried,peakMass+1,int(maxMassTried-peakMass),peakMass,maxMassTried)
+    for massRange,ssb in itertools.izip(massRangesTried,sRootBTried):
+      graph.Fill(massRange[0],massRange[1]-1,ssb)
+    graph.SetTitle('Optimization for RS Graviton mass='+str(modelPoint.mass)+'GeV, coupling='+str(modelPoint.coupling))
+    graph.SetName('srootbOpt_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass))
+    graph.GetXaxis().SetTitle('Mass window low [GeV]')
+    graph.GetYaxis().SetTitle('Mass window high [GeV]')
+    #graph.GetZaxis().SetTitle('S/#sqrt{S+B}')
+  else:
+    halfWindowSizesTried = [(massRangeTried[1]-massRangeTried[0])/2.0 for massRangeTried in massRangesTried]
+    graph = TGraph(len(halfWindowSizesTried), array.array("f",halfWindowSizesTried),array.array("f",sRootBTried))
+    graph.SetTitle('Optimization for RS Graviton mass='+str(modelPoint.mass)+'GeV, coupling='+str(modelPoint.coupling))
+    graph.SetName('srootbOpt_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass))
+    graph.GetXaxis().SetTitle('Mass window half size [GeV]')
+    graph.GetYaxis().SetTitle('S/#sqrt{B}')
+    graphOpt = TGraph(1, array.array("f",[halfWindowSizesTried[optSRootBIndex]]),array.array("f",[sRootBTried[optSRootBIndex]]))
+    graphOpt.SetName('srootbOptPoint_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass))
+    graphOpt.Write()
+  graph.Write()
+
+
 def MakeOptHalfWindowVsMassPlot(coupling,masses,optMinMasses,optMaxMasses,colorIndex,rootFile):
   # make plot of opt. halfWindowSize vs. mass/coupling
+  if len(masses) < 1:
+    return
   optHalfWindowSizes = [(optMassHigh-optMassLow-1)/2 for optMassHigh,optMassLow in itertools.izip(optMaxMasses,optMinMasses)]
   #                   # -1, since we get the top edge of the maxBin as the upper mass limit
   graph = TGraph(len(masses), array.array("f",masses),array.array("f",optHalfWindowSizes))
@@ -148,25 +175,37 @@ def MakeOptHalfWindowVsMassPlot(coupling,masses,optMinMasses,optMaxMasses,colorI
 
 def MakeOptHalfWindowVsMassMultigraph(rootFile):
   rootFile.cd()
-  graph0p01 = rootFile.Get('optHalfWindowVsMassK0p01')
-  graph0p05 = rootFile.Get('optHalfWindowVsMassK0p05')
-  graph0p1 = rootFile.Get('optHalfWindowVsMassK0p1')
+  graph0p01 = MakeNullPointer(TGraph)
+  graph0p05 = MakeNullPointer(TGraph)
+  graph0p1 = MakeNullPointer(TGraph)
+  try:
+    rootFile.GetObject('optHalfWindowVsMassK0p01',graph0p01)
+    rootFile.GetObject('optHalfWindowVsMassK0p05',graph0p05)
+    rootFile.GetObject('optHalfWindowVsMassK0p1',graph0p1)
+  except LookupError:
+    pass
   c = TCanvas()
   c.SetName('optHalfWindowsVsMassAllCanvas')
   c.SetTitle('')
   c.cd()
   mg = TMultiGraph()
-  mg.Add(graph0p01)
-  mg.Add(graph0p05)
-  mg.Add(graph0p1)
+  if graph0p01:
+    mg.Add(graph0p01)
+  if graph0p05:
+    mg.Add(graph0p05)
+  if graph0p1:
+    mg.Add(graph0p1)
   mg.Draw('ap')
   mg.GetXaxis().SetTitle("Mass [GeV]")
   mg.GetYaxis().SetTitle("Opt. HalfWindow size [GeV]")
   mg.SetName('optHalfWindowsVsMassAll')
   legend = TLegend(0.42,0.71,0.73,0.92)
-  legend.AddEntry(graph0p01," #tilde{k} = "+str(0.01),"l")
-  legend.AddEntry(graph0p05," #tilde{k} = "+str(0.05),"l")
-  legend.AddEntry(graph0p1," #tilde{k} = "+str(0.1),"l")
+  if graph0p01:
+    legend.AddEntry(graph0p01," #tilde{k} = "+str(0.01),"l")
+  if graph0p05:
+    legend.AddEntry(graph0p05," #tilde{k} = "+str(0.05),"l")
+  if graph0p1:
+    legend.AddEntry(graph0p1," #tilde{k} = "+str(0.1),"l")
   legend.SetBorderSize(0)
   legend.SetFillColor(0)
   legend.Draw()
@@ -233,6 +272,8 @@ def MakeOptHalfWindowVsMassMultigraph(rootFile):
 
 def MakeOptMassWindowGraph(coupling,masses,optMinMasses,optMaxMasses,peakMasses,colorIndex,rootFile):
   # filled graphs
+  if len(masses) < 1:
+    return
   rootFile.cd()
   massErrs = [0]*len(masses)
   massWindErrsUp= [optMaxMass-peakMass for optMaxMass,peakMass in itertools.izip(optMaxMasses,peakMasses)]
@@ -252,25 +293,37 @@ def MakeOptMassWindowGraph(coupling,masses,optMinMasses,optMaxMasses,peakMasses,
 
 def MakeOptMassWindowsVsMassMultiGraph(rootFile):
   rootFile.cd()
-  graph0p01Errs = rootFile.Get('optMassWindowsVsMassK0p01')
-  graph0p05Errs = rootFile.Get('optMassWindowsVsMassK0p05')
-  graph0p1Errs = rootFile.Get('optMassWindowsVsMassK0p1')
+  graph0p01Errs = MakeNullPointer(TGraphAsymmErrors)
+  graph0p05Errs = MakeNullPointer(TGraphAsymmErrors)
+  graph0p1Errs = MakeNullPointer(TGraphAsymmErrors)
+  try:
+    rootFile.GetObject('optMassWindowsVsMassK0p01',graph0p01Errs)
+    rootFile.GetObject('optMassWindowsVsMassK0p05',graph0p05Errs)
+    rootFile.GetObject('optMassWindowsVsMassK0p1',graph0p1Errs)
+  except LookupError:
+    pass
   c = TCanvas()
   c.SetName('optMassWindowsVsMassAllCanvas')
   c.SetTitle('')
   c.cd()
   mg = TMultiGraph()
-  mg.Add(graph0p01Errs,'3')
-  mg.Add(graph0p05Errs,'3')
-  mg.Add(graph0p1Errs,'3')
+  if graph0p01Errs:
+    mg.Add(graph0p01Errs,'3')
+  if graph0p05Errs:
+    mg.Add(graph0p05Errs,'3')
+  if graph0p1Errs:
+    mg.Add(graph0p1Errs,'3')
   mg.Draw('ap')
   mg.GetXaxis().SetTitle("Mass [GeV]")
   mg.GetYaxis().SetTitle("Opt. mass window [GeV]")
   mg.SetName('optMassWindowsVsMassAll')
   legend = TLegend(0.42,0.71,0.73,0.92)
-  legend.AddEntry(graph0p01Errs," #tilde{k} = "+str(0.01),"l")
-  legend.AddEntry(graph0p05Errs," #tilde{k} = "+str(0.05),"l")
-  legend.AddEntry(graph0p1Errs," #tilde{k} = "+str(0.1),"l")
+  if graph0p01Errs:
+    legend.AddEntry(graph0p01Errs," #tilde{k} = "+str(0.01),"l")
+  if graph0p05Errs:
+    legend.AddEntry(graph0p05Errs," #tilde{k} = "+str(0.05),"l")
+  if graph0p1Errs:
+    legend.AddEntry(graph0p1Errs," #tilde{k} = "+str(0.1),"l")
   legend.SetBorderSize(0)
   legend.SetFillColor(0)
   legend.Draw()
@@ -280,6 +333,8 @@ def MakeOptMassWindowsVsMassMultiGraph(rootFile):
 
 def MakeOptSSBValuesGraph(coupling,masses,optSSBValues,colorIndex,rootFile):
   # make plot of opt. SSB vs. mass/coupling
+  if len(masses) < 1:
+    return
   graph = TGraph(len(masses), array.array("f",masses),array.array("f",optSSBValues))
   plotname = "optSSBVsMassK"+str(coupling)
   savename = TString(plotname)
@@ -293,25 +348,37 @@ def MakeOptSSBValuesGraph(coupling,masses,optSSBValues,colorIndex,rootFile):
 
 def MakeOptSSBValueVsMassMultigraph(rootFile):
   rootFile.cd()
-  graph0p01 = rootFile.Get('optSSBVsMassK0p01')
-  graph0p05 = rootFile.Get('optSSBVsMassK0p05')
-  graph0p1 = rootFile.Get('optSSBVsMassK0p1')
+  graph0p01 = MakeNullPointer(TGraph)
+  graph0p05 = MakeNullPointer(TGraph)
+  graph0p1 = MakeNullPointer(TGraph)
+  try:
+    rootFile.GetObject('optSSBVsMassK0p01',graph0p01)
+    rootFile.GetObject('optSSBVsMassK0p05',graph0p05)
+    rootFile.GetObject('optSSBVsMassK0p1',graph0p1)
+  except LookupError:
+    pass
   c = TCanvas()
   c.SetName('optSSBVsMassAllCanvas')
   c.SetTitle('')
   c.cd()
   mg = TMultiGraph()
-  mg.Add(graph0p01,'lp')
-  mg.Add(graph0p05,'lp')
-  mg.Add(graph0p1,'lp')
+  if graph0p01:
+    mg.Add(graph0p01,'lp')
+  if graph0p05:
+    mg.Add(graph0p05,'lp')
+  if graph0p1:
+    mg.Add(graph0p1,'lp')
   mg.Draw('ap')
   mg.GetXaxis().SetTitle("Mass [GeV]")
   mg.GetYaxis().SetTitle("Opt. S/#sqrt{S+B}")
   mg.SetName('optSSBVsMassAll')
   legend = TLegend(0.42,0.71,0.73,0.92)
-  legend.AddEntry(graph0p01," #tilde{k} = "+str(0.01),"l")
-  legend.AddEntry(graph0p05," #tilde{k} = "+str(0.05),"l")
-  legend.AddEntry(graph0p1," #tilde{k} = "+str(0.1),"l")
+  if graph0p01:
+    legend.AddEntry(graph0p01," #tilde{k} = "+str(0.01),"l")
+  if graph0p05:
+    legend.AddEntry(graph0p05," #tilde{k} = "+str(0.05),"l")
+  if graph0p1:
+    legend.AddEntry(graph0p1," #tilde{k} = "+str(0.1),"l")
   legend.SetBorderSize(0)
   legend.SetFillColor(0)
   legend.Draw()
@@ -347,7 +414,7 @@ def MakeOptMassWindowSignalBackgroundPlot(rootFile,signalHistogram,backgroundHis
   ConvertToPng(savePath)
 
 
-def MakeOptGraphImages(rootFile,outputDir,modelPointArray):
+def MakeOptGraphImages(rootFile,outputDir,modelPointArray, plotSRootBCurve):
   # mkdir if not there already
   if not os.path.isdir(outputDir):
     os.mkdir(outputDir)
@@ -390,6 +457,19 @@ def MakeOptGraphImages(rootFile,outputDir,modelPointArray):
     mg.Draw('a')
     mg.GetXaxis().SetTitle('Window Size (GeV)')
     mg.GetYaxis().SetTitle('s/#sqrt{s+b}')
+    if plotSRootBCurve:
+      srbGraphName = 'srootbOpt_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass)
+      srbOptGraph = rootFile.Get(graphName)
+      srbOptPtGraphName = 'srootbOptPoint_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass)
+      srbOptPtGraph = rootFile.Get(optPtGraphName)
+      srbOptPtGraph.SetMarkerColor(4)
+      srbOptPtGraph.SetLineColor(4)
+      srbOptPtGraph.SetMarkerStyle(3)
+      srbOptPtGraph.SetMarkerSize(1.4)
+      mg.Add(srbOptGraph,drawOpt)
+      mg.Add(srbOptPtGraph,drawOpt)
+      mg.Draw('a')
+      mg.GetYaxis().SetTitle('s/#sqrt{s/b}')
     #
     savePath = outputDir+'/'+graphName
     c.Print(savePath+'.pdf')
@@ -427,12 +507,21 @@ def MakeOptMassWindowVsMassImages(rootFile,imageDir):
   c.SetFrameLineWidth(2)
   c.SetFrameBorderMode(0)
   #
-  symmWindowOptGraphk0p01 = rootFile.Get('optMassWindowsVsMassK0p01')
-  symmWindowOptGraphk0p01.SetFillStyle(3002)
-  symmWindowOptGraphk0p05 = rootFile.Get('optMassWindowsVsMassK0p05')
-  symmWindowOptGraphk0p05.SetFillStyle(3007)
-  symmWindowOptGraphk0p1 = rootFile.Get('optMassWindowsVsMassK0p1')
-  symmWindowOptGraphk0p1.SetFillStyle(3006)
+  symmWindowOptGraphk0p01 = MakeNullPointer(TGraphAsymmErrors)
+  symmWindowOptGraphk0p05 = MakeNullPointer(TGraphAsymmErrors)
+  symmWindowOptGraphk0p1 = MakeNullPointer(TGraphAsymmErrors)
+  try:
+    rootFile.GetObject('optMassWindowsVsMassK0p01',symmWindowOptGraphk0p01)
+    rootFile.GetObject('optMassWindowsVsMassK0p05',symmWindowOptGraphk0p05)
+    rootFile.GetObject('optMassWindowsVsMassK0p1',symmWindowOptGraphk0p1)
+  except:
+    pass
+  if symmWindowOptGraphk0p01:
+    symmWindowOptGraphk0p01.SetFillStyle(3002)
+  if symmWindowOptGraphk0p05:
+    symmWindowOptGraphk0p05.SetFillStyle(3007)
+  if symmWindowOptGraphk0p1:
+    symmWindowOptGraphk0p1.SetFillStyle(3006)
   test = TH1F("test","test",10,750,3500)
   test.SetMinimum(600)
   test.SetMaximum(4100)
@@ -460,9 +549,12 @@ def MakeOptMassWindowVsMassImages(rootFile,imageDir):
   test.Draw()
   #
   mg = TMultiGraph()
-  mg.Add(symmWindowOptGraphk0p01,"3")
-  mg.Add(symmWindowOptGraphk0p05,"3")
-  mg.Add(symmWindowOptGraphk0p1,"3")
+  if symmWindowOptGraphk0p01:
+    mg.Add(symmWindowOptGraphk0p01,"3")
+  if symmWindowOptGraphk0p05:
+    mg.Add(symmWindowOptGraphk0p05,"3")
+  if symmWindowOptGraphk0p1:
+    mg.Add(symmWindowOptGraphk0p1,"3")
   mg.Draw("l")
   #
   leg = TLegend(0.18,0.65,0.5,0.86)
@@ -531,9 +623,15 @@ def MakeOptMassWindowVsMassImages(rootFile,imageDir):
 
 
 def MakeOptSSBVsMassImages(rootFile, outputDir):
-  symmWindowOptGraphk0p01 = rootFile.Get('optSSBVsMassK0p01')
-  symmWindowOptGraphk0p05 = rootFile.Get('optSSBVsMassK0p05')
-  symmWindowOptGraphk0p1 = rootFile.Get('optSSBVsMassK0p1')
+  symmWindowOptGraphk0p01 = MakeNullPointer(TGraph)
+  symmWindowOptGraphk0p05 = MakeNullPointer(TGraph)
+  symmWindowOptGraphk0p1 = MakeNullPointer(TGraph)
+  try:
+    rootFile.GetObject('optSSBVsMassK0p01',symmWindowOptGraphk0p01)
+    rootFile.GetObject('optSSBVsMassK0p05',symmWindowOptGraphk0p05)
+    rootFile.GetObject('optSSBVsMassK0p1',symmWindowOptGraphk0p1)
+  except LookupError:
+    pass
   #
   c = TCanvas("c", "c",0,0,600,600)
   gStyle.SetOptFit(1)
@@ -588,9 +686,12 @@ def MakeOptSSBVsMassImages(rootFile, outputDir):
   #
   mg = TMultiGraph()
   drawOpt = 'pl'
-  mg.Add(symmWindowOptGraphk0p01,drawOpt)
-  mg.Add(symmWindowOptGraphk0p05,drawOpt)
-  mg.Add(symmWindowOptGraphk0p1,drawOpt)
+  if symmWindowOptGraphk0p01:
+    mg.Add(symmWindowOptGraphk0p01,drawOpt)
+  if symmWindowOptGraphk0p05:
+    mg.Add(symmWindowOptGraphk0p05,drawOpt)
+  if symmWindowOptGraphk0p1:
+    mg.Add(symmWindowOptGraphk0p1,drawOpt)
   mg.Draw("l")
   #
   leg = TLegend(0.6,0.7,0.8,0.9)
@@ -601,27 +702,30 @@ def MakeOptSSBVsMassImages(rootFile, outputDir):
   leg.SetFillColor(0)
   leg.SetFillStyle(0)
   legDrawOpt = 'lp'
-  entry=leg.AddEntry(symmWindowOptGraphk0p01,"Symm. Window #tilde{k} = 0.01",legDrawOpt)
-  entry.SetLineColor(2)
-  entry.SetLineStyle(2)
-  entry.SetLineWidth(4)
-  entry.SetMarkerColor(2)
-  entry.SetMarkerStyle(21)
-  entry.SetMarkerSize(1)
-  entry=leg.AddEntry(symmWindowOptGraphk0p05,"Symm. Window #tilde{k} = 0.05",legDrawOpt)
-  entry.SetLineColor(4)
-  entry.SetLineStyle(2)
-  entry.SetLineWidth(4)
-  entry.SetMarkerColor(4)
-  entry.SetMarkerStyle(21)
-  entry.SetMarkerSize(1)
-  entry=leg.AddEntry(symmWindowOptGraphk0p1,"Symm. Window #tilde{k} = 0.1",legDrawOpt)
-  entry.SetLineColor(8)
-  entry.SetLineStyle(2)
-  entry.SetLineWidth(4)
-  entry.SetMarkerColor(8)
-  entry.SetMarkerStyle(21)
-  entry.SetMarkerSize(1)
+  if symmWindowOptGraphk0p01:
+    entry=leg.AddEntry(symmWindowOptGraphk0p01,"Symm. Window #tilde{k} = 0.01",legDrawOpt)
+    entry.SetLineColor(2)
+    entry.SetLineStyle(2)
+    entry.SetLineWidth(4)
+    entry.SetMarkerColor(2)
+    entry.SetMarkerStyle(21)
+    entry.SetMarkerSize(1)
+  if symmWindowOptGraphk0p05:
+    entry=leg.AddEntry(symmWindowOptGraphk0p05,"Symm. Window #tilde{k} = 0.05",legDrawOpt)
+    entry.SetLineColor(4)
+    entry.SetLineStyle(2)
+    entry.SetLineWidth(4)
+    entry.SetMarkerColor(4)
+    entry.SetMarkerStyle(21)
+    entry.SetMarkerSize(1)
+  if symmWindowOptGraphk0p1:
+    entry=leg.AddEntry(symmWindowOptGraphk0p1,"Symm. Window #tilde{k} = 0.1",legDrawOpt)
+    entry.SetLineColor(8)
+    entry.SetLineStyle(2)
+    entry.SetLineWidth(4)
+    entry.SetMarkerColor(8)
+    entry.SetMarkerStyle(21)
+    entry.SetMarkerSize(1)
   leg.Draw()
   #
   test__6 = TH1F("test__6","test",10,750,3500)
@@ -737,7 +841,8 @@ def PlotAllBands(modelPointArrays, lumi, rootFile, imageDir):
   # To make the separate graphs share the same axes
   h = TH1F("test","test",10,750,3500)
   h.SetStats(False)
-  h.GetYaxis().SetRangeUser(3e-4,3e-3)
+  #h.GetYaxis().SetRangeUser(3e-4,3e-3)
+  h.GetYaxis().SetRangeUser(2.4e-4,3e-3)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
   h.GetYaxis().SetTitle("RS graviton #sigma [pb]     ")
   h.GetXaxis().SetLabelFont(42)
@@ -1158,63 +1263,83 @@ def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile, l
   cLimit.SetFrameBorderMode(0)
 
   # Observed limits
-  #graph = TGraph(3)
   graph = TGraph(len(couplingList))
   graph.SetName("Graph")
   graph.SetTitle("")
-  graph.SetFillColor(1)
-  ci = TColor.GetColor("#ff0000")
-  graph.SetLineColor(ci)
-  graph.SetLineWidth(3)
-  graph.SetMarkerColor(ci)
+  obsLimFillColor = kRed-4
+  graph.SetFillColor(obsLimFillColor)
+  graph.SetFillStyle(3001)
+  graph.SetLineColor(obsLimFillColor)
+  graph.SetLineWidth(10000)
+  graph.SetMarkerColor(obsLimFillColor)
   graph.SetMarkerStyle(20)
   graph.SetMarkerSize(1.0)
-  #graph.SetPoint(0,1164.15,0.01)
-  #graph.SetPoint(1,1885.73,0.05)
-  #graph.SetPoint(2,2293.09,0.1)
   for i in range(0,len(couplingList)):
     graph.SetPoint(i,obsMassLimList[i],couplingList[i])
 
   # Expected limits
-  #graph2 = TGraph(3)
   graph2 = TGraph(len(couplingList))
-  graph2.SetMarkerColor(ci)
+  graph2.SetMarkerColor(kRed)
   graph2.SetMarkerStyle(20)
   graph2.SetMarkerSize(0.0)
-  #graph2.SetPoint(0,  1157.02,0.01)
-  #graph2.SetPoint(1, 1922.33,0.05)
-  #graph2.SetPoint(2, 2299.17,0.1)
   for i in range(0,len(couplingList)):
     graph2.SetPoint(i,expMassLimList[i],couplingList[i])
-  graph2.SetLineStyle(kDashed)
-  graph2.SetLineColor(ci)
-  graph2.SetLineWidth(3)
+  graph2.SetLineStyle(7)
+  graph2.SetLineColor(kRed+2)
+  graph2.SetLineWidth(2)
   graph2.GetXaxis().SetLabelFont(42)
   graph2.GetYaxis().SetLabelFont(42)
 
+  # Previous CMS limits at 7 TeV, 2.2/fb; see arXiv:1112.0688v2
+  graphPrevCMS = TGraph(10)
+  graphPrevCMS.SetName("graphPrevCMS")
+  graphPrevCMS.SetLineStyle(2)
+  graphPrevCMS.SetPoint(0,860,0.01)
+  graphPrevCMS.SetPoint(1,1130,0.02)
+  graphPrevCMS.SetPoint(2,1270,0.03)
+  graphPrevCMS.SetPoint(3,1390,0.04)
+  graphPrevCMS.SetPoint(4,1500,0.05)
+  graphPrevCMS.SetPoint(5,1590,0.06)
+  graphPrevCMS.SetPoint(6,1670,0.07)
+  graphPrevCMS.SetPoint(7,1740,0.08)
+  graphPrevCMS.SetPoint(8,1800,0.09)
+  graphPrevCMS.SetPoint(9,1840,0.1)
+  #graphPrevCMS.SetLineColor(kRed+2)
+  #graphPrevCMS.SetLineColor(kRed+3)
+  graphPrevCMS.SetLineColor(kRed+4)
+
+  # ATLAS limits at 7 TeV, 2.12/fb; see Physics Letters B 710 (2012) 538-556
+  # See table 3, use result with k-factor=1.75, all channels
+  graphAtlas = TGraph(4)
+  graphAtlas.SetName("graphAtlas")
+  graphAtlas.SetLineStyle(3)
+  graphAtlas.SetPoint(0,800,0.01)
+  graphAtlas.SetPoint(1,1370,0.03)
+  graphAtlas.SetPoint(2,1550,0.05)
+  graphAtlas.SetPoint(3,1950,0.1)
+  #graphAtlas.SetLineColor(kGreen+2)
+  graphAtlas.SetLineColor(kGreen+3)
+
+
   # M_D > 10 TeV
   LambdaPi = TF1("LambdaPi","pol1",250,2500)
-  LambdaPi.SetFillColor(15)
-  LambdaPi.SetFillStyle(3004)
-  LambdaPi.SetLineColor(15)
-  LambdaPi.SetLineWidth(1)
   LambdaPi.SetParameter(0,0)
   LambdaPi.SetParError(0,0)
   LambdaPi.SetParLimits(0,0,0)
   LambdaPi.SetParameter(1,2.61097e-05)
   LambdaPi.SetParError(1,0)
   LambdaPi.SetParLimits(1,0,0)
-  LambdaPi.GetXaxis().SetLabelFont(42)
-  LambdaPi.GetYaxis().SetLabelFont(42)
+  LambdaPiGraph = TGraph(LambdaPi)
+  LambdaPiGraph.SetFillColor(kOrange-8)
+  LambdaPiGraph.SetLineColor(kBlack)
+  LambdaPiGraph.SetFillStyle(1001)
+  LambdaPiGraph.SetLineWidth(-10000)
 
   # Electroweak limits
   graphEW = TGraph(27)
   graphEW.SetName("graphEW")
   graphEW.SetTitle("graphEW")
-  graphEW.SetFillColor(1)
-  graphEW.SetFillStyle(3004)    
   graphEW.SetLineStyle(5)
-  graphEW.SetLineWidth(3)
   graphEW.SetPoint(0,180,0.1071)
   graphEW.SetPoint(1,183,0.1062)
   graphEW.SetPoint(2,190,0.1043)
@@ -1244,23 +1369,26 @@ def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile, l
   graphEW.SetPoint(26,2200,0.01)
   graphEW.GetXaxis().SetLabelFont(42)
   graphEW.GetYaxis().SetLabelFont(42)
-  graphEW.SetFillColor(kBlack)
-  graphEW.SetFillStyle(3004)
-  graphEW.SetLineWidth(1)
-  graphEW.SetFillStyle(3002)
-  graphEW.SetFillColor(kBlack)
   graphEW.SetLineWidth(-10000)
+  graphEW.SetLineColor(kBlack)
+  graphEW.SetFillColor(kAzure-4)
+  graphEW.SetFillStyle(1001)
 
   # Draw limExp, limObs, EW limits -- same axes
   mg = TMultiGraph()
-  mg.Add(graph)
-  mg.Add(graph2)
-  mg.Add(graphEW)
+  mg.Add(LambdaPiGraph,'C')
+  mg.Add(graphEW,'C')
+  mg.Add(graph,'L')
+  mg.Add(graph2,'L')
+  mg.Add(graphPrevCMS,'L')
+  mg.Add(graphAtlas,'L')
   xArray = graph.GetX()
   xArray.SetSize(graph.GetN())
   xList = list(xArray)
-  mg.Draw("al")
-  mg.GetXaxis().SetRangeUser(xList[0],xList[len(xList)-1])
+  cLimit.Clear()
+  mg.Draw('a')
+  #mg.GetXaxis().SetRangeUser(xList[0],xList[len(xList)-1])
+  mg.GetXaxis().SetRangeUser(xList[0],xList[len(xList)-1]-200)
   mg.SetMinimum(0)
   mg.SetMaximum(0.12)
   mg.GetXaxis().SetTitle("M_{1} [GeV]")
@@ -1271,64 +1399,71 @@ def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile, l
   mg.GetYaxis().SetLabelSize(0.04)
   mg.GetYaxis().SetTitleOffset(1.19)
   mg.GetXaxis().SetTitleOffset(1.0)
-  # Draw LambdaPi
-  LambdaPi.Draw("same")
+  mg.GetXaxis().SetTickLength()
+  mg.GetYaxis().SetTickLength()
+  mg.GetXaxis().Draw()
+  mg.GetYaxis().Draw()
+  gPad.RedrawAxis()
+  gPad.Update()
 
   # Legend
-  leg = TLegend(0.2072864,0.4667832,0.4007538,0.7517483,"","brNDC")
+  #leg = TLegend(0.207,0.467,0.401,0.752,"","brNDC")
+  leg = TLegend(0.16,0.59,0.43,0.89,"","brNDC")
   leg.SetBorderSize(1)
   leg.SetTextFont(62)
-  leg.SetTextSize(0.05)
+  leg.SetTextSize(0.0275)
   leg.SetLineColor(0)
   leg.SetLineStyle(0)
   leg.SetLineWidth(0)
-  leg.SetFillColor(0)
-  leg.SetFillStyle(0)
-  entry=leg.AddEntry("graph","Electroweak Limits","lf")
+  leg.SetFillColor(kWhite)
+  leg.SetFillStyle(1001)
+  entry=leg.AddEntry(graphEW,"Electroweak Limits","lf")
   entry.SetLineColor(1)
   entry.SetLineStyle(5)
   entry.SetLineWidth(3)
-  entry.SetMarkerColor(1)
-  entry.SetMarkerStyle(21)
-  entry.SetMarkerSize(1)
-  ci = TColor.GetColor("#ff0000")
-  entry.SetMarkerColor(ci)
-  entry.SetMarkerStyle(20)
-  entry.SetMarkerSize(1.3)
-  entry=leg.AddEntry("Graph","95% CL Limit","l")
-  leg.AddEntry(graph2,"Expected Limit","l")
-  ci = TColor.GetColor("#00ff00")
-  entry.SetMarkerColor(ci)
-  entry.SetMarkerStyle(21)
-  entry.SetMarkerSize(1.3)
-  entry=leg.AddEntry("LambdaPi","M_{D} > 10TeV","lf")
+  #entry.SetMarkerColor(1)
+  #entry.SetMarkerStyle(21)
+  #entry.SetMarkerSize(1)
+  #entry.SetMarkerStyle(20)
+  #entry.SetMarkerSize(1.3)
+  entry=leg.AddEntry(graph,"CMS 95% CL Limit","f")
+  leg.AddEntry(graph2,"CMS Expected Limit","l")
+  #entry.SetMarkerStyle(21)
+  #entry.SetMarkerSize(1.3)
+  leg.AddEntry(graphPrevCMS,"CMS 2.2 fb^{-1} at 7 TeV","l")
+  leg.AddEntry(graphAtlas,"ATLAS 2.2 fb^{-1} at 7 TeV","l")
+  entry=leg.AddEntry(LambdaPiGraph,"M_{D} > 10TeV","lf")
+  leg.SetHeader("CMS %.1f" % (lumi/1000)+" fb^{-1} at 8 TeV")
   leg.Draw()
-  # lumi
-  pt = TPaveText(0.629397,0.798951,0.8002513,0.8653846,"blNDC")
-  pt.SetFillColor(0)
-  pt.SetBorderSize(1)
-  pt.SetLineColor(0)
-  pt.SetTextSize(0.06)
-  text = pt.AddText("%.1f" % (lumi/1000)+" fb^{-1} at 8 TeV")
-  pt.Draw()
-  # CMS
-  ptCMS = TPaveText(0.2236181,0.7884615,0.4736181,0.8583916,"blNDC")
-  ptCMS.SetName("CMS")
-  ptCMS.SetBorderSize(1)
-  ptCMS.SetLineColor(0)
-  ptCMS.SetFillColor(0)
-  ptCMS.SetTextSize(0.06)
-  text = ptCMS.AddText("CMS")
-  ptCMS.Draw()
+  ## lumi
+  #pt = TPaveText(0.629397,0.798951,0.8002513,0.8653846,"blNDC")
+  #pt.SetFillColor(0)
+  #pt.SetBorderSize(1)
+  #pt.SetLineColor(0)
+  #pt.SetTextSize(0.06)
+  #text = pt.AddText("%.1f" % (lumi/1000)+" fb^{-1} at 8 TeV")
+  #pt.Draw()
+  ## CMS
+  #ptCMS = TPaveText(0.2236181,0.7884615,0.4736181,0.8583916,"blNDC")
+  #ptCMS.SetName("CMS")
+  #ptCMS.SetBorderSize(1)
+  #ptCMS.SetLineColor(0)
+  #ptCMS.SetFillColor(0)
+  #ptCMS.SetTextSize(0.06)
+  #text = ptCMS.AddText("CMS")
+  #ptCMS.Draw()
 
   cLimit.SetLogy(0)
   cLimit.Modified()
   cLimit.cd()
   cLimit.SetSelected(cLimit)
   cLimit.Update()
-  cLimit.Print(imageDir+'/'+"RSMassVsCouplingLimits.C")
-  cLimit.Print(imageDir+'/'+"RSMassVsCouplingLimits.png")
-  cLimit.Print(imageDir+'/'+"RSMassVsCouplingLimits.pdf")
+  cLimit.Print(imageDir+'/RSMassVsCouplingLimits.C')
+  cLimit.Print(imageDir+'/RSMassVsCouplingLimits.pdf')
+  cLimit.Print(imageDir+'/RSMassVsCouplingLimits.eps')
+  #cLimit.Print(imageDir+'/RSMassVsCouplingLimits.png')
+  baseName=imageDir+'/RSMassVsCouplingLimits'
+  subprocess.call(['gs','-dTextAlphaBits=4','-dBATCH','-dNOPAUSE','-dQUIET','-dEPSCrop','-sDEVICE=png16m','-sOutputFile='+baseName+'.png',baseName+'.eps'])
   cLimit.SetName("RSMassVsCouplingLimits")
   cLimit.Write()
 
@@ -1341,10 +1476,12 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   couplings = []
   effArrs = []
   for mpArray in modelPointArrays:
+    if len(mpArray) < 1:
+      continue
     masses, effs = makeEffArrays(mpArray)
     massesArrs.append(masses)
-    couplings.append(mpArray[0].coupling)
     effArrs.append(effs)
+    couplings.append(mpArray[0].coupling)
 
   rootFile.cd()
   c = TCanvas("c","c",100,100,600,600)
@@ -1649,5 +1786,4 @@ def PlotAllExpBGs(modelPointArrays, lumi, rootFile, imageDir):
   # write
   mg.SetName("allExpBGs")
   mg.Write()
-
 
