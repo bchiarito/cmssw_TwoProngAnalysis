@@ -71,7 +71,7 @@ void ComputeLimit(float lumi, float lumiError, float totalEff, float nBackground
                                      //"",123456); // seed for testing
 
  // open file
- ofstream myfile(fileName.c_str(), ios::out | ios::app); // append
+ ofstream myfile(fileName.c_str());
  if(myfile.is_open())
  {
    // write file
@@ -91,8 +91,9 @@ void ComputeLimit(float lumi, float lumiError, float totalEff, float nBackground
    myfile << "ExpectedLimitTwoSigmaHigh: " << limit.GetTwoSigmaHighRange() << "\n";
    myfile << "ExpectedLimitTwoSigmaLow: " << limit.GetTwoSigmaLowRange() << "\n";
    myfile << "ObservedLimit: " << limit.GetObservedLimit() << "\n\n";
-   myfile.close();
+   myfile << flush;
  }
+ myfile.close();
 
  gApplication->Terminate();
 
