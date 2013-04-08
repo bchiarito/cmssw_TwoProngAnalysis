@@ -54,6 +54,7 @@ class ModelPoint:
   def Write(self,file):
     file.write("Coupling: " + str(self.coupling) + "\n")
     file.write("Mass: " + str(self.mass) + "\n")
+    file.write("FileName: " + self.fileName + "\n")
     file.write("TotalXSection: " + str(self.totalXSec) + "\n")
     file.write("TotalEff: " + str(self.totalEff) + "\n")
     file.write("HalfWidth: " + str(self.halfWidth) + "\n")
@@ -129,20 +130,27 @@ class ModelPoint:
     return tableString
 
 
-def ReadFromFile(file):
+def ReadFromLines(lines):
   outputModelPoints = []
-  for line in file:
+  for line in lines:
+    line.strip('\n')
     if len(line) < 2:
       continue
     try:
       value = float(line.split(': ')[1])
     except ValueError:
-      value = None
+      try:
+        value = str(line.split(': ')[1])
+      except ValueError:
+        value = None
     if "Coupling:" in line:
+      print 'ReadFromLines: set coupling=',value,'from',line
       mp = ModelPoint()
       mp.coupling = value
     elif "Mass:" in line:
       mp.mass = value
+    elif "FileName" in line:
+      mp.fileName = value
     elif "TotalXSection:" in line:
       mp.totalXSec = value
     elif "TotalEff:" in line:
@@ -175,6 +183,9 @@ def ReadFromFile(file):
   return outputModelPoints
 
 
+def ReadFromFile(file):
+  lines = file.readlines()
+  return ReadFromLines(lines)
 
 
 
