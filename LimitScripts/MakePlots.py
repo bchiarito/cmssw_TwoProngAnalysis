@@ -395,9 +395,12 @@ def MakeOptMassWindowSignalBackgroundPlot(rootFile,signalHistogram,backgroundHis
   c.SetName('signalBackgroundOptWindowsCanvas_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass))
   c.SetTitle('')
   c.cd()
+  c.SetLogy()
   signalHistogram.SetStats(False)
   signalHistogram.SetLineColor(2)
   signalHistogram.SetMarkerColor(2)
+  signalHistogram.Draw()
+  signalHistogram.GetXaxis().SetRangeUser(optMassLow-50,optMassHigh+50)
   signalHistogram.Draw()
   backgroundHist.Draw('same')
   lineLow = TLine(optMassLow,0,optMassLow,signalHistogram.GetMaximum())
@@ -407,11 +410,20 @@ def MakeOptMassWindowSignalBackgroundPlot(rootFile,signalHistogram,backgroundHis
   lineHigh.SetLineColor(4)
   lineHigh.Draw()
   c.Write()
-  fileName = 'signalBackgroundOptWindows_k'+str(modelPoint.coupling).replace('.','p')+'_m'+str(modelPoint.mass)
-  savePath = outputDir+'/'+fileName
-  c.Print(savePath+'.pdf')
-  c.Print(savePath+'.eps')
-  ConvertToPng(savePath)
+
+
+def MakeOptMassWindowSignalBackgroundImages(rootFile,outputDir,modelPointArray):
+  # mkdir if not there already
+  if not os.path.isdir(outputDir):
+    os.mkdir(outputDir)
+  for mp in modelPointArray:
+    canvasName = 'signalBackgroundOptWindowsCanvas_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass)
+    c = rootFile.Get(canvasName)
+    fileName = 'signalBackgroundOptWindows_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass)
+    savePath = outputDir+'/'+fileName
+    c.Print(savePath+'.pdf')
+    c.Print(savePath+'.eps')
+    ConvertToPng(savePath)
 
 
 def MakeOptGraphImages(rootFile,outputDir,modelPointArray, plotSRootBCurve):
@@ -454,22 +466,47 @@ def MakeOptGraphImages(rootFile,outputDir,modelPointArray, plotSRootBCurve):
     drawOpt = 'p'
     mg.Add(optGraph,drawOpt)
     mg.Add(optPtGraph,drawOpt)
-    mg.Draw('a')
-    mg.GetXaxis().SetTitle('Window Size (GeV)')
-    mg.GetYaxis().SetTitle('s/#sqrt{s+b}')
+    leg = TLegend(0.75,0.65,0.95,0.86)
+    leg.SetBorderSize(0)
+    leg.SetLineColor(1)
+    leg.SetLineStyle(1)
+    leg.SetLineWidth(2)
+    leg.SetFillColor(0)
+    leg.SetFillStyle(0)
+    legDrawOpt = 'p'
+    leg.AddEntry(optGraph,"s/#sqrt{s+b}",legDrawOpt)
+    leg.AddEntry(optPtGraph,"Opt. s/#sqrt{s+b}",legDrawOpt)
     if plotSRootBCurve:
       srbGraphName = 'srootbOpt_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass)
-      srbOptGraph = rootFile.Get(graphName)
+      srbOptGraph = rootFile.Get(srbGraphName)
+      srbOptGraph.SetLineColor(4)
+      srbOptGraph.SetMarkerColor(4)
+      srbOptGraph.SetMarkerStyle(3)
+      srbOptGraph.SetMarkerSize(0.5)
       srbOptPtGraphName = 'srootbOptPoint_k'+str(mp.coupling).replace('.','p')+'_m'+str(mp.mass)
-      srbOptPtGraph = rootFile.Get(optPtGraphName)
-      srbOptPtGraph.SetMarkerColor(4)
-      srbOptPtGraph.SetLineColor(4)
+      srbOptPtGraph = rootFile.Get(srbOptPtGraphName)
+      srbOptPtGraph.SetLineColor(8)
+      srbOptPtGraph.SetMarkerColor(8)
       srbOptPtGraph.SetMarkerStyle(3)
       srbOptPtGraph.SetMarkerSize(1.4)
       mg.Add(srbOptGraph,drawOpt)
       mg.Add(srbOptPtGraph,drawOpt)
-      mg.Draw('a')
-      mg.GetYaxis().SetTitle('s/#sqrt{s/b}')
+      leg.AddEntry(srbOptGraph,"s/#sqrt{b}",legDrawOpt)
+      leg.AddEntry(srbOptPtGraph,"Opt. s/#sqrt{b}",legDrawOpt)
+      lineOptSRB = TLine(srbOptPtGraph.GetX()[0],0,srbOptPtGraph.GetX()[0],srbOptPtGraph.GetY()[0])
+      lineOptSRB.SetVertical()
+      lineOptSRB.SetLineColor(8)
+      lineOptSRB.Draw()
+      lineOptSSB = TLine(optPtGraph.GetX()[0],0,optPtGraph.GetX()[0],optPtGraph.GetY()[0])
+      lineOptSSB.SetVertical()
+      lineOptSSB.SetLineColor(2)
+      lineOptSSB.Draw()
+    graphNameTemplate = 'ssbOpt_k{coupling}_m{mass}'
+    graphName = graphNameTemplate.format(coupling=str(mp.coupling).replace('.','p'),mass=str(mp.mass))
+    mg.Draw('a')
+    #mg.GetXaxis().SetTitle('Window Size (GeV)')
+    #mg.GetYaxis().SetTitle('Opt. Var.')
+    leg.Draw()
     #
     savePath = outputDir+'/'+graphName
     c.Print(savePath+'.pdf')
@@ -482,6 +519,7 @@ def MakeOptGraphImages(rootFile,outputDir,modelPointArray, plotSRootBCurve):
 
 
 def MakeOptMassWindowVsMassImages(rootFile,imageDir):
+  #TODO Make this take the model array like the above...
   # mkdir if not there already
   if not os.path.isdir(imageDir):
     os.mkdir(imageDir)
