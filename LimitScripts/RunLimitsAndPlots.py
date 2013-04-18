@@ -166,8 +166,6 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   print 'Run for coupling 0.01'
   with open(limitsFileName+'0p01.txt', 'r') as file:
     readModelPoints0p01 = ReadFromFile(file)
-  for modelPoint in readModelPoints0p01:
-    modelPoint.Print()
   PlotBands(readModelPoints0p01,lumi,rootFile,outputDir)
   m0p01,xs,mExp0p01,xsE = GetMassLimit(readModelPoints0p01)
   print string.ljust('Coupling: '+str(readModelPoints0p01[0].coupling),14),
@@ -203,14 +201,19 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   couplings = [0.01,0.05,0.1]
   CouplingVsMassPlot(couplings,mLimExp,mLimObs,rootFile,lumi,outputDir)
   # efficiencies for all couplings/masses on same axes
+  print 'PlotAllEfficiencies'
   PlotAllEfficiencies([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,outputDir)
   # half widths
+  print 'PlotAllHalfWidths'
   PlotAllHalfWidths([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,outputDir)
   # exp BG
+  print 'PlotAllExpBGs'
   PlotAllExpBGs([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,outputDir)
   # limit plot for all couplings on same axes
+  print 'PlotAllBands'
   PlotAllBands([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,outputDir)
   # make table
+  print 'DoTablesAllPoints'
   DoTablesAllPoints(lumi)
 
 
@@ -325,17 +328,17 @@ def DoOptimizeAllPoints():
   colorIndex = 2 #TODO add this into modelpoint itself?
   with open(limitsFileName+'0p01.txt', 'w') as file:
     OptimizeSignalMassWindows(
-        rootFileLocation,modelPointsC0p01,lumi,useAsymmWindow,useSSB,maxWindowRange,file,rootFile,colorIndex,outputDir)
+        rootFileLocation,modelPointsC0p01,lumi,useAsymmWindow,useSSB,mScaleSyst,maxWindowRange,file,rootFile,colorIndex,outputDir)
   print 'Run for coupling 0.05'
   colorIndex = 4
   with open(limitsFileName+'0p05.txt', 'w') as file:
     OptimizeSignalMassWindows(
-        rootFileLocation,modelPointsC0p05,lumi,useAsymmWindow,useSSB,maxWindowRange,file,rootFile,colorIndex,outputDir)
+        rootFileLocation,modelPointsC0p05,lumi,useAsymmWindow,useSSB,mScaleSyst,maxWindowRange,file,rootFile,colorIndex,outputDir)
   print 'Run for coupling 0.1'
   colorIndex = 8
   with open(limitsFileName+'0p1.txt', 'w') as file:
     OptimizeSignalMassWindows(
-        rootFileLocation,modelPointsC0p1,lumi,useAsymmWindow,useSSB,maxWindowRange,file,rootFile,colorIndex,outputDir)
+        rootFileLocation,modelPointsC0p1,lumi,useAsymmWindow,useSSB,mScaleSyst,maxWindowRange,file,rootFile,colorIndex,outputDir)
   # make multigraphs for all masses/couplings
   MakeOptHalfWindowVsMassMultigraph(rootFile)
   MakeOptMassWindowsVsMassMultiGraph(rootFile)
@@ -421,10 +424,9 @@ cl95MacroName = 'roostats_cl95.C'
 # Configurable stuff here
 now = datetime.datetime.now()
 Date = now.strftime("%b%d")
-outputDir = Date.lower()+'_results_asymmWindowSSBOpt'
+outputDir = 'apr17_results_symmWindowSSBOpt'
+#outputDir = Date.lower()+'_results_symmWindowSSBOpt'
 #outputDir = Date.lower()+'_results_stdYields'
-#outputDir = 'Apr02_results_ssbOpt_k0p01_6points_100kToys'
-#outputDir = 'test_Mar26_results'
 if not os.path.isdir(outputDir):
   os.mkdir(outputDir)
 # limit results file base name
@@ -436,6 +438,8 @@ rootFileLocation = '/afs/cern.ch/user/s/scooper/work/private/results/diPhotonHis
 # Declarations of Lumi and model points to consider -- must have xsec, etc. defined above
 lumi = 19620.
 lumiErr = lumi*0.044
+# mass scale systematic
+mScaleSyst = 0.012 # 1.2%
 masses0p01 = [750,1000,1250,1500,1750,2000,3000]
 masses0p05 = [1750,2000,2500,2750,3000]
 masses0p1 = [2250,2500,2750,3000,3250,3500]
@@ -498,7 +502,6 @@ elif sys.argv[1]=='tables':
   rootFile = TFile(plotFileName,'update')
   DoTablesAllPoints(lumi)
 elif sys.argv[1]=='all':
-  # FIXME TESTING XXX SIC
   print 'all: optimize+limits+plots'
   print 'optimize: OptimizeSignalMassWindows'
   print 'warning: will overwrite file',plotFileName,'if it already exists.'
@@ -510,7 +513,6 @@ elif sys.argv[1]=='all':
   #print 'all: stdYields+limits+plots'
   #rootFile = TFile(plotFileName,'recreate')
   #DoCalculateYieldsAllPoints() # std/old mass windows
-  # FIXME TESTING XXX SIC
   PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,outputDir)
   print 'limits: DoLimitsAllPoints'
   #rootFile = TFile(plotFileName,'update')
