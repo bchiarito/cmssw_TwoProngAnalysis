@@ -24,9 +24,10 @@ std::string intToString(int num)
 }
 
 
-void ComputeLimit(float lumi, float lumiError, float totalEff, float nBackground, float nBackgroundErr,
-    float nDataObs, int mass, float coupling, float halfWidth, float totalXSec, int massWindowLow, int massWindowHigh,
-    std::string fileName)
+void ComputeLimit(float lumi, float lumiError, float totalEff, float totalEffErr, float totalEffMScaleSystUp,
+    float totalEffMScaleSystDown,
+    float nBackground, float nBackgroundErr, float nDataObs, int mass, float coupling, float halfWidth,
+    float totalXSec, int massWindowLow, int massWindowHigh, std::string fileName)
 {
   using namespace std;
   
@@ -64,7 +65,7 @@ void ComputeLimit(float lumi, float lumiError, float totalEff, float nBackground
   plotFileName+=intToString(mass);
   plotFileName+=+".pdf";
   LimitResult limit = roostats_limit(lumi, lumiError, totalEff,
-                                     sqrt((totalEff*(1.-totalEff))/25000.),
+                                     totalEffErr,
                                      nBackground, nBackgroundErr,
                                      nDataObs, false, 0, "cls",
                                      plotFileName.c_str(),0);
@@ -79,6 +80,9 @@ void ComputeLimit(float lumi, float lumiError, float totalEff, float nBackground
    myfile << "Mass: " << mass << "\n";
    myfile << "TotalXSection: " << totalXSec << "\n";
    myfile << "TotalEff: " << totalEff << "\n";
+   myfile << "TotalEffErr: " << totalEffErr << "\n";
+   myfile << "TotalEffMScaleSystUp: " << totalEffMScaleSystUp << "\n";
+   myfile << "TotalEffMScaleSystDown: " << totalEffMScaleSystDown << "\n";
    myfile << "HalfWidth: " << halfWidth << "\n";
    myfile << "OptMassWindowLow: " << massWindowLow << "\n";
    myfile << "OptMassWindowHigh: " << massWindowHigh << "\n";
