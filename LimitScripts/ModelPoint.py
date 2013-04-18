@@ -10,23 +10,26 @@ import string
 
 class ModelPoint:
   def __init__(self, *args, **kwargs):
-    self.coupling             = kwargs.get('coupling',None)
-    self.mass                 = kwargs.get('mass',None)
-    self.totalXSec            = kwargs.get('totalXSec',None)
-    self.totalEff             = kwargs.get('totalEff',None)
-    self.halfWidth            = kwargs.get('halfWidth',None)
-    self.optMassWindowLow     = kwargs.get('optMassWindowLow',None)
-    self.optMassWindowHigh    = kwargs.get('optMassWindowHigh',None)
-    self.nDataObs             = kwargs.get('nDataObs',None)
-    self.nBackground          = kwargs.get('nBg',None)
-    self.nBackgroundErr       = kwargs.get('nBgErr',None)
-    self.expLimit             = kwargs.get('expLimit',None)
-    self.expLimitOneSigmaHigh = kwargs.get('expLimitOneSigmaHigh',None)
-    self.expLimitOneSigmaLow  = kwargs.get('expLimitOneSigmaLow',None)
-    self.expLimitTwoSigmaHigh = kwargs.get('expLimitTwoSigmaHigh',None)
-    self.expLimitTwoSigmaLow  = kwargs.get('expLimitTwoSigmaLow',None)
-    self.obsLimit             = kwargs.get('obsLimit',None)
-    self.fileName             = kwargs.get('fileName',None)
+    self.coupling               = kwargs.get('coupling',None)
+    self.mass                   = kwargs.get('mass',None)
+    self.totalXSec              = kwargs.get('totalXSec',None)
+    self.totalEff               = kwargs.get('totalEff',None)
+    self.totalEffErr            = kwargs.get('totalEffErr',None)
+    self.totalEffMScaleSystUp   = kwargs.get('totalEffMScaleSystUp',None)
+    self.totalEffMScaleSystDown = kwargs.get('totalEffMScaleSystDown',None)
+    self.halfWidth              = kwargs.get('halfWidth',None)
+    self.optMassWindowLow       = kwargs.get('optMassWindowLow',None)
+    self.optMassWindowHigh      = kwargs.get('optMassWindowHigh',None)
+    self.nDataObs               = kwargs.get('nDataObs',None)
+    self.nBackground            = kwargs.get('nBg',None)
+    self.nBackgroundErr         = kwargs.get('nBgErr',None)
+    self.expLimit               = kwargs.get('expLimit',None)
+    self.expLimitOneSigmaHigh   = kwargs.get('expLimitOneSigmaHigh',None)
+    self.expLimitOneSigmaLow    = kwargs.get('expLimitOneSigmaLow',None)
+    self.expLimitTwoSigmaHigh   = kwargs.get('expLimitTwoSigmaHigh',None)
+    self.expLimitTwoSigmaLow    = kwargs.get('expLimitTwoSigmaLow',None)
+    self.obsLimit               = kwargs.get('obsLimit',None)
+    self.fileName               = kwargs.get('fileName',None)
 
   def AddLimitResult(self,lr):
     self.expLimit = lr.GetExpectedLimit()
@@ -41,6 +44,9 @@ class ModelPoint:
     print "Mass: ",self.mass
     print "TotalXSection: " , self.totalXSec
     print "TotalEff: %.5f"%self.totalEff
+    print "TotalEffErr: %.5f"%self.totalEffErr
+    print "TotalEffMScaleSystUp: %.5f"%self.totalEffMScaleSystUp
+    print "TotalEffMScaleSystDown: %.5f"%self.totalEffMScaleSystDown
     print "HalfWidth: " , self.halfWidth
     print "OptMassWindow: ", self.optMassWindowLow,"-",self.optMassWindowHigh
     print "NDataObs: " , self.nDataObs
@@ -57,6 +63,9 @@ class ModelPoint:
     file.write("FileName: " + self.fileName + "\n")
     file.write("TotalXSection: " + str(self.totalXSec) + "\n")
     file.write("TotalEff: " + str(self.totalEff) + "\n")
+    file.write("TotalEffErr: " + str(self.totalEffErr) + "\n")
+    file.write("TotalEffMScaleSystUp: " + str(self.totalEffMScaleSystUp) + "\n")
+    file.write("TotalEffMScaleSystDown: " + str(self.totalEffMScaleSystDown) + "\n")
     file.write("HalfWidth: " + str(self.halfWidth) + "\n")
     file.write("OptMassWindowLow: " + str(self.optMassWindowLow) + "\n")
     file.write("OptMassWindowHigh: " + str(self.optMassWindowHigh) + "\n")
@@ -106,8 +115,12 @@ class ModelPoint:
     else:
       backExpString = '%0.2f'%self.nBackground+'+/-'+'%0.2f'%self.nBackgroundErr
     tableString+=string.center(backExpString,18)+string.center(str(self.nDataObs),10)
-    tableString+=string.center('%.1E'%float(self.totalXSec),10)+string.center(str(round(self.expLimit,6)),10)
-    tableString+=string.center(str(round(self.obsLimit,5)),12)
+    tableString+=string.center('%.1E'%float(self.totalXSec),10)
+    try:
+      tableString+=string.center(str(round(self.expLimit,6)),10)
+      tableString+=string.center(str(round(self.obsLimit,5)),12)
+    except TypeError:
+      pass
     return tableString
 
 
@@ -125,8 +138,11 @@ class ModelPoint:
     else:
       backExpString = '%0.2f'%self.nBackground+'+/-'+'%0.2f'%self.nBackgroundErr
     tableString+=string.center(backExpString,18)+'|'+string.center(str(self.nDataObs),10)+'|'
-    tableString+=string.center(str(round(self.expLimit,6)),10)+'|'
-    tableString+=string.center(str(round(self.obsLimit,5)),12)+'|'
+    try:
+      tableString+=string.center(str(round(self.expLimit,6)),10)+'|'
+      tableString+=string.center(str(round(self.obsLimit,5)),12)+'|'
+    except TypeError:
+      pass
     return tableString
 
 
@@ -144,7 +160,6 @@ def ReadFromLines(lines):
       except ValueError:
         value = None
     if "Coupling:" in line:
-      print 'ReadFromLines: set coupling=',value,'from',line
       mp = ModelPoint()
       mp.coupling = value
     elif "Mass:" in line:
@@ -155,6 +170,12 @@ def ReadFromLines(lines):
       mp.totalXSec = value
     elif "TotalEff:" in line:
       mp.totalEff = value
+    elif "TotalEffErr:" in line:
+      mp.totalEffErr = value
+    elif "TotalEffMScaleSystUp:" in line:
+      mp.totalEffMScaleSystUp = value
+    elif "TotalEffMScaleSystDown:" in line:
+      mp.totalEffMScaleSystDown = value
     elif "HalfWidth:" in line:
       mp.halfWidth = value
     elif "OptMassWindowLow:" in line:
