@@ -592,6 +592,7 @@ class PlottingCodeLoop {
    
   TH1F* h_Photon1_hadOverEm; 
   TH1F* h_Photon1_hadOverEm_log;
+  TH1F* h_Photon1_hadTowerOverEm; 
   TH1F* h_Photon1_hadDepth1OverEm; 
   TH1F* h_Photon1_hadDepth2OverEm; 
    
@@ -637,6 +638,7 @@ class PlottingCodeLoop {
    
   TH1F* h_Photon2_hadOverEm; 
   TH1F* h_Photon2_hadOverEm_log;
+  TH1F* h_Photon2_hadTowerOverEm; 
   TH1F* h_Photon2_hadDepth1OverEm; 
   TH1F* h_Photon2_hadDepth2OverEm; 
    
@@ -663,10 +665,16 @@ class PlottingCodeLoop {
    
   TH1F* h_Photon2_esRatio; 
    
+  TH1F* h_Vtx_Nvtx_Acc;
   TH1F* h_Vtx_Nvtx;
   TH1F* h_Vtx_vx;
   TH1F* h_Vtx_vy;
   TH1F* h_Vtx_vz;
+
+  TH2F* acceptedEventsBothPhotonsNVtxVsGenPt;
+  TH2F* acceptedEventsBothPhotonsNVtxVsDetEta;
+  TH2F* acceptedAndPFIDedEventsBothPhotonsNVtxVsGenPt;
+  TH2F* acceptedAndPFIDedEventsBothPhotonsNVtxVsDetEta;
 
   // tight-tight ie signal sample
 
@@ -885,7 +893,8 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_Diphoton_deltaPhi = new TH1F("h_Diphoton_deltaPhi","Delta#phi;#gamma#gamma #Delta#phi",36,-3.14159,3.14159);
   h_Diphoton_cosThetaStar = new TH1F("h_Diphoton_cosThetaStar","Diphoton |cos(#theta *)|; #gamma#gamma |cos#theta*|",20,0.,1.); 
 
-  h_Vtx_Nvtx = new TH1F("h_Vtx_Nvtx","Number of Vertices ; Num Vertices",40,0,40);
+  h_Vtx_Nvtx_Acc = new TH1F("h_Vtx_Nvtx_Acc","Number of Vertices Acc. Evts.; Num Vertices",100,0,100);
+  h_Vtx_Nvtx = new TH1F("h_Vtx_Nvtx","Number of Vertices ; Num Vertices",100,0,100);
   h_Vtx_vx = new TH1F("h_Vtx_vx","V_{x}; V_{x} (cm)",500,0.,1.);
   h_Vtx_vy = new TH1F("h_Vtx_vy","V_{y}; V_{y} (cm)",500,0.,1.);
   h_Vtx_vz = new TH1F("h_Vtx_vz","V_{z}; V_{z} (cm)",40,-20.,20.);
@@ -898,6 +907,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   //WHY BOTH VERSIONS OF H/E DO NOT HAVE SAME MAX VALUES
   h_Photon1_hadOverEm = new TH1F("h_Photon1_hadOverEm","Photon1 H/E;#gamma_{1} H/E", 60, 0., 0.06);
   h_Photon1_hadOverEm_log = new TH1F("h_Photon1_hadOverEm_log","Photon1 H/E;#gamma_{1} H/E", 60, 0., 0.06);
+  h_Photon1_hadTowerOverEm = new TH1F("h_Photon1_hadTowerOverEm","Photon1 HTower/E;#gamma_{1} HTower/E", 60, 0., 0.06);
 
   h_Photon1_trkIsoSumPtHollow04 = new TH1F("h_Photon1_trkIsoSumPtHollow04","Photon1 Track Iso #Sigma p_{T} Hollow #DeltaR 0.4;#gamma_{1} Track Iso #Sigma p_{T} Hollow #DeltaR 0.4", 20, 0., 3.);
   h_Photon1_trkIsoSumPtHollow04_log = new TH1F("h_Photon1_trkIsoSumPtHollow04_log","Photon1 Track Iso #Sigma p_{T} Hollow #DeltaR 0.4;#gamma_{1} Track Iso #Sigma p_{T} Hollow #DeltaR 0.4", 20, 0., 3.);
@@ -910,6 +920,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_Photon2_sigmaIetaIeta = new TH1F("h_Photon2_sigmaIetaIeta","Photon2 #sigma_{i#etai#eta};#gamma_{2} #sigma_{i#etai#eta}", 50, 0.005, 0.020);
   h_Photon2_hadOverEm = new TH1F("h_Photon2_hadOverEm","Photon2 H/E;#gamma_{2} H/E", 60, 0., 0.06);
   h_Photon2_hadOverEm_log = new TH1F("h_Photon2_hadOverEm_log","Photon2 H/E;#gamma_{2} H/E", 60, 0., 0.06);
+  h_Photon2_hadTowerOverEm = new TH1F("h_Photon2_hadTowerOverEm","Photon2 HTower/E;#gamma_{2} HTower/E", 60, 0., 0.06);
   h_Photon2_trkIsoSumPtHollow04 = new TH1F("h_Photon2_trkIsoSumPtHollow04","Photon2 Track Iso #Sigma p_{T} Hollow #DeltaR 0.4;#gamma_{2} Track Iso #Sigma p_{T} Hollow #DeltaR 0.4", 20, 0., 3.);
   h_Photon2_trkIsoSumPtHollow04_log = new TH1F("h_Photon2_trkIsoSumPtHollow04_log","Photon2 Track Iso #Sigma p_{T} Hollow #DeltaR 0.4;#gamma_{2} Track Iso #Sigma p_{T} Hollow #DeltaR 0.4", 20, 0., 3.);
   h_Photon2_trkIsoNtrksHollow04 = new TH1F("h_Photon2_trkIsoNtrksHollow04","Photon2 Track Iso N_{tracks} Hollow #DeltaR 0.4;#gamma_{2} Track Iso N_{tracks}Hollow #DeltaR 0.4", 6, 0., 6.);
@@ -918,6 +929,12 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_Photon2_hcalIso04_log = new TH1F("h_Photon2_hcalIso04_log","Photon2 HCAL Iso #DeltaR 0.4;#gamma_{1} HCAL Iso #DeltaR 0.4", 100, 0., 5.);
   h_Photon1_detEta = new TH1F("h_Photon1_detEta","Photon1 Detetctor #eta;#gamma_{1} #eta",60,-3.,3.);
   h_Photon2_detEta = new TH1F("h_Photon2_detEta","Photon2 Detetctor #eta;#gamma_{2} #eta",60,-3.,3.);
+  // others
+  acceptedEventsBothPhotonsNVtxVsGenPt = new TH2F("acceptedEventsBothPhotonsNVtxVsGenPt","acceptedEventsBothPhotonsNVtxVsGenPt (no eff scaleFactor);#gamma_{1} GenPt [GeV];#Vtx",60,0,3000,100,0,100);
+  acceptedAndPFIDedEventsBothPhotonsNVtxVsGenPt = new TH2F("acceptedAndPFIDedEventsBothPhotonsNVtxVsGenPt","acceptedAndPFIDedEventsBothPhotonsNVtxVsGenPt (no eff scaleFactor);#gamma_{1} GenPt [GeV];#Vtx",60,0,3000,100,0,100);
+  acceptedEventsBothPhotonsNVtxVsDetEta = new TH2F("acceptedEventsBothPhotonsNVtxVsDetEta","acceptedEventsBothPhotonsNVtxVsDetEta (no eff scaleFactor);#eta;#Vtx",60,-1.5,1.5,100,0,100);
+  acceptedAndPFIDedEventsBothPhotonsNVtxVsDetEta = new TH2F("acceptedAndPFIDedEventsBothPhotonsNVtxVsDetEta","acceptedAndPFIDedEventsBothPhotonsNVtxVsDetEta (no eff scaleFactor);#eta;#Vtx",60,-1.5,1.5,100,0,100);
+
 
   cout<<"PlottingCode.h Before FakeRate"<<endl;
   //fakerate histos//
@@ -1013,7 +1030,7 @@ void PlottingCodeLoop::Init(TTree *tree)
   cout<<"After Fake Rate Plotticode.h"<<endl; 
  
   h_nEvents->Sumw2();
- 
+
   h_Diphoton_Minv->Sumw2();
   h_Diphoton_Minv_FineBinning->Sumw2();
   h_FakeRate_tt_pt1->Sumw2();
