@@ -12,6 +12,7 @@ void PlottingCodeLoop::Loop()
 {
 
   bool useDataMCEffScaleFactor = true;
+  bool useDeltaPhiCut = true;
 
   if (fChain == 0) return;
 
@@ -37,9 +38,12 @@ void PlottingCodeLoop::Loop()
 
     if(Diphoton_Minv < 200.) continue;
 
-    if(fabs(Diphoton_deltaPhi) < 2.8) continue;
-    //if(fabs(Diphoton_deltaPhi) < 3.0) continue;
-    //if(Diphoton_qt > 100.) continue;
+    if(useDeltaPhiCut)
+    {
+      if(fabs(Diphoton_deltaPhi) < 2.8) continue;
+      //if(fabs(Diphoton_deltaPhi) < 3.0) continue;
+      //if(Diphoton_qt > 100.) continue;
+    }
 
     // XXX SIC R9
     //if(Photon1_r9 <= 0.95 || Photon2_r9 <= 0.95) continue;
