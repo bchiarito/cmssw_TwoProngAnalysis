@@ -32,25 +32,42 @@ void PlottingCodeLoop::Loop()
 
     // fill all events hist here
     h_nEvents->Fill(0.5,MCPUWeight);
-
-    if(!(Photon1_isEB && Photon2_isEB && Photon1_pt>=80. && Photon2_pt>=80.))
-      continue;
-
+    
+    // Event-level cuts (minv, deltaPhi if selected)
     if(Diphoton_Minv < 200.) continue;
-
     if(useDeltaPhiCut)
     {
       if(fabs(Diphoton_deltaPhi) < 2.8) continue;
       //if(fabs(Diphoton_deltaPhi) < 3.0) continue;
       //if(Diphoton_qt > 100.) continue;
     }
-
     // XXX SIC R9
     //if(Photon1_r9 <= 0.95 || Photon2_r9 <= 0.95) continue;
     //if(Photon1_r9 > 0.94 || Photon2_r9 > 0.94) continue;
     // XXX SIC R9
 
-    PUweight = MCPUWeight;
+    // compute deltaRs, actual cut is below
+    Float_t dphi1 = GenPhoton1_phi - Photon1_phi;
+    if(dphi1 > 3.1415926) dphi1-=2.*3.1415926;
+    if(dphi1 <= -3.1415926) dphi1+=2.*3.1415926;
+    Float_t deta1 = GenPhoton1_eta - Photon1_eta;
+    Float_t deltar1 = sqrt(deta1*deta1 + dphi1*dphi1);
+    //
+    Float_t dphi2 = GenPhoton2_phi - Photon2_phi;
+    if(dphi2 > 3.1415926) dphi2-=2.*3.1415926;
+    if(dphi2 <= -3.1415926) dphi2+=2.*3.1415926;
+    Float_t deta2 = GenPhoton2_eta - Photon2_eta;
+    Float_t deltar2 = sqrt(deta2*deta2 + dphi2*dphi2);
+
+    // now apply the photon fiducial cuts
+    if(!(Photon1_isEB && Photon2_isEB && Photon1_pt>=80. && Photon2_pt>=80.))
+      continue;
+    if(fabs(Photon1_detEta) > 1.4442 || fabs(Photon2_detEta) > 1.4442)
+      continue;
+    // deltaR matching cuts
+    if(deltar1 > 0.2) continue;
+    if(deltar2 > 0.2) continue;
+
     if(useDataMCEffScaleFactor)
     {
       // scale factor numbers for tight PF, full 2012 at 8 TeV taken from our twiki page
@@ -65,30 +82,40 @@ void PlottingCodeLoop::Loop()
         dataMCEffScaleFactorPhoton2 = 0.9764*0.9976;
     }
 
-    // deltaR matching
-    Float_t dphi1 = GenPhoton1_phi - Photon1_phi;
-    if(dphi1 > 3.1415926) dphi1-=2.*3.1415926;
-    if(dphi1 <= -3.1415926) dphi1+=2.*3.1415926;
-    Float_t deta1 = GenPhoton1_eta - Photon1_eta;
-    Float_t deltar1 = sqrt(deta1*deta1 + dphi1*dphi1);
-    //
-    Float_t dphi2 = GenPhoton2_phi - Photon2_phi;
-    if(dphi2 > 3.1415926) dphi2-=2.*3.1415926;
-    if(dphi2 <= -3.1415926) dphi2+=2.*3.1415926;
-    Float_t deta2 = GenPhoton2_eta - Photon2_eta;
-    Float_t deltar2 = sqrt(deta2*deta2 + dphi2*dphi2);
-    if(deltar1 > 0.2) continue;
-    if(deltar2 > 0.2) continue;
+    PUweight = MCPUWeight;
 
+    // fill accepted events hist here
+    h_nAcceptedEvents->Fill(0.5,MCPUWeight);
+    h_Vtx_Nvtx_Acc->Fill(Vtx_Nvtx,PUweight);
+    //
     acceptedEventsBothPhotonsNVtxVsGenPt->Fill(GenPhoton1_pt,Vtx_Nvtx,PUweight);
     acceptedEventsBothPhotonsNVtxVsGenPt->Fill(GenPhoton2_pt,Vtx_Nvtx,PUweight);
     acceptedEventsBothPhotonsNVtxVsDetEta->Fill(Photon1_detEta,Vtx_Nvtx,PUweight);
     acceptedEventsBothPhotonsNVtxVsDetEta->Fill(Photon2_detEta,Vtx_Nvtx,PUweight);
-    h_Vtx_Nvtx_Acc->Fill(Vtx_Nvtx,PUweight);
+    acceptedEventsBothPhotonsGenPt->Fill(GenPhoton1_pt,PUweight);
+    acceptedEventsBothPhotonsGenPt->Fill(GenPhoton2_pt,PUweight);
+    // efficiency hists
+    if(Photon1_isTightPFPhoton)
+    {
+      acceptedAndPFIDedEventsBothPhotonsNVtxVsGenPt->Fill(GenPhoton1_pt,Vtx_Nvtx,PUweight);
+      acceptedAndPFIDedEventsBothPhotonsNVtxVsDetEta->Fill(Photon1_detEta,Vtx_Nvtx,PUweight);
+      acceptedAndPFIDedEventsBothPhotonsGenPt->Fill(GenPhoton1_pt,PUweight);
+    }
+    if(Photon2_isTightPFPhoton)
+    {
+      acceptedAndPFIDedEventsBothPhotonsNVtxVsGenPt->Fill(GenPhoton2_pt,Vtx_Nvtx,PUweight);
+      acceptedAndPFIDedEventsBothPhotonsNVtxVsDetEta->Fill(Photon2_detEta,Vtx_Nvtx,PUweight);
+      acceptedAndPFIDedEventsBothPhotonsGenPt->Fill(GenPhoton2_pt,PUweight);
+    }
+    // efficiency hists
 
-    // detector or PF ID 
+
+    // apply detector or PF ID  selection
     //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) continue;
     if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) continue;
+
+    // fill selected events hist here
+    h_nSelectedEvents->Fill(0.5,MCPUWeight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
 
     //cout<<"Pileup weight "<<PUweight<<endl;	
 
@@ -138,11 +165,6 @@ void PlottingCodeLoop::Loop()
     h_Photon2_ecalIso04->Fill(Photon2_ecalIso04,PUweight*dataMCEffScaleFactorPhoton2);
     h_Photon2_detEta->Fill(Photon2_detEta,PUweight*dataMCEffScaleFactorPhoton2);
     //
-    // no scale factor
-    acceptedAndPFIDedEventsBothPhotonsNVtxVsGenPt->Fill(GenPhoton1_pt,Vtx_Nvtx,PUweight);
-    acceptedAndPFIDedEventsBothPhotonsNVtxVsGenPt->Fill(GenPhoton2_pt,Vtx_Nvtx,PUweight);
-    acceptedAndPFIDedEventsBothPhotonsNVtxVsDetEta->Fill(Photon1_detEta,Vtx_Nvtx,PUweight);
-    acceptedAndPFIDedEventsBothPhotonsNVtxVsDetEta->Fill(Photon2_detEta,Vtx_Nvtx,PUweight);
 
 
   }//end of loop over entries    
@@ -150,6 +172,8 @@ void PlottingCodeLoop::Loop()
 
   _outputfile->cd();
   h_nEvents->Write();
+  h_nAcceptedEvents->Write();
+  h_nSelectedEvents->Write();
   h_Photon1_pt->Write();
   h_Photon1_pt_log->Write();
   h_Photon1_eta->Write();
@@ -201,7 +225,13 @@ void PlottingCodeLoop::Loop()
   acceptedEventsBothPhotonsNVtxVsDetEta->Write();
   acceptedAndPFIDedEventsBothPhotonsNVtxVsGenPt->Write();
   acceptedAndPFIDedEventsBothPhotonsNVtxVsDetEta->Write();
+  acceptedEventsBothPhotonsGenPt->Write();
+  acceptedAndPFIDedEventsBothPhotonsGenPt->Write();
 
   _outputfile->Close();   
+
+  cout << "Total reweighted entries: " << h_nEvents->Integral() << " total selected entries: " << h_Diphoton_Minv->Integral() << " acc=" << h_nAcceptedEvents->Integral()/h_nEvents->Integral() <<
+    " sel=" << h_nSelectedEvents->Integral()/h_nAcceptedEvents->Integral() <<
+    " acc*eff=" << h_Diphoton_Minv->Integral()/h_nEvents->Integral() << endl;
 
 }//end of Loop method
