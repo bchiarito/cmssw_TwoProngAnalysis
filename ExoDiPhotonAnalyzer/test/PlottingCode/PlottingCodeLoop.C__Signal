@@ -5,6 +5,8 @@
 #include <TCanvas.h>
 #include <TF1.h>
 #include <TMath.h>
+#include <TLorentzVector.h>
+#include <algorithm>
 
 using namespace std;
 
@@ -16,9 +18,32 @@ void PlottingCodeLoop::Loop()
 
   if (fChain == 0) return;
 
+  // for computing shifted pileup weights
+  TH1D* signalPUHistOrig = (TH1D*)fChain->GetCurrentFile()->Get("diphotonSignalMCAnalyzer/fpu_n_BeforeCuts");
+  TH1D* signalPUHist = (TH1D*)signalPUHistOrig->Clone();
+  signalPUHist->SetBins(80,0,80);
+  signalPUHist->Scale(1.0/signalPUHist->Integral());
+  // for now, hardcode file location
+  TFile* dataShiftUpFile = TFile::Open("PileupDataDec14thHistogramUpperSyst.root");
+  TH1D* dataPUShiftUpHistOrig = (TH1D*)dataShiftUpFile->Get("pileup");
+  TH1D* dataPUShiftUpHist = (TH1D*)dataPUShiftUpHistOrig->Clone();
+  dataPUShiftUpHist->Scale(1.0/dataPUShiftUpHist->Integral());
+  TH1D* pileupWeightsUpShiftHist = (TH1D*)dataPUShiftUpHist->Clone();
+  pileupWeightsUpShiftHist->Divide(signalPUHist);
+  // for now, hardcode file location
+  TFile* dataShiftDownFile = TFile::Open("PileupDataDec14thHistogramLowerSyst.root");
+  TH1D* dataPUShiftDownHistOrig = (TH1D*)dataShiftDownFile->Get("pileup");
+  TH1D* dataPUShiftDownHist = (TH1D*)dataPUShiftDownHistOrig->Clone();
+  dataPUShiftDownHist->Scale(1.0/dataPUShiftDownHist->Integral());
+  TH1D* pileupWeightsDownShiftHist = (TH1D*)dataPUShiftDownHist->Clone();
+  pileupWeightsDownShiftHist->Divide(signalPUHist);
+  // end of computing shifted pileup weight hists
+  
   cout<<"PlottingCodeLoop::Loop(): for signal; "<<fChain->GetEntries()<<" entries in Tree Chain"<<endl;
 
   Double_t PUweight = 1.;
+  Double_t PUweightUpwardShift = 1.;
+  Double_t PUweightDownwardShift = 1.;
   Double_t dataMCEffScaleFactorPhoton1 = 1.;
   Double_t dataMCEffScaleFactorPhoton2 = 1.;
 
@@ -33,19 +58,6 @@ void PlottingCodeLoop::Loop()
     // fill all events hist here
     h_nEvents->Fill(0.5,MCPUWeight);
     
-    // Event-level cuts (minv, deltaPhi if selected)
-    if(Diphoton_Minv < 200.) continue;
-    if(useDeltaPhiCut)
-    {
-      if(fabs(Diphoton_deltaPhi) < 2.8) continue;
-      //if(fabs(Diphoton_deltaPhi) < 3.0) continue;
-      //if(Diphoton_qt > 100.) continue;
-    }
-    // XXX SIC R9
-    //if(Photon1_r9 <= 0.95 || Photon2_r9 <= 0.95) continue;
-    //if(Photon1_r9 > 0.94 || Photon2_r9 > 0.94) continue;
-    // XXX SIC R9
-
     // compute deltaRs, actual cut is below
     Float_t dphi1 = GenPhoton1_phi - Photon1_phi;
     if(dphi1 > 3.1415926) dphi1-=2.*3.1415926;
@@ -58,12 +70,6 @@ void PlottingCodeLoop::Loop()
     if(dphi2 <= -3.1415926) dphi2+=2.*3.1415926;
     Float_t deta2 = GenPhoton2_eta - Photon2_eta;
     Float_t deltar2 = sqrt(deta2*deta2 + dphi2*dphi2);
-
-    // now apply the photon fiducial cuts
-    if(!(Photon1_isEB && Photon2_isEB && Photon1_pt>=80. && Photon2_pt>=80.))
-      continue;
-    if(fabs(Photon1_detEta) > 1.4442 || fabs(Photon2_detEta) > 1.4442)
-      continue;
     // deltaR matching cuts
     if(deltar1 > 0.2) continue;
     if(deltar2 > 0.2) continue;
@@ -81,8 +87,124 @@ void PlottingCodeLoop::Loop()
       else // can only be in higher eta region in EB
         dataMCEffScaleFactorPhoton2 = 0.9764*0.9976;
     }
-
     PUweight = MCPUWeight;
+    // get pileup-shifted weights for pileup syst
+    PUweightUpwardShift = pileupWeightsUpShiftHist->GetBinContent(pileupWeightsUpShiftHist->GetXaxis()->FindBin(Vtx_Nvtx));
+    PUweightDownwardShift = pileupWeightsDownShiftHist->GetBinContent(pileupWeightsDownShiftHist->GetXaxis()->FindBin(Vtx_Nvtx));
+
+    // now we have a well-matched photon, so calculate smearing and flag
+    bool acceptedSmearedDiPhotonEvent = true;
+    // smear both
+    float dataOverMCResRatio = 1.7; //1.32;
+    float smearedPtPhoton1 = max(0.0,GenPhoton1_pt+dataOverMCResRatio*(Photon1_pt-GenPhoton1_pt));
+    float smearedPtPhoton2 = max(0.0,GenPhoton2_pt+dataOverMCResRatio*(Photon2_pt-GenPhoton2_pt));
+    float smearedEPhoton1 = smearedPtPhoton1*cosh(Photon1_eta);
+    float smearedEPhoton2 = smearedPtPhoton2*cosh(Photon2_eta);
+    TLorentzVector smearedFourVectorPhoton1;
+    smearedFourVectorPhoton1.SetPtEtaPhiE(smearedPtPhoton1,Photon1_eta,Photon1_phi,smearedEPhoton1);
+    TLorentzVector smearedFourVectorPhoton2;
+    smearedFourVectorPhoton2.SetPtEtaPhiE(smearedPtPhoton2,Photon2_eta,Photon2_phi,smearedEPhoton2);
+    float diphotonSmearedMass = (smearedFourVectorPhoton1+smearedFourVectorPhoton2).M();
+    // check for passing selections: minv, dPhi, EB, Pt, detEta, ID
+    if(diphotonSmearedMass < 200.) acceptedSmearedDiPhotonEvent = false;
+    if(useDeltaPhiCut)
+    {
+      if(fabs(Diphoton_deltaPhi) < 2.8) acceptedSmearedDiPhotonEvent = false;
+    }
+    if(smearedPtPhoton1 < 80 || smearedPtPhoton2 < 80) acceptedSmearedDiPhotonEvent = false;
+    if(!(Photon1_isEB && Photon2_isEB)) acceptedSmearedDiPhotonEvent = false;
+    if(fabs(Photon1_detEta) > 1.4442 || fabs(Photon2_detEta) > 1.4442) acceptedSmearedDiPhotonEvent = false;
+    //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) acceptedSmearedDiPhotonEvent = false;
+    if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) acceptedSmearedDiPhotonEvent = false;
+    // fill for those passing selections
+    if(acceptedSmearedDiPhotonEvent)
+    {
+      h_Diphoton_Minv_Smeared->Fill(diphotonSmearedMass,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+      h_Diphoton_Minv_Smeared_FineBinning->Fill(diphotonSmearedMass,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+    }
+    // end of smearing
+    // scale shift up and flag
+    float scaleShift = 0.01; // controls both up and down shift amount
+    bool acceptedShiftedUpDiPhotonEvent = true;
+    // shift both photons
+    float scaleShiftUp = 1+scaleShift;
+    float shiftedUpPtPhoton1 = scaleShiftUp*Photon1_pt;
+    float shiftedUpPtPhoton2 = scaleShiftUp*Photon2_pt;
+    float shiftedUpEPhoton1 = shiftedUpPtPhoton1*cosh(Photon1_eta);
+    float shiftedUpEPhoton2 = shiftedUpPtPhoton2*cosh(Photon2_eta);
+    TLorentzVector shiftedUpFourVectorPhoton1;
+    shiftedUpFourVectorPhoton1.SetPtEtaPhiE(shiftedUpPtPhoton1,Photon1_eta,Photon1_phi,shiftedUpEPhoton1);
+    TLorentzVector shiftedUpFourVectorPhoton2;
+    shiftedUpFourVectorPhoton2.SetPtEtaPhiE(shiftedUpPtPhoton2,Photon2_eta,Photon2_phi,shiftedUpEPhoton2);
+    float diphotonShiftedUpMass = (shiftedUpFourVectorPhoton1+shiftedUpFourVectorPhoton2).M();
+    // check for passing selections: minv, dPhi, EB, Pt, detEta, ID
+    if(diphotonShiftedUpMass < 200.) acceptedShiftedUpDiPhotonEvent = false;
+    if(useDeltaPhiCut)
+    {
+      if(fabs(Diphoton_deltaPhi) < 2.8) acceptedShiftedUpDiPhotonEvent = false;
+    }
+    if(shiftedUpPtPhoton1 < 80 || shiftedUpPtPhoton2 < 80) acceptedShiftedUpDiPhotonEvent = false;
+    if(!(Photon1_isEB && Photon2_isEB)) acceptedShiftedUpDiPhotonEvent = false;
+    if(fabs(Photon1_detEta) > 1.4442 || fabs(Photon2_detEta) > 1.4442) acceptedShiftedUpDiPhotonEvent = false;
+    //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) acceptedShiftedUpDiPhotonEvent = false;
+    if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) acceptedShiftedUpDiPhotonEvent = false;
+    // fill for those passing selections
+    if(acceptedShiftedUpDiPhotonEvent)
+    {
+      h_Diphoton_Minv_ScaleShiftedUp->Fill(diphotonShiftedUpMass,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+      h_Diphoton_Minv_ScaleShiftedUp_FineBinning->Fill(diphotonShiftedUpMass,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+    }
+    // end of shift up
+    // scale shift down and flag
+    bool acceptedShiftedDownDiPhotonEvent = true;
+    // shift both
+    float scaleShiftDown = 1-scaleShift;
+    float shiftedDownPtPhoton1 = scaleShiftDown*Photon1_pt;
+    float shiftedDownPtPhoton2 = scaleShiftDown*Photon2_pt;
+    float shiftedDownEPhoton1 = shiftedDownPtPhoton1*cosh(Photon1_eta);
+    float shiftedDownEPhoton2 = shiftedDownPtPhoton2*cosh(Photon2_eta);
+    TLorentzVector shiftedDownFourVectorPhoton1;
+    shiftedDownFourVectorPhoton1.SetPtEtaPhiE(shiftedDownPtPhoton1,Photon1_eta,Photon1_phi,shiftedDownEPhoton1);
+    TLorentzVector shiftedDownFourVectorPhoton2;
+    shiftedDownFourVectorPhoton2.SetPtEtaPhiE(shiftedDownPtPhoton2,Photon2_eta,Photon2_phi,shiftedDownEPhoton2);
+    float diphotonShiftedDownMass = (shiftedDownFourVectorPhoton1+shiftedDownFourVectorPhoton2).M();
+    // check for passing selections: minv, dPhi, EB, Pt, detEta, ID
+    if(diphotonShiftedDownMass < 200.) acceptedShiftedDownDiPhotonEvent = false;
+    if(useDeltaPhiCut)
+    {
+      if(fabs(Diphoton_deltaPhi) < 2.8) acceptedShiftedDownDiPhotonEvent = false;
+    }
+    if(shiftedDownPtPhoton1 < 80 || shiftedDownPtPhoton2 < 80) acceptedShiftedDownDiPhotonEvent = false;
+    if(!(Photon1_isEB && Photon2_isEB)) acceptedShiftedDownDiPhotonEvent = false;
+    if(fabs(Photon1_detEta) > 1.4442 || fabs(Photon2_detEta) > 1.4442) acceptedShiftedDownDiPhotonEvent = false;
+    //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) acceptedShiftedDownDiPhotonEvent = false;
+    if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) acceptedShiftedDownDiPhotonEvent = false;
+    // fill for those passing selections
+    if(acceptedShiftedDownDiPhotonEvent)
+    {
+      h_Diphoton_Minv_ScaleShiftedDown->Fill(diphotonShiftedDownMass,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+      h_Diphoton_Minv_ScaleShiftedDown_FineBinning->Fill(diphotonShiftedDownMass,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+    }
+    // end of shift down
+    
+
+    // Event-level cuts (minv, deltaPhi if selected)
+    if(Diphoton_Minv < 200.) continue;
+    if(useDeltaPhiCut)
+    {
+      if(fabs(Diphoton_deltaPhi) < 2.8) continue;
+    }
+    // XXX SIC R9
+    //if(Photon1_r9 <= 0.95 || Photon2_r9 <= 0.95) continue;
+    //if(Photon1_r9 > 0.94 || Photon2_r9 > 0.94) continue;
+    // XXX SIC R9
+
+    // now apply the photon fiducial cuts -- isEB, Pt, detEta
+    if(!(Photon1_isEB && Photon2_isEB && Photon1_pt>=80. && Photon2_pt>=80.))
+      continue;
+    if(fabs(Photon1_detEta) > 1.4442 || fabs(Photon2_detEta) > 1.4442)
+      continue;
+
 
     // fill accepted events hist here
     h_nAcceptedEvents->Fill(0.5,MCPUWeight);
@@ -129,6 +251,10 @@ void PlottingCodeLoop::Loop()
     h_Photon2_eta->Fill(Photon2_eta,PUweight*dataMCEffScaleFactorPhoton2);
     h_Diphoton_Minv->Fill(Diphoton_Minv,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
     h_Diphoton_Minv_FineBinning->Fill(Diphoton_Minv,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+    h_Diphoton_Minv_PileupShiftedUp->Fill(Diphoton_Minv,PUweightUpwardShift*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+    h_Diphoton_Minv_PileupShiftedUp_FineBinning->Fill(Diphoton_Minv,PUweightUpwardShift*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+    h_Diphoton_Minv_PileupShiftedDown->Fill(Diphoton_Minv,PUweightDownwardShift*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+    h_Diphoton_Minv_PileupShiftedDown_FineBinning->Fill(Diphoton_Minv,PUweightDownwardShift*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
     h_Diphoton_Minv_log->Fill(Diphoton_Minv,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
     h_Diphoton_qt->Fill(Diphoton_qt,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
     h_Diphoton_qt_log->Fill(Diphoton_qt,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
@@ -184,6 +310,16 @@ void PlottingCodeLoop::Loop()
   h_Photon2_eta->Write();
   h_Diphoton_Minv->Write();
   h_Diphoton_Minv_FineBinning->Write();
+  h_Diphoton_Minv_PileupShiftedUp->Write();
+  h_Diphoton_Minv_PileupShiftedUp_FineBinning->Write();
+  h_Diphoton_Minv_PileupShiftedDown->Write();
+  h_Diphoton_Minv_PileupShiftedDown_FineBinning->Write();
+  h_Diphoton_Minv_Smeared->Write();
+  h_Diphoton_Minv_Smeared_FineBinning->Write();
+  h_Diphoton_Minv_ScaleShiftedUp->Write();
+  h_Diphoton_Minv_ScaleShiftedUp_FineBinning->Write();
+  h_Diphoton_Minv_ScaleShiftedDown->Write();
+  h_Diphoton_Minv_ScaleShiftedDown_FineBinning->Write();
   h_Diphoton_Minv_log->Write();
   h_Diphoton_qt->Write();
   h_Diphoton_qt_log->Write();
