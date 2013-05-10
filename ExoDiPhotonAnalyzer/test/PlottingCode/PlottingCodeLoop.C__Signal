@@ -95,7 +95,7 @@ void PlottingCodeLoop::Loop()
     // now we have a well-matched photon, so calculate smearing and flag
     bool acceptedSmearedDiPhotonEvent = true;
     // smear both
-    float dataOverMCResRatio = 1.7; //1.32;
+    float dataOverMCResRatio = 1.32;
     float smearedPtPhoton1 = max(0.0,GenPhoton1_pt+dataOverMCResRatio*(Photon1_pt-GenPhoton1_pt));
     float smearedPtPhoton2 = max(0.0,GenPhoton2_pt+dataOverMCResRatio*(Photon2_pt-GenPhoton2_pt));
     float smearedEPhoton1 = smearedPtPhoton1*cosh(Photon1_eta);
