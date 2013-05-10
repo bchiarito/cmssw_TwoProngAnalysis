@@ -38,7 +38,7 @@ void PlottingCodeLoop::Loop()
   TH1D* pileupWeightsDownShiftHist = (TH1D*)dataPUShiftDownHist->Clone();
   pileupWeightsDownShiftHist->Divide(signalPUHist);
   // end of computing shifted pileup weight hists
-  
+
   cout<<"PlottingCodeLoop::Loop(): for signal; "<<fChain->GetEntries()<<" entries in Tree Chain"<<endl;
 
   Double_t PUweight = 1.;
@@ -89,8 +89,8 @@ void PlottingCodeLoop::Loop()
     }
     PUweight = MCPUWeight;
     // get pileup-shifted weights for pileup syst
-    PUweightUpwardShift = pileupWeightsUpShiftHist->GetBinContent(pileupWeightsUpShiftHist->GetXaxis()->FindBin(Vtx_Nvtx));
-    PUweightDownwardShift = pileupWeightsDownShiftHist->GetBinContent(pileupWeightsDownShiftHist->GetXaxis()->FindBin(Vtx_Nvtx));
+    PUweightUpwardShift = pileupWeightsUpShiftHist->GetBinContent(pileupWeightsUpShiftHist->GetXaxis()->FindBin(pu_n));
+    PUweightDownwardShift = pileupWeightsDownShiftHist->GetBinContent(pileupWeightsDownShiftHist->GetXaxis()->FindBin(pu_n));
 
     // now we have a well-matched photon, so calculate smearing and flag
     bool acceptedSmearedDiPhotonEvent = true;
