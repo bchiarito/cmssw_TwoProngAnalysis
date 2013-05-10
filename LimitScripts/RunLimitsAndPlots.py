@@ -54,24 +54,32 @@ halfWidths0p1[2750] = 35.9283
 halfWidths0p1[3000] = 38.7399
 halfWidths0p1[3250] = 41.8178
 halfWidths0p1[3500] = 40.2991
-# mapping of couplings/masses to crossSections --> taken as input from theoretical calc.
+# mapping of couplings/masses to crossSections --> taken from AN-12-305
 totalXSecs0p01 = dict()
-totalXSecs0p01[750] = 1.023e-02
+totalXSecs0p01[750] =  1.023e-02
 totalXSecs0p01[1000] = 2.072e-03
 totalXSecs0p01[1250] = 5.21e-04
 totalXSecs0p01[1500] = 1.604e-04
 totalXSecs0p01[1750] = 5.408e-05
 totalXSecs0p01[2000] = 1.853e-05
+totalXSecs0p01[2250] = 7.207e-06
+totalXSecs0p01[2500] = 2.945e-06
 totalXSecs0p01[3000] = 4.703e-07
 # 0.05
 totalXSecs0p05 = dict()
+totalXSecs0p05[1250] = 1.28e-02
+totalXSecs0p05[1500] = 3.866e-03
 totalXSecs0p05[1750] = 1.331e-03
 totalXSecs0p05[2000] = 4.665e-04
+totalXSecs0p05[2250] = 1.774e-04
 totalXSecs0p05[2500] = 7.226e-05
 totalXSecs0p05[2750] = 2.803e-05
 totalXSecs0p05[3000] = 1.169e-05
 # 0.1
 totalXSecs0p1 = dict()
+totalXSecs0p1[1500] = 1.5e-02
+totalXSecs0p1[1750] = 5.2e-03
+totalXSecs0p1[2000] = 1.8e-03
 totalXSecs0p1[2250] = 7.04e-04
 totalXSecs0p1[2500] = 2.79e-04
 totalXSecs0p1[2750] = 1.14e-04
@@ -92,8 +100,9 @@ def GetHalfWidth(coupling,mass):
   if mass in dict:
     return dict[mass]
   else:
-    print 'GetHalfWidth: Coupling',coupling,'mass',mass,'not recognized; quitting'
-    exit()
+    return -1
+    #print 'GetHalfWidth: Coupling',coupling,'mass',mass,'not recognized; quitting'
+    #exit()
 
 
 def GetXSec(coupling,mass):
@@ -203,6 +212,9 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   # efficiencies for all couplings/masses on same axes
   print 'PlotAllEfficiencies'
   PlotAllEfficiencies([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,outputDir)
+  PlotAllEfficienciesMScale([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1], lumi, rootFile, outputDir)
+  PlotAllEfficienciesMRes([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,outputDir)
+  PlotAllEfficienciesPileup([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,outputDir)
   # half widths
   print 'PlotAllHalfWidths'
   PlotAllHalfWidths([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,outputDir)
@@ -328,17 +340,17 @@ def DoOptimizeAllPoints():
   colorIndex = 2 #TODO add this into modelpoint itself?
   with open(limitsFileName+'0p01.txt', 'w') as file:
     OptimizeSignalMassWindows(
-        rootFileLocation,modelPointsC0p01,lumi,useAsymmWindow,useSSB,mScaleSyst,maxWindowRange,file,rootFile,colorIndex,outputDir)
+        rootFileLocation,modelPointsC0p01,lumi,useAsymmWindow,useSSB,maxWindowRange,file,rootFile,colorIndex,outputDir)
   print 'Run for coupling 0.05'
   colorIndex = 4
   with open(limitsFileName+'0p05.txt', 'w') as file:
     OptimizeSignalMassWindows(
-        rootFileLocation,modelPointsC0p05,lumi,useAsymmWindow,useSSB,mScaleSyst,maxWindowRange,file,rootFile,colorIndex,outputDir)
+        rootFileLocation,modelPointsC0p05,lumi,useAsymmWindow,useSSB,maxWindowRange,file,rootFile,colorIndex,outputDir)
   print 'Run for coupling 0.1'
   colorIndex = 8
   with open(limitsFileName+'0p1.txt', 'w') as file:
     OptimizeSignalMassWindows(
-        rootFileLocation,modelPointsC0p1,lumi,useAsymmWindow,useSSB,mScaleSyst,maxWindowRange,file,rootFile,colorIndex,outputDir)
+        rootFileLocation,modelPointsC0p1,lumi,useAsymmWindow,useSSB,maxWindowRange,file,rootFile,colorIndex,outputDir)
   # make multigraphs for all masses/couplings
   MakeOptHalfWindowVsMassMultigraph(rootFile)
   MakeOptMassWindowsVsMassMultiGraph(rootFile)
@@ -424,8 +436,9 @@ cl95MacroName = 'roostats_cl95.C'
 # Configurable stuff here
 now = datetime.datetime.now()
 Date = now.strftime("%b%d")
-outputDir = 'apr17_results_symmWindowSSBOpt'
-#outputDir = Date.lower()+'_results_symmWindowSSBOpt'
+#outputDir = 'may07_results_symmWindowSSBOpt_smearedRes1p1_OtmansBGMCAndDataHistsWithSF_1pctOptMWindowMargin'
+outputDir = Date.lower()+'_results_symmWindowSSBOpt_smearedRes1p32_withPileupSyst_1pctOptMWindowMargin'
+#outputDir = 'apr28_results_symmWindowSSBOpt_newDec14PU_newSignalPts_OtmansBGMCAndDataHists_3p5pctOptMWindowMargin'
 #outputDir = Date.lower()+'_results_stdYields'
 if not os.path.isdir(outputDir):
   os.mkdir(outputDir)
@@ -433,20 +446,20 @@ if not os.path.isdir(outputDir):
 limitsFileNameBase = 'results_limits_k_'
 limitsFileName = outputDir+'/'+limitsFileNameBase
 plotFileName = outputDir+'/plots.root'
+# location of signal root files from CreateHistogramFiles code
+signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_deltaPhi2p8_19p6invFb/'
 # location of backgroundMC/data root files from CreateHistogramFiles code
-rootFileLocation = '/afs/cern.ch/user/s/scooper/work/private/results/diPhotonHistogramsPF_deltaPhi2p8_19p6invFb/'
+rootFileLocation = '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/'
 # Declarations of Lumi and model points to consider -- must have xsec, etc. defined above
 lumi = 19620.
 lumiErr = lumi*0.044
-# mass scale systematic
-mScaleSyst = 0.012 # 1.2%
-masses0p01 = [750,1000,1250,1500,1750,2000,3000]
-masses0p05 = [1750,2000,2500,2750,3000]
-masses0p1 = [2250,2500,2750,3000,3250,3500]
+masses0p01 = [750,1000,1250,1500,1750,2000,2250,2500,3000]
+masses0p05 = [1250,1500,1750,2000,2250,2500,2750,3000]
+masses0p1 = [1500,1750,2000,2250,2500,2750,3000,3250,3500]
 
 
 # List signal histogram file template; rest of quantities are filled from functions (xsec, width, etc.) or histograms in the files
-signalHistogramFilesPathTemplate = rootFileLocation+'diphoton_tree_RSGravToGG_kMpl-{coupling}_M-{mass}_TuneZ2star_8TeV-pythia_merged/histograms_diphoton_tree_RSGravToGG_kMpl-{coupling}_M-{mass}_TuneZ2star_8TeV-pythia_merged.root'
+signalHistogramFilesPathTemplate = signalRootFileLocation+'diphoton_tree_RSGravToGG_kMpl-{coupling}_M-{mass}_TuneZ2star_8TeV-pythia_merged/histograms_diphoton_tree_RSGravToGG_kMpl-{coupling}_M-{mass}_TuneZ2star_8TeV-pythia_merged.root'
 # for now, we use the directory structure that the CreateHistogramFiles.C code uses
 # setup k=0.01
 modelPointsC0p01 = []
@@ -483,6 +496,9 @@ elif sys.argv[1]=='optimize':
   DoOptimizeAllPoints()
   DoOptimizationPlots()
   PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,outputDir)
+  PlotAllEfficienciesMScale([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,outputDir)
+  PlotAllEfficienciesMRes([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,outputDir)
+  PlotAllEfficienciesPileup([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,outputDir)
 elif sys.argv[1]=='yields':
   print 'yields: CalculateYieldsForMassRanges'
   #rootFile = TFile(plotFileName,'update')
@@ -514,6 +530,9 @@ elif sys.argv[1]=='all':
   #rootFile = TFile(plotFileName,'recreate')
   #DoCalculateYieldsAllPoints() # std/old mass windows
   PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,outputDir)
+  PlotAllEfficienciesMScale([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,outputDir)
+  PlotAllEfficienciesMRes([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,outputDir)
+  PlotAllEfficienciesPileup([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,outputDir)
   print 'limits: DoLimitsAllPoints'
   #rootFile = TFile(plotFileName,'update')
   DoLimitsAllPoints(cl95MacroPath+cl95MacroName,lumi,lumiErr,limitsFileName)

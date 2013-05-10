@@ -6,6 +6,9 @@
 # Seth I. Cooper, U. Alabama
 # November 21 2012
 
+# important note: when modifying this class, ComputeLimit.C must also be modified
+# to pass in and write out any new data members!
+
 import string
 
 class ModelPoint:
@@ -17,6 +20,10 @@ class ModelPoint:
     self.totalEffErr            = kwargs.get('totalEffErr',None)
     self.totalEffMScaleSystUp   = kwargs.get('totalEffMScaleSystUp',None)
     self.totalEffMScaleSystDown = kwargs.get('totalEffMScaleSystDown',None)
+    self.totalEffMResSystUp     = kwargs.get('totalEffMResSystUp',None)
+    self.totalEffMResSystDown   = kwargs.get('totalEffMResSystDown',None)
+    self.totalEffPileupSystUp   = kwargs.get('totalEffPileupSystUp',None)
+    self.totalEffPileupSystDown = kwargs.get('totalEffPileupSystDown',None)
     self.halfWidth              = kwargs.get('halfWidth',None)
     self.optMassWindowLow       = kwargs.get('optMassWindowLow',None)
     self.optMassWindowHigh      = kwargs.get('optMassWindowHigh',None)
@@ -47,6 +54,10 @@ class ModelPoint:
     print "TotalEffErr: %.5f"%self.totalEffErr
     print "TotalEffMScaleSystUp: %.5f"%self.totalEffMScaleSystUp
     print "TotalEffMScaleSystDown: %.5f"%self.totalEffMScaleSystDown
+    print "TotalEffMResSystUp: %.5f"%self.totalEffMResSystUp
+    print "TotalEffMResSystDown: %.5f"%self.totalEffMResSystDown
+    print "TotalEffPileupSystUp: %.5f"%self.totalEffPileupSystUp
+    print "TotalEffPileupSystDown: %.5f"%self.totalEffPileupSystDown
     print "HalfWidth: " , self.halfWidth
     print "OptMassWindow: ", self.optMassWindowLow,"-",self.optMassWindowHigh
     print "NDataObs: " , self.nDataObs
@@ -66,6 +77,10 @@ class ModelPoint:
     file.write("TotalEffErr: " + str(self.totalEffErr) + "\n")
     file.write("TotalEffMScaleSystUp: " + str(self.totalEffMScaleSystUp) + "\n")
     file.write("TotalEffMScaleSystDown: " + str(self.totalEffMScaleSystDown) + "\n")
+    file.write("TotalEffMResSystUp: " + str(self.totalEffMResSystUp) + "\n")
+    file.write("TotalEffMResSystDown: " + str(self.totalEffMResSystDown) + "\n")
+    file.write("TotalEffPileupSystUp: " + str(self.totalEffPileupSystUp) + "\n")
+    file.write("TotalEffPileupSystDown: " + str(self.totalEffPileupSystDown) + "\n")
     file.write("HalfWidth: " + str(self.halfWidth) + "\n")
     file.write("OptMassWindowLow: " + str(self.optMassWindowLow) + "\n")
     file.write("OptMassWindowHigh: " + str(self.optMassWindowHigh) + "\n")
@@ -176,6 +191,14 @@ def ReadFromLines(lines):
       mp.totalEffMScaleSystUp = value
     elif "TotalEffMScaleSystDown:" in line:
       mp.totalEffMScaleSystDown = value
+    elif "TotalEffMResSystUp:" in line:
+      mp.totalEffMResSystUp = value
+    elif "TotalEffMResSystDown:" in line:
+      mp.totalEffMResSystDown = value
+    elif "TotalEffPileupSystUp:" in line:
+      mp.totalEffPileupSystUp = value
+    elif "TotalEffPileupSystDown:" in line:
+      mp.totalEffPileupSystDown = value
     elif "HalfWidth:" in line:
       mp.halfWidth = value
     elif "OptMassWindowLow:" in line:

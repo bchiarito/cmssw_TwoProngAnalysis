@@ -24,8 +24,9 @@ std::string intToString(int num)
 }
 
 
-void ComputeLimit(float lumi, float lumiError, float totalEff, float totalEffErr, float totalEffMScaleSystUp,
-    float totalEffMScaleSystDown,
+void ComputeLimit(float lumi, float lumiError, float totalEff, float totalEffErr,
+    float totalEffMScaleSystUp, float totalEffMScaleSystDown, float totalEffMResSystUp, float totalEffMResSystDown,
+    float totalEffPileupSystUp, float totalEffPileupSystDown,
     float nBackground, float nBackgroundErr, float nDataObs, int mass, float coupling, float halfWidth,
     float totalXSec, int massWindowLow, int massWindowHigh, std::string fileName)
 {
@@ -83,6 +84,10 @@ void ComputeLimit(float lumi, float lumiError, float totalEff, float totalEffErr
    myfile << "TotalEffErr: " << totalEffErr << "\n";
    myfile << "TotalEffMScaleSystUp: " << totalEffMScaleSystUp << "\n";
    myfile << "TotalEffMScaleSystDown: " << totalEffMScaleSystDown << "\n";
+   myfile << "TotalEffMResSystUp: " << totalEffMResSystUp << "\n";
+   myfile << "TotalEffMResSystDown: " << totalEffMResSystDown << "\n";
+   myfile << "TotalEffPileupSystUp: " << totalEffPileupSystUp << "\n";
+   myfile << "TotalEffPileupSystDown: " << totalEffPileupSystDown << "\n";
    myfile << "HalfWidth: " << halfWidth << "\n";
    myfile << "OptMassWindowLow: " << massWindowLow << "\n";
    myfile << "OptMassWindowHigh: " << massWindowHigh << "\n";

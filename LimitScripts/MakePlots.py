@@ -848,7 +848,8 @@ def PlotAllBands(modelPointArrays, lumi, rootFile, imageDir):
 
   # Multigraph
   mg = TMultiGraph()
-  legend = TLegend(0.42,0.71,0.73,0.92)
+  #legend = TLegend(0.42,0.71,0.73,0.92)
+  legend = TLegend(0.6,0.71,0.9,0.92)
   colorIndex = 2 
   for limitObsGraph, limitExpGraph, thGraph, coupling in itertools.izip(limitObsGraphs,limitExpGraphs,thGraphs,couplings):
     limitExpGraph.SetMarkerSize(2)
@@ -1554,8 +1555,6 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
   rootFile.cd()
   # turn the arrays into graphs
   effGraphs = []
-  #for massesArr, effsArr in itertools.izip(massesArrs,effArrs):
-  #  effGraphs.append(TGraph(len(massesArr), array.array("f",massesArr),array.array("f",effsArr)))
   for massesArr, effsArr, effMScaleDownArr, effMScaleUpArr in itertools.izip(massesArrs,effArrs,effMScaleDownArrs,effMScaleUpArrs):
     massErrs = [0]*len(massesArr)
     nominals = [1]*len(massesArr)
@@ -1569,7 +1568,7 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
   c.SetGridy()
   # Multigraph
   mg = TMultiGraph()
-  legend = TLegend(0.2,0.71,0.5,0.92)
+  legend = TLegend(0.2,0.75,0.5,0.9)
   colorIndex = 2 
   drawOpt = 'l3'
   legDrawOpt = 'f'
@@ -1595,7 +1594,7 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
   # To make the separate graphs share the same axes
   h = TH1F("test","",10,750,3500)
   h.SetStats(False)
-  h.GetYaxis().SetRangeUser(0.7,1.3)
+  h.GetYaxis().SetRangeUser(0.8,1.2)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
   h.GetYaxis().SetTitle("rel. efficiency change")
   h.GetXaxis().SetLabelFont(42)
@@ -1631,6 +1630,262 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
   #pt2.Draw()
   gPad.RedrawAxis()
   basename = 'allEfficienciesMScaleSyst'
+  plotname = basename+'.pdf'
+  savename = TString(plotname)
+  pdfName = savename.Data()
+  c.SaveAs(imageDir+'/'+savename.Data())
+  plotname = basename+'.C'
+  savename = TString(plotname)
+  c.SaveAs(imageDir+'/'+savename.Data())
+  plotname = basename+'.eps'
+  savename = TString(plotname)
+  c.SaveAs(imageDir+'/'+savename.Data())
+  # png output looks strange, so convert from pdf instead
+  plotname = basename+'.png'
+  savename = TString(plotname)
+  fullBasename = imageDir+'/'+basename
+  #subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
+  subprocess.call(['gs','-dTextAlphaBits=4','-dBATCH','-dNOPAUSE','-dQUIET','-dEPSCrop','-sDEVICE=png16m','-sOutputFile='+fullBasename+'.png',fullBasename+'.eps'])
+  # write
+  name = TString(basename)
+  mg.SetName(name.Data())
+  mg.Write()
+
+
+def PlotAllEfficienciesMRes(modelPointArrays, lumi, rootFile, imageDir):
+  # this function takes a list of modelPointArrays: [mpsCoupling0.01, mpsCoupling0.05, ...]
+  # fill arrays that we care about
+  # TODO reuse this code in the plotbands section
+  massesArrs = []
+  couplings = []
+  effArrs = []
+  effMResUpArrs = []
+  effMResDownArrs = []
+  for mpArray in modelPointArrays:
+    if len(mpArray) < 1:
+      continue
+    masses, effs = makeEffArrays(mpArray)
+    massesArrs.append(masses)
+    effArrs.append(effs)
+    couplings.append(mpArray[0].coupling)
+    effMResUp = []
+    effMResDown = []
+    for mp in mpArray:
+      mp.Print()
+      print 'mp.totalEffMResSystUp=',mp.totalEffMResSystUp,'mp.totalEff=',mp.totalEff,'relDiff=',(mp.totalEffMResSystUp-mp.totalEff)/mp.totalEff
+      print 'mp.totalEffMResSystDown=',mp.totalEffMResSystDown,'mp.totalEff=',mp.totalEff,'relDiff=',(mp.totalEffMResSystDown-mp.totalEff)/mp.totalEff
+      #effMResUp.append(math.fabs(mp.totalEffMResSystUp-mp.totalEff)/mp.totalEff)
+      effMResUp.append((mp.totalEffMResSystUp-mp.totalEff)/mp.totalEff)
+      effMResDown.append(math.fabs(mp.totalEffMResSystDown-mp.totalEff)/mp.totalEff)
+    effMResUpArrs.append(effMResUp)
+    effMResDownArrs.append(effMResDown)
+
+  rootFile.cd()
+  # turn the arrays into graphs
+  effGraphs = []
+  for massesArr, effsArr, effMResDownArr, effMResUpArr in itertools.izip(massesArrs,effArrs,effMResDownArrs,effMResUpArrs):
+    massErrs = [0]*len(massesArr)
+    nominals = [1]*len(massesArr)
+    #effGraphs.append(TGraphAsymmErrors(len(massesArr), array.array("f",massesArr),array.array("f",nominals),array.array("f",massErrs),array.array("f",massErrs),array.array("f",effMResDownArr),array.array("f",effMResUpArr)))
+    effGraphs.append(TGraph(len(massesArr), array.array("f",massesArr),array.array("f",effMResUpArr)))
+
+  SetCustomGStyle()
+  c = TCanvas("c","c",100,100,600,600)
+  c.cd()
+  #c.SetLogy()
+  c.SetRightMargin(0.04)
+  c.SetGridy()
+  # Multigraph
+  mg = TMultiGraph()
+  legend = TLegend(0.2,0.75,0.5,0.9)
+  colorIndex = 2 
+  #drawOpt = 'l3'
+  #legDrawOpt = 'f'
+  drawOpt = 'lp'
+  legDrawOpt = 'lp'
+  for effGraph, coupling in itertools.izip(effGraphs,couplings):
+    effGraph.SetMarkerSize(0.8)
+    effGraph.SetMarkerColor(colorIndex)
+    effGraph.SetLineColor(colorIndex)
+    effGraph.SetLineWidth(4)
+    #effGraph.SetLineStyle(2)
+    effGraph.SetFillColor(colorIndex)
+    effGraph.SetFillStyle(3003)
+    # no exp graph for now
+    #mg.Add(limitExpGraph,"C")
+    #legend.AddEntry(limitExpGraph,"Exp. limit #tilde{k} = "+str(coupling),"l")
+    mg.Add(effGraph,drawOpt)
+    legend.AddEntry(effGraph," #tilde{k} = "+str(coupling),legDrawOpt)
+    if colorIndex==2:
+      colorIndex = 4
+    elif colorIndex==4:
+      colorIndex = 8
+    elif colorIndex>=8:
+      colorIndex+=1
+  # To make the separate graphs share the same axes
+  h = TH1F("test","",10,750,3500)
+  h.SetStats(False)
+  #h.GetYaxis().SetRangeUser(0.8,1.2)
+  h.GetYaxis().SetRangeUser(-0.25,0.25)
+  h.GetXaxis().SetTitle("M_{1} [GeV]")
+  h.GetYaxis().SetTitle("rel. efficiency change")
+  h.GetXaxis().SetLabelFont(42)
+  h.GetYaxis().SetLabelFont(42)
+  h.GetXaxis().SetLabelSize(0.04)
+  h.GetYaxis().SetLabelSize(0.04)
+  h.GetYaxis().SetTitleOffset(1.5)
+  h.GetXaxis().SetTitleOffset(1.2)
+  h.GetXaxis().SetTitleSize(0.04)
+  h.GetYaxis().SetTitleSize(0.04)
+  h.Draw()
+  mg.Draw()
+  # draw legend
+  legend.SetBorderSize(0)
+  legend.SetFillColor(0)
+  legend.Draw()
+  ## CMS
+  #pt = TPaveText(0.645973,0.629371,0.845638,0.699301,"blNDC")
+  #pt.SetName("CMS Preliminary")
+  #pt.SetBorderSize(1)
+  #pt.SetLineColor(0)
+  #pt.SetFillColor(0)
+  #pt.SetTextSize(0.0354545)
+  #text = pt.AddText("CMS Preliminary")
+  #pt.Draw()
+  ## lumi
+  #pt2 = TPaveText(0.654362,0.585664,0.825503,0.652098,"blNDC")
+  #pt2.SetFillColor(0)
+  #pt2.SetBorderSize(1)
+  #pt2.SetLineColor(0)
+  #pt2.SetTextSize(0.0354545)
+  #text = pt2.AddText("%.1f" % (lumi/1000)+" fb^{-1} at 8 TeV")
+  #pt2.Draw()
+  gPad.RedrawAxis()
+  basename = 'allEfficienciesMResSyst'
+  plotname = basename+'.pdf'
+  savename = TString(plotname)
+  pdfName = savename.Data()
+  c.SaveAs(imageDir+'/'+savename.Data())
+  plotname = basename+'.C'
+  savename = TString(plotname)
+  c.SaveAs(imageDir+'/'+savename.Data())
+  plotname = basename+'.eps'
+  savename = TString(plotname)
+  c.SaveAs(imageDir+'/'+savename.Data())
+  # png output looks strange, so convert from pdf instead
+  plotname = basename+'.png'
+  savename = TString(plotname)
+  fullBasename = imageDir+'/'+basename
+  #subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
+  subprocess.call(['gs','-dTextAlphaBits=4','-dBATCH','-dNOPAUSE','-dQUIET','-dEPSCrop','-sDEVICE=png16m','-sOutputFile='+fullBasename+'.png',fullBasename+'.eps'])
+  # write
+  name = TString(basename)
+  mg.SetName(name.Data())
+  mg.Write()
+
+
+def PlotAllEfficienciesPileup(modelPointArrays, lumi, rootFile, imageDir):
+  # this function takes a list of modelPointArrays: [mpsCoupling0.01, mpsCoupling0.05, ...]
+  # fill arrays that we care about
+  # TODO reuse this code in the plotbands section
+  massesArrs = []
+  couplings = []
+  effArrs = []
+  effPileupUpArrs = []
+  effPileupDownArrs = []
+  for mpArray in modelPointArrays:
+    if len(mpArray) < 1:
+      continue
+    masses, effs = makeEffArrays(mpArray)
+    massesArrs.append(masses)
+    effArrs.append(effs)
+    couplings.append(mpArray[0].coupling)
+    effPileupUp = []
+    effPileupDown = []
+    for mp in mpArray:
+      effPileupUp.append(math.fabs(mp.totalEffPileupSystUp-mp.totalEff)/mp.totalEff)
+      effPileupDown.append(math.fabs(mp.totalEffPileupSystDown-mp.totalEff)/mp.totalEff)
+    effPileupUpArrs.append(effPileupUp)
+    effPileupDownArrs.append(effPileupDown)
+
+  rootFile.cd()
+  # turn the arrays into graphs
+  effGraphs = []
+  for massesArr, effsArr, effPileupDownArr, effPileupUpArr in itertools.izip(massesArrs,effArrs,effPileupDownArrs,effPileupUpArrs):
+    massErrs = [0]*len(massesArr)
+    nominals = [1]*len(massesArr)
+    effGraphs.append(TGraphAsymmErrors(len(massesArr), array.array("f",massesArr),array.array("f",nominals),array.array("f",massErrs),array.array("f",massErrs),array.array("f",effPileupDownArr),array.array("f",effPileupUpArr)))
+
+  SetCustomGStyle()
+  c = TCanvas("c","c",100,100,600,600)
+  c.cd()
+  #c.SetLogy()
+  c.SetRightMargin(0.04)
+  c.SetGridy()
+  # Multigraph
+  mg = TMultiGraph()
+  legend = TLegend(0.2,0.75,0.5,0.9)
+  colorIndex = 2 
+  drawOpt = 'l3'
+  legDrawOpt = 'f'
+  for effGraph, coupling in itertools.izip(effGraphs,couplings):
+    effGraph.SetMarkerSize(0.8)
+    effGraph.SetMarkerColor(colorIndex)
+    effGraph.SetLineColor(colorIndex)
+    effGraph.SetLineWidth(4)
+    effGraph.SetLineStyle(2)
+    effGraph.SetFillColor(colorIndex)
+    effGraph.SetFillStyle(3003)
+    # no exp graph for now
+    #mg.Add(limitExpGraph,"C")
+    #legend.AddEntry(limitExpGraph,"Exp. limit #tilde{k} = "+str(coupling),"l")
+    mg.Add(effGraph,drawOpt)
+    legend.AddEntry(effGraph," #tilde{k} = "+str(coupling),legDrawOpt)
+    if colorIndex==2:
+      colorIndex = 4
+    elif colorIndex==4:
+      colorIndex = 8
+    elif colorIndex>=8:
+      colorIndex+=1
+  # To make the separate graphs share the same axes
+  h = TH1F("test","",10,750,3500)
+  h.SetStats(False)
+  h.GetYaxis().SetRangeUser(0.95,1.05)
+  h.GetXaxis().SetTitle("M_{1} [GeV]")
+  h.GetYaxis().SetTitle("rel. efficiency change")
+  h.GetXaxis().SetLabelFont(42)
+  h.GetYaxis().SetLabelFont(42)
+  h.GetXaxis().SetLabelSize(0.04)
+  h.GetYaxis().SetLabelSize(0.04)
+  h.GetYaxis().SetTitleOffset(1.5)
+  h.GetXaxis().SetTitleOffset(1.2)
+  h.GetXaxis().SetTitleSize(0.04)
+  h.GetYaxis().SetTitleSize(0.04)
+  h.Draw()
+  mg.Draw()
+  # draw legend
+  legend.SetBorderSize(0)
+  legend.SetFillColor(0)
+  legend.Draw()
+  ## CMS
+  #pt = TPaveText(0.645973,0.629371,0.845638,0.699301,"blNDC")
+  #pt.SetName("CMS Preliminary")
+  #pt.SetBorderSize(1)
+  #pt.SetLineColor(0)
+  #pt.SetFillColor(0)
+  #pt.SetTextSize(0.0354545)
+  #text = pt.AddText("CMS Preliminary")
+  #pt.Draw()
+  ## lumi
+  #pt2 = TPaveText(0.654362,0.585664,0.825503,0.652098,"blNDC")
+  #pt2.SetFillColor(0)
+  #pt2.SetBorderSize(1)
+  #pt2.SetLineColor(0)
+  #pt2.SetTextSize(0.0354545)
+  #text = pt2.AddText("%.1f" % (lumi/1000)+" fb^{-1} at 8 TeV")
+  #pt2.Draw()
+  gPad.RedrawAxis()
+  basename = 'allEfficienciesPileupSyst'
   plotname = basename+'.pdf'
   savename = TString(plotname)
   pdfName = savename.Data()
@@ -1757,8 +2012,6 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   name = TString(basename)
   mg.SetName(name.Data())
   mg.Write()
-  # now call the other one
-  PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir)
 
 
 def PlotAllHalfWidths(modelPointArrays, lumi, rootFile, imageDir):
