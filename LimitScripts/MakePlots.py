@@ -612,21 +612,21 @@ def MakeSmoothedMassWindowVsMassImages(rootFile,imageDir):
   leg.SetFillColor(0)
   leg.SetFillStyle(0)
   legDrawOpt = 'lp'
-  entry=leg.AddEntry(symmWindowSmoothedraphk0p01,"Smoothed Symm. Windows #tilde{k} = 0.01",legDrawSmoothed
+  entry=leg.AddEntry(symmWindowSmoothedraphk0p01,"Smoothed Symm. Windows #tilde{k} = 0.01",legDrawSmoothed)
   entry.SetLineColor(2)
   entry.SetLineStyle(2)
   entry.SetLineWidth(4)
   entry.SetMarkerColor(2)
   entry.SetMarkerStyle(21)
   entry.SetMarkerSize(1)
-  entry=leg.AddEntry(symmWindowSmoothedraphk0p05,"Smoothed Symm. Windows #tilde{k} = 0.05",legDrawSmoothed
+  entry=leg.AddEntry(symmWindowSmoothedraphk0p05,"Smoothed Symm. Windows #tilde{k} = 0.05",legDrawSmoothed)
   entry.SetLineColor(4)
   entry.SetLineStyle(2)
   entry.SetLineWidth(4)
   entry.SetMarkerColor(4)
   entry.SetMarkerStyle(21)
   entry.SetMarkerSize(1)
-  entry=leg.AddEntry(symmWindowSmoothedraphk0p1,"Smoothed Symm. Windows #tilde{k} = 0.1",legDrawSmoothed
+  entry=leg.AddEntry(symmWindowSmoothedraphk0p1,"Smoothed Symm. Windows #tilde{k} = 0.1",legDrawSmoothed)
   entry.SetLineColor(8)
   entry.SetLineStyle(2)
   entry.SetLineWidth(4)
