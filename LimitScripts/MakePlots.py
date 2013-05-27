@@ -162,14 +162,14 @@ def MakeOptimizationGraphSRootB(peakMass,modelPoint,minMassTried,maxMassTried,ma
   graph.Write()
 
 
-def MakeOptHalfWindowVsMassPlot(coupling,masses,optMinMasses,optMaxMasses,colorIndex,rootFile):
+def MakeSmoothedWindowVsMassPlot(coupling,masses,optMinMasses,optMaxMasses,colorIndex,rootFile):
   # make plot of opt. halfWindowSize vs. mass/coupling
   if len(masses) < 1:
     return
-  optHalfWindowSizes = [(optMassHigh-optMassLow-1)/2 for optMassHigh,optMassLow in itertools.izip(optMaxMasses,optMinMasses)]
+  optHalfWindowSizes = [(optMassHigh-optMassLow-1) for optMassHigh,optMassLow in itertools.izip(optMaxMasses,optMinMasses)]
   #                   # -1, since we get the top edge of the maxBin as the upper mass limit
   graph = TGraph(len(masses), array.array("f",masses),array.array("f",optHalfWindowSizes))
-  plotname = "optHalfWindowVsMassK"+str(coupling)
+  plotname = "optSmoothedWindowVsMassK"+str(coupling)
   savename = TString(plotname)
   indexstring = savename.Index(".")
   savename.Replace(indexstring,1,"p")
@@ -185,13 +185,13 @@ def MakeOptHalfWindowVsMassMultigraph(rootFile):
   graph0p05 = MakeNullPointer(TGraph)
   graph0p1 = MakeNullPointer(TGraph)
   try:
-    rootFile.GetObject('optHalfWindowVsMassK0p01',graph0p01)
-    rootFile.GetObject('optHalfWindowVsMassK0p05',graph0p05)
-    rootFile.GetObject('optHalfWindowVsMassK0p1',graph0p1)
+    rootFile.GetObject('optSmoothedWindowVsMassK0p01',graph0p01)
+    rootFile.GetObject('optSmoothedWindowVsMassK0p05',graph0p05)
+    rootFile.GetObject('optSmoothedWindowVsMassK0p1',graph0p1)
   except LookupError:
     pass
   c = TCanvas()
-  c.SetName('optHalfWindowsVsMassAllCanvas')
+  c.SetName('optSmoothedWindowsVsMassAllCanvas')
   c.SetTitle('')
   c.cd()
   mg = TMultiGraph()
@@ -204,7 +204,7 @@ def MakeOptHalfWindowVsMassMultigraph(rootFile):
   mg.Draw('ap')
   mg.GetXaxis().SetTitle("Mass [GeV]")
   mg.GetYaxis().SetTitle("Opt. HalfWindow size [GeV]")
-  mg.SetName('optHalfWindowsVsMassAll')
+  mg.SetName('optSmoothedWindowsVsMassAll')
   legend = TLegend(0.42,0.71,0.73,0.92)
   if graph0p01:
     legend.AddEntry(graph0p01," #tilde{k} = "+str(0.01),"l")
@@ -276,7 +276,7 @@ def MakeOptHalfWindowVsMassMultigraph(rootFile):
   #mg.Write()
 
 
-def MakeOptMassWindowGraph(coupling,masses,optMinMasses,optMaxMasses,peakMasses,colorIndex,rootFile):
+def MakeOptMassWindowGraphs(coupling,masses,optMinMasses,optMaxMasses,peakMasses,colorIndex,rootFile):
   # filled graphs
   if len(masses) < 1:
     return
@@ -295,6 +295,21 @@ def MakeOptMassWindowGraph(coupling,masses,optMinMasses,optMaxMasses,peakMasses,
   graphErrs.SetFillColor(colorIndex)
   graphErrs.SetFillStyle(3003)
   graphErrs.Write()
+  massWindowWidths = [optMaxMass-optMinMass for optMaxMass,optMinMass in itertools.izip(optMaxMasses,optMinMasses)]
+  graph = TGraph(len(masses),array.array("f",masses),array.array("f",massWindowWidths))
+  plotname = "optMassWindowWidthVsMassK"+str(coupling)
+  savename = TString(plotname)
+  indexstring = savename.Index(".")
+  savename.Replace(indexstring,1,"p")
+  graph.SetName(savename.Data())
+  graph.SetMarkerColor(colorIndex)
+  graph.SetLineColor(colorIndex)
+  graph.SetFillColor(colorIndex)
+  graph.SetFillStyle(3003)
+  graph.Fit('pol1')
+  graph.Write()
+  myFunc = graph.GetFunction('pol1')
+  return myFunc.GetParameter(0),myFunc.GetParameter(1)
 
 
 def MakeOptMassWindowsVsMassMultiGraph(rootFile):
@@ -522,6 +537,130 @@ def MakeOptGraphImages(rootFile,outputDir,modelPointArray, plotSRootBCurve):
     ConvertToPng(savePath)
     # eps too big
     os.unlink(savePath+'.eps')
+
+
+def MakeSmoothedMassWindowVsMassImages(rootFile,imageDir):
+  #TODO Make this take the model array like the above...
+  # mkdir if not there already
+  if not os.path.isdir(imageDir):
+    os.mkdir(imageDir)
+  c = TCanvas("c", "c",0,0,600,600)
+  gStyle.SetOptFit(1)
+  gStyle.SetOptStat(0)
+  gStyle.SetOptTitle(0)
+  c.SetHighLightColor(2)
+  c.Range(200,-3.536669,3637.5,-2.469521)
+  c.SetFillColor(0)
+  c.SetBorderMode(0)
+  c.SetBorderSize(2)
+  c.SetTickx(1)
+  c.SetTicky(1)
+  c.SetLeftMargin(0.18)
+  c.SetRightMargin(0.04)
+  c.SetTopMargin(0.05)
+  c.SetBottomMargin(0.15)
+  c.SetFrameFillStyle(0)
+  c.SetFrameLineWidth(2)
+  c.SetFrameBorderMode(0)
+  c.SetFrameFillStyle(0)
+  c.SetFrameLineWidth(2)
+  c.SetFrameBorderMode(0)
+  #
+  symmWindowOptGraphk0p01 = MakeNullPointer(TGraph)
+  symmWindowOptGraphk0p05 = MakeNullPointer(TGraph)
+  symmWindowOptGraphk0p1 = MakeNullPointer(TGraph)
+  try:
+    rootFile.GetObject('optSmoothedWindowVsMassK0p01',symmWindowOptGraphk0p01)
+    rootFile.GetObject('optSmoothedWindowVsMassK0p05',symmWindowOptGraphk0p05)
+    rootFile.GetObject('optSmoothedWindowVsMassK0p1',symmWindowOptGraphk0p1)
+  except:
+    pass
+  test = TH1F("test","test",10,750,3500)
+  test.SetMinimum(600)
+  test.SetMaximum(4100)
+  test.SetStats(0)
+  test.SetLineStyle(0)
+  test.SetLineWidth(2)
+  test.SetMarkerStyle(20)
+  test.SetMarkerSize(0.8)
+  test.GetXaxis().SetTitle("M_{1} [GeV]")
+  test.GetXaxis().SetLabelFont(42)
+  test.GetXaxis().SetLabelOffset(0.007)
+  test.GetXaxis().SetTitleOffset(1.2)
+  test.GetXaxis().SetTitleFont(42)
+  test.GetYaxis().SetTitle("Mass window width [GeV]")
+  test.GetYaxis().SetLabelFont(42)
+  test.GetYaxis().SetLabelOffset(0.007)
+  test.GetYaxis().SetTitleOffset(1.5)
+  test.GetYaxis().SetTitleFont(42)
+  test.Draw()
+  #
+  mg = TMultiGraph()
+  if symmWindowOptGraphk0p01:
+    mg.Add(symmWindowOptGraphk0p01,"p")
+  if symmWindowOptGraphk0p05:
+    mg.Add(symmWindowOptGraphk0p05,"p")
+  if symmWindowOptGraphk0p1:
+    mg.Add(symmWindowOptGraphk0p1,"p")
+  mg.Draw("l")
+  #
+  leg = TLegend(0.18,0.65,0.5,0.86)
+  leg.SetBorderSize(0)
+  leg.SetLineColor(1)
+  leg.SetLineStyle(1)
+  leg.SetLineWidth(2)
+  leg.SetFillColor(0)
+  leg.SetFillStyle(0)
+  legDrawOpt = 'lp'
+  entry=leg.AddEntry(symmWindowSmoothedraphk0p01,"Smoothed Symm. Windows #tilde{k} = 0.01",legDrawSmoothed
+  entry.SetLineColor(2)
+  entry.SetLineStyle(2)
+  entry.SetLineWidth(4)
+  entry.SetMarkerColor(2)
+  entry.SetMarkerStyle(21)
+  entry.SetMarkerSize(1)
+  entry=leg.AddEntry(symmWindowSmoothedraphk0p05,"Smoothed Symm. Windows #tilde{k} = 0.05",legDrawSmoothed
+  entry.SetLineColor(4)
+  entry.SetLineStyle(2)
+  entry.SetLineWidth(4)
+  entry.SetMarkerColor(4)
+  entry.SetMarkerStyle(21)
+  entry.SetMarkerSize(1)
+  entry=leg.AddEntry(symmWindowSmoothedraphk0p1,"Smoothed Symm. Windows #tilde{k} = 0.1",legDrawSmoothed
+  entry.SetLineColor(8)
+  entry.SetLineStyle(2)
+  entry.SetLineWidth(4)
+  entry.SetMarkerColor(8)
+  entry.SetMarkerStyle(21)
+  entry.SetMarkerSize(1)
+  leg.Draw()
+  #
+  test__6 = TH1F("test__6","test",10,750,3500)
+  test__6.SetMinimum(600)
+  test__6.SetMaximum(4100)
+  test__6.SetDirectory(0)
+  test__6.SetStats(0)
+  test__6.SetLineStyle(0)
+  test__6.SetLineWidth(2)
+  test__6.SetMarkerStyle(20)
+  test__6.SetMarkerSize(0.8)
+  test__6.GetXaxis().SetTitle("M_{1} [GeV]")
+  test__6.GetXaxis().SetLabelFont(42)
+  test__6.GetXaxis().SetLabelOffset(0.007)
+  test__6.GetXaxis().SetTitleOffset(1.2)
+  test__6.GetXaxis().SetTitleFont(42)
+  test__6.GetYaxis().SetTitle("Mass Window width [GeV]")
+  test__6.GetYaxis().SetLabelFont(42)
+  test__6.GetYaxis().SetLabelOffset(0.007)
+  test__6.GetYaxis().SetTitleOffset(1.5)
+  test__6.GetYaxis().SetTitleFont(42)
+  test__6.Draw("sameaxis")
+  fileName = 'smoothedMassWindowsVsMass'
+  savePath = imageDir+'/'+fileName
+  c.Print(savePath+'.pdf')
+  c.Print(savePath+'.eps')
+  c.Print(savePath+'.C')
+  ConvertToPng(savePath)
 
 
 def MakeOptMassWindowVsMassImages(rootFile,imageDir):
@@ -1537,6 +1676,8 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
   effArrs = []
   effMScaleUpArrs = []
   effMScaleDownArrs = []
+  effMScaleUpNonAbsArrs = []
+  effMScaleDownNonAbsArrs = []
   for mpArray in modelPointArrays:
     if len(mpArray) < 1:
       continue
@@ -1546,19 +1687,31 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
     couplings.append(mpArray[0].coupling)
     effMScaleUp = []
     effMScaleDown = []
+    effMScaleUpNonAbs = []
+    effMScaleDownNonAbs = []
     for mp in mpArray:
       effMScaleUp.append(math.fabs(mp.totalEffMScaleSystUp-mp.totalEff)/mp.totalEff)
       effMScaleDown.append(math.fabs(mp.totalEffMScaleSystDown-mp.totalEff)/mp.totalEff)
+      effMScaleUpNonAbs.append((mp.totalEffMScaleSystUp-mp.totalEff)/mp.totalEff)
+      effMScaleDownNonAbs.append((mp.totalEffMScaleSystDown-mp.totalEff)/mp.totalEff)
     effMScaleUpArrs.append(effMScaleUp)
     effMScaleDownArrs.append(effMScaleDown)
+    effMScaleUpNonAbsArrs.append(effMScaleUpNonAbs)
+    effMScaleDownNonAbsArrs.append(effMScaleDownNonAbs)
 
   rootFile.cd()
   # turn the arrays into graphs
   effGraphs = []
-  for massesArr, effsArr, effMScaleDownArr, effMScaleUpArr in itertools.izip(massesArrs,effArrs,effMScaleDownArrs,effMScaleUpArrs):
+  effGraphsNonAbsUp = []
+  effGraphsNonAbsDown = []
+  for massesArr, effsArr, effMScaleDownArr, effMScaleUpArr, effMScaleUpNonAbsArr, effMScaleDownNonAbsArr in itertools.izip(massesArrs,effArrs,effMScaleDownArrs,effMScaleUpArrs,effMScaleUpNonAbsArrs,effMScaleDownNonAbsArrs):
     massErrs = [0]*len(massesArr)
     nominals = [1]*len(massesArr)
     effGraphs.append(TGraphAsymmErrors(len(massesArr), array.array("f",massesArr),array.array("f",nominals),array.array("f",massErrs),array.array("f",massErrs),array.array("f",effMScaleDownArr),array.array("f",effMScaleUpArr)))
+    effGraphsNonAbsUp.append(TGraph(len(massesArr), array.array("f",massesArr), array.array("f",effMScaleUpNonAbsArr)))
+    effGraphsNonAbsDown.append(TGraph(len(massesArr), array.array("f",massesArr), array.array("f",effMScaleDownNonAbsArr)))
+    #print 'effMScaleDownArr:',effMScaleDownArr
+    #print 'effMScaleDownArr:',effMScaleDownArr
 
   SetCustomGStyle()
   c = TCanvas("c","c",100,100,600,600)
@@ -1568,11 +1721,15 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
   c.SetGridy()
   # Multigraph
   mg = TMultiGraph()
+  mgNonAbs = TMultiGraph()
   legend = TLegend(0.2,0.75,0.5,0.9)
+  legendNonAbs = TLegend(0.2,0.75,0.5,0.9)
   colorIndex = 2 
   drawOpt = 'l3'
   legDrawOpt = 'f'
-  for effGraph, coupling in itertools.izip(effGraphs,couplings):
+  drawOptNonAbs = 'lp'
+  legDrawOptNonAbs = 'lp'
+  for effGraph, effGraphNAUp, effGraphNADown, coupling in itertools.izip(effGraphs,effGraphsNonAbsUp,effGraphsNonAbsDown,couplings):
     effGraph.SetMarkerSize(0.8)
     effGraph.SetMarkerColor(colorIndex)
     effGraph.SetLineColor(colorIndex)
@@ -1580,11 +1737,25 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
     effGraph.SetLineStyle(2)
     effGraph.SetFillColor(colorIndex)
     effGraph.SetFillStyle(3003)
-    # no exp graph for now
-    #mg.Add(limitExpGraph,"C")
-    #legend.AddEntry(limitExpGraph,"Exp. limit #tilde{k} = "+str(coupling),"l")
     mg.Add(effGraph,drawOpt)
     legend.AddEntry(effGraph," #tilde{k} = "+str(coupling),legDrawOpt)
+    effGraphNAUp.SetMarkerSize(0.8)
+    effGraphNAUp.SetMarkerColor(colorIndex)
+    effGraphNAUp.SetLineColor(colorIndex)
+    effGraphNAUp.SetLineWidth(4)
+    effGraphNAUp.SetName('mscaleShiftUpK='+str(coupling).replace('.','p'))
+    effGraphNAUp.Write()
+    effGraphNADown.SetMarkerSize(0.8)
+    effGraphNADown.SetMarkerColor(colorIndex)
+    effGraphNADown.SetLineColor(colorIndex)
+    effGraphNADown.SetLineWidth(4)
+    effGraphNADown.SetLineStyle(2)
+    effGraphNADown.SetName('mscaleShiftDownK'+str(coupling).replace('.','p'))
+    effGraphNADown.Write()
+    mgNonAbs.Add(effGraphNAUp,drawOptNonAbs)
+    mgNonAbs.Add(effGraphNADown,drawOptNonAbs)
+    legendNonAbs.AddEntry(effGraphNAUp," scaleShiftUp: #tilde{k} = "+str(coupling),legDrawOptNonAbs)
+    legendNonAbs.AddEntry(effGraphNADown," scaleShiftDown: #tilde{k} = "+str(coupling),legDrawOptNonAbs)
     if colorIndex==2:
       colorIndex = 4
     elif colorIndex==4:
@@ -1596,7 +1767,7 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
   h.SetStats(False)
   h.GetYaxis().SetRangeUser(0.8,1.2)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
-  h.GetYaxis().SetTitle("rel. efficiency change")
+  h.GetYaxis().SetTitle("rel. efficiency*acc change")
   h.GetXaxis().SetLabelFont(42)
   h.GetYaxis().SetLabelFont(42)
   h.GetXaxis().SetLabelSize(0.04)
@@ -1650,6 +1821,71 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
   name = TString(basename)
   mg.SetName(name.Data())
   mg.Write()
+  #
+  # for non-abs
+  c = TCanvas("c","c",100,100,600,600)
+  c.cd()
+  c.SetRightMargin(0.04)
+  c.SetGridy()
+  # To make the separate graphs share the same axes
+  h = TH1F("test","",10,750,3500)
+  h.SetStats(False)
+  h.GetYaxis().SetRangeUser(-0.2,0.2)
+  h.GetXaxis().SetTitle("M_{1} [GeV]")
+  h.GetYaxis().SetTitle("rel. efficiency*acc change")
+  h.GetXaxis().SetLabelFont(42)
+  h.GetYaxis().SetLabelFont(42)
+  h.GetXaxis().SetLabelSize(0.04)
+  h.GetYaxis().SetLabelSize(0.04)
+  h.GetYaxis().SetTitleOffset(1.5)
+  h.GetXaxis().SetTitleOffset(1.2)
+  h.GetXaxis().SetTitleSize(0.04)
+  h.GetYaxis().SetTitleSize(0.04)
+  h.Draw()
+  mgNonAbs.Draw()
+  # draw legend
+  legendNonAbs.SetBorderSize(0)
+  legendNonAbs.SetFillColor(0)
+  legendNonAbs.Draw()
+  ## CMS
+  #pt = TPaveText(0.645973,0.629371,0.845638,0.699301,"blNDC")
+  #pt.SetName("CMS Preliminary")
+  #pt.SetBorderSize(1)
+  #pt.SetLineColor(0)
+  #pt.SetFillColor(0)
+  #pt.SetTextSize(0.0354545)
+  #text = pt.AddText("CMS Preliminary")
+  #pt.Draw()
+  ## lumi
+  #pt2 = TPaveText(0.654362,0.585664,0.825503,0.652098,"blNDC")
+  #pt2.SetFillColor(0)
+  #pt2.SetBorderSize(1)
+  #pt2.SetLineColor(0)
+  #pt2.SetTextSize(0.0354545)
+  #text = pt2.AddText("%.1f" % (lumi/1000)+" fb^{-1} at 8 TeV")
+  #pt2.Draw()
+  gPad.RedrawAxis()
+  basename = 'allEfficienciesMScaleSystNonAbs'
+  plotname = basename+'.pdf'
+  savename = TString(plotname)
+  pdfName = savename.Data()
+  c.SaveAs(imageDir+'/'+savename.Data())
+  plotname = basename+'.C'
+  savename = TString(plotname)
+  c.SaveAs(imageDir+'/'+savename.Data())
+  plotname = basename+'.eps'
+  savename = TString(plotname)
+  c.SaveAs(imageDir+'/'+savename.Data())
+  # png output looks strange, so convert from pdf instead
+  plotname = basename+'.png'
+  savename = TString(plotname)
+  fullBasename = imageDir+'/'+basename
+  #subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
+  subprocess.call(['gs','-dTextAlphaBits=4','-dBATCH','-dNOPAUSE','-dQUIET','-dEPSCrop','-sDEVICE=png16m','-sOutputFile='+fullBasename+'.png',fullBasename+'.eps'])
+  # write
+  name = TString(basename)
+  mgNonAbs.SetName(name.Data())
+  mgNonAbs.Write()
 
 
 def PlotAllEfficienciesMRes(modelPointArrays, lumi, rootFile, imageDir):
@@ -1671,12 +1907,11 @@ def PlotAllEfficienciesMRes(modelPointArrays, lumi, rootFile, imageDir):
     effMResUp = []
     effMResDown = []
     for mp in mpArray:
-      mp.Print()
-      print 'mp.totalEffMResSystUp=',mp.totalEffMResSystUp,'mp.totalEff=',mp.totalEff,'relDiff=',(mp.totalEffMResSystUp-mp.totalEff)/mp.totalEff
-      print 'mp.totalEffMResSystDown=',mp.totalEffMResSystDown,'mp.totalEff=',mp.totalEff,'relDiff=',(mp.totalEffMResSystDown-mp.totalEff)/mp.totalEff
+      #print 'mp.totalEffMResSystUp=',mp.totalEffMResSystUp,'mp.totalEff=',mp.totalEff,'relDiff=',(mp.totalEffMResSystUp-mp.totalEff)/mp.totalEff
+      #print 'mp.totalEffMResSystDown=',mp.totalEffMResSystDown,'mp.totalEff=',mp.totalEff,'relDiff=',(mp.totalEffMResSystDown-mp.totalEff)/mp.totalEff
       #effMResUp.append(math.fabs(mp.totalEffMResSystUp-mp.totalEff)/mp.totalEff)
       effMResUp.append((mp.totalEffMResSystUp-mp.totalEff)/mp.totalEff)
-      effMResDown.append(math.fabs(mp.totalEffMResSystDown-mp.totalEff)/mp.totalEff)
+      effMResDown.append(math.fabs(mp.totalEffMResSystDown-mp.totalEff)/mp.totalEff) # not used
     effMResUpArrs.append(effMResUp)
     effMResDownArrs.append(effMResDown)
 
@@ -1690,6 +1925,7 @@ def PlotAllEfficienciesMRes(modelPointArrays, lumi, rootFile, imageDir):
     effGraphs.append(TGraph(len(massesArr), array.array("f",massesArr),array.array("f",effMResUpArr)))
 
   SetCustomGStyle()
+  gStyle.SetFuncColor(1)
   c = TCanvas("c","c",100,100,600,600)
   c.cd()
   #c.SetLogy()
@@ -1709,8 +1945,10 @@ def PlotAllEfficienciesMRes(modelPointArrays, lumi, rootFile, imageDir):
     effGraph.SetLineColor(colorIndex)
     effGraph.SetLineWidth(4)
     #effGraph.SetLineStyle(2)
-    effGraph.SetFillColor(colorIndex)
-    effGraph.SetFillStyle(3003)
+    #effGraph.SetFillColor(colorIndex)
+    #effGraph.SetFillStyle(3003)
+    effGraph.SetName('mResShiftK'+str(coupling).replace('.','p'))
+    effGraph.Fit('pol1')
     # no exp graph for now
     #mg.Add(limitExpGraph,"C")
     #legend.AddEntry(limitExpGraph,"Exp. limit #tilde{k} = "+str(coupling),"l")
@@ -1728,7 +1966,7 @@ def PlotAllEfficienciesMRes(modelPointArrays, lumi, rootFile, imageDir):
   #h.GetYaxis().SetRangeUser(0.8,1.2)
   h.GetYaxis().SetRangeUser(-0.25,0.25)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
-  h.GetYaxis().SetTitle("rel. efficiency change")
+  h.GetYaxis().SetTitle("rel. efficiency*acc change")
   h.GetXaxis().SetLabelFont(42)
   h.GetYaxis().SetLabelFont(42)
   h.GetXaxis().SetLabelSize(0.04)
@@ -1850,14 +2088,15 @@ def PlotAllEfficienciesPileup(modelPointArrays, lumi, rootFile, imageDir):
   # To make the separate graphs share the same axes
   h = TH1F("test","",10,750,3500)
   h.SetStats(False)
-  h.GetYaxis().SetRangeUser(0.95,1.05)
+  h.GetYaxis().SetRangeUser(0.99,1.01)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
-  h.GetYaxis().SetTitle("rel. efficiency change")
+  h.GetYaxis().SetTitle("rel. efficiency*acc change")
+  h.GetYaxis().SetNdivisions(515)
   h.GetXaxis().SetLabelFont(42)
   h.GetYaxis().SetLabelFont(42)
   h.GetXaxis().SetLabelSize(0.04)
   h.GetYaxis().SetLabelSize(0.04)
-  h.GetYaxis().SetTitleOffset(1.5)
+  h.GetYaxis().SetTitleOffset(1.7)
   h.GetXaxis().SetTitleOffset(1.2)
   h.GetXaxis().SetTitleSize(0.04)
   h.GetYaxis().SetTitleSize(0.04)
@@ -1951,7 +2190,7 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
     #mg.Add(limitExpGraph,"C")
     #legend.AddEntry(limitExpGraph,"Exp. limit #tilde{k} = "+str(coupling),"l")
     mg.Add(effGraph,drawOpt)
-    legend.AddEntry(effGraph," efficiency #tilde{k} = "+str(coupling),drawOpt)
+    legend.AddEntry(effGraph," #tilde{k} = "+str(coupling),drawOpt)
     if colorIndex==2:
       colorIndex = 4
     elif colorIndex==4:
@@ -1963,7 +2202,7 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   h.SetStats(False)
   h.GetYaxis().SetRangeUser(0.2,0.7)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
-  h.GetYaxis().SetTitle("efficiency")
+  h.GetYaxis().SetTitle("efficiency*acc")
   h.GetXaxis().SetLabelFont(42)
   h.GetYaxis().SetLabelFont(42)
   h.GetXaxis().SetLabelSize(0.04)

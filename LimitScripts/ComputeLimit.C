@@ -24,16 +24,20 @@ std::string intToString(int num)
 }
 
 
-void ComputeLimit(float lumi, float lumiError, float totalEff, float totalEffErr,
+void ComputeLimit(float lumi, float lumiError, float totalEff, float totalEffErrStat, float totalEffErrSyst,
     float totalEffMScaleSystUp, float totalEffMScaleSystDown, float totalEffMResSystUp, float totalEffMResSystDown,
     float totalEffPileupSystUp, float totalEffPileupSystDown,
-    float nBackground, float nBackgroundErr, float nDataObs, int mass, float coupling, float halfWidth,
+    float nBackground, float nBackgroundErrStat, float nBackgroundErrSyst,
+    float nDataObs, int mass, float coupling, float halfWidth,
     float totalXSec, int massWindowLow, int massWindowHigh, std::string fileName)
 {
   using namespace std;
   
+  float totalEffErr = sqrt(pow(totalEffErrStat,2)+pow(totalEffErrSyst,2));
+  float nBackgroundErr = sqrt(pow(nBackgroundErrStat,2)+pow(nBackgroundErrSyst,2));
+
   cout << "Compute limit for coupling= " << coupling << " mass= " << mass << endl;
-  cout << "Efficiency*Acceptance= " << totalEff << " nBackground= " << nBackground << " +/- " << nBackgroundErr << endl;
+  cout << "Efficiency*Acceptance= " << totalEff << " +/- " << totalEffErr << " nBackground= " << nBackground << " +/- " << nBackgroundErr << endl;
   cout << "nDataObs= " << nDataObs << " halfWidth= " << halfWidth << " totalXSec= " << totalXSec << endl;
 
   string cmsswBase;
@@ -81,7 +85,8 @@ void ComputeLimit(float lumi, float lumiError, float totalEff, float totalEffErr
    myfile << "Mass: " << mass << "\n";
    myfile << "TotalXSection: " << totalXSec << "\n";
    myfile << "TotalEff: " << totalEff << "\n";
-   myfile << "TotalEffErr: " << totalEffErr << "\n";
+   myfile << "TotalEffErrStat: " << totalEffErrStat << "\n";
+   myfile << "TotalEffErrSyst: " << totalEffErrSyst << "\n";
    myfile << "TotalEffMScaleSystUp: " << totalEffMScaleSystUp << "\n";
    myfile << "TotalEffMScaleSystDown: " << totalEffMScaleSystDown << "\n";
    myfile << "TotalEffMResSystUp: " << totalEffMResSystUp << "\n";
@@ -93,7 +98,8 @@ void ComputeLimit(float lumi, float lumiError, float totalEff, float totalEffErr
    myfile << "OptMassWindowHigh: " << massWindowHigh << "\n";
    myfile << "NDataObs: " << nDataObs << "\n";
    myfile << "NBackground: " << nBackground << "\n";
-   myfile << "NBackgroundErr: " << nBackgroundErr << "\n";
+   myfile << "NBackgroundErrStat: " << nBackgroundErrStat << "\n";
+   myfile << "NBackgroundErrSyst: " << nBackgroundErrSyst << "\n";
    myfile << "ExpectedLimit: " << limit.GetExpectedLimit() << "\n";
    myfile << "ExpectedLimitOneSigmaHigh: " << limit.GetOneSigmaHighRange() << "\n";
    myfile << "ExpectedLimitOneSigmaLow: " << limit.GetOneSigmaLowRange() << "\n";

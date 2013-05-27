@@ -17,7 +17,8 @@ class ModelPoint:
     self.mass                   = kwargs.get('mass',None)
     self.totalXSec              = kwargs.get('totalXSec',None)
     self.totalEff               = kwargs.get('totalEff',None)
-    self.totalEffErr            = kwargs.get('totalEffErr',None)
+    self.totalEffErrStat        = kwargs.get('totalEffErrStat',None)
+    self.totalEffErrSyst        = kwargs.get('totalEffErrSyst',None)
     self.totalEffMScaleSystUp   = kwargs.get('totalEffMScaleSystUp',None)
     self.totalEffMScaleSystDown = kwargs.get('totalEffMScaleSystDown',None)
     self.totalEffMResSystUp     = kwargs.get('totalEffMResSystUp',None)
@@ -29,7 +30,8 @@ class ModelPoint:
     self.optMassWindowHigh      = kwargs.get('optMassWindowHigh',None)
     self.nDataObs               = kwargs.get('nDataObs',None)
     self.nBackground            = kwargs.get('nBg',None)
-    self.nBackgroundErr         = kwargs.get('nBgErr',None)
+    self.nBackgroundErrStat     = kwargs.get('nBgErrStat',None)
+    self.nBackgroundErrSyst     = kwargs.get('nBgErrSyst',None)
     self.expLimit               = kwargs.get('expLimit',None)
     self.expLimitOneSigmaHigh   = kwargs.get('expLimitOneSigmaHigh',None)
     self.expLimitOneSigmaLow    = kwargs.get('expLimitOneSigmaLow',None)
@@ -50,8 +52,7 @@ class ModelPoint:
     print "Coupling : " , self.coupling
     print "Mass: ",self.mass
     print "TotalXSection: " , self.totalXSec
-    print "TotalEff: %.5f"%self.totalEff
-    print "TotalEffErr: %.5f"%self.totalEffErr
+    print "TotalEff: %.5f"%self.totalEff , " +/- %.5f (stat)"%self.totalEffErrStat, " +/- %.5f (syst)"%self.totalEffErrSyst
     print "TotalEffMScaleSystUp: %.5f"%self.totalEffMScaleSystUp
     print "TotalEffMScaleSystDown: %.5f"%self.totalEffMScaleSystDown
     print "TotalEffMResSystUp: %.5f"%self.totalEffMResSystUp
@@ -61,7 +62,7 @@ class ModelPoint:
     print "HalfWidth: " , self.halfWidth
     print "OptMassWindow: ", self.optMassWindowLow,"-",self.optMassWindowHigh
     print "NDataObs: " , self.nDataObs
-    print "NBackground: %.5f"%self.nBackground , " +/- %.5f"%self.nBackgroundErr
+    print "NBackground: %.5f"%self.nBackground , " +/- %.5f (stat)"%self.nBackgroundErrStat, " +/- %.5f (syst)"%self.nBackgroundErrSyst
     print "Filename:",self.fileName
     print "Expected Limit:" , self.expLimit , " + " , self.expLimitOneSigmaHigh , " - " , self.expLimitOneSigmaLow
     print "Expected Limit2SigmaBounds: + " , self.expLimitTwoSigmaHigh , " - " , self.expLimitTwoSigmaLow
@@ -74,7 +75,8 @@ class ModelPoint:
     file.write("FileName: " + self.fileName + "\n")
     file.write("TotalXSection: " + str(self.totalXSec) + "\n")
     file.write("TotalEff: " + str(self.totalEff) + "\n")
-    file.write("TotalEffErr: " + str(self.totalEffErr) + "\n")
+    file.write("TotalEffErrStat: " + str(self.totalEffErrStat) + "\n")
+    file.write("TotalEffErrSyst: " + str(self.totalEffErrSyst) + "\n")
     file.write("TotalEffMScaleSystUp: " + str(self.totalEffMScaleSystUp) + "\n")
     file.write("TotalEffMScaleSystDown: " + str(self.totalEffMScaleSystDown) + "\n")
     file.write("TotalEffMResSystUp: " + str(self.totalEffMResSystUp) + "\n")
@@ -86,7 +88,8 @@ class ModelPoint:
     file.write("OptMassWindowHigh: " + str(self.optMassWindowHigh) + "\n")
     file.write("NDataObs: " + str(self.nDataObs) + "\n")
     file.write("NBackground: " + str(self.nBackground) + "\n")
-    file.write("NBackgroundErr: " + str(self.nBackgroundErr) + "\n")
+    file.write("NBackgroundErrStat: " + str(self.nBackgroundErrStat) + "\n")
+    file.write("NBackgroundErrSyst: " + str(self.nBackgroundErrSyst) + "\n")
     file.write("ExpectedLimit: " + str(self.expLimit) + "\n")
     file.write("ExpectedLimitOneSigmaHigh: " + str(self.expLimitOneSigmaHigh) + "\n")
     file.write("ExpectedLimitOneSigmaLow: " + str(self.expLimitOneSigmaLow) + "\n")
@@ -110,7 +113,7 @@ class ModelPoint:
     latexLine+='%.2f'%self.totalEff+' & '
     expectedSignalEvents = lumi * self.totalXSec * self.totalEff
     latexLine+='%.2f'%float(expectedSignalEvents)+' & '
-    latexLine+='%.4f'%self.nBackground+' $\\pm$ '+'%.4f'%self.nBackgroundErr+' & '
+    latexLine+='%.4f'%self.nBackground+' $\\pm$ '+'%.4f'%self.nBackgroundErrStat+' (stat) $\\pm$ '+'%.4f'%self.nBackgroundErrSyst+' (syst) & '
     latexLine+=str(int(self.nDataObs))#+'&'
     #latexLine+='%.1E'%float(self.totalXSec)+'&'
     #latexLine+='%.1E'%self.expLimit+'&'
@@ -122,14 +125,14 @@ class ModelPoint:
   def StringTableLine(self,lumi):
     tableString=string.ljust(str(self.coupling),9)+string.ljust(str(int(self.mass)),6)+string.ljust('%0.3f'%self.totalEff,8)
     expectedSignalEvents = lumi * self.totalXSec * self.totalEff
-    tableString+=string.center(str(round(expectedSignalEvents,2)),9)
+    tableString+=string.center(str(round(expectedSignalEvents,2)),12)
     #backExpString = '%0.4f'%self.nBackground+'+/-'+'%0.4f'%self.nBackgroundErr
     #backExpString = str(self.nBackground)+'+/-'+str(self.nBackgroundErr)
     if(self.nBackground < 1):
-      backExpString = '%s' % float('%.2g' % self.nBackground)+'+/-'+'%s'%float('%.2g' % self.nBackgroundErr)
+      backExpString = '%s' % float('%.2g' % self.nBackground)+'+/-'+'%s'%float('%.2g' % self.nBackgroundErrStat)+' (stat) +/-'+'%s'%float('%.2g' % self.nBackgroundErrSyst)+' (syst)'
     else:
-      backExpString = '%0.2f'%self.nBackground+'+/-'+'%0.2f'%self.nBackgroundErr
-    tableString+=string.center(backExpString,18)+string.center(str(self.nDataObs),10)
+      backExpString = '%0.2f'%self.nBackground+'+/-'+'%0.2f'%self.nBackgroundErrStat+' (stat) +/-'+'%0.2f'%self.nBackgroundErrSyst+' (syst)'
+    tableString+=string.ljust(backExpString,42)+string.center(str(self.nDataObs),10)
     tableString+=string.center('%.1E'%float(self.totalXSec),10)
     try:
       tableString+=string.center(str(round(self.expLimit,6)),10)
@@ -149,9 +152,9 @@ class ModelPoint:
     expectedSignalEvents = lumi * self.totalXSec * self.totalEff
     tableString+=string.center(str(round(expectedSignalEvents,2)),9)+'|'
     if(self.nBackground < 1):
-      backExpString = '%s' % float('%.2g' % self.nBackground)+'+/-'+'%s'%float('%.2g' % self.nBackgroundErr)
+      backExpString = '%s' % float('%.2g' % self.nBackground)+'+/-'+'%s'%float('%.2g' % self.nBackgroundErrStat)+' (stat) +/-'+'%s'%float('%.2g' % self.nBackgroundErrSyst)+' (syst)'
     else:
-      backExpString = '%0.2f'%self.nBackground+'+/-'+'%0.2f'%self.nBackgroundErr
+      backExpString = '%0.2f'%self.nBackground+'+/-'+'%0.2f'%self.nBackgroundErrStat+' (stat) +/-'+'%0.2f'%self.nBackgroundErrSyst+' (syst)'
     tableString+=string.center(backExpString,18)+'|'+string.center(str(self.nDataObs),10)+'|'
     try:
       tableString+=string.center(str(round(self.expLimit,6)),10)+'|'
@@ -185,8 +188,10 @@ def ReadFromLines(lines):
       mp.totalXSec = value
     elif "TotalEff:" in line:
       mp.totalEff = value
-    elif "TotalEffErr:" in line:
-      mp.totalEffErr = value
+    elif "TotalEffErrStat:" in line:
+      mp.totalEffErrStat = value
+    elif "TotalEffErrSyst:" in line:
+      mp.totalEffErrSyst = value
     elif "TotalEffMScaleSystUp:" in line:
       mp.totalEffMScaleSystUp = value
     elif "TotalEffMScaleSystDown:" in line:
@@ -209,8 +214,10 @@ def ReadFromLines(lines):
       mp.nDataObs = value
     elif "NBackground:" in line and not "Err" in line:
       mp.nBackground = value
-    elif "NBackgroundErr:" in line:
-      mp.nBackgroundErr = value
+    elif "NBackgroundErrStat:" in line:
+      mp.nBackgroundErrStat = value
+    elif "NBackgroundErrSyst:" in line:
+      mp.nBackgroundErrSyst = value
     elif "ExpectedLimit:" in line and not "Sigma" in line:
       mp.expLimit = value
     elif "ExpectedLimitOneSigmaHigh:" in line:

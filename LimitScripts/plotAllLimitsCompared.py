@@ -5,9 +5,15 @@ import subprocess
 from ROOT import *
 
 # Make comparison between limits with and without deltaPhi cut
+#
+# Seth Cooper, U. Alabama
 
-deltaPhiCutRootFileName = 'results_deltaPhiCut_10k_25_jan17/plots.root'
-noDeltaPhiCutRootFileName = 'results_noCuts_10k_25_jan17/plots.root'
+
+deltaPhiCutResultDir = ''
+noDeltaPhiCutResultDir = ''
+
+deltaPhiCutRootFileName = deltaPhiCutResultDir+'/plots.root'
+noDeltaPhiCutRootFileName = noDeltaPhiCutResultDir+'/plots.root'
 
 tfileNoCut = TFile.Open(noDeltaPhiCutRootFileName)
 tfileDPhiCut = TFile.Open(deltaPhiCutRootFileName)
