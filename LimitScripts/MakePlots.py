@@ -2154,6 +2154,8 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   massesArrs = []
   couplings = []
   effArrs = []
+  effSystArrs = []
+  massErrsArrs = []
   for mpArray in modelPointArrays:
     if len(mpArray) < 1:
       continue
@@ -2161,12 +2163,19 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
     massesArrs.append(masses)
     effArrs.append(effs)
     couplings.append(mpArray[0].coupling)
+    massErrs = [0]*len(mpArray)
+    massErrsArrs.append(massErrs)
+    effSystErrs = []
+    for modelPoint in mpArray:
+      effSystErrs.append(modelPoint.totalEffErrSyst)
+    effSystArrs.append(effSystErrs)
 
   rootFile.cd()
   # turn the arrays into graphs
   effGraphs = []
-  for massesArr, effsArr in itertools.izip(massesArrs,effArrs):
-    effGraphs.append(TGraph(len(massesArr), array.array("f",massesArr),array.array("f",effsArr)))
+  for massesArr, effsArr, effSystArr in itertools.izip(massesArrs,effArrs,effSystArrs):
+    #effGraphs.append(TGraph(len(massesArr), array.array("f",massesArr),array.array("f",effsArr)))
+    effGraphs.append(TGraphErrors(len(massesArr), array.array("f",massesArr), array.array("f",effsArr), array.array("f",[0]*len(massesArr)),array.array("f",effSystArr)))
 
   SetCustomGStyle()
   c = TCanvas("c","c",100,100,600,600)
@@ -2175,15 +2184,17 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   c.SetRightMargin(0.04)
   # Multigraph
   mg = TMultiGraph()
-  legend = TLegend(0.42,0.71,0.73,0.92)
+  legend = TLegend(0.45,0.73,0.73,0.92)
   colorIndex = 2 
-  drawOpt = 'lx'
+  #drawOpt = 'lx'
+  drawOpt = 'lpx'
   for effGraph, coupling in itertools.izip(effGraphs,couplings):
     effGraph.SetMarkerSize(0.8)
     effGraph.SetMarkerColor(colorIndex)
+    effGraph.SetMarkerStyle(21)
     effGraph.SetLineColor(colorIndex)
     effGraph.SetLineWidth(4)
-    effGraph.SetLineStyle(2)
+    #effGraph.SetLineStyle(2)
     effGraph.SetFillColor(colorIndex)
     effGraph.SetFillStyle(3003)
     # no exp graph for now
@@ -2200,7 +2211,7 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   # To make the separate graphs share the same axes
   h = TH1F("test","",10,750,3500)
   h.SetStats(False)
-  h.GetYaxis().SetRangeUser(0.2,0.7)
+  h.GetYaxis().SetRangeUser(0.2,0.6)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
   h.GetYaxis().SetTitle("efficiency*acc")
   h.GetXaxis().SetLabelFont(42)
@@ -2244,9 +2255,12 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   savename = TString(plotname)
   c.SaveAs(imageDir+'/'+savename.Data())
   # png output looks strange, so convert from pdf instead
-  plotname = basename+'.png'
+  plotname = basename+'.eps'
   savename = TString(plotname)
-  subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
+  c.SaveAs(imageDir+'/'+savename.Data())
+  basename=imageDir+'/allEfficiencies'
+  subprocess.call(['gs','-dTextAlphaBits=4','-dBATCH','-dNOPAUSE','-dQUIET','-dEPSCrop','-sDEVICE=png16m','-sOutputFile='+basename+'.png',basename+'.eps'])
+  #subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
   # write
   name = TString(basename)
   mg.SetName(name.Data())
