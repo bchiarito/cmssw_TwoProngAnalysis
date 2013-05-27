@@ -50,22 +50,36 @@ signalHistogramPileupShiftDown = TH1F()
 histogramSignalFile = 0
 
 
-def ComputeLimits(cl95MacroPath,lumi,lumiErr,modelPointArray,fileName):
+def ComputeLimits(cl95MacroPath,lumi,lumiErr,modelPointArray,fileName,useKFactor):
   if not os.path.isdir('cls_plots'):
     os.mkdir('cls_plots')
   # Get setup script path
   setupScriptPath = cl95MacroPath.split('root')[0]
   setupScriptPath+='setup/lxplus_standalone_setup.sh'
   for modelPoint in modelPointArray:
+    # save some info
     thisMPFileName = modelPoint.fileName
+    thisMPKFactor = modelPoint.kFactor
     handle,tempFileName = tempfile.mkstemp()
     #void ComputeLimit(float lumi, float lumiError, float totalEff, float totalEffErrStat, float totalEffErrSyst,
+    #float nBackground, float nBackgroundErrStat, float nBackgroundErrSyst,
+    #float nDataObs, 
+    #TODO not needed for computelimit -- save/remove
     #float totalEffMScaleSystUp, float totalEffMScaleSystDown,
     #float totalEffMResSystUp, float totalEffMResSystDown,
     #float totalEffPileupSystUp, float totalEffPileupSystDown,
-    #float nBackground, float nBackgroundErrStat, float nBackgroundErrSyst,
-    #float nDataObs, int mass, float coupling, float halfWidth,
+    #int mass, float coupling, float halfWidth,
     #float totalXSec, int massWindowLow, int massWindowHigh, std::string fileName)
+    if useKFactor:
+      modelPoint.totalEff*=modelPoint.kFactor
+      modelPoint.totalEffErrStat*=modelPoint.kFactor
+      modelPoint.totalEffErrSyst*=modelPoint.kFactor
+      modelPoint.totalEffMScaleSystUp*=modelPoint.kFactor
+      modelPoint.totalEffMScaleSystDown*=modelPoint.kFactor
+      modelPoint.totalEffMResSystUp*=modelPoint.kFactor
+      modelPoint.totalEffMResSystDown*=modelPoint.kFactor
+      modelPoint.totalEffPileupSystUp*=modelPoint.kFactor
+      modelPoint.totalEffPileupSystDown*=modelPoint.kFactor
     command = 'ComputeLimit.C('+str(lumi)+','+str(lumiErr)+','+str(modelPoint.totalEff)+','
     command+=str(modelPoint.totalEffErrStat)+','+str(modelPoint.totalEffErrSyst)+','
     command+=str(modelPoint.totalEffMScaleSystUp)+','+str(modelPoint.totalEffMScaleSystDown)+','
@@ -91,6 +105,7 @@ def ComputeLimits(cl95MacroPath,lumi,lumiErr,modelPointArray,fileName):
     os.remove(tempFileName)
     thisModelPoint = ReadFromLines(lines)[0]
     thisModelPoint.fileName = thisMPFileName
+    thisModelPoint.kFactor = thisMPKFactor
     #FIXME/TODO: store all info besides limit info like this and don't use ComputeLimit.C to write it out...
     # replace this model point in the array
     for index,mp in enumerate(modelPointArray):

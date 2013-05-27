@@ -21,6 +21,7 @@ import math
 import array
 import subprocess
 import datetime
+import itertools
 
 # run root in batch
 sys.argv.append('-b')
@@ -135,23 +136,59 @@ def GetSignalFileName(template,coupling,mass):
   return template.format(coupling=couplingStr,mass=massStr)
 
 
+def FillKFactors(modelPointArray):
+  myCoupling = modelPointArray[0].coupling
+  massToKFactorDict = dict()
+  with open(kFactorFile, 'r') as file:
+    lines = file.readlines()
+  i = 0
+  while i < len(lines):
+    line = lines[i]
+    line.strip('\n')
+    if "Coupling" in line:
+      coupling = float(line.split('= ')[1])
+      if coupling == myCoupling:
+        break
+    i+=1
+  if i>=len(lines):
+    print 'Could not find k-factors in file:',kFactorFile,'for coupling=',myCoupling
+    return
+  i+=2 # get past ----- line
+  line = lines[i]
+  while i < len(lines):
+    if '--' in line:
+      break
+    lineSplit = line.split()
+    massToKFactorDict[int(float(lineSplit[0]))] = float(lineSplit[1])
+    i+=1
+    line = lines[i]
+  for mp in modelPointArray:
+    mp.kFactor = massToKFactorDict[mp.mass]
+
+
 # TODO: remove hardcoding; instead use list of couplings to run over
 def DoLimitsAllPoints(cl95MacroPathAndName,lumi,lumiErr,limitsFileName):
   print 'Run for coupling 0.01'
   with open(optimizationFileName+'0p01.txt', 'r') as file:
     lines = file.readlines()
     readModelPointsC0p01 = ReadFromLines(lines)
-  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p01,limitsFileName+'0p01.txt')
+    if UseKFactor:
+      FillKFactors(readModelPointsC0p01)
+  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p01,limitsFileName+'0p01.txt',UseKFactor)
   print 'Run for coupling 0.05'
   with open(optimizationFileName+'0p05.txt', 'r') as file:
     lines = file.readlines()
     readModelPointsC0p05 = ReadFromLines(lines)
-  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p05,limitsFileName+'0p05.txt')
+    if UseKFactor:
+      FillKFactors(readModelPointsC0p05)
+  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p05,limitsFileName+'0p05.txt',UseKFactor)
   print 'Run for coupling 0.1'
   with open(optimizationFileName+'0p1.txt', 'r') as file:
     lines = file.readlines()
     readModelPointsC0p1 = ReadFromLines(lines)
-  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p1,limitsFileName+'0p1.txt')
+    if UseKFactor:
+      FillKFactors(readModelPointsC0p1)
+  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p1,limitsFileName+'0p1.txt',UseKFactor)
   subprocess.call(['mv','cls_plots',limitsOutputDir])
 
 
@@ -175,7 +212,7 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   print 'Run for coupling 0.01'
   with open(limitsFileName+'0p01.txt', 'r') as file:
     readModelPoints0p01 = ReadFromFile(file)
-  PlotBands(readModelPoints0p01,lumi,rootFile,limitsOutputDir)
+  PlotBands(readModelPoints0p01,lumi,rootFile,plotsOutputDir)
   m0p01,xs,mExp0p01,xsE = GetMassLimit(readModelPoints0p01)
   print string.ljust('Coupling: '+str(readModelPoints0p01[0].coupling),14),
   print ' Observed limit mass: %0.2f'%m0p01
@@ -186,7 +223,7 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   print 'Run for coupling 0.05'
   with open(limitsFileName+'0p05.txt', 'r') as file:
     readModelPoints0p05 = ReadFromFile(file)
-  PlotBands(readModelPoints0p05,lumi,rootFile,limitsOutputDir)
+  PlotBands(readModelPoints0p05,lumi,rootFile,plotsOutputDir)
   m0p05,xs,mExp0p05,xsE = GetMassLimit(readModelPoints0p05)
   print string.ljust('Coupling: '+str(readModelPoints0p05[0].coupling),14),
   print ' Observed limit mass: %0.2f'%m0p05
@@ -197,7 +234,7 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   print 'Run for coupling 0.1'
   with open(limitsFileName+'0p1.txt', 'r') as file:
     readModelPoints0p1 = ReadFromFile(file)
-  PlotBands(readModelPoints0p1,lumi,rootFile,limitsOutputDir)
+  PlotBands(readModelPoints0p1,lumi,rootFile,plotsOutputDir)
   m0p1,xs,mExp0p1,xsE = GetMassLimit(readModelPoints0p1)
   print string.ljust('Coupling: '+str(readModelPoints0p1[0].coupling),14),
   print ' Observed limit mass: %0.2f'%m0p1
@@ -208,22 +245,22 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   mLimObs = [m0p01,m0p05,m0p1]
   mLimExp = [mExp0p01,mExp0p05,mExp0p1]
   couplings = [0.01,0.05,0.1]
-  CouplingVsMassPlot(couplings,mLimExp,mLimObs,rootFile,lumi,limitsOutputDir)
+  CouplingVsMassPlot(couplings,mLimExp,mLimObs,rootFile,lumi,plotsOutputDir)
   # efficiencies for all couplings/masses on same axes
   print 'PlotAllEfficiencies'
-  PlotAllEfficiencies([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,optimizationOutputDir)
-  PlotAllEfficienciesMScale([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1], lumi, rootFile, optimizationOutputDir)
-  PlotAllEfficienciesMRes([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,optimizationOutputDir)
-  PlotAllEfficienciesPileup([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,optimizationOutputDir)
+  PlotAllEfficiencies([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesMScale([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1], lumi, rootFile, plotsOutputDir)
+  PlotAllEfficienciesMRes([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesPileup([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
   # half widths
   print 'PlotAllHalfWidths'
-  PlotAllHalfWidths([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,limitsOutputDir)
+  PlotAllHalfWidths([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
   # exp BG
   print 'PlotAllExpBGs'
-  PlotAllExpBGs([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,limitsOutputDir)
+  PlotAllExpBGs([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
   # limit plot for all couplings on same axes
   print 'PlotAllBands'
-  PlotAllBands([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,limitsOutputDir)
+  PlotAllBands([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
   # make table
   print 'DoTablesAllPoints'
   DoTablesAllPoints(lumi)
@@ -425,6 +462,7 @@ def GetConfigurationString():
   configString+='DataSample='+DataSample+'\n'
   configString+='BackgroundMC='+BackgroundMC+'\n'
   configString+='extraWindowMargin='+str(extraWindowMargin)+'\n'
+  configString+='UseKFactor='+str(UseKFactor)+', k-factor file='+kFactorFile+'\n'
   configString+='lumi='+str(lumi)+'\n'
   configString+='lumiErr='+str(lumiErr)+'\n'
   configString+='signalPoints K0p01='+str(masses0p01)+'\n'
@@ -463,9 +501,11 @@ cl95MacroName = 'roostats_cl95.C'
 # Configurable stuff here
 now = datetime.datetime.now()
 Date = now.strftime("%b%d")
-outputDirBase = Date.lower()+'_results_symmWindowSSBOpt_10pctBGSyst_indivSigEffSysts_1pctOptMWindowMarginSmoothed'
+#outputDirBase = Date.lower()+'_results_symmWindowSSBOpt_10pctBGSyst_indivSigEffSysts_1pctOptMWindowMarginSmoothed'
+outputDirBase = 'may16_results_symmWindowSSBOpt_10pctBGSyst_indivSigEffSysts_0pctOptMWindowMarginSmoothed'
 optimizationOutputDir = outputDirBase+'_optimization'
 limitsOutputDir = outputDirBase+'_limits'
+plotsOutputDir = outputDirBase+'_plots'
 # limit results file base name
 limitsFileNameBase = 'limits_k_'
 limitsFileName = limitsOutputDir+'/'+limitsFileNameBase
@@ -480,8 +520,11 @@ signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistog
 rootFileLocation = '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/'
 DataSample = "ExoDiPhotonAnalyzer_PFDec14th_DataABCD"
 BackgroundMC = "diphoton_tree_MC_all"
+kFactorFile = 'RS-KF-LHC-8TeV-y1.4442-ptcut80.dat'
+# use k-factors to compute limit (optimization always done with k-factor=1)
+UseKFactor = False
 # use extra window margin to minimize mScale/mRes systematic effects on signal
-extraWindowMargin = 0.01 # fraction to expand window by, e.g., 0.01 --> expand edges by 1%
+extraWindowMargin = 0.00 # fraction to expand window by, e.g., 0.01 --> expand edges by 1%
 # Declarations of Lumi and model points to consider -- must have xsec, etc. defined above
 lumi = 19620.
 lumiErr = lumi*0.044
@@ -516,6 +559,8 @@ for mass in masses0p1:
   modelPointsC0p1.append(ModelPoint(coupling=k,mass=mass,totalXSec=GetXSec(k,mass),halfWidth=GetHalfWidth(k,mass),
     fileName=GetSignalFileName(signalHistogramFilesPathTemplate,k,mass))) 
 
+
+
 # Parse arguments
 if len(sys.argv)==1:
   Usage()
@@ -535,10 +580,12 @@ elif sys.argv[1]=='optimize':
   rootFile = TFile(optimizationPlotFileName,'recreate')
   DoOptimizeAllPoints(rootFile)
   DoOptimizationPlots(rootFile)
-  PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,optimizationOutputDir)
-  PlotAllEfficienciesMScale([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,optimizationOutputDir)
-  PlotAllEfficienciesMRes([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,optimizationOutputDir)
-  PlotAllEfficienciesPileup([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,optimizationOutputDir)
+  if not os.path.isdir(plotsOutputDir):
+    os.mkdir(plotsOutputDir)
+  PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesMScale([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesMRes([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesPileup([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
 elif sys.argv[1]=='yields':
   print 'yields: CalculateYieldsForMassRanges'
   if not os.path.isdir(optimizationOutputDir):
@@ -547,7 +594,9 @@ elif sys.argv[1]=='yields':
     file.write(configString)
   rootFile = TFile(optimizationPlotFileName,'recreate')
   DoCalculateYieldsAllPoints()
-  PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,optimizationOutputDir)
+  if not os.path.isdir(plotsOutputDir):
+    os.mkdir(plotsOutputDir)
+  PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
 elif sys.argv[1]=='limits':
   print 'limits: DoLimitsAllPoints'
   print 'warning: will overwrite file',limitsPlotFileName,'if it already exists.'
@@ -559,6 +608,8 @@ elif sys.argv[1]=='limits':
   DoLimitsAllPoints(cl95MacroPath+cl95MacroName,lumi,lumiErr,limitsFileName)
 elif sys.argv[1]=='plots':
   print 'plots: DoPlotsAllPoints'
+  if not os.path.isdir(plotsOutputDir):
+    os.mkdir(plotsOutputDir)
   rootFile = TFile(limitsPlotFileName,'update')
   DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle)
 elif sys.argv[1]=='tables':
@@ -581,10 +632,12 @@ elif sys.argv[1]=='all':
   #print 'all: stdYields+limits+plots'
   #rootFile = TFile(optimizationPlotFileName,'recreate')
   #DoCalculateYieldsAllPoints() # std/old mass windows
-  PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,optimizationOutputDir)
-  PlotAllEfficienciesMScale([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,optimizationOutputDir)
-  PlotAllEfficienciesMRes([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,optimizationOutputDir)
-  PlotAllEfficienciesPileup([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,optimizationOutputDir)
+  if not os.path.isdir(plotsOutputDir):
+    os.mkdir(plotsOutputDir)
+  PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesMScale([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesMRes([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesPileup([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
   rootFile.Close()
   print 'limits: DoLimitsAllPoints'
   print 'warning: will overwrite file',limitsPlotFileName,'if it already exists.'
