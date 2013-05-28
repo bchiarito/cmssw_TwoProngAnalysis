@@ -426,12 +426,8 @@ def DoOptimizeAllPoints(optimizationRootFile):
 
 def DoOptimizationPlots(optimizationRootFile):
   # toggle plot s/sqrt(b) off
-  #MakeOptGraphImages(optimizationRootFile,optimizationOutputDir,modelPointsC0p01+modelPointsC0p05+modelPointsC0p1,True)
+  MakeOptGraphImages(optimizationRootFile,optimizationOutputDir,modelPointsC0p01+modelPointsC0p05+modelPointsC0p1,True)
   # above takes a lot of time--many points
-  ## make multigraphs for all masses/couplings
-  #MakeOptHalfWindowVsMassMultigraph(optimizationRootFile)
-  #MakeOptMassWindowsVsMassMultiGraph(optimizationRootFile)
-  #MakeOptSSBValueVsMassMultigraph(optimizationRootFile)
   # do images
   MakeOptMassWindowVsMassImages(optimizationRootFile,optimizationOutputDir)
   MakeSmoothedMassWindowVsMassImages(optimizationRootFile,optimizationOutputDir)
@@ -452,22 +448,28 @@ def DoCalculateYieldsAllPoints():
 
 
 def GetConfigurationString():
-  configString='Running with configuration:'+'\n'
-  configString+='optimizationOutputDir='+optimizationOutputDir+'\n'
-  configString+='limitsOutputDir='+limitsOutputDir+'\n'
-  configString+='limitsFileNameBase='+limitsFileNameBase+'\n'
-  configString+='optimizationFileNameBase='+optimizationFileNameBase+'\n'
-  configString+='signalRootFileLocation='+signalRootFileLocation+'\n'
-  configString+='rootFileLocation='+rootFileLocation+'\n'
-  configString+='DataSample='+DataSample+'\n'
-  configString+='BackgroundMC='+BackgroundMC+'\n'
-  configString+='extraWindowMargin='+str(extraWindowMargin)+'\n'
-  configString+='UseKFactor='+str(UseKFactor)+', k-factor file='+kFactorFile+'\n'
+  configString='-----------------------------------------------\n'+'Running with configuration:'+'\n'
   configString+='lumi='+str(lumi)+'\n'
-  configString+='lumiErr='+str(lumiErr)+'\n'
+  configString+='lumiErr='+str(lumiErr)+'\n'+'-----------------------------------------------\n'
+  configString+='signalRootFileLocation='+signalRootFileLocation+'\n'
   configString+='signalPoints K0p01='+str(masses0p01)+'\n'
   configString+='signalPoints K0p05='+str(masses0p05)+'\n'
   configString+='signalPoints K0p1='+str(masses0p1)+'\n'
+  configString+='Data/MC rootFileLocation='+rootFileLocation+'\n'
+  configString+='DataSample='+DataSample+'\n'
+  configString+='BackgroundMC='+BackgroundMC+'\n'+'-----------------------------------------------\n'
+  configString+='extraWindowMargin='+str(extraWindowMargin)+'\n'
+  configString+='UseKFactor='+str(UseKFactor)+', k-factor file='+kFactorFile+'\n'
+  # overall systematics
+  configString+='SigPUSyst='+str(SigPUSyst)+'\n'
+  configString+='SigPDFSyst='+str(SigPDFSyst)+'\n'
+  configString+='SigScaleFactorSyst='+str(SigScaleFactorSyst)+'\n'
+  configString+='SigPtSFSyst='+str(SigPtSFSyst)+'\n'
+  configString+='BGOverallSyst='+str(BGOverallSyst)+'\n'+'-----------------------------------------------\n'
+  configString+='optimizationOutputDir='+optimizationOutputDir+'\n'
+  configString+='limitsOutputDir='+limitsOutputDir+'\n'
+  configString+='limitsFileNameBase='+limitsFileNameBase+'\n'
+  configString+='optimizationFileNameBase='+optimizationFileNameBase+'\n'+'-----------------------------------------------\n'
   return configString
 
 
@@ -502,7 +504,8 @@ cl95MacroName = 'roostats_cl95.C'
 now = datetime.datetime.now()
 Date = now.strftime("%b%d")
 #outputDirBase = Date.lower()+'_results_symmWindowSSBOpt_10pctBGSyst_indivSigEffSysts_1pctOptMWindowMarginSmoothed'
-outputDirBase = 'may16_results_symmWindowSSBOpt_10pctBGSyst_indivSigEffSysts_0pctOptMWindowMarginSmoothed'
+#outputDirBase = 'may16_results_symmWindowSSBOpt_10pctBGSyst_indivSigEffSysts_0pctOptMWindowMarginSmoothed'
+outputDirBase = 'may28_testOptimizePlots'
 optimizationOutputDir = outputDirBase+'_optimization'
 limitsOutputDir = outputDirBase+'_limits'
 plotsOutputDir = outputDirBase+'_plots'
