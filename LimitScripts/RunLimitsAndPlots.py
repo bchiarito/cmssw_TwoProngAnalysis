@@ -378,17 +378,17 @@ def DoOptimizeAllPoints(optimizationRootFile):
   colorIndex = 2 #TODO add this into modelpoint itself?
   with open(optimizationFileName+'0p01.txt', 'w') as file:
     OptimizeSignalMassWindows(
-        rootFileLocation,modelPointsC0p01,lumi,useAsymmWindow,useSSB,maxWindowRange,file,optimizationRootFile,colorIndex,optimizationOutputDir,extraWindowMargin,DataSample,BackgroundMC)
+        rootFileLocationDataFake,rootFileBackgroundMC,modelPointsC0p01,lumi,useAsymmWindow,useSSB,maxWindowRange,file,optimizationRootFile,colorIndex,optimizationOutputDir,extraWindowMargin,DataSample)
   print 'Run for coupling 0.05'
   colorIndex = 4
   with open(optimizationFileName+'0p05.txt', 'w') as file:
     OptimizeSignalMassWindows(
-        rootFileLocation,modelPointsC0p05,lumi,useAsymmWindow,useSSB,maxWindowRange,file,optimizationRootFile,colorIndex,optimizationOutputDir,extraWindowMargin,DataSample,BackgroundMC)
+        rootFileLocationDataFake,rootFileBackgroundMC,modelPointsC0p05,lumi,useAsymmWindow,useSSB,maxWindowRange,file,optimizationRootFile,colorIndex,optimizationOutputDir,extraWindowMargin,DataSample)
   print 'Run for coupling 0.1'
   colorIndex = 8
   with open(optimizationFileName+'0p1.txt', 'w') as file:
     OptimizeSignalMassWindows(
-        rootFileLocation,modelPointsC0p1,lumi,useAsymmWindow,useSSB,maxWindowRange,file,optimizationRootFile,colorIndex,optimizationOutputDir,extraWindowMargin,DataSample,BackgroundMC)
+        rootFileLocationDataFake,rootFileBackgroundMC,modelPointsC0p1,lumi,useAsymmWindow,useSSB,maxWindowRange,file,optimizationRootFile,colorIndex,optimizationOutputDir,extraWindowMargin,DataSample)
   # make multigraphs for all masses/couplings
   MakeOptHalfWindowVsMassMultigraph(optimizationRootFile)
   MakeOptMassWindowsVsMassMultiGraph(optimizationRootFile)
@@ -438,13 +438,13 @@ def DoOptimizationPlots(optimizationRootFile):
 def DoCalculateYieldsAllPoints():
   print 'Yields: Run for coupling 0.01'
   with open(optimizationFileName+'0p01.txt', 'w') as file:
-    CalculateYieldsForMassRanges(rootFileLocation, modelPointsC0p01, lumi, 3, file,DataSample,BackgroundMC)
+    CalculateYieldsForMassRanges(rootFileLocationDataFake, rootFileBackgroundMC, modelPointsC0p01, lumi, 3, file,DataSample)
   print 'Yields: Run for coupling 0.05'
   with open(optimizationFileName+'0p05.txt', 'w') as file:
-    CalculateYieldsForMassRanges(rootFileLocation, modelPointsC0p05, lumi, 3, file,DataSample,BackgroundMC)
+    CalculateYieldsForMassRanges(rootFileLocationDataFake, rootFileBackgroundMC, modelPointsC0p05, lumi, 3, file,DataSample)
   print 'Yields: Run for coupling 0.1'
   with open(optimizationFileName+'0p1.txt', 'w') as file:
-    CalculateYieldsForMassRanges(rootFileLocation, modelPointsC0p1, lumi, 3, file,DataSample,BackgroundMC)
+    CalculateYieldsForMassRanges(rootFileLocationDataFake, rootFileBackgroundMC, modelPointsC0p1, lumi, 3, file,DataSample)
 
 
 def GetConfigurationString():
@@ -455,9 +455,9 @@ def GetConfigurationString():
   configString+='signalPoints K0p01='+str(masses0p01)+'\n'
   configString+='signalPoints K0p05='+str(masses0p05)+'\n'
   configString+='signalPoints K0p1='+str(masses0p1)+'\n'
-  configString+='Data/MC rootFileLocation='+rootFileLocation+'\n'
+  configString+='Data/Fake rootFileLocation='+rootFileLocationDataFake+'\n'
   configString+='DataSample='+DataSample+'\n'
-  configString+='BackgroundMC='+BackgroundMC+'\n'+'-----------------------------------------------\n'
+  configString+='BackgroundMC root file='+rootFileBackgroundMC+'\n'+'-----------------------------------------------\n'
   configString+='extraWindowMargin='+str(extraWindowMargin)+'\n'
   configString+='UseKFactor='+str(UseKFactor)+', k-factor file='+kFactorFile+'\n'
   # overall systematics
@@ -503,9 +503,7 @@ cl95MacroName = 'roostats_cl95.C'
 # Configurable stuff here
 now = datetime.datetime.now()
 Date = now.strftime("%b%d")
-#outputDirBase = Date.lower()+'_results_symmWindowSSBOpt_10pctBGSyst_indivSigEffSysts_1pctOptMWindowMarginSmoothed'
-#outputDirBase = 'may16_results_symmWindowSSBOpt_10pctBGSyst_indivSigEffSysts_0pctOptMWindowMarginSmoothed'
-outputDirBase = 'may28_testOptimizePlots'
+outputDirBase = Date.lower()+'_results_sherpaBG_symmWindowSSBOpt_15pctBGSyst_0pctOptMWindowMarginSmoothed'
 optimizationOutputDir = outputDirBase+'_optimization'
 limitsOutputDir = outputDirBase+'_limits'
 plotsOutputDir = outputDirBase+'_plots'
@@ -519,10 +517,12 @@ optimizationFileName = optimizationOutputDir+'/'+optimizationFileNameBase
 optimizationPlotFileName = optimizationOutputDir+'/plots.root'
 # location of signal root files from CreateHistogramFiles code
 signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_deltaPhi2p8_19p6invFb/'
-# location of backgroundMC/data root files from CreateHistogramFiles code
-rootFileLocation = '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/'
+# location of data/fake root files from CreateHistogramFiles code
+rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/'
 DataSample = "ExoDiPhotonAnalyzer_PFDec14th_DataABCD"
-BackgroundMC = "diphoton_tree_MC_all"
+# location of backgroundMC root files from CreateHistogramFiles code
+rootFileBackgroundMC = '/afs/cern.ch/work/c/charaf/public/ForZeynep/histograms_diphoton_tree_MC_all.root' # SHERPA
+#rootFileBackgroundMC= '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/diphoton_tree_MC_all/histograms_diphoton_tree_MC_all.root' # PYTHIA
 kFactorFile = 'RS-KF-LHC-8TeV-y1.4442-ptcut80.dat'
 # use k-factors to compute limit (optimization always done with k-factor=1)
 UseKFactor = False

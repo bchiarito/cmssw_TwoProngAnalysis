@@ -337,7 +337,7 @@ def OptimizeWindow(modelPoint, lumi, maxWindowRange, useAsymmWindow, useSSB, roo
   return peakMass, indexMaxSsb, massRangesUsedForWindow, ssbForWindow, indexMaxSOverSqrtB, sOverSqrtBForWindow
 
 
-def OptimizeSignalMassWindows(HistogramFileLocation,modelPointArray,lumi,useAsymmWindow,useSSB,maxWindowRange,txtFile,rootFile,colorIndex,imageDir,extraWindowMargin,DataSample,BackgroundMC):
+def OptimizeSignalMassWindows(HistogramFileLocationData,HistogramFileLocationMC,modelPointArray,lumi,useAsymmWindow,useSSB,maxWindowRange,txtFile,rootFile,colorIndex,imageDir,extraWindowMargin,DataSample):
   optMinMasses = []
   optMaxMasses = []
   peakMasses = []
@@ -360,10 +360,11 @@ def OptimizeSignalMassWindows(HistogramFileLocation,modelPointArray,lumi,useAsym
   global histosdata
   # FIXME hardcoded names/locations
   # background
-  print 'using data sample:',DataSample+';','histogram file location for fakes/MC:',HistogramFileLocation
-  histogramFileJetJet = HistogramFileLocation+DataSample+"/histograms_"+DataSample+"_JetJet.root"
-  histogramFileGammaJet = HistogramFileLocation+DataSample+"/histograms_"+DataSample+"_GammaJet.root"	
-  histogramFileMC = HistogramFileLocation+BackgroundMC+"/histograms_"+BackgroundMC+".root"
+  print 'using data sample:',DataSample+';','histogram file location for fakes/data:',HistogramFileLocationData
+  print 'histogram file for backgroundMC:',HistogramFileLocationMC
+  histogramFileJetJet = HistogramFileLocationData+DataSample+"/histograms_"+DataSample+"_JetJet.root"
+  histogramFileGammaJet = HistogramFileLocationData+DataSample+"/histograms_"+DataSample+"_GammaJet.root"	
+  histogramFileMC = HistogramFileLocationMC
   fJetJethists = TFile.Open(histogramFileJetJet)
   if not fJetJethists:
     print 'file:',histogramFileJetJet,'not found; quitting'
@@ -388,7 +389,7 @@ def OptimizeSignalMassWindows(HistogramFileLocation,modelPointArray,lumi,useAsym
   backgroundHist.Add(histosJetJet)
   backgroundHist.Add(histosmc)
   backgroundHist.SetName('backgroundHist')
-  histogramFileData = HistogramFileLocation+DataSample+"/histograms_"+DataSample+".root"
+  histogramFileData = HistogramFileLocationData+DataSample+"/histograms_"+DataSample+".root"
   # open data file
   fdatahists = TFile.Open(histogramFileData)
   if not fdatahists:
@@ -470,15 +471,15 @@ def GetMinMaxMassArrays(modelPointArray, numsigmas = 3):
 
 
 # import of yield-calculating code from ExoDiPhotonAnalyzer/test/PlottingCode/CreateHistogramFiles.C
-def CalculateYieldsForMassRanges(HistogramFileLocation, modelPointArray, lumi, numsigmas, txtFile, DataSample, BackgroundMC):
+def CalculateYieldsForMassRanges(HistogramFileLocationData, HistogramFileLocationMC, modelPointArray, lumi, numsigmas, txtFile, DataSample):
   gStyle.SetOptStat("ourmei")
 
   # FIXME hardcoded names/locations
   # background
-  histogramFileData = HistogramFileLocation+DataSample+"/histograms_"+DataSample+".root"
-  histogramFileJetJet = HistogramFileLocation+DataSample+"/histograms_"+DataSample+"_JetJet.root"
-  histogramFileGammaJet = HistogramFileLocation+DataSample+"/histograms_"+DataSample+"_GammaJet.root"	
-  histogramFileMC = HistogramFileLocation+BackgroundMC+"/histograms_"+BackgroundMC+".root"
+  histogramFileData = HistogramFileLocationData+DataSample+"/histograms_"+DataSample+".root"
+  histogramFileJetJet = HistogramFileLocationData+DataSample+"/histograms_"+DataSample+"_JetJet.root"
+  histogramFileGammaJet = HistogramFileLocationData+DataSample+"/histograms_"+DataSample+"_GammaJet.root"	
+  histogramFileMC = HistogramFileLocationMC
   fdatahists = TFile.Open(histogramFileData)
   if not fdatahists:
     print 'file:',histogramFileData,'not found; quitting'
