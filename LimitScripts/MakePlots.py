@@ -293,7 +293,7 @@ def MakeOptMassWindowGraphs(coupling,masses,optMinMasses,optMaxMasses,peakMasses
   graphErrs.SetMarkerColor(colorIndex)
   graphErrs.SetLineColor(colorIndex)
   graphErrs.SetFillColor(colorIndex)
-  graphErrs.SetFillStyle(3003)
+  #graphErrs.SetFillStyle(3003)
   graphErrs.Write()
   massWindowWidths = [optMaxMass-optMinMass for optMaxMass,optMinMass in itertools.izip(optMaxMasses,optMinMasses)]
   graph = TGraph(len(masses),array.array("f",masses),array.array("f",massWindowWidths))
@@ -305,7 +305,7 @@ def MakeOptMassWindowGraphs(coupling,masses,optMinMasses,optMaxMasses,peakMasses
   graph.SetMarkerColor(colorIndex)
   graph.SetLineColor(colorIndex)
   graph.SetFillColor(colorIndex)
-  graph.SetFillStyle(3003)
+  #graph.SetFillStyle(3003)
   graph.Fit('pol1')
   graph.Write()
   myFunc = graph.GetFunction('pol1')
@@ -314,30 +314,30 @@ def MakeOptMassWindowGraphs(coupling,masses,optMinMasses,optMaxMasses,peakMasses
 
 def MakeOptMassWindowsVsMassMultiGraph(rootFile):
   rootFile.cd()
-  graph0p01Errs = MakeNullPointer(TGraphAsymmErrors)
-  graph0p05Errs = MakeNullPointer(TGraphAsymmErrors)
-  graph0p1Errs = MakeNullPointer(TGraphAsymmErrors)
+  graph0p01Errs = MakeNullPointer(TGraph)
+  graph0p05Errs = MakeNullPointer(TGraph)
+  graph0p1Errs = MakeNullPointer(TGraph)
   try:
-    rootFile.GetObject('optMassWindowsVsMassK0p01',graph0p01Errs)
-    rootFile.GetObject('optMassWindowsVsMassK0p05',graph0p05Errs)
-    rootFile.GetObject('optMassWindowsVsMassK0p1',graph0p1Errs)
+    rootFile.GetObject('optMassWindowWidthVsMassK0p01',graph0p01Errs)
+    rootFile.GetObject('optMassWindowWidthVsMassK0p05',graph0p05Errs)
+    rootFile.GetObject('optMassWindowWidthVsMassK0p1',graph0p1Errs)
   except LookupError:
     pass
   c = TCanvas()
-  c.SetName('optMassWindowsVsMassAllCanvas')
+  c.SetName('optMassWindowWidthVsMassAllCanvas')
   c.SetTitle('')
   c.cd()
   mg = TMultiGraph()
   if graph0p01Errs:
-    mg.Add(graph0p01Errs,'3')
+    mg.Add(graph0p01Errs,'lpx')
   if graph0p05Errs:
-    mg.Add(graph0p05Errs,'3')
+    mg.Add(graph0p05Errs,'lpx')
   if graph0p1Errs:
-    mg.Add(graph0p1Errs,'3')
-  mg.Draw('ap')
+    mg.Add(graph0p1Errs,'lpx')
+  mg.Draw('a')
   mg.GetXaxis().SetTitle("Mass [GeV]")
-  mg.GetYaxis().SetTitle("Opt. mass window [GeV]")
-  mg.SetName('optMassWindowsVsMassAll')
+  mg.GetYaxis().SetTitle("Opt. mass window width [GeV]")
+  mg.SetName('optMassWindowWidthVsMassAll')
   legend = TLegend(0.42,0.71,0.73,0.92)
   if graph0p01Errs:
     legend.AddEntry(graph0p01Errs," #tilde{k} = "+str(0.01),"l")
@@ -576,8 +576,8 @@ def MakeSmoothedMassWindowVsMassImages(rootFile,imageDir):
   except:
     pass
   test = TH1F("test","test",10,750,3500)
-  test.SetMinimum(600)
-  test.SetMaximum(4100)
+  test.SetMinimum(0)
+  test.SetMaximum(1000)
   test.SetStats(0)
   test.SetLineStyle(0)
   test.SetLineWidth(2)
@@ -597,12 +597,12 @@ def MakeSmoothedMassWindowVsMassImages(rootFile,imageDir):
   #
   mg = TMultiGraph()
   if symmWindowOptGraphk0p01:
-    mg.Add(symmWindowOptGraphk0p01,"p")
+    mg.Add(symmWindowOptGraphk0p01,"pl")
   if symmWindowOptGraphk0p05:
-    mg.Add(symmWindowOptGraphk0p05,"p")
+    mg.Add(symmWindowOptGraphk0p05,"pl")
   if symmWindowOptGraphk0p1:
-    mg.Add(symmWindowOptGraphk0p1,"p")
-  mg.Draw("l")
+    mg.Add(symmWindowOptGraphk0p1,"pl")
+  mg.Draw()
   #
   leg = TLegend(0.18,0.65,0.5,0.86)
   leg.SetBorderSize(0)
@@ -612,21 +612,21 @@ def MakeSmoothedMassWindowVsMassImages(rootFile,imageDir):
   leg.SetFillColor(0)
   leg.SetFillStyle(0)
   legDrawOpt = 'lp'
-  entry=leg.AddEntry(symmWindowSmoothedraphk0p01,"Smoothed Symm. Windows #tilde{k} = 0.01",legDrawSmoothed)
+  entry=leg.AddEntry(symmWindowOptGraphk0p01,"Opt Symm. Windows #tilde{k} = 0.01",legDrawOpt)
   entry.SetLineColor(2)
   entry.SetLineStyle(2)
   entry.SetLineWidth(4)
   entry.SetMarkerColor(2)
   entry.SetMarkerStyle(21)
   entry.SetMarkerSize(1)
-  entry=leg.AddEntry(symmWindowSmoothedraphk0p05,"Smoothed Symm. Windows #tilde{k} = 0.05",legDrawSmoothed)
+  entry=leg.AddEntry(symmWindowOptGraphk0p05,"Opt Symm. Windows #tilde{k} = 0.05",legDrawOpt)
   entry.SetLineColor(4)
   entry.SetLineStyle(2)
   entry.SetLineWidth(4)
   entry.SetMarkerColor(4)
   entry.SetMarkerStyle(21)
   entry.SetMarkerSize(1)
-  entry=leg.AddEntry(symmWindowSmoothedraphk0p1,"Smoothed Symm. Windows #tilde{k} = 0.1",legDrawSmoothed)
+  entry=leg.AddEntry(symmWindowOptGraphk0p1,"Opt Symm. Windows #tilde{k} = 0.1",legDrawOpt)
   entry.SetLineColor(8)
   entry.SetLineStyle(2)
   entry.SetLineWidth(4)
@@ -636,8 +636,8 @@ def MakeSmoothedMassWindowVsMassImages(rootFile,imageDir):
   leg.Draw()
   #
   test__6 = TH1F("test__6","test",10,750,3500)
-  test__6.SetMinimum(600)
-  test__6.SetMaximum(4100)
+  test__6.SetMinimum(0)
+  test__6.SetMaximum(1000)
   test__6.SetDirectory(0)
   test__6.SetStats(0)
   test__6.SetLineStyle(0)
@@ -690,24 +690,24 @@ def MakeOptMassWindowVsMassImages(rootFile,imageDir):
   c.SetFrameLineWidth(2)
   c.SetFrameBorderMode(0)
   #
-  symmWindowOptGraphk0p01 = MakeNullPointer(TGraphAsymmErrors)
-  symmWindowOptGraphk0p05 = MakeNullPointer(TGraphAsymmErrors)
-  symmWindowOptGraphk0p1 = MakeNullPointer(TGraphAsymmErrors)
+  symmWindowOptGraphk0p01 = MakeNullPointer(TGraph)
+  symmWindowOptGraphk0p05 = MakeNullPointer(TGraph)
+  symmWindowOptGraphk0p1 = MakeNullPointer(TGraph)
   try:
-    rootFile.GetObject('optMassWindowsVsMassK0p01',symmWindowOptGraphk0p01)
-    rootFile.GetObject('optMassWindowsVsMassK0p05',symmWindowOptGraphk0p05)
-    rootFile.GetObject('optMassWindowsVsMassK0p1',symmWindowOptGraphk0p1)
+    rootFile.GetObject('optMassWindowWidthVsMassK0p01',symmWindowOptGraphk0p01)
+    rootFile.GetObject('optMassWindowWidthVsMassK0p05',symmWindowOptGraphk0p05)
+    rootFile.GetObject('optMassWindowWidthVsMassK0p1',symmWindowOptGraphk0p1)
   except:
     pass
-  if symmWindowOptGraphk0p01:
-    symmWindowOptGraphk0p01.SetFillStyle(3002)
-  if symmWindowOptGraphk0p05:
-    symmWindowOptGraphk0p05.SetFillStyle(3007)
-  if symmWindowOptGraphk0p1:
-    symmWindowOptGraphk0p1.SetFillStyle(3006)
+  #if symmWindowOptGraphk0p01:
+  #  symmWindowOptGraphk0p01.SetFillStyle(3002)
+  #if symmWindowOptGraphk0p05:
+  #  symmWindowOptGraphk0p05.SetFillStyle(3007)
+  #if symmWindowOptGraphk0p1:
+  #  symmWindowOptGraphk0p1.SetFillStyle(3006)
   test = TH1F("test","test",10,750,3500)
-  test.SetMinimum(600)
-  test.SetMaximum(4100)
+  test.SetMinimum(0)
+  test.SetMaximum(1200)
   test.SetStats(0)
   test.SetLineStyle(0)
   test.SetLineWidth(2)
@@ -718,7 +718,7 @@ def MakeOptMassWindowVsMassImages(rootFile,imageDir):
   test.GetXaxis().SetLabelOffset(0.007)
   test.GetXaxis().SetTitleOffset(1.2)
   test.GetXaxis().SetTitleFont(42)
-  test.GetYaxis().SetTitle("Mass window [GeV]")
+  test.GetYaxis().SetTitle("Mass window width [GeV]")
   test.GetYaxis().SetLabelFont(42)
   test.GetYaxis().SetLabelOffset(0.007)
   test.GetYaxis().SetTitleOffset(1.5)
@@ -733,12 +733,12 @@ def MakeOptMassWindowVsMassImages(rootFile,imageDir):
   #
   mg = TMultiGraph()
   if symmWindowOptGraphk0p01:
-    mg.Add(symmWindowOptGraphk0p01,"3")
+    mg.Add(symmWindowOptGraphk0p01,'lp')
   if symmWindowOptGraphk0p05:
-    mg.Add(symmWindowOptGraphk0p05,"3")
+    mg.Add(symmWindowOptGraphk0p05,'lp')
   if symmWindowOptGraphk0p1:
-    mg.Add(symmWindowOptGraphk0p1,"3")
-  mg.Draw("l")
+    mg.Add(symmWindowOptGraphk0p1,'lp') # draw option was 3 to get the bands
+  mg.Draw()
   #
   leg = TLegend(0.18,0.65,0.5,0.86)
   leg.SetBorderSize(0)
@@ -747,7 +747,7 @@ def MakeOptMassWindowVsMassImages(rootFile,imageDir):
   leg.SetLineWidth(2)
   leg.SetFillColor(0)
   leg.SetFillStyle(0)
-  legDrawOpt = 'f'
+  legDrawOpt = 'lp'
   entry=leg.AddEntry(symmWindowOptGraphk0p01,"Opt. Symm. Windows #tilde{k} = 0.01",legDrawOpt)
   entry.SetLineColor(2)
   entry.SetLineStyle(2)
@@ -771,33 +771,33 @@ def MakeOptMassWindowVsMassImages(rootFile,imageDir):
   entry.SetMarkerSize(1)
   leg.Draw()
   #
-  test__6 = TH1F("test__6","test",10,750,3500)
-  test__6.SetMinimum(600)
-  test__6.SetMaximum(4100)
-  test__6.SetDirectory(0)
-  test__6.SetStats(0)
-  test__6.SetLineStyle(0)
-  test__6.SetLineWidth(2)
-  test__6.SetMarkerStyle(20)
-  test__6.SetMarkerSize(0.8)
-  test__6.GetXaxis().SetTitle("M_{1} [GeV]")
-  test__6.GetXaxis().SetLabelFont(42)
-  test__6.GetXaxis().SetLabelOffset(0.007)
-  test__6.GetXaxis().SetTitleOffset(1.2)
-  test__6.GetXaxis().SetTitleFont(42)
-  test__6.GetYaxis().SetTitle("Mass Window [GeV]")
-  test__6.GetYaxis().SetLabelFont(42)
-  test__6.GetYaxis().SetLabelOffset(0.007)
-  test__6.GetYaxis().SetTitleOffset(1.5)
-  test__6.GetYaxis().SetTitleFont(42)
-  test__6.GetZaxis().SetLabelFont(42)
-  test__6.GetZaxis().SetLabelOffset(0.007)
-  test__6.GetZaxis().SetLabelSize(0.05)
-  test__6.GetZaxis().SetTitleSize(0.06)
-  test__6.GetZaxis().SetTitleOffset(1.1)
-  test__6.GetZaxis().SetTitleFont(42)
-  test__6.Draw("sameaxis")
-  fileName = 'optimizedMassWindowsVsMass'
+  #test__6 = TH1F("test__6","test",10,750,3500)
+  #test__6.SetMinimum(600)
+  #test__6.SetMaximum(4100)
+  #test__6.SetDirectory(0)
+  #test__6.SetStats(0)
+  #test__6.SetLineStyle(0)
+  #test__6.SetLineWidth(2)
+  #test__6.SetMarkerStyle(20)
+  #test__6.SetMarkerSize(0.8)
+  #test__6.GetXaxis().SetTitle("M_{1} [GeV]")
+  #test__6.GetXaxis().SetLabelFont(42)
+  #test__6.GetXaxis().SetLabelOffset(0.007)
+  #test__6.GetXaxis().SetTitleOffset(1.2)
+  #test__6.GetXaxis().SetTitleFont(42)
+  #test__6.GetYaxis().SetTitle("Mass Window [GeV]")
+  #test__6.GetYaxis().SetLabelFont(42)
+  #test__6.GetYaxis().SetLabelOffset(0.007)
+  #test__6.GetYaxis().SetTitleOffset(1.5)
+  #test__6.GetYaxis().SetTitleFont(42)
+  #test__6.GetZaxis().SetLabelFont(42)
+  #test__6.GetZaxis().SetLabelOffset(0.007)
+  #test__6.GetZaxis().SetLabelSize(0.05)
+  #test__6.GetZaxis().SetTitleSize(0.06)
+  #test__6.GetZaxis().SetTitleOffset(1.1)
+  #test__6.GetZaxis().SetTitleFont(42)
+  #test__6.Draw("sameaxis")
+  fileName = 'optimizedMassWindowWidthVsMass'
   savePath = imageDir+'/'+fileName
   c.Print(savePath+'.pdf')
   c.Print(savePath+'.eps')
