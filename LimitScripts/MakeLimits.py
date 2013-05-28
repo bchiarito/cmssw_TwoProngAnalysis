@@ -24,11 +24,11 @@ from MakePlots import *
 
 # systematics for all model points
 SigPUSyst = 0.007
-SigPDFSyst = 0.022
+SigPDFSyst = 0.05
 SigScaleFactorSyst = 0.005
 SigPtSFSyst = 0.03
 # background
-BGOverallSyst = 0.1
+BGOverallSyst = 0.15
 
 # globally defined hists
 histosdata = TH1F()
