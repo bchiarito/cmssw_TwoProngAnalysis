@@ -362,8 +362,8 @@ def OptimizeSignalMassWindows(HistogramFileLocationData,HistogramFileLocationMC,
   # background
   print 'using data sample:',DataSample+';','histogram file location for fakes/data:',HistogramFileLocationData
   print 'histogram file for backgroundMC:',HistogramFileLocationMC
-  histogramFileJetJet = HistogramFileLocationData+DataSample+"/histograms_"+DataSample+"_JetJet.root"
-  histogramFileGammaJet = HistogramFileLocationData+DataSample+"/histograms_"+DataSample+"_GammaJet.root"	
+  histogramFileJetJet = HistogramFileLocationData+"/histograms_"+DataSample+"_JetJet.root"
+  histogramFileGammaJet = HistogramFileLocationData+"/histograms_"+DataSample+"_GammaJet.root"	
   histogramFileMC = HistogramFileLocationMC
   fJetJethists = TFile.Open(histogramFileJetJet)
   if not fJetJethists:
@@ -389,7 +389,7 @@ def OptimizeSignalMassWindows(HistogramFileLocationData,HistogramFileLocationMC,
   backgroundHist.Add(histosJetJet)
   backgroundHist.Add(histosmc)
   backgroundHist.SetName('backgroundHist')
-  histogramFileData = HistogramFileLocationData+DataSample+"/histograms_"+DataSample+".root"
+  histogramFileData = HistogramFileLocationData+"/histograms_"+DataSample+".root"
   # open data file
   fdatahists = TFile.Open(histogramFileData)
   if not fdatahists:
@@ -476,9 +476,9 @@ def CalculateYieldsForMassRanges(HistogramFileLocationData, HistogramFileLocatio
 
   # FIXME hardcoded names/locations
   # background
-  histogramFileData = HistogramFileLocationData+DataSample+"/histograms_"+DataSample+".root"
-  histogramFileJetJet = HistogramFileLocationData+DataSample+"/histograms_"+DataSample+"_JetJet.root"
-  histogramFileGammaJet = HistogramFileLocationData+DataSample+"/histograms_"+DataSample+"_GammaJet.root"	
+  histogramFileData = HistogramFileLocationData+"/histograms_"+DataSample+".root"
+  histogramFileJetJet = HistogramFileLocationData+"/histograms_"+DataSample+"_JetJet.root"
+  histogramFileGammaJet = HistogramFileLocationData+"/histograms_"+DataSample+"_GammaJet.root"	
   histogramFileMC = HistogramFileLocationMC
   fdatahists = TFile.Open(histogramFileData)
   if not fdatahists:
