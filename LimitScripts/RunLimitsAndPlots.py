@@ -503,7 +503,8 @@ cl95MacroName = 'roostats_cl95.C'
 # Configurable stuff here
 now = datetime.datetime.now()
 Date = now.strftime("%b%d")
-outputDirBase = Date.lower()+'_results_sherpaBG_symmWindowSSBOpt_15pctBGSyst_0pctOptMWindowMarginSmoothed'
+outputDirBase = Date.lower()+'_results_sherpaBG_noDPhi_symmWindowSSBOpt_15pctBGSyst_0pctOptMWindowMarginSmoothed'
+#outputDirBase = 'may16_results_symmWindowSSBOpt_10pctBGSyst_indivSigEffSysts_0pctOptMWindowMarginSmoothed'
 optimizationOutputDir = outputDirBase+'_optimization'
 limitsOutputDir = outputDirBase+'_limits'
 plotsOutputDir = outputDirBase+'_plots'
@@ -516,12 +517,14 @@ optimizationFileNameBase = 'optimization_k_'
 optimizationFileName = optimizationOutputDir+'/'+optimizationFileNameBase
 optimizationPlotFileName = optimizationOutputDir+'/plots.root'
 # location of signal root files from CreateHistogramFiles code
-signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_deltaPhi2p8_19p6invFb/'
+#signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_deltaPhi2p8_19p6invFb/'
+signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb/'
 # location of data/fake root files from CreateHistogramFiles code
-rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/'
-DataSample = "ExoDiPhotonAnalyzer_PFDec14th_DataABCD"
+#rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/ExoDiPhotonAnalyzer_PFDec14th_DataABCD/'
+rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/ForZeynep/' # no dPhi cut
+DataSample = 'ExoDiPhotonAnalyzer_PFDec14th_DataABCD'
 # location of backgroundMC root files from CreateHistogramFiles code
-rootFileBackgroundMC = '/afs/cern.ch/work/c/charaf/public/ForZeynep/histograms_diphoton_tree_MC_all.root' # SHERPA
+rootFileBackgroundMC = '/afs/cern.ch/work/c/charaf/public/ForZeynep/histograms_diphoton_tree_MC_all.root' # SHERPA, no dphi
 #rootFileBackgroundMC= '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/diphoton_tree_MC_all/histograms_diphoton_tree_MC_all.root' # PYTHIA
 kFactorFile = 'RS-KF-LHC-8TeV-y1.4442-ptcut80.dat'
 # use k-factors to compute limit (optimization always done with k-factor=1)
