@@ -573,6 +573,8 @@ class PlottingCodeLoop {
   TH1F* h_Diphoton_Minv_PileupShiftedUp_FineBinning;
   TH1F* h_Diphoton_Minv_PileupShiftedDown;
   TH1F* h_Diphoton_Minv_PileupShiftedDown_FineBinning;
+  TH1F* h_Diphoton_Minv_acceptedOnly;
+  TH1F* h_Diphoton_Minv_FineBinning_acceptedOnly;
   //   TH1* h_Diphoton_Minv_add;
   TH1F* h_Diphoton_Minv_log;
   TH1F* h_Diphoton_qt;
@@ -827,6 +829,8 @@ void PlottingCodeLoop::Init(TTree *tree)
   h_Diphoton_Minv_PileupShiftedDown = new TH1F("h_Diphoton_Minv_PileupShiftedDown","Diphoton Invariant Mass (pileup shifted down);M_{#gamma#gamma} [GeV/c^{2}]",199,20.,4000.);
   h_Diphoton_Minv_PileupShiftedDown_FineBinning = new TH1F("h_Diphoton_Minv_PileupShiftedDown_FineBinning","Diphoton Invariant Mass (pileup shifted down);M_{#gamma#gamma} [GeV/c^{2}]",3980,20.,4000.);
   h_Diphoton_Minv_log = new TH1F("h_Diphoton_Minv_log","Diphoton Invariant Mass;M_{#gamma#gamma} [GeV/c^{2}]",199,20.,4000.);
+  h_Diphoton_Minv_acceptedOnly = new TH1F("h_Diphoton_Minv_acceptedOnly","Diphoton Invariant Mass (accepted only);M_{#gamma#gamma} [GeV/c^{2}]",199,20.,4000.);
+  h_Diphoton_Minv_FineBinning_acceptedOnly = new TH1F("h_Diphoton_Minv_FineBinning_acceptedOnly","Diphoton Invariant Mass (accepted only);M_{#gamma#gamma} [GeV/c^{2}]",3980,20.,4000.);
   h_Diphoton_qt = new TH1F("h_Diphoton_qt","Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_Diphoton_qt_log = new TH1F("h_Diphoton_qt_log","Diphoton qt;#gamma#gamma qt [GeV]",50,0.,600.);
   h_Diphoton_deltaR = new TH1F("h_Diphoton_deltaR","Diphoton #DeltaR; #gamma#gamma #DeltaR",70,0.,7.);

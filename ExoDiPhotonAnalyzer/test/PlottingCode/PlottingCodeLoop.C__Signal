@@ -14,7 +14,7 @@ void PlottingCodeLoop::Loop()
 {
 
   bool useDataMCEffScaleFactor = true;
-  bool useDeltaPhiCut = true;
+  bool useDeltaPhiCut = false;
 
   if (fChain == 0) return;
 
@@ -216,6 +216,8 @@ void PlottingCodeLoop::Loop()
     acceptedEventsBothPhotonsNVtxVsDetEta->Fill(Photon2_detEta,Vtx_Nvtx,PUweight);
     acceptedEventsBothPhotonsGenPt->Fill(GenPhoton1_pt,PUweight);
     acceptedEventsBothPhotonsGenPt->Fill(GenPhoton2_pt,PUweight);
+    h_Diphoton_Minv_acceptedOnly->Fill(Diphoton_Minv,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+    h_Diphoton_Minv_FineBinning_acceptedOnly->Fill(Diphoton_Minv,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
     // efficiency hists
     if(Photon1_isTightPFPhoton)
     {
@@ -321,6 +323,8 @@ void PlottingCodeLoop::Loop()
   h_Diphoton_Minv_ScaleShiftedDown->Write();
   h_Diphoton_Minv_ScaleShiftedDown_FineBinning->Write();
   h_Diphoton_Minv_log->Write();
+  h_Diphoton_Minv_acceptedOnly->Write();
+  h_Diphoton_Minv_FineBinning_acceptedOnly->Write();
   h_Diphoton_qt->Write();
   h_Diphoton_qt_log->Write();
   h_Diphoton_deltaR->Write();
