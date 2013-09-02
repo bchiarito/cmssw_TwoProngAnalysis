@@ -25,8 +25,8 @@ from MakePlots import *
 # systematics for all model points
 SigPUSyst = 0.007
 SigPDFSyst = 0.05
-SigScaleFactorSyst = 0.005
-SigPtSFSyst = 0.03
+SigScaleFactorSystOneGamma = 0.005
+SigPtSFSystOneGamma = 0.03
 # background
 BGOverallSyst = 0.15
 
@@ -40,6 +40,7 @@ histosGammaJet = TH1F()
 histosGammaJetUpperError = TH1F()
 histosGammaJetLowerError = TH1F()
 signalHistogram = TH1F()
+signalAccOnlyHistogram = TH1F()
 signalTotalEventsHistogram = TH1F()
 signalEntriesTotal = 0
 signalHistogramSmeared = TH1F()
@@ -165,6 +166,7 @@ def PrintEntries(name, listEntries):
 def OpenSignalFilesAndGetHists(modelPoint):
   global histogramSignalFile
   global signalHistogram
+  global signalAccOnlyHistogram
   global signalTotalEventsHistogram
   global signalEntriesTotal
   global signalHistogramSmeared
@@ -178,6 +180,7 @@ def OpenSignalFilesAndGetHists(modelPoint):
     print 'file:',modelPoint.fileName,'not found; quitting'
     return
   signalHistogram = histogramSignalFile.Get("h_Diphoton_Minv_FineBinning")
+  signalAccOnlyHistogram = histogramSignalFile.Get("h_Diphoton_Minv_FineBinning_acceptedOnly")
   signalTotalEventsHistogram = histogramSignalFile.Get("h_nEvents")
   signalEntriesTotal = signalTotalEventsHistogram.Integral()
   signalHistogramSmeared = histogramSignalFile.Get("h_Diphoton_Minv_Smeared_FineBinning")
@@ -190,6 +193,7 @@ def OpenSignalFilesAndGetHists(modelPoint):
 def CloseSignalFilesAndDeleteHists():
   global histogramSignalFile
   global signalHistogram
+  global signalAccOnlyHistogram
   global signalTotalEventsHistogram
   global signalHistogramSmeared
   global signalHistogramScaleShiftUp
@@ -198,6 +202,7 @@ def CloseSignalFilesAndDeleteHists():
   global signalHistogramPileupShiftDown
   histogramSignalFile.Close()
   del signalHistogram
+  del signalAccOnlyHistogram
   del signalTotalEventsHistogram
   del signalHistogramSmeared
   del signalHistogramScaleShiftUp
@@ -234,7 +239,10 @@ def FillModelPointInfoForWindow(modelPoint,minBin,maxBin):
   modelPoint.optMassWindowHigh = optMassRangeHigh
   sigMScaleSyst = max(math.fabs(modelPoint.totalEffMScaleSystUp-modelPoint.totalEff)/modelPoint.totalEff,math.fabs(modelPoint.totalEffMScaleSystDown-modelPoint.totalEff)/modelPoint.totalEff)
   sigMResSyst = math.fabs(modelPoint.totalEffMResSystUp-modelPoint.totalEff)/modelPoint.totalEff
-  sigEffSyst = math.sqrt(pow(sigMScaleSyst,2)+pow(sigMResSyst,2)+pow(SigPUSyst,2)+pow(SigPDFSyst,2)+pow(SigScaleFactorSyst,2)+pow(SigPtSFSyst,2))
+  acceptance = 1.0*signalAccOnlyHistogram.Integral(minBin,maxBin)/signalEntriesTotal
+  singlePhotonEff = modelPoint.totalEff/acceptance
+  sigEffSystSingleGammaToTwoGamma = 2*singlePhotonEff*math.sqrt(pow(SigScaleFactorSystOneGamma,2)+pow(SigPtSFSystOneGamma,2))
+  sigEffSyst = math.sqrt(pow(sigMScaleSyst,2)+pow(sigMResSyst,2)+pow(SigPUSyst,2)+pow(SigPDFSyst,2)+pow(sigEffSystSingleGammaToTwoGamma,2))
   modelPoint.totalEffErrSyst = sigEffSyst*modelPoint.totalEff # make into number of events, not %
   totalEffErr = math.sqrt(pow(modelPoint.totalEffErrStat,2)+pow(modelPoint.totalEffErrSyst,2))
   bgErrSyst = BGOverallSyst
