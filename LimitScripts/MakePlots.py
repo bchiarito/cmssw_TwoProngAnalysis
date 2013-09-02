@@ -1631,7 +1631,7 @@ def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile, l
   #entry.SetMarkerSize(1.3)
   leg.AddEntry(graphPrevCMS,"CMS 2.2 fb^{-1} at 7 TeV","l")
   leg.AddEntry(graphAtlas,"ATLAS 2.2 fb^{-1} at 7 TeV","l")
-  entry=leg.AddEntry(LambdaPiGraph,"M_{D} > 10TeV","lf")
+  entry=leg.AddEntry(LambdaPiGraph,"#Lambda_{#pi} < 10TeV","lf")
   leg.SetHeader("CMS %.1f" % (lumi/1000)+" fb^{-1} at 8 TeV")
   leg.Draw()
   ## lumi
