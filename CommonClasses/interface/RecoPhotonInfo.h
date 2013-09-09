@@ -7,7 +7,7 @@
 // Also includes a Fill function to fill the struct from the appropriate objects
 // and a string that can be used to define the tree branch
 // 
-//  $Id: RecoPhotonInfo.h,v 1.15 2012/08/27 22:49:26 charaf Exp $
+//  $Id: RecoPhotonInfo.h,v 1.16 2012/12/14 16:26:48 charaf Exp $
 // 
 //********************************************************************
 
@@ -194,6 +194,10 @@ namespace ExoDiPhotons
 
     // since we will now store also 'Fakeable objects' from data
     Bool_t isFakeable;
+
+    // ID
+    Bool_t isTightDetPhoton;
+    Bool_t isTightPFPhoton;
   };
 
 
@@ -202,7 +206,7 @@ namespace ExoDiPhotons
   // obviously this needs to be kept up-to-date with the struct definition
   // but now at least this only needs to be done here in this file, 
   // rather than in each individual analyser 
-  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:r9/D:sigmaIetaIeta:sigmaEtaEta:sigmaIphiIphi:sigmaPhiPhi:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:maxRecHitTime/D:hadOverEm:hadTowerOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04:hcalIso03:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoSumPtHollow03:trkIsoSumPtSolid03:PFIsoCharged04:PFIsoNeutral04:PFIsoPhoton04:PFIsoAll04:PFIsoCharged03:PFIsoNeutral03:PFIsoPhoton03:PFIsoAll03:PFIsoCharged02:PFIsoNeutral02:PFIsoPhoton02:PFIsoAll02:rhocorPFIsoCharged04:rhocorPFIsoNeutral04:rhocorPFIsoPhoton04:rhocorPFIsoAll04:rhocorPFIsoCharged03:rhocorPFIsoNeutral03:rhocorPFIsoPhoton03:rhocorPFIsoAll03:rhocorPFIsoCharged02:rhocorPFIsoNeutral02:rhocorPFIsoPhoton02:rhocorPFIsoAll02:esRatio:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:severityLevel/I:recHitFlag/I:detId/I:iEtaY/I:iPhiX/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:hasMatchedPromptElec:isFakeable");
+  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:r9/D:sigmaIetaIeta:sigmaEtaEta:sigmaIphiIphi:sigmaPhiPhi:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:maxRecHitTime/D:hadOverEm:hadTowerOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04:hcalIso03:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoSumPtHollow03:trkIsoSumPtSolid03:PFIsoCharged04:PFIsoNeutral04:PFIsoPhoton04:PFIsoAll04:PFIsoCharged03:PFIsoNeutral03:PFIsoPhoton03:PFIsoAll03:PFIsoCharged02:PFIsoNeutral02:PFIsoPhoton02:PFIsoAll02:rhocorPFIsoCharged04:rhocorPFIsoNeutral04:rhocorPFIsoPhoton04:rhocorPFIsoAll04:rhocorPFIsoCharged03:rhocorPFIsoNeutral03:rhocorPFIsoPhoton03:rhocorPFIsoAll03:rhocorPFIsoCharged02:rhocorPFIsoNeutral02:rhocorPFIsoPhoton02:rhocorPFIsoAll02:esRatio:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:severityLevel/I:recHitFlag/I:detId/I:iEtaY/I:iPhiX/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:hasMatchedPromptElec:isFakeable:isTightDetPhoton:isTightPFPhoton");
 
 
   // useful function for ESratio
