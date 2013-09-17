@@ -16,9 +16,14 @@ void PlottingCodeLoop::Loop()
  
   cout<<"PlottingCodeLoop::Loop(): "<<fChain->GetEntries()<<" entries in Tree Chain"<<endl;
 
+ 
   Double_t PUweight = 1.;
   Double_t weightFake = 1.;      
   Double_t KFactorweight = 1.; 
+
+  bool useDataMCEffScaleFactor = true;
+  Float_t dataMCEffScaleFactorPhoton1 = 1.;
+  Float_t dataMCEffScaleFactorPhoton2 = 1.;
 
   std::vector<Float_t> FRparams;
   //   //Jet dataset(sinin)
@@ -26,15 +31,43 @@ void PlottingCodeLoop::Loop()
   //   FRparams.push_back(3105.);
   //   FRparams.push_back(2.897);
   
-//  //Jet dataset(sinin with pixel seed veto)
-//    FRparams.push_back(0.0213);
-//    FRparams.push_back(344.3);
-//    FRparams.push_back(2.336);
+  //  //Jet dataset(sinin with pixel seed veto)
+  //    FRparams.push_back(0.0213);
+  //    FRparams.push_back(344.3);
+  //    FRparams.push_back(2.336);
   
-    //Jet dataset PF ID (sinin with pixel seed veto)                                                                                               
-   FRparams.push_back(-0.01327);
-   FRparams.push_back(1.051);
-   FRparams.push_back(0.7728);
+  //Jet dataset PF ID (sinin with pixel seed veto)                                                                                               
+  //   FRparams.push_back(-0.01327);
+  //   FRparams.push_back(1.051);
+  //   FRparams.push_back(0.7728);
+
+
+  //5_10
+  FRparams.push_back(1.442184e-02);
+  FRparams.push_back(30.55271827);
+  FRparams.push_back(1.644886);
+
+  // //5_Inf
+  //   FRparams.push_back(7.97736722e-03);
+  //   FRparams.push_back(33.3303486);
+  //   FRparams.push_back(1.78443490);
+
+  // //5_20
+  //   FRparams.push_back(1.248104e-02);
+  //   FRparams.push_back(31.720425);
+  //   FRparams.push_back(1.680136);
+
+  // //5_50
+  //   FRparams.push_back(9.861030e-03);
+  //   FRparams.push_back(23.532264);
+  //   FRparams.push_back(1.672036);
+
+  // //10_20
+  //   FRparams.push_back(1.167409e-02);
+  //   FRparams.push_back(33.084811);
+  //   FRparams.push_back(1.713744);
+
+
 
   //     //Photon dataset
   //     FRparams.push_back(0.06529);
@@ -80,9 +113,7 @@ void PlottingCodeLoop::Loop()
        
       if(Diphoton_Minv < 200.) continue;
 
-      if(fabs(Diphoton_deltaPhi) < 2.8) continue;
-      //if(fabs(Diphoton_deltaPhi) < 3.0) continue;
-      //if(Diphoton_qt > 100.) continue;
+      //if(fabs(Diphoton_deltaPhi) < 2.8) continue;
 
       //set it to true by default
       Bool_t triggerPass = true;
@@ -102,54 +133,69 @@ void PlottingCodeLoop::Loop()
 	  // 	  if(Diphoton_Minv < 320.) KFactorweight = 1.73405;
 	  // 	  if(Diphoton_Minv >= 320.) KFactorweight = KFactorFunction->Eval(Diphoton_Minv);	  
 	  KFactorweight = KFactorFunction->Eval(Diphoton_Minv);
+
+	  if(useDataMCEffScaleFactor)
+	    {
+	      // scale factor numbers for tight PF, full 2012 at 8 TeV taken from our twiki page
+	      // tight PF ID * electronVeto
+	      if(fabs(Photon1_detEta) < 0.8)
+		dataMCEffScaleFactorPhoton1 = 0.9703*0.9976;
+	      else // can only be in higher eta region in EB
+		dataMCEffScaleFactorPhoton1 = 0.9764*0.9976;
+	      if(fabs(Photon2_detEta) < 0.8)
+		dataMCEffScaleFactorPhoton2 = 0.9703*0.9976;
+	      else // can only be in higher eta region in EB
+		dataMCEffScaleFactorPhoton2 = 0.9764*0.9976;
+	    }
+	
 	}//end of if sampletype == mc
 
 	//cout<<"Pileup weight "<<PUweight<<" K factor "<<KFactorweight<<endl;	
 	//cout<<"Filling TT histograms "<<endl;
 
-	h_Photon1_pt->Fill(Photon1_pt,PUweight*KFactorweight);		
-	h_Photon1_pt_log->Fill(Photon1_pt,PUweight*KFactorweight);
-	h_Photon1_eta->Fill(Photon1_eta,PUweight*KFactorweight);
-	h_Photon1_phi->Fill(Photon1_phi,PUweight*KFactorweight);
-	h_Photon2_pt->Fill(Photon2_pt,PUweight*KFactorweight);
-	h_Photon2_pt_log->Fill(Photon2_pt,PUweight*KFactorweight);
-	h_Photon2_phi->Fill(Photon2_phi,PUweight*KFactorweight);
-	h_Photon2_eta->Fill(Photon2_eta,PUweight*KFactorweight);
-	h_Diphoton_Minv->Fill(Diphoton_Minv,PUweight*KFactorweight);
-	h_Diphoton_Minv_FineBinning->Fill(Diphoton_Minv,PUweight*KFactorweight);
-	h_Diphoton_Minv_log->Fill(Diphoton_Minv,PUweight*KFactorweight);
-	h_Diphoton_qt->Fill(Diphoton_qt,PUweight*KFactorweight);
-	h_Diphoton_qt_log->Fill(Diphoton_qt,PUweight*KFactorweight);
-	h_Diphoton_deltaR->Fill(Diphoton_deltaR,PUweight*KFactorweight);
-	h_Diphoton_deltaPhi->Fill(Diphoton_deltaPhi,PUweight*KFactorweight);
-	h_Diphoton_deltaEta->Fill(Diphoton_deltaEta,PUweight*KFactorweight);
-	h_Diphoton_cosThetaStar->Fill(Diphoton_cosThetaStar,PUweight*KFactorweight);
-	h_Vtx_vx->Fill(Vtx_vx,PUweight*KFactorweight);
-	h_Vtx_vy->Fill(Vtx_vy,PUweight*KFactorweight);
-	h_Vtx_vz->Fill(Vtx_vz,PUweight*KFactorweight);
-	h_Vtx_Nvtx->Fill(Vtx_Nvtx,PUweight*KFactorweight);
-	h_Photon1_sigmaIetaIeta->Fill(Photon1_sigmaIetaIeta,PUweight*KFactorweight);
-	h_Photon1_sigmaEtaEta->Fill(Photon1_sigmaEtaEta,PUweight*KFactorweight);
-	h_Photon1_hadOverEm->Fill(Photon1_hadOverEm,PUweight*KFactorweight);
-	h_Photon1_hadOverEm_log->Fill(Photon1_hadOverEm,PUweight*KFactorweight);
-	h_Photon1_trkIsoSumPtHollow04->Fill(Photon1_trkIsoSumPtHollow04,PUweight*KFactorweight);
-	h_Photon1_trkIsoSumPtHollow04_log->Fill(Photon1_trkIsoSumPtHollow04,PUweight*KFactorweight);
-	h_Photon1_trkIsoNtrksHollow04->Fill(Photon1_trkIsoNtrksHollow04,PUweight*KFactorweight);
-	h_Photon1_hcalIso04->Fill(Photon1_hcalIso04,PUweight*KFactorweight);
-	h_Photon1_hcalIso04_log->Fill(Photon1_hcalIso04,PUweight*KFactorweight);
-	h_Photon1_ecalIso04->Fill(Photon1_ecalIso04,PUweight*KFactorweight);
-	h_Photon1_detEta->Fill(Photon1_detEta,PUweight*KFactorweight);
-	h_Photon2_sigmaIetaIeta->Fill(Photon2_sigmaIetaIeta,PUweight*KFactorweight);
-	h_Photon2_sigmaEtaEta->Fill(Photon2_sigmaEtaEta,PUweight*KFactorweight);
-	h_Photon2_hadOverEm->Fill(Photon2_hadOverEm,PUweight*KFactorweight);
-	h_Photon2_hadOverEm_log->Fill(Photon2_hadOverEm,PUweight*KFactorweight);
-	h_Photon2_trkIsoSumPtHollow04->Fill(Photon2_trkIsoSumPtHollow04,PUweight*KFactorweight);
-	h_Photon2_trkIsoSumPtHollow04_log->Fill(Photon2_trkIsoSumPtHollow04,PUweight*KFactorweight);
-	h_Photon2_trkIsoNtrksHollow04->Fill(Photon2_trkIsoNtrksHollow04,PUweight*KFactorweight);
-	h_Photon2_hcalIso04->Fill(Photon2_hcalIso04,PUweight*KFactorweight);
-	h_Photon2_hcalIso04_log->Fill(Photon2_hcalIso04,PUweight*KFactorweight);
-	h_Photon2_ecalIso04->Fill(Photon2_ecalIso04,PUweight*KFactorweight);
-	h_Photon2_detEta->Fill(Photon2_detEta,PUweight*KFactorweight);
+	h_Photon1_pt->Fill(Photon1_pt,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);		
+	h_Photon1_pt_log->Fill(Photon1_pt,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon1_eta->Fill(Photon1_eta,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon1_phi->Fill(Photon1_phi,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_pt->Fill(Photon2_pt,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_pt_log->Fill(Photon2_pt,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_phi->Fill(Photon2_phi,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_eta->Fill(Photon2_eta,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Diphoton_Minv->Fill(Diphoton_Minv,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Diphoton_Minv_FineBinning->Fill(Diphoton_Minv,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Diphoton_Minv_log->Fill(Diphoton_Minv,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Diphoton_qt->Fill(Diphoton_qt,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Diphoton_qt_log->Fill(Diphoton_qt,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Diphoton_deltaR->Fill(Diphoton_deltaR,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Diphoton_deltaPhi->Fill(Diphoton_deltaPhi,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Diphoton_deltaEta->Fill(Diphoton_deltaEta,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Diphoton_cosThetaStar->Fill(Diphoton_cosThetaStar,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Vtx_vx->Fill(Vtx_vx,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Vtx_vy->Fill(Vtx_vy,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Vtx_vz->Fill(Vtx_vz,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Vtx_Nvtx->Fill(Vtx_Nvtx,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon1_sigmaIetaIeta->Fill(Photon1_sigmaIetaIeta,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon1_sigmaEtaEta->Fill(Photon1_sigmaEtaEta,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon1_hadOverEm->Fill(Photon1_hadOverEm,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon1_hadOverEm_log->Fill(Photon1_hadOverEm,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon1_trkIsoSumPtHollow04->Fill(Photon1_trkIsoSumPtHollow04,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon1_trkIsoSumPtHollow04_log->Fill(Photon1_trkIsoSumPtHollow04,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon1_trkIsoNtrksHollow04->Fill(Photon1_trkIsoNtrksHollow04,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon1_hcalIso04->Fill(Photon1_hcalIso04,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon1_hcalIso04_log->Fill(Photon1_hcalIso04,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon1_ecalIso04->Fill(Photon1_ecalIso04,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon1_detEta->Fill(Photon1_detEta,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_sigmaIetaIeta->Fill(Photon2_sigmaIetaIeta,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_sigmaEtaEta->Fill(Photon2_sigmaEtaEta,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_hadOverEm->Fill(Photon2_hadOverEm,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_hadOverEm_log->Fill(Photon2_hadOverEm,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_trkIsoSumPtHollow04->Fill(Photon2_trkIsoSumPtHollow04,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_trkIsoSumPtHollow04_log->Fill(Photon2_trkIsoSumPtHollow04,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_trkIsoNtrksHollow04->Fill(Photon2_trkIsoNtrksHollow04,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_hcalIso04->Fill(Photon2_hcalIso04,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_hcalIso04_log->Fill(Photon2_hcalIso04,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_ecalIso04->Fill(Photon2_ecalIso04,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+	h_Photon2_detEta->Fill(Photon2_detEta,PUweight*KFactorweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
 
 	//Why is the fake rate applied here ???
 
