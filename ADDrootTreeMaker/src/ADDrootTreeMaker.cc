@@ -27,16 +27,14 @@ Implementation:
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
-#include "FWCore/ParameterSet/interface/InputTag.h"
+#include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-
-#include "MyAnaSpace/ADDrootTreeMaker/interface/ADDrootTreeMaker.h"
 
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h" 
 #include "DataFormats/JetReco/interface/GenJet.h"
 
-#include "FWCore/Framework/interface/TriggerNames.h"
+#include "FWCore/Common/interface/TriggerNames.h"
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "DataFormats/EgammaCandidates/interface/Photon.h"
 
@@ -46,7 +44,7 @@ Implementation:
 #include "TMath.h"
 #include "TLorentzVector.h"
 #include <iostream>
-#include "../interface/ADDrootTreeMaker.h"
+#include "DiPhotonAnalysis/ADDrootTreeMaker/interface/ADDrootTreeMaker.h"
 
 #include <sstream>
 
@@ -279,7 +277,7 @@ void ADDrootTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& 
 	edm::InputTag trigResult("TriggerResults::HLT") ;
 	iEvent.getByLabel(trigResult, hltresults) ;
 
-	edm::TriggerNames triggerNames ;
+  const edm::TriggerNames& triggerNames = iEvent.triggerNames(*hltresults);
 
 	HLT_IsoPhoton40_L1R_ = 0 ;
   HLT_Photon25_L1R_ = 0 ;
@@ -289,7 +287,7 @@ void ADDrootTreeMaker::analyze(const edm::Event& iEvent, const edm::EventSetup& 
     int ntrigs = hltresults->size();
     if (ntrigs==0){std::cout << "%HLTInfo -- No trigger name given in TriggerResults of the input " << std::endl;}
 
-    triggerNames.init(*hltresults);
+    //triggerNames.init(*hltresults);
 
     for (int itrig = 0; itrig != ntrigs; ++itrig){
 
@@ -706,14 +704,14 @@ float ADDrootTreeMaker::dR(double eta1, double phi1, double eta2, double phi2) {
 
 float ADDrootTreeMaker::minDr(double eta, double phi, const std::vector<pat::Jet>& jets) {
 	float minDrVal = 100 ;
-	for (int i = 0 ; i < jets.size() ; ++i)
+	for (unsigned int i = 0 ; i < jets.size() ; ++i)
 		if (jets[i].et() > 40 && dR(eta, phi, jets[i].eta(), jets[i].phi()) < minDrVal) minDrVal = dR(eta, phi, jets[i].eta(), jets[i].phi()) ;
 	return minDrVal ;
 }
 
 float ADDrootTreeMaker::minDr(double eta, double phi, const std::vector<pat::Photon>& phos) {
 	float minDrVal = 100 ;
-	for (int i = 0 ; i < phos.size() ; ++i)
+	for (unsigned int i = 0 ; i < phos.size() ; ++i)
 		if (phos[i].et() > 40 && dR(eta, phi, phos[i].eta(), phos[i].phi()) < minDrVal) minDrVal = dR(eta, phi, phos[i].eta(), phos[i].phi()) ;
 	return minDrVal ;
 }

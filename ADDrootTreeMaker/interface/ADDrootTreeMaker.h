@@ -85,7 +85,7 @@ class ADDrootTreeMaker : public edm::EDAnalyzer {
 	int nGenPho_ ;
 	float genE_pho_[maxGenPho], genPt_pho_[maxGenPho], genEta_pho_[maxGenPho], genPhi_pho_[maxGenPho] ;
 	int genPdgId_pho_[maxGenPho], motherGenPdgId_pho_[maxGenPho], motherGenStatus_pho_[maxGenPho];
-	static const int maxPhos = 100 ;
+	static const unsigned int maxPhos = 100 ;
 	int nPhos_ ;
 	float eta_recPho_[maxPhos], phi_recPho_[maxPhos], pt_recPho_[maxPhos], e_recPho_[maxPhos], p_recPho_[maxPhos], e5x5_recPho_[maxPhos], e3x3_recPho_[maxPhos] ;
 	int nRecoPhos_ ;
@@ -103,7 +103,7 @@ class ADDrootTreeMaker : public edm::EDAnalyzer {
 	int genPdgId_recPho_[maxPhos], motherGenPdgId_recPho_[maxPhos] ;
 	//float invMass_[maxPhotonPair] ;
 	//static const int maxjets = 100 ;
-	static const int maxJets = 100 ;
+	static const unsigned int maxJets = 100 ;
 	int nJets_ ;
 	float eta_recJet_[maxJets], phi_recJet_[maxJets], et_recJet_[maxJets], e_recJet_[maxJets], p_recJet_[maxJets], emf_recJet_[maxJets] ;
 	float genEta_recJet_[maxJets], genPhi_recJet_[maxJets], genEt_recJet_[maxJets], genE_recJet_[maxJets], genP_recJet_[maxJets] ;
@@ -116,7 +116,7 @@ class ADDrootTreeMaker : public edm::EDAnalyzer {
 	float eta_genPart_[maxMCpart], phi_genPart_[maxMCpart], pt_genPart_[maxMCpart], e_genPart_[maxMCpart] ;
 	int pdgId_genPart_[maxMCpart], status_genPart_[maxMCpart], motherPdgId_genPart_[maxMCpart], motherStatus_genPart_[maxMCpart], grandMotherPdgId_genPart_[maxMCpart], grandMotherStatus_genPart_[maxMCpart] ;
 	
-	static const int maxGenJet = 1000 ;
+	static const unsigned int maxGenJet = 1000 ;
 	int nGenJet_ ;
 	float eta_genJet_[maxGenJet], phi_genJet_[maxGenJet], et_genJet_[maxGenJet], e_genJet_[maxGenJet] ; 
 	

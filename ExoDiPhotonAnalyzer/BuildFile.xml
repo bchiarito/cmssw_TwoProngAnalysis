@@ -16,6 +16,3 @@
 <use   name="SimDataFormats/PileupSummaryInfo"/>
 <use   name="PhysicsTools/Utilities"/>
 <flags   EDM_PLUGIN="1"/>
-<export>
-  <lib   name="1"/>
-</export>

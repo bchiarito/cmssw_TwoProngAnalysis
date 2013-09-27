@@ -498,7 +498,7 @@ ExoDiPhotonBkgAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup&
      // not in gap
      // not a spike
      // min pt cut  (for all photons)
-     if(ExoDiPhotons::isTightPhoton(&(*recoPhoton)) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt) ) {
+     if(ExoDiPhotons::isTightPhoton(&(*recoPhoton),rho) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt) ) {
 
      // fill all reco photons for bkg study
      //     if(true) {
