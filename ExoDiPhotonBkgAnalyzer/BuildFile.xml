@@ -13,4 +13,5 @@
 <use   name="CondFormats/DataRecord"/>
 <use   name="Geometry/CaloGeometry"/>
 <use   name="Geometry/EcalAlgo"/>
+<use   name="PhysicsTools/Utilities"/>
 <flags   EDM_PLUGIN="1"/>
