@@ -5,5 +5,3 @@
 <use   name="DataFormats/Math"/>
 <use   name="PhysicsTools/UtilAlgos"/>
 <flags   EDM_PLUGIN="1"/>
-<export>
-</export>
