@@ -146,12 +146,10 @@ class ExoDiPhotonSignalMCAnalyzer : public edm::EDAnalyzer {
       edm::LumiReWeighting    LumiWeights;
 
       bool               fkRemoveSpikes;   // option to remove spikes before filling tree
-      bool               fkRequireTightPhotons;  // option to require tight photon id in tree
       string             PUMCFileName;
       string             PUDataFileName;
       string             PUDataHistName;
       string             PUMCHistName;
-      string             PFIDCategory;   
 
 
     
@@ -216,12 +214,10 @@ ExoDiPhotonSignalMCAnalyzer::ExoDiPhotonSignalMCAnalyzer(const edm::ParameterSet
     fRho25Tag(iConfig.getParameter<edm::InputTag>("rho25Correction")),
     pileupCollectionTag(iConfig.getUntrackedParameter<edm::InputTag>("pileupCorrection")),
     fkRemoveSpikes(iConfig.getUntrackedParameter<bool>("removeSpikes")),
-    fkRequireTightPhotons(iConfig.getUntrackedParameter<bool>("requireTightPhotons")),
     PUMCFileName(iConfig.getUntrackedParameter<string>("PUMCFileName")),
     PUDataFileName(iConfig.getUntrackedParameter<string>("PUDataFileName")),
     PUDataHistName(iConfig.getUntrackedParameter<string>("PUDataHistName")),
-    PUMCHistName(iConfig.getUntrackedParameter<string>("PUMCHistName")),
-    PFIDCategory(iConfig.getUntrackedParameter<string>("PFIDCategory"))
+    PUMCHistName(iConfig.getUntrackedParameter<string>("PUMCHistName"))
 
 {
    //now do what ever initialization is needed
@@ -498,8 +494,6 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    }
    
    //cout << "N photons = " << photonColl->size() <<endl;
-
-   TString CategoryPFID(PFIDCategory.c_str());
 
 //      //   photon loop
 //    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
@@ -791,12 +785,24 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
     
     // test the conversion safe electron veto
     bool passElecVeto = !ConversionTools::hasMatchedPromptElectron(matchPhoton1->superCluster(), hElectrons, hConversions, beamSpot.position());
-    if(ExoDiPhotons::isPFTightPhoton(&(*matchPhoton1),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,passElecVeto,CategoryPFID) && 
+    if(ExoDiPhotons::isPFTightPhoton(&(*matchPhoton1),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,passElecVeto,TString("Tight")) && 
     !ExoDiPhotons::isGapPhoton(&(*matchPhoton1)) && 
     !ExoDiPhotons::isASpike(&(*matchPhoton1))  )
       fRecoPhotonInfo1.isTightPFPhoton = true;
     else
       fRecoPhotonInfo1.isTightPFPhoton = false;
+    if(ExoDiPhotons::isPFTightPhoton(&(*matchPhoton1),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,passElecVeto,TString("Medium")) && 
+    !ExoDiPhotons::isGapPhoton(&(*matchPhoton1)) && 
+    !ExoDiPhotons::isASpike(&(*matchPhoton1))  )
+      fRecoPhotonInfo1.isMediumPFPhoton = true;
+    else
+      fRecoPhotonInfo1.isMediumPFPhoton = false;
+    if(ExoDiPhotons::isPFTightPhoton(&(*matchPhoton1),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,passElecVeto,TString("Loose")) && 
+    !ExoDiPhotons::isGapPhoton(&(*matchPhoton1)) && 
+    !ExoDiPhotons::isASpike(&(*matchPhoton1))  )
+      fRecoPhotonInfo1.isLoosePFPhoton = true;
+    else
+      fRecoPhotonInfo1.isLoosePFPhoton = false;
    }
    else {
      //     cout << "No match to signal photon1!" <<endl;
@@ -887,13 +893,24 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
     
     // test the conversion safe electron veto
     bool passElecVeto = !ConversionTools::hasMatchedPromptElectron(matchPhoton2->superCluster(), hElectrons, hConversions, beamSpot.position());
-
-    if(ExoDiPhotons::isPFTightPhoton(matchPhoton2,rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,passElecVeto,CategoryPFID) && 
-    !ExoDiPhotons::isGapPhoton(matchPhoton2) && 
-    !ExoDiPhotons::isASpike(matchPhoton2)  )
+    if(ExoDiPhotons::isPFTightPhoton(&(*matchPhoton2),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,passElecVeto,TString("Tight")) && 
+    !ExoDiPhotons::isGapPhoton(&(*matchPhoton2)) && 
+    !ExoDiPhotons::isASpike(&(*matchPhoton2))  )
       fRecoPhotonInfo2.isTightPFPhoton = true;
     else
       fRecoPhotonInfo2.isTightPFPhoton = false;
+    if(ExoDiPhotons::isPFTightPhoton(&(*matchPhoton2),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,passElecVeto,TString("Medium")) && 
+    !ExoDiPhotons::isGapPhoton(&(*matchPhoton2)) && 
+    !ExoDiPhotons::isASpike(&(*matchPhoton2))  )
+      fRecoPhotonInfo2.isMediumPFPhoton = true;
+    else
+      fRecoPhotonInfo2.isMediumPFPhoton = false;
+    if(ExoDiPhotons::isPFTightPhoton(&(*matchPhoton2),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,passElecVeto,TString("Loose")) && 
+    !ExoDiPhotons::isGapPhoton(&(*matchPhoton2)) && 
+    !ExoDiPhotons::isASpike(&(*matchPhoton2))  )
+      fRecoPhotonInfo2.isLoosePFPhoton = true;
+    else
+      fRecoPhotonInfo2.isLoosePFPhoton = false;
    }
    else {
      //     cout << "No match to signal photon2!" <<endl;
