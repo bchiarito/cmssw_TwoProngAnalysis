@@ -433,6 +433,8 @@ class PlottingCodeLoop {
   Bool_t          Photon1_isFakeable;
   Bool_t          Photon1_isTightDetPhoton;
   Bool_t          Photon1_isTightPFPhoton;
+  Bool_t          Photon1_isMediumPFPhoton;
+  Bool_t          Photon1_isLoosePFPhoton;
   Double_t        Photon2_pt;
   Double_t        Photon2_eta;
   Double_t        Photon2_phi;
@@ -524,6 +526,8 @@ class PlottingCodeLoop {
   Bool_t          Photon2_isFakeable;
   Bool_t          Photon2_isTightDetPhoton;
   Bool_t          Photon2_isTightPFPhoton;
+  Bool_t          Photon2_isMediumPFPhoton;
+  Bool_t          Photon2_isLoosePFPhoton;
   Double_t        DiphotonGen_Minv;
   Double_t        DiphotonGen_qt;
   Double_t        DiphotonGen_deltaPhi;
