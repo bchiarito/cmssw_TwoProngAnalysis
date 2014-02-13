@@ -25,20 +25,21 @@ from MakePlots import *
 # systematics for all model points
 SigPUSyst = 0.007
 SigPDFSyst = 0.05
-SigScaleFactorSystOneGamma = 0.005
+#SigScaleFactorSystOneGamma = 0.005
+SigScaleFactorSystOneGamma = 0.0014
 SigPtSFSystOneGamma = 0.03
-# background
-BGOverallSyst = 0.15
+# background --> take from hists in root files
 
 # globally defined hists
 histosdata = TH1F()
 histosmc = TH1F()
+histosmcUpperError = TH1F()
 histosJetJet = TH1F()
 histosJetJetUpperError = TH1F()
-histosJetJetLowerError = TH1F()
+#histosJetJetLowerError = TH1F()
 histosGammaJet = TH1F()
 histosGammaJetUpperError = TH1F()
-histosGammaJetLowerError = TH1F()
+#histosGammaJetLowerError = TH1F()
 signalHistogram = TH1F()
 signalAccOnlyHistogram = TH1F()
 signalTotalEventsHistogram = TH1F()
@@ -54,9 +55,9 @@ histogramSignalFile = 0
 def ComputeLimits(cl95MacroPath,lumi,lumiErr,modelPointArray,fileName,useKFactor):
   if not os.path.isdir('cls_plots'):
     os.mkdir('cls_plots')
-  # Get setup script path
-  setupScriptPath = cl95MacroPath.split('root')[0]
-  setupScriptPath+='setup/lxplus_standalone_setup.sh'
+  ## Get setup script path
+  #setupScriptPath = cl95MacroPath.split('root')[0]
+  #setupScriptPath+='setup/lxplus_standalone_setup.sh'
   for modelPoint in modelPointArray:
     # save some info
     thisMPFileName = modelPoint.fileName
@@ -121,6 +122,7 @@ def ComputeLimits(cl95MacroPath,lumi,lumiErr,modelPointArray,fileName,useKFactor
   print 'Used StatisticalTools/RooStatsRoutine CVS tag:',GetRooStatsMacroCVSTag(cl95MacroPath)
 
 
+# FIXME: make git-compatible somehow
 def GetRooStatsMacroCVSTag(cl95MacroPath):
   cl95Split = cl95MacroPath.split('/')
   cl95MacroName = cl95Split[len(cl95Split)-1]
@@ -217,16 +219,21 @@ def FillModelPointInfoForWindow(modelPoint,minBin,maxBin):
   entriesData = histosdata.Integral(minBin,maxBin)
   errGamJet = Double(0) #ROOT.Double()
   entGamJet = histosGammaJet.IntegralAndError(minBin,maxBin,errGamJet)
+  errSystGamJet = histosGammaJetUpperError.Integral(minBin,maxBin)
   errJetJet = Double(0)
   entJetJet = histosJetJet.IntegralAndError(minBin,maxBin,errJetJet)
+  errSystJetJet = histosJetJetUpperError.Integral(minBin,maxBin)
   errMC = Double(0)
   entMC = histosmc.IntegralAndError(minBin,maxBin,errMC)
+  errSystMC = histosmcUpperError.Integral(minBin,maxBin)
   entryBG = entGamJet+entJetJet+entMC
-  errorBG = math.sqrt(errGamJet*errGamJet+errJetJet*errJetJet+errMC*errMC)
+  errorStatBG = math.sqrt(errGamJet*errGamJet+errJetJet*errJetJet+errMC*errMC)
   modelPoint.nDataObs = entriesData
   modelPoint.nBackground = entryBG
   # FIXME: take the upper limit...in case of zero background--1.14?
-  modelPoint.nBackgroundErrStat = errorBG
+  modelPoint.nBackgroundErrStat = errorStatBG
+  modelPoint.nBackgroundErrSyst = math.sqrt(errSystGamJet*errSystGamJet+errSystJetJet*errSystJetJet+errSystMC*errSystMC)
+  totalBGErr = math.sqrt(pow(modelPoint.nBackgroundErrStat,2)+pow(modelPoint.nBackgroundErrSyst,2))
   modelPoint.totalEff = 1.0*signalHistogram.Integral(minBin,maxBin)/signalEntriesTotal
   modelPoint.totalEffErrStat = math.sqrt(modelPoint.totalEff*(1-modelPoint.totalEff)/signalEntriesTotal)
   modelPoint.totalEffMScaleSystUp = 1.0*signalHistogramScaleShiftUp.Integral(minBin,maxBin)/signalEntriesTotal
@@ -245,9 +252,6 @@ def FillModelPointInfoForWindow(modelPoint,minBin,maxBin):
   sigEffSyst = math.sqrt(pow(sigMScaleSyst,2)+pow(sigMResSyst,2)+pow(SigPUSyst,2)+pow(SigPDFSyst,2)+pow(sigEffSystSingleGammaToTwoGamma,2))
   modelPoint.totalEffErrSyst = sigEffSyst*modelPoint.totalEff # make into number of events, not %
   totalEffErr = math.sqrt(pow(modelPoint.totalEffErrStat,2)+pow(modelPoint.totalEffErrSyst,2))
-  bgErrSyst = BGOverallSyst
-  modelPoint.nBackgroundErrSyst = bgErrSyst*modelPoint.nBackground # make into number of events, not %
-  totalBGErr = math.sqrt(pow(modelPoint.nBackgroundErrStat,2)+pow(modelPoint.nBackgroundErrSyst,2))
   optMassLow = modelPoint.optMassWindowLow
   optMassHigh = modelPoint.optMassWindowHigh
   peakBin = signalHistogram.GetMaximumBin()
@@ -328,10 +332,10 @@ def OptimizeWindow(modelPoint, lumi, maxWindowRange, useAsymmWindow, useSSB, roo
     optMassRangeHigh = (1+extraMargin)*massRangesUsedForWindow[indexMaxSOverSqrtB][1]
   minBin = histosdata.FindBin(optMassRangeLow)
   maxBin = histosdata.FindBin(optMassRangeHigh)-1 # will take the next bin without -1
-  # Fill the model point
-  FillModelPointInfoForWindow(modelPoint,minBin,maxBin)
   print 'opt massRange=',optMassRangeLow,'-',optMassRangeHigh,'(added extra margin of',extraMargin,')'
   print 'opt +extraMargin(if any) binRange =',minBin,'-',maxBin
+  # Fill the model point
+  FillModelPointInfoForWindow(modelPoint,minBin,maxBin)
   peakMass = signalHistogram.GetBinLowEdge(peakBin)
   backgroundHist = histosGammaJet.Clone()
   backgroundHist.Add(histosJetJet)
@@ -358,12 +362,13 @@ def OptimizeSignalMassWindows(HistogramFileLocationData,HistogramFileLocationMC,
   global fGammaJethists
   global fMChists
   global histosmc
+  global histosmcUpperError
   global histosJetJet
   global histosJetJetUpperError
-  global histosJetJetLowerError
+  #global histosJetJetLowerError
   global histosGammaJet
   global histosGammaJetUpperError
-  global histosGammaJetLowerError
+  #global histosGammaJetLowerError
   global fdatahists
   global histosdata
   # FIXME hardcoded names/locations
@@ -387,12 +392,14 @@ def OptimizeSignalMassWindows(HistogramFileLocationData,HistogramFileLocationMC,
     return
   histosmc = fMChists.Get("h_Diphoton_Minv_FineBinning")
   histosmc.Scale(lumi)
+  histosmcUpperError = fMChists.Get("h_Diphoton_Minv_FineBinning_UpperError")
+  histosmcUpperError.Scale(lumi)
   histosJetJet = fJetJethists.Get("h_JetJet_minv_FineBinning")
   histosJetJetUpperError = fJetJethists.Get("h_JetJet_minv_UpperError")
-  histosJetJetLowerError = fJetJethists.Get("h_JetJet_minv_LowerError")
+  #histosJetJetLowerError = fJetJethists.Get("h_JetJet_minv_LowerError")
   histosGammaJet = fGammaJethists.Get("h_GammaJet_minv_FineBinning")
   histosGammaJetUpperError = fGammaJethists.Get("h_GammaJet_minv_UpperError")
-  histosGammaJetLowerError = fGammaJethists.Get("h_GammaJet_minv_LowerError")
+  #histosGammaJetLowerError = fGammaJethists.Get("h_GammaJet_minv_LowerError")
   backgroundHist = histosGammaJet.Clone()
   backgroundHist.Add(histosJetJet)
   backgroundHist.Add(histosmc)
@@ -517,7 +524,7 @@ def CalculateYieldsForMassRanges(HistogramFileLocationData, HistogramFileLocatio
   #print "Getting Jet+Jet histograms"
   histosJetJet = fJetJethists.Get("h_JetJet_minv_FineBinning")
   histosJetJetUpperError = fJetJethists.Get("h_JetJet_minv_UpperError")
-  histosJetJetLowerError = fJetJethists.Get("h_JetJet_minv_LowerError")
+  #histosJetJetLowerError = fJetJethists.Get("h_JetJet_minv_LowerError")
   #print "histo",histosJetJet.GetName(),histosJetJet.GetEntries(),"entries",histosJetJet.Integral(),"(integral)"
   #print "histo",histosJetJetUpperError.GetName(),histosJetJetUpperError.GetEntries(),"entries",histosJetJetUpperError.Integral(),"(integral)"
   #print "histo",histosJetJetLowerError.GetName(),histosJetJetLowerError.GetEntries(),"entries",histosJetJetLowerError.Integral(),"(integral)"
@@ -525,7 +532,7 @@ def CalculateYieldsForMassRanges(HistogramFileLocationData, HistogramFileLocatio
   #print "Getting Gamma+Jet histograms"
   histosGammaJet = fGammaJethists.Get("h_GammaJet_minv_FineBinning")
   histosGammaJetUpperError = fGammaJethists.Get("h_GammaJet_minv_UpperError")
-  histosGammaJetLowerError = fGammaJethists.Get("h_GammaJet_minv_LowerError")
+  #histosGammaJetLowerError = fGammaJethists.Get("h_GammaJet_minv_LowerError")
   #print "histo",histosGammaJet.GetName(),histosGammaJet.GetEntries(),"entries",histosGammaJet.Integral(),"(integral)"
   #print "histo",histosGammaJetUpperError.GetName(),histosGammaJetUpperError.GetEntries(),"entries",histosGammaJetUpperError.Integral(),"(integral)"
   #print "histo",histosGammaJetLowerError.GetName(),histosGammaJetLowerError.GetEntries(),"entries",histosGammaJetLowerError.Integral(),"(integral)"
