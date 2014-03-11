@@ -212,7 +212,8 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   print 'Run for coupling 0.01'
   with open(limitsFileName+'0p01.txt', 'r') as file:
     readModelPoints0p01 = ReadFromFile(file)
-  PlotBands(readModelPoints0p01,lumi,rootFile,plotsOutputDir)
+  for plotObsLim in [True,False]:
+    PlotBands(readModelPoints0p01,plotObsLim,lumi,rootFile,plotsOutputDir)
   m0p01,xs,mExp0p01,xsE = GetMassLimit(readModelPoints0p01)
   print string.ljust('Coupling: '+str(readModelPoints0p01[0].coupling),14),
   print ' Observed limit mass: %0.2f'%m0p01
@@ -223,7 +224,8 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   print 'Run for coupling 0.05'
   with open(limitsFileName+'0p05.txt', 'r') as file:
     readModelPoints0p05 = ReadFromFile(file)
-  PlotBands(readModelPoints0p05,lumi,rootFile,plotsOutputDir)
+  for plotObsLim in [True,False]:
+    PlotBands(readModelPoints0p05,plotObsLim,lumi,rootFile,plotsOutputDir)
   m0p05,xs,mExp0p05,xsE = GetMassLimit(readModelPoints0p05)
   print string.ljust('Coupling: '+str(readModelPoints0p05[0].coupling),14),
   print ' Observed limit mass: %0.2f'%m0p05
@@ -234,7 +236,8 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   print 'Run for coupling 0.1'
   with open(limitsFileName+'0p1.txt', 'r') as file:
     readModelPoints0p1 = ReadFromFile(file)
-  PlotBands(readModelPoints0p1,lumi,rootFile,plotsOutputDir)
+  for plotObsLim in [True,False]:
+    PlotBands(readModelPoints0p1,plotObsLim,lumi,rootFile,plotsOutputDir)
   m0p1,xs,mExp0p1,xsE = GetMassLimit(readModelPoints0p1)
   print string.ljust('Coupling: '+str(readModelPoints0p1[0].coupling),14),
   print ' Observed limit mass: %0.2f'%m0p1
@@ -276,11 +279,12 @@ def DoTablesAllPoints(lumi):
   with open(limitsFileName+'0p1.txt', 'r') as file:
     readModelPoints0p1 = ReadFromFile(file)
   # now make table output
-  tableTitleString=string.ljust('Coupling',9)+string.ljust('Mass',6)+string.ljust('Eff.',8)
-  tableTitleString+=string.center('Exp. Sig.',12)
-  tableTitleString+=string.center('Exp. Bkg.',42)+string.center('Obs.',10)
-  tableTitleString+=string.center('Th. XSec',10)+string.center('Exp. Lim.',12)
-  tableTitleString+=string.center('Obs. Lim.',10)
+  tableTitleString=string.ljust('Kmpl',6)+string.ljust('Mass',6)+string.ljust('Window',11)
+  tableTitleString+=string.ljust('Eff.',8)
+  tableTitleString+=string.ljust('ExpSig.',9)
+  tableTitleString+=string.center('ExpBkg.',41)+string.center('Obs.',10)
+  tableTitleString+=string.center('ThXSec',10)+string.center('ExpLim.',12)
+  tableTitleString+=string.center('ObsLim.',12)
   print
   print tableTitleString
   for modelPoint in readModelPoints0p01+readModelPoints0p05+readModelPoints0p1:
@@ -289,7 +293,7 @@ def DoTablesAllPoints(lumi):
   twikiTitleString='|* '+string.ljust('Coupling',9)+' *|* '+string.ljust('Mass [GeV]',10)+' *|* '
   twikiTitleString+='Mass Window *|* '
   twikiTitleString+=string.ljust('Efficiency',8)+' *|* '
-  twikiTitleString+=string.center('Exp. Sig. Evts.',9)+' *|* '
+  twikiTitleString+=string.center('Exp. Sig. Evts.',10)+' *|* '
   twikiTitleString+=string.center('Exp. Bkg. Evts.',17)+' *|* '+string.center('Obs. Data',10)+' *|* '
   twikiTitleString+=string.center('Exp. Lim. [pb]',13)+' *|* '
   twikiTitleString+=string.center('Obs. Lim. [pb]',13)+' *|'
@@ -298,14 +302,14 @@ def DoTablesAllPoints(lumi):
   for modelPoint in readModelPoints0p01+readModelPoints0p05+readModelPoints0p1:
     print modelPoint.TwikiTableLine(lumi)
   # twiki mass limits
-  twikiMassTitleString = '|* Coupling *|* Mass Limit [GeV] *|'
+  twikiMassTitleString = '|* Coupling *|* Expected XSec Limit [pb] *|* Observed XSec Limit [pb] *|* Expected Mass Limit [GeV] *|* Observed Mass Limit [GeV] *|'
   twikiLine = ''
   massLimObs, xsLimObs, massLimExp, xsLimExp = GetMassLimit(readModelPoints0p01)
-  twikiLine+='| 0.01 |'+str(int(massLimObs))+'|\n'
+  twikiLine+='| 0.01 | '+str(round(xsLimExp,5))+' | '+str(round(xsLimObs,5))+' | '+str(int(massLimExp))+' | '+str(int(massLimObs))+' |\n'
   massLimObs, xsLimObs, massLimExp, xsLimExp = GetMassLimit(readModelPoints0p05)
-  twikiLine+='| 0.05 |'+str(int(massLimObs))+'|\n'
+  twikiLine+='| 0.05 | '+str(round(xsLimExp,5))+' | '+str(round(xsLimObs,5))+' | '+str(int(massLimExp))+' | '+str(int(massLimObs))+' |\n'
   massLimObs, xsLimObs, massLimExp, xsLimExp = GetMassLimit(readModelPoints0p1)
-  twikiLine+='| 0.1 |'+str(int(massLimObs))+'|'
+  twikiLine+='| 0.1  | '+str(round(xsLimExp,5))+' | '+str(round(xsLimObs,5))+' | '+str(int(massLimExp))+' | '+str(int(massLimObs))+' |\n'
   print
   print twikiMassTitleString
   print twikiLine
@@ -463,9 +467,9 @@ def GetConfigurationString():
   # overall systematics
   configString+='SigPUSyst='+str(SigPUSyst)+'\n'
   configString+='SigPDFSyst='+str(SigPDFSyst)+'\n'
-  configString+='SigScaleFactorSyst='+str(SigScaleFactorSyst)+'\n'
-  configString+='SigPtSFSyst='+str(SigPtSFSyst)+'\n'
-  configString+='BGOverallSyst='+str(BGOverallSyst)+'\n'+'-----------------------------------------------\n'
+  configString+='SigScaleFactorSystOneGamma='+str(SigScaleFactorSystOneGamma)+'\n'
+  configString+='SigPtSFSystOneGamma='+str(SigPtSFSystOneGamma)+'\n'
+  configString+='BGSystsFromHists'+'\n'+'-----------------------------------------------\n'
   configString+='optimizationOutputDir='+optimizationOutputDir+'\n'
   configString+='limitsOutputDir='+limitsOutputDir+'\n'
   configString+='limitsFileNameBase='+limitsFileNameBase+'\n'
@@ -503,11 +507,13 @@ cl95MacroName = 'roostats_cl95.C'
 # Configurable stuff here
 now = datetime.datetime.now()
 Date = now.strftime("%b%d")
-outputDirBase = Date.lower()+'_results_sherpaBG_noDPhi_symmWindowSSBOpt_15pctBGSyst_0pctOptMWindowMarginSmoothed'
-#outputDirBase = 'may16_results_symmWindowSSBOpt_10pctBGSyst_indivSigEffSysts_0pctOptMWindowMarginSmoothed'
+#outputDirBase = Date.lower()+'_results_lumiErr2p6_newFakeAndBGSysts_sherpaBG_noDPhi_symmWindowSSBOpt_BGSystsFromHists_0pctOptMWindowMarginSmoothed_loosePFID'
+outputDirBase = 'mar07_results_lumiErr2p6_newFakeAndBGSysts_sherpaBG_noDPhi_symmWindowSSBOpt_BGSystsFromHists_0pctOptMWindowMarginSmoothed_mediumPFID'
+#outputDirBase = 'mar08_results_lumiErr2p6_newFakeAndBGSysts_sherpaBG_noDPhi_symmWindowSSBOpt_BGSystsFromHists_0pctOptMWindowMarginSmoothed_loosePFID'
+#outputDirBase = 'oct17_TightPFID_optLimitsPlots/oct17_results_lumiErr2p6_newFakeAndBGSysts_sherpaBG_noDPhi_symmWindowSSBOpt_BGSystsFromHists_0pctOptMWindowMarginSmoothed'
 optimizationOutputDir = outputDirBase+'_optimization'
 limitsOutputDir = outputDirBase+'_limits'
-plotsOutputDir = outputDirBase+'_plots'
+plotsOutputDir = outputDirBase+'_plots3'
 # limit results file base name
 limitsFileNameBase = 'limits_k_'
 limitsFileName = limitsOutputDir+'/'+limitsFileNameBase
@@ -518,14 +524,22 @@ optimizationFileName = optimizationOutputDir+'/'+optimizationFileNameBase
 optimizationPlotFileName = optimizationOutputDir+'/plots.root'
 # location of signal root files from CreateHistogramFiles code
 #signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_deltaPhi2p8_19p6invFb/'
-signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb/'
+#signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb/'
+#signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb_mediumID/'
+signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb_looseID/'
 # location of data/fake root files from CreateHistogramFiles code
-#rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/ExoDiPhotonAnalyzer_PFDec14th_DataABCD/'
-rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/ForZeynep/' # no dPhi cut
-DataSample = 'ExoDiPhotonAnalyzer_PFDec14th_DataABCD'
+## OLD #rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/ExoDiPhotonAnalyzer_PFDec14th_DataABCD/'
+#rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/ForDiPhoton/'
+#DataSample = 'ExoDiPhotonAnalyzer_PFDec14th_DataABCD'
+#rootFileLocationDataFake = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb_mediumID/'
+#DataSample = 'ExoDiPhotonAnalyzer_MediumDataABCD2012'
+rootFileLocationDataFake = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb_looseID/'
+DataSample = 'ExoDiPhotonAnalyzer_LooseDataABCD2012'
 # location of backgroundMC root files from CreateHistogramFiles code
-rootFileBackgroundMC = '/afs/cern.ch/work/c/charaf/public/ForZeynep/histograms_diphoton_tree_MC_all.root' # SHERPA, no dphi
-#rootFileBackgroundMC= '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/diphoton_tree_MC_all/histograms_diphoton_tree_MC_all.root' # PYTHIA
+#rootFileBackgroundMC = '/afs/cern.ch/work/c/charaf/public/ForDiPhoton/histograms_diphoton_tree_MC_all.root' # SHERPA, no dphi
+## OLD #rootFileBackgroundMC= '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/diphoton_tree_MC_all/histograms_diphoton_tree_MC_all.root' # PYTHIA
+#rootFileBackgroundMC = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb_mediumID/histograms_diphoton_tree_MC_all.root'
+rootFileBackgroundMC = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb_looseID/histograms_diphoton_tree_MC_all.root'
 kFactorFile = 'RS-KF-LHC-8TeV-y1.4442-ptcut80.dat'
 # use k-factors to compute limit (optimization always done with k-factor=1)
 UseKFactor = False
@@ -533,7 +547,7 @@ UseKFactor = False
 extraWindowMargin = 0.00 # fraction to expand window by, e.g., 0.01 --> expand edges by 1%
 # Declarations of Lumi and model points to consider -- must have xsec, etc. defined above
 lumi = 19620.
-lumiErr = lumi*0.044
+lumiErr = lumi*0.026
 masses0p01 = [750,1000,1250,1500,1750,2000,2250,2500,3000]
 masses0p05 = [1250,1500,1750,2000,2250,2500,2750,3000]
 masses0p1 = [1500,1750,2000,2250,2500,2750,3000,3250,3500]
@@ -544,7 +558,9 @@ print configString
 
 # List signal histogram file template; rest of quantities are filled from functions (xsec, width, etc.) or histograms in the files
 # initialize signal points
-signalHistogramFilesPathTemplate = signalRootFileLocation+'diphoton_tree_RSGravToGG_kMpl-{coupling}_M-{mass}_TuneZ2star_8TeV-pythia_merged/histograms_diphoton_tree_RSGravToGG_kMpl-{coupling}_M-{mass}_TuneZ2star_8TeV-pythia_merged.root'
+#signalHistogramFilesPathTemplate = signalRootFileLocation+'diphoton_tree_RSGravToGG_kMpl-{coupling}_M-{mass}_TuneZ2star_8TeV-pythia_merged/histograms_diphoton_tree_RSGravToGG_kMpl-{coupling}_M-{mass}_TuneZ2star_8TeV-pythia_merged.root'
+#FIXME --> added pythia6 for med/loose signal samples
+signalHistogramFilesPathTemplate = signalRootFileLocation+'diphoton_tree_RSGravToGG_kMpl-{coupling}_M-{mass}_TuneZ2star_8TeV-pythia6_merged/histograms_diphoton_tree_RSGravToGG_kMpl-{coupling}_M-{mass}_TuneZ2star_8TeV-pythia6_merged.root'
 # for now, we use the directory structure that the CreateHistogramFiles.C code uses
 # setup k=0.01
 modelPointsC0p01 = []

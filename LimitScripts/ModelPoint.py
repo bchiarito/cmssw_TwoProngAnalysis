@@ -126,20 +126,23 @@ class ModelPoint:
 
 
   def StringTableLine(self,lumi):
-    tableString=string.ljust(str(self.coupling),9)+string.ljust(str(int(self.mass)),6)+string.ljust('%0.3f'%self.totalEff,8)
+    tableString=string.ljust(str(self.coupling),6)+string.ljust(str(int(self.mass)),6)
+    massWindowString=str(int(self.optMassWindowLow))+'-'+str(int(self.optMassWindowHigh))
+    tableString+=string.ljust(massWindowString,11)
+    tableString+=string.ljust('%0.3f'%self.totalEff,8)
     expectedSignalEvents = lumi * self.totalXSec * self.totalEff
-    tableString+=string.center(str(round(expectedSignalEvents,2)),12)
+    tableString+=string.ljust(str(round(expectedSignalEvents,3)),10)
     #backExpString = '%0.4f'%self.nBackground+'+/-'+'%0.4f'%self.nBackgroundErr
     #backExpString = str(self.nBackground)+'+/-'+str(self.nBackgroundErr)
     if(self.nBackground < 1):
       backExpString = '%s' % float('%.2g' % self.nBackground)+'+/-'+'%s'%float('%.2g' % self.nBackgroundErrStat)+' (stat) +/-'+'%s'%float('%.2g' % self.nBackgroundErrSyst)+' (syst)'
     else:
       backExpString = '%0.2f'%self.nBackground+'+/-'+'%0.2f'%self.nBackgroundErrStat+' (stat) +/-'+'%0.2f'%self.nBackgroundErrSyst+' (syst)'
-    tableString+=string.ljust(backExpString,42)+string.center(str(self.nDataObs),10)
+    tableString+=string.ljust(backExpString,41)+string.center(str(self.nDataObs),10)
     tableString+=string.center('%.1E'%float(self.totalXSec),10)
     try:
       tableString+=string.center(str(round(self.expLimit,6)),10)
-      tableString+=string.center(str(round(self.obsLimit,5)),12)
+      tableString+=string.center(str(round(self.obsLimit,6)),12)
     except TypeError:
       pass
     return tableString
@@ -161,7 +164,7 @@ class ModelPoint:
     tableString+=string.center(backExpString,18)+'|'+string.center(str(self.nDataObs),10)+'|'
     try:
       tableString+=string.center(str(round(self.expLimit,6)),10)+'|'
-      tableString+=string.center(str(round(self.obsLimit,5)),12)+'|'
+      tableString+=string.center(str(round(self.obsLimit,6)),12)+'|'
     except TypeError:
       pass
     return tableString

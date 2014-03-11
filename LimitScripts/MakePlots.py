@@ -1087,7 +1087,7 @@ def PlotAllBands(modelPointArrays, lumi, rootFile, imageDir):
   mg.Write()
 
 
-def PlotBands(modelPointArray, lumi, rootFile, imageDir):
+def PlotBands(modelPointArray, plotObsLimit, lumi, rootFile, imageDir):
   #print '----- PlotBands -----'
   #print 'Coupling:',modelPointArray[0].coupling
   # fill arrays
@@ -1277,7 +1277,8 @@ def PlotBands(modelPointArray, lumi, rootFile, imageDir):
   mg.Add(g01_exp_2s,"3C")
   mg.Add(g01_exp_1s,"3C")
   mg.Add(g01_exp,"C")
-  mg.Add(g01_obs,"LP")
+  if plotObsLimit:
+    mg.Add(g01_obs,"LP")
   mg.Add(g01_theory,"L")
   mg.Draw("AL")
   # To have diff. x-axes for each limit graph (TMultiGraph doesn't exactly respect zoomed x-axis)
@@ -1324,7 +1325,8 @@ def PlotBands(modelPointArray, lumi, rootFile, imageDir):
   legend.AddEntry(g01_exp_1s ,"68% expected","lf")
   legend.AddEntry(g01_exp_2s ,"95% expected","lf")
   legend.AddEntry(g01_theory ,titlename,"l")
-  legend.AddEntry(g01_obs ,"95% CL limit","l")
+  if plotObsLimit:
+    legend.AddEntry(g01_obs ,"95% CL limit","l")
   legend.SetBorderSize(0)
   legend.SetFillColor(0)
   legend.Draw()
@@ -1349,25 +1351,37 @@ def PlotBands(modelPointArray, lumi, rootFile, imageDir):
 
   gPad.RedrawAxis()
 
-  plotname = "limit_k_%.2f.pdf" % modelPointArray[0].coupling
+  if plotObsLimit:
+    plotname = "limit_k_%.2f.pdf" % modelPointArray[0].coupling
+  else:
+    plotname = "limit_k_%.2f_expOnly.pdf" % modelPointArray[0].coupling
   savename = TString(plotname)
   indexstring = savename.Index(".")
   savename.Replace(indexstring,1,"p")
   pdfName = savename.Data()
   c.SaveAs(imageDir+'/'+savename.Data())
-  plotname = "limit_k_%.2f.C" % modelPointArray[0].coupling
+  if plotObsLimit:
+    plotname = "limit_k_%.2f.C" % modelPointArray[0].coupling
+  else:
+    plotname = "limit_k_%.2f_expOnly.C" % modelPointArray[0].coupling
   savename = TString(plotname)
   indexstring = savename.Index(".")
   savename.Replace(indexstring,1,"p")
   c.SaveAs(imageDir+'/'+savename.Data())
   # png output looks strange, so convert from pdf instead
-  plotname = "limit_k_%.2f.png" % modelPointArray[0].coupling
+  if plotObsLimit:
+    plotname = "limit_k_%.2f.png" % modelPointArray[0].coupling
+  else:
+    plotname = "limit_k_%.2f_expOnly.png" % modelPointArray[0].coupling
   savename = TString(plotname)
   indexstring = savename.Index(".")
   savename.Replace(indexstring,1,"p")
   subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
   # write
-  mg.SetName("limit_k_%.2f_MultiGraph" % modelPointArray[0].coupling)
+  if plotObsLimit:
+    mg.SetName("limit_k_%.2f_MultiGraph" % modelPointArray[0].coupling)
+  else:
+    mg.SetName("limit_k_%.2f_MultiGraph_expOnly" % modelPointArray[0].coupling)
   mg.Write()
 
 
@@ -2187,7 +2201,8 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   c.SetRightMargin(0.04)
   # Multigraph
   mg = TMultiGraph()
-  legend = TLegend(0.45,0.73,0.73,0.92)
+  #legend = TLegend(0.45,0.73,0.73,0.92)
+  legend = TLegend(0.62,0.22,0.92,0.42)
   colorIndex = 2 
   #drawOpt = 'lx'
   drawOpt = 'lpx'
@@ -2214,7 +2229,8 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   # To make the separate graphs share the same axes
   h = TH1F("test","",10,750,3500)
   h.SetStats(False)
-  h.GetYaxis().SetRangeUser(0.2,0.6)
+  # range is set here
+  h.GetYaxis().SetRangeUser(0.2,0.7)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
   h.GetYaxis().SetTitle("efficiency*acc")
   h.GetXaxis().SetLabelFont(42)
