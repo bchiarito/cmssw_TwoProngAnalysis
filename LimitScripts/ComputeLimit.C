@@ -45,7 +45,11 @@ void ComputeLimit(float lumi, float lumiError, float totalEff, float totalEffErr
   string cl95MacroPath = cmsswBase;
   cl95MacroPath+="/src/StatisticalTools/RooStatsRoutines/root/roostats_cl95.C";
 
+  string roofitsys;
+  roofitsys = string(getenv("ROOFITSYS"));
   gROOT->Reset();
+  string includePath = "-I"+roofitsys;
+  gSystem->SetIncludePath((includePath+"/include").c_str());
   string command = ".L ";
   command+=cl95MacroPath;
   command+="+g";
