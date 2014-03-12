@@ -25,7 +25,6 @@ import itertools
 
 # run root in batch
 sys.argv.append('-b')
-#import ROOT
 from ROOT import *
 from MakePlots import *
 from MakeLimits import *
@@ -87,6 +86,20 @@ totalXSecs0p1[2750] = 1.14e-04
 totalXSecs0p1[3000] = 4.68e-05
 totalXSecs0p1[3250] = 1.19e-05
 totalXSecs0p1[3500] = 7.7e-06
+
+
+# for writing to log file+stdout
+class MyTee():
+  def __init__(self,logfile):
+    self.stdout = sys.stdout
+    self.logfile = open(logfile,'w')
+  def write(self,txt):
+    self.stdout.write(txt)
+    self.logfile.write(txt)
+    self.logfile.flush()
+  def close(self):
+    self.stdout.close()
+    self.logfile.close()
 
 
 def GetHalfWidth(coupling,mass):
@@ -167,29 +180,47 @@ def FillKFactors(modelPointArray):
 
 
 # TODO: remove hardcoding; instead use list of couplings to run over
-def DoLimitsAllPoints(cl95MacroPathAndName,lumi,lumiErr,limitsFileName):
+def DoLimitsAllPoints(cl95MacroPathAndName,doBatch,queueName,lumi,lumiErr,limitsFileName,limitsDirRel):
+  if not os.path.isfile(optimizationFileName+'0p01.txt'):
+    print
+    print 'ERROR: Could not find optimization file: ',optimizationFileName+'0p01.txt'
+    print '       Must run optimization first. Quiting.'
+    exit(-1)
+  if not os.path.isfile(optimizationFileName+'0p05.txt'):
+    print
+    print 'ERROR: Could not find optimization file: ',optimizationFileName+'0p05.txt'
+    print '       Must run optimization first. Quiting.'
+    exit(-1)
+  if not os.path.isfile(optimizationFileName+'0p1.txt'):
+    print
+    print 'ERROR: Could not find optimization file: ',optimizationFileName+'0p1.txt'
+    print '       Must run optimization first. Quiting.'
+    exit(-1)
   print 'Run for coupling 0.01'
   with open(optimizationFileName+'0p01.txt', 'r') as file:
     lines = file.readlines()
     readModelPointsC0p01 = ReadFromLines(lines)
     if UseKFactor:
       FillKFactors(readModelPointsC0p01)
-  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p01,limitsFileName+'0p01.txt',UseKFactor)
+  #ComputeLimits(cl95MacroPathAndName,doBatch,queueName,lumi,lumiErr,readModelPointsC0p01,limitsFileName+'0p01.txt',limitsDir,UseKFactor)
   print 'Run for coupling 0.05'
   with open(optimizationFileName+'0p05.txt', 'r') as file:
     lines = file.readlines()
     readModelPointsC0p05 = ReadFromLines(lines)
     if UseKFactor:
       FillKFactors(readModelPointsC0p05)
-  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p05,limitsFileName+'0p05.txt',UseKFactor)
+  #ComputeLimits(cl95MacroPathAndName,doBatch,queueName,lumi,lumiErr,readModelPointsC0p05,limitsFileName+'0p05.txt',limitsDir,UseKFactor)
   print 'Run for coupling 0.1'
   with open(optimizationFileName+'0p1.txt', 'r') as file:
     lines = file.readlines()
     readModelPointsC0p1 = ReadFromLines(lines)
     if UseKFactor:
       FillKFactors(readModelPointsC0p1)
-  ComputeLimits(cl95MacroPathAndName,lumi,lumiErr,readModelPointsC0p1,limitsFileName+'0p1.txt',UseKFactor)
-  subprocess.call(['mv','cls_plots',limitsOutputDir])
+  #ComputeLimits(cl95MacroPathAndName,doBatch,queueName,lumi,lumiErr,readModelPointsC0p1,limitsFileName+'0p1.txt',limitsDir,UseKFactor)
+  # run for all
+  limitsDir=os.getcwd()+'/'+limitsDirRel
+  ComputeLimits(cl95MacroPathAndName,doBatch,queueName,lumi,lumiErr,readModelPointsC0p01+readModelPointsC0p05+readModelPointsC0p1,limitsDir,UseKFactor)
+  #subprocess.call(['mv','cls_plots',limitsOutputDir])
 
 
 ## TODO
@@ -203,6 +234,43 @@ def DoLimitsAllPoints(cl95MacroPathAndName,lumi,lumiErr,limitsFileName):
 #      readModelPoints = ReadFromFile(file)
 #    resultsByCoupling[c] = readModelPoints
 #  return resultsByCoupling
+
+def DoMergeCheckAllPoints(limitsDir,limitsFileNameBase):
+  if not os.path.isfile(optimizationFileName+'0p01.txt'):
+    print
+    print 'ERROR: Could not find optimization file: ',optimizationFileName+'0p01.txt'
+    print '       Must run optimization first. Quiting.'
+    exit(-1)
+  if not os.path.isfile(optimizationFileName+'0p05.txt'):
+    print
+    print 'ERROR: Could not find optimization file: ',optimizationFileName+'0p05.txt'
+    print '       Must run optimization first. Quiting.'
+    exit(-1)
+  if not os.path.isfile(optimizationFileName+'0p1.txt'):
+    print
+    print 'ERROR: Could not find optimization file: ',optimizationFileName+'0p1.txt'
+    print '       Must run optimization first. Quiting.'
+    exit(-1)
+  print 'Run for coupling 0.01'
+  with open(optimizationFileName+'0p01.txt', 'r') as file:
+    lines = file.readlines()
+    readModelPointsC0p01 = ReadFromLines(lines)
+    if UseKFactor:
+      FillKFactors(readModelPointsC0p01)
+  print 'Run for coupling 0.05'
+  with open(optimizationFileName+'0p05.txt', 'r') as file:
+    lines = file.readlines()
+    readModelPointsC0p05 = ReadFromLines(lines)
+    if UseKFactor:
+      FillKFactors(readModelPointsC0p05)
+  print 'Run for coupling 0.1'
+  with open(optimizationFileName+'0p1.txt', 'r') as file:
+    lines = file.readlines()
+    readModelPointsC0p1 = ReadFromLines(lines)
+    if UseKFactor:
+      FillKFactors(readModelPointsC0p1)
+  # run for all
+  MergeLimitJobs(readModelPointsC0p01+readModelPointsC0p05+readModelPointsC0p1,limitsDir,limitsFileNameBase)
 
 
 def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
@@ -264,12 +332,9 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   # limit plot for all couplings on same axes
   print 'PlotAllBands'
   PlotAllBands([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
-  # make table
-  print 'DoTablesAllPoints'
-  DoTablesAllPoints(lumi)
 
 
-def DoTablesAllPoints(lumi):
+def DoTablesAllPoints(lumi,limitsDir):
   with open(limitsFileName+'0p01.txt', 'r') as file:
     readModelPoints0p01 = ReadFromFile(file)
   # 0.05
@@ -278,7 +343,10 @@ def DoTablesAllPoints(lumi):
   # 0.1
   with open(limitsFileName+'0p1.txt', 'r') as file:
     readModelPoints0p1 = ReadFromFile(file)
-  # now make table output
+  # save original stdout; redirect to stdout+logfile
+  origStdOut = sys.stdout
+  sys.stdout = MyTee(limitsDir+'/tables.txt')
+  # now make txt table output
   tableTitleString=string.ljust('Kmpl',6)+string.ljust('Mass',6)+string.ljust('Window',11)
   tableTitleString+=string.ljust('Eff.',8)
   tableTitleString+=string.ljust('ExpSig.',9)
@@ -371,6 +439,8 @@ def DoTablesAllPoints(lumi):
   print '\t\\label{table:limitResults}'
   print '\t\\end{center}'
   print '\\end{table}'
+  # reset stdout back to original
+  sys.stdout = origStdOut
   
 
 def DoOptimizeAllPoints(optimizationRootFile):
@@ -378,6 +448,9 @@ def DoOptimizeAllPoints(optimizationRootFile):
   maxWindowRange = 600 # bins/GeV
   useAsymmWindow = False
   useSSB = True
+  # save original stdout; redirect to stdout+logfile
+  origStdOut = sys.stdout
+  sys.stdout = MyTee(optimizationOutputDir+'/log.txt')
   print 'Run for coupling 0.01'
   colorIndex = 2 #TODO add this into modelpoint itself?
   with open(optimizationFileName+'0p01.txt', 'w') as file:
@@ -426,6 +499,8 @@ def DoOptimizeAllPoints(optimizationRootFile):
   for mp in modelPointsC0p1:
     print '|0.1|',mp.mass,'|',
     print '<a href="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/signalBackgroundOptWindows_k0p1_m'+str(mp.mass)+'.png"><img src="http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/signalBackgroundOptWindows_k0p1_m'+str(mp.mass)+'.png" alt="optimization_K0p1_m'+str(mp.mass)+'" width="600" /></a>|<a href=http://scooper.web.cern.ch/scooper/exoDiPhotons/twikiPlots/signalBackgroundOptWindows_k0p1_m'+str(mp.mass)+'.pdf>PDF Version</a>|'
+  # reset stdout back to original
+  sys.stdout = origStdOut
 
 
 def DoOptimizationPlots(optimizationRootFile):
@@ -479,13 +554,16 @@ def GetConfigurationString():
 
 def Usage():
   print 'Usage: python RunLimitsAndPlots.py [arg] where arg can be:'
-  print '    all           --> run yields, limits, and plots (see below)'
-  print '    limits        --> Compute limits for all model points & write out results'
-  print '    plots         --> Read limit results from text files and make limit plots'
-  print '    tables        --> Read limit results from text files and make results tables (text/latex)'
-  print '    yields        --> Calculate event yields from histograms in root files (from CreateHistogramFiles)'
-  print '    optimize      --> Calculate optimal inv. mass windows using histograms in root files (from CreateHistogramFiles)'
-  print '    optimizePlots --> Print optimization graphs as images (use after optimize has been run)'
+  print '    optimize      --> Calculate optimal inv. mass windows using histograms in root files (from CreateHistogramFiles).'
+  print '    limits        --> Compute limits for all model points.'
+  print '    mergeLimits   --> Merge/check limit results for all model points. Run after batch jobs done.  Also makes plots and tables.'
+  print '    plots         --> Read limit results from text files and make limit plots.'
+  print '    tables        --> Read limit results from text files and make results tables (text/latex/twiki).'
+  print '    optimizePlots --> Print optimization graphs as images (use after optimize has been run; done automatically by default).'
+  print '    yields        --> Calculate event yields from histograms in root files (from CreateHistogramFiles).'
+  print
+  print 'Typically, one first runs optimize, then limits, then mergeLimits (after batch jobs are done if using batch submission).'
+  print 'This will calculate all the results and make all the plots and tables.'
 
 
 
@@ -507,13 +585,14 @@ cl95MacroName = 'roostats_cl95.C'
 # Configurable stuff here
 now = datetime.datetime.now()
 Date = now.strftime("%b%d")
-#outputDirBase = Date.lower()+'_results_lumiErr2p6_newFakeAndBGSysts_sherpaBG_noDPhi_symmWindowSSBOpt_BGSystsFromHists_0pctOptMWindowMarginSmoothed_loosePFID'
-outputDirBase = 'mar07_results_lumiErr2p6_newFakeAndBGSysts_sherpaBG_noDPhi_symmWindowSSBOpt_BGSystsFromHists_0pctOptMWindowMarginSmoothed_mediumPFID'
+outputDirBase = Date.lower()+'_TEST_results_lumiErr2p6_newFakeAndBGSysts_sherpaBG_noDPhi_symmWindowSSBOpt_BGSystsFromHists_0pctOptMWindowMarginSmoothed_loosePFID'
+#outputDirBase = 'mar11_TEST_results_lumiErr2p6_newFakeAndBGSysts_sherpaBG_noDPhi_symmWindowSSBOpt_BGSystsFromHists_0pctOptMWindowMarginSmoothed_loosePFID'
+#outputDirBase = 'mar07_results_lumiErr2p6_newFakeAndBGSysts_sherpaBG_noDPhi_symmWindowSSBOpt_BGSystsFromHists_0pctOptMWindowMarginSmoothed_mediumPFID'
 #outputDirBase = 'mar08_results_lumiErr2p6_newFakeAndBGSysts_sherpaBG_noDPhi_symmWindowSSBOpt_BGSystsFromHists_0pctOptMWindowMarginSmoothed_loosePFID'
 #outputDirBase = 'oct17_TightPFID_optLimitsPlots/oct17_results_lumiErr2p6_newFakeAndBGSysts_sherpaBG_noDPhi_symmWindowSSBOpt_BGSystsFromHists_0pctOptMWindowMarginSmoothed'
 optimizationOutputDir = outputDirBase+'_optimization'
 limitsOutputDir = outputDirBase+'_limits'
-plotsOutputDir = outputDirBase+'_plots3'
+plotsOutputDir = outputDirBase+'_plots'
 # limit results file base name
 limitsFileNameBase = 'limits_k_'
 limitsFileName = limitsOutputDir+'/'+limitsFileNameBase
@@ -543,6 +622,9 @@ rootFileBackgroundMC = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistogra
 kFactorFile = 'RS-KF-LHC-8TeV-y1.4442-ptcut80.dat'
 # use k-factors to compute limit (optimization always done with k-factor=1)
 UseKFactor = False
+# launch limit-setting jobs on lxbatch
+DoBatch = True
+QueueName = '8nh'
 # use extra window margin to minimize mScale/mRes systematic effects on signal
 extraWindowMargin = 0.00 # fraction to expand window by, e.g., 0.01 --> expand edges by 1%
 # Declarations of Lumi and model points to consider -- must have xsec, etc. defined above
@@ -591,6 +673,12 @@ elif sys.argv[1]=='optimizePlots':
   print 'optimizePlots: print plot images from optimization'
   rootFile = TFile(optimizationPlotFileName,'update')
   DoOptimizationPlots(rootFile)
+  if not os.path.isdir(plotsOutputDir):
+    os.mkdir(plotsOutputDir)
+  PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesMScale([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesMRes([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesPileup([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
 elif sys.argv[1]=='optimize':
   print 'optimize: OptimizeSignalMassWindows'
   print 'warning: will overwrite file',optimizationPlotFileName,'if it already exists.'
@@ -621,13 +709,20 @@ elif sys.argv[1]=='yields':
   PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
 elif sys.argv[1]=='limits':
   print 'limits: DoLimitsAllPoints'
-  print 'warning: will overwrite file',limitsPlotFileName,'if it already exists.'
+  print 'Warning: will overwrite file',limitsPlotFileName,'if it already exists.'
   if not os.path.isdir(limitsOutputDir):
     os.mkdir(limitsOutputDir)
   with open(limitsOutputDir+'/config.txt', 'w') as file:
     file.write(configString)
   rootFile = TFile(limitsPlotFileName,'recreate')
-  DoLimitsAllPoints(cl95MacroPath+cl95MacroName,lumi,lumiErr,limitsFileName)
+  DoLimitsAllPoints(cl95MacroPath+cl95MacroName,DoBatch,QueueName,lumi,lumiErr,limitsFileName,limitsOutputDir)
+elif sys.argv[1]=='mergeLimits':
+  print 'mergeLimits: DoMergeCheckAllPoints, DoPlotsAllPoints, DoTablesAllPoints'
+  print 'Warning: will overwrite files',limitsFileName+'0p01.txt',limitsFileName+'0p05.txt',limitsFileName+'0p1.txt','if they already exist.'
+  rootFile = TFile(limitsPlotFileName)
+  DoMergeCheckAllPoints(limitsOutputDir,limitsFileName)
+  DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle)
+  DoTablesAllPoints(lumi,limitsOutputDir)
 elif sys.argv[1]=='plots':
   print 'plots: DoPlotsAllPoints'
   if not os.path.isdir(plotsOutputDir):
@@ -636,61 +731,13 @@ elif sys.argv[1]=='plots':
   DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle)
 elif sys.argv[1]=='tables':
   print 'tables: DoTablesAllPoints'
-  rootFile = TFile(limitsPlotFileName,'update')
-  DoTablesAllPoints(lumi)
-elif sys.argv[1]=='all':
-  if not os.path.isdir(optimizationOutputDir):
-    os.mkdir(optimizationOutputDir)
-  print 'all: optimize+limits+plots'
-  print 'optimize: OptimizeSignalMassWindows'
-  print 'warning: will overwrite file',optimizationPlotFileName,'if it already exists.'
-  # recreate tfile for optimize step
-  rootFile = TFile(optimizationPlotFileName,'recreate')
-  with open(optimizationOutputDir+'/config.txt', 'w') as file:
-    file.write(configString)
-  DoOptimizeAllPoints(rootFile)
-  DoOptimizationPlots(rootFile)
-  #
-  #print 'all: stdYields+limits+plots'
-  #rootFile = TFile(optimizationPlotFileName,'recreate')
-  #DoCalculateYieldsAllPoints() # std/old mass windows
-  if not os.path.isdir(plotsOutputDir):
-    os.mkdir(plotsOutputDir)
-  PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
-  PlotAllEfficienciesMScale([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
-  PlotAllEfficienciesMRes([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
-  PlotAllEfficienciesPileup([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
-  rootFile.Close()
-  print 'limits: DoLimitsAllPoints'
-  print 'warning: will overwrite file',limitsPlotFileName,'if it already exists.'
-  if not os.path.isdir(limitsOutputDir):
-    os.mkdir(limitsOutputDir)
-  with open(limitsOutputDir+'/config.txt', 'w') as file:
-    file.write(configString)
-  rootFile = TFile(limitsPlotFileName,'recreate')
-  DoLimitsAllPoints(cl95MacroPath+cl95MacroName,lumi,lumiErr,limitsFileName)
-  print 'plots: DoPlotsAllPoints'
-  DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle)
-  print 'tables: DoTablesAllPoints'
-  DoTablesAllPoints(lumi)
+  rootFile = TFile(limitsPlotFileName)
+  DoTablesAllPoints(lumi,limitsOutputDir)
 else:
   print 'Did not understand input.'
   Usage()
   sys.exit()
 
 rootFile.Close()
-
-
-### wait for input to keep the GUI (which lives on a ROOT event dispatcher) alive
-#if __name__ == '__main__':
-#  rep = ''
-#  while not rep in [ 'q', 'Q' ]:
-#    rep = raw_input( 'enter "q" to quit: ' )
-#    if 1 < len(rep):
-#      rep = rep[0]
-
-
-
-
 
 

@@ -51,75 +51,162 @@ signalHistogramPileupShiftUp = TH1F()
 signalHistogramPileupShiftDown = TH1F()
 histogramSignalFile = 0
 
+Farm_Directories = []
 
-def ComputeLimits(cl95MacroPath,lumi,lumiErr,modelPointArray,fileName,useKFactor):
-  if not os.path.isdir('cls_plots'):
-    os.mkdir('cls_plots')
-  ## Get setup script path
-  #setupScriptPath = cl95MacroPath.split('root')[0]
-  #setupScriptPath+='setup/lxplus_standalone_setup.sh'
+
+def CreateFarmDirectoryStructure(FarmDirectory):
+  global Farm_Directories
+  Farm_Directories = [FarmDirectory+'/',
+                        FarmDirectory+'/inputs/',
+                        FarmDirectory+'/outputs/',
+                        FarmDirectory+'/logs/',
+                        FarmDirectory+'/errors/']
+  for i in range(0,len(Farm_Directories)):
+    if os.path.isdir(Farm_Directories[i]) == False:
+      os.system('mkdir -p ' + Farm_Directories[i])
+
+
+def CreateTheCmdFile(PathCmd):
+  cmd_file=open(PathCmd,'w')
+  cmd_file.write('#!/bin/bash\n')
+  cmd_file.write('# list all bsub commands' + '\n')
+  cmd_file.close()
+
+
+def AddJobToCmdFile(PathCmd,PathShell,PathLog,PathError,doBatch,QueueName):
+  cmd_file=open(PathCmd,'a')
+  cmd_file.write('\n')
+  if doBatch:
+    cmd_file.write('bsub -q "%s" '     % QueueName)
+    cmd_file.write(' -o %s' % PathLog)
+    cmd_file.write(' -e %s ' % PathError)
+  cmd_file.write(PathShell + '\n')
+  cmd_file.close()
+
+
+def CreateShellFile(modelPoint,useKFactor,lumi,lumiErr,limitsDir):
+  global Farm_Directories
+  couplingStr = str(modelPoint.coupling).replace('.','p')
+  massString = str(int(modelPoint.mass))
+  plotFileSamplingName = 'cls_sampling_k_'+couplingStr+"_m"+massString+".pdf"
+  plotFileName = 'cls_k_'+couplingStr+"_m"+massString+".pdf"
+  outputFile = Farm_Directories[2]+'limits_k_'+couplingStr+'_m'+massString+'.txt'
+  if not os.path.isfile(outputFile):
+    os.system('touch '+outputFile)
+  PathShell = Farm_Directories[1]+'limits_k_'+couplingStr+'_m'+massString+'.sh'
+  PathLog = Farm_Directories[3]+'limits_k_'+couplingStr+'_m'+massString+'.log'
+  PathError = Farm_Directories[4]+'limits_k_'+couplingStr+'_m'+massString+'.err'
+  shell_file=open(PathShell,'w')
+  shell_file.write('#!/bin/sh\n')
+  shell_file.write('export SCRAM_ARCH=slc5_amd64_gcc462\n')
+  #shell_file.write('source /afs/cern.ch/sw/lcg/external/gcc/4.3.2/x86_64-slc5/setup.sh\n')
+  #shell_file.write('source /afs/cern.ch/sw/lcg/app/releases/ROOT/5.32.02/x86_64-slc5-gcc43-opt/root/bin/thisroot.sh\n')
+  shell_file.write('source /afs/cern.ch/cms/cmsset_default.sh\n')
+  shell_file.write('source /afs/cern.ch/cms/LCG/LCG-2/UI/cms_ui_env.sh\n')
+  shell_file.write('cd ' + Farm_Directories[2] + '\n')
+  shell_file.write('eval `scram run -sh`\n')
+  shell_file.write('cd -' + '\n')
+  #void ComputeLimit(float lumi, float lumiError, float totalEff, float totalEffErrStat, float totalEffErrSyst,
+  #float nBackground, float nBackgroundErrStat, float nBackgroundErrSyst,
+  #float nDataObs, 
+  #TODO not needed for computelimit -- save/remove
+  #float totalEffMScaleSystUp, float totalEffMScaleSystDown,
+  #float totalEffMResSystUp, float totalEffMResSystDown,
+  #float totalEffPileupSystUp, float totalEffPileupSystDown,
+  #int mass, float coupling, float halfWidth,
+  #float totalXSec, int massWindowLow, int massWindowHigh, std::string fileName)
+  if useKFactor:
+    modelPoint.totalEff*=modelPoint.kFactor
+    modelPoint.totalEffErrStat*=modelPoint.kFactor
+    modelPoint.totalEffErrSyst*=modelPoint.kFactor
+    modelPoint.totalEffMScaleSystUp*=modelPoint.kFactor
+    modelPoint.totalEffMScaleSystDown*=modelPoint.kFactor
+    modelPoint.totalEffMResSystUp*=modelPoint.kFactor
+    modelPoint.totalEffMResSystDown*=modelPoint.kFactor
+    modelPoint.totalEffPileupSystUp*=modelPoint.kFactor
+    modelPoint.totalEffPileupSystDown*=modelPoint.kFactor
+  command = os.getcwd()+'/'
+  command+= 'ComputeLimit.C('+str(lumi)+','+str(lumiErr)+','+str(modelPoint.totalEff)+','
+  command+=str(modelPoint.totalEffErrStat)+','+str(modelPoint.totalEffErrSyst)+','
+  command+=str(modelPoint.totalEffMScaleSystUp)+','+str(modelPoint.totalEffMScaleSystDown)+','
+  command+=str(modelPoint.totalEffMResSystUp)+','+str(modelPoint.totalEffMResSystDown)+','
+  command+=str(modelPoint.totalEffPileupSystUp)+','+str(modelPoint.totalEffPileupSystDown)+','
+  command+=str(modelPoint.nBackground)+','+str(modelPoint.nBackgroundErrStat)+','+str(modelPoint.nBackgroundErrSyst)+','
+  command+=str(modelPoint.nDataObs)+','+str(modelPoint.mass)+','
+  command+=str(modelPoint.coupling)+','+str(modelPoint.halfWidth)+','+str(modelPoint.totalXSec)+','
+  command+=str(modelPoint.optMassWindowLow)+','+str(modelPoint.optMassWindowHigh)+','
+  command+='\\"'+outputFile+'\\"'
+  command+=')'
+  shell_file.write('root -l -b -q "'+command+'"\n')
+  shell_file.write('mv cls_sampling.pdf '+limitsDir+'/cls_plots/'+plotFileSamplingName+'\n')
+  shell_file.write('mv cls.pdf '+limitsDir+'/cls_plots/'+plotFileName+'\n')
+  shell_file.close()
+  os.system('chmod 777 '+PathShell)
+  return PathShell,PathLog,PathError
+
+
+def SubmitJobs(pathCmd):
+  os.system('source '+pathCmd)
+
+
+def ComputeLimits(cl95MacroPath,doBatch,queueName,lumi,lumiErr,modelPointArray,limitsDir,useKFactor):
+  global Farm_Directories
+  if not os.path.isdir(limitsDir+'/cls_plots'):
+    os.mkdir(limitsDir+'/cls_plots')
+  farmDirBase = limitsDir+'/Farm'
+  CreateFarmDirectoryStructure(farmDirBase)
+  cmdPath = farmDirBase+'/submit.sh'
+  CreateTheCmdFile(cmdPath)
   for modelPoint in modelPointArray:
-    # save some info
+    pathShell,pathLog,pathError = CreateShellFile(modelPoint,useKFactor,lumi,lumiErr,limitsDir)
+    AddJobToCmdFile(cmdPath,pathShell,pathLog,pathError,doBatch,queueName)
+  print 'Submit all jobs'
+  SubmitJobs(cmdPath)
+  #FIXME make git-compatible somehow
+  #print 'Used StatisticalTools/RooStatsRoutine CVS tag:',GetRooStatsMacroCVSTag(cl95MacroPath)
+
+
+def MergeLimitJobs(modelPointArray,limitsDir,limitsFileNameBase):
+  global Farm_Directories
+  farmDirBase = limitsDir+'/Farm'
+  CreateFarmDirectoryStructure(farmDirBase)
+  newModelPointArray = []
+  for modelPoint in modelPointArray:
+    # FIXME save original info; eventually do all non-limit-related stuff like this
+    # TODO removing from pass-through in ComputeLimit.C macro
     thisMPFileName = modelPoint.fileName
     thisMPKFactor = modelPoint.kFactor
-    handle,tempFileName = tempfile.mkstemp()
-    #void ComputeLimit(float lumi, float lumiError, float totalEff, float totalEffErrStat, float totalEffErrSyst,
-    #float nBackground, float nBackgroundErrStat, float nBackgroundErrSyst,
-    #float nDataObs, 
-    #TODO not needed for computelimit -- save/remove
-    #float totalEffMScaleSystUp, float totalEffMScaleSystDown,
-    #float totalEffMResSystUp, float totalEffMResSystDown,
-    #float totalEffPileupSystUp, float totalEffPileupSystDown,
-    #int mass, float coupling, float halfWidth,
-    #float totalXSec, int massWindowLow, int massWindowHigh, std::string fileName)
-    if useKFactor:
-      modelPoint.totalEff*=modelPoint.kFactor
-      modelPoint.totalEffErrStat*=modelPoint.kFactor
-      modelPoint.totalEffErrSyst*=modelPoint.kFactor
-      modelPoint.totalEffMScaleSystUp*=modelPoint.kFactor
-      modelPoint.totalEffMScaleSystDown*=modelPoint.kFactor
-      modelPoint.totalEffMResSystUp*=modelPoint.kFactor
-      modelPoint.totalEffMResSystDown*=modelPoint.kFactor
-      modelPoint.totalEffPileupSystUp*=modelPoint.kFactor
-      modelPoint.totalEffPileupSystDown*=modelPoint.kFactor
-    command = 'ComputeLimit.C('+str(lumi)+','+str(lumiErr)+','+str(modelPoint.totalEff)+','
-    command+=str(modelPoint.totalEffErrStat)+','+str(modelPoint.totalEffErrSyst)+','
-    command+=str(modelPoint.totalEffMScaleSystUp)+','+str(modelPoint.totalEffMScaleSystDown)+','
-    command+=str(modelPoint.totalEffMResSystUp)+','+str(modelPoint.totalEffMResSystDown)+','
-    command+=str(modelPoint.totalEffPileupSystUp)+','+str(modelPoint.totalEffPileupSystDown)+','
-    command+=str(modelPoint.nBackground)+','+str(modelPoint.nBackgroundErrStat)+','+str(modelPoint.nBackgroundErrSyst)+','
-    command+=str(modelPoint.nDataObs)+','+str(modelPoint.mass)+','
-    command+=str(modelPoint.coupling)+','+str(modelPoint.halfWidth)+','+str(modelPoint.totalXSec)+','
-    command+=str(modelPoint.optMassWindowLow)+','+str(modelPoint.optMassWindowHigh)+','
-    command+='\"'+tempFileName+'\"'
-    command+=')'
-    subprocess.call(['root','-b','-q',command]) # wait for each one to finish
-    os.close(handle)
+    # read this model point (now with limits) from output file
     couplingStr = str(modelPoint.coupling).replace('.','p')
-    plotFileSamplingName = 'cls_sampling_k_'+couplingStr+"_m"+str(modelPoint.mass)+".pdf"
-    plotFileName = 'cls_k_'+couplingStr+"_m"+str(modelPoint.mass)+".pdf"
-    subprocess.call(['mv','cls_sampling.pdf','cls_plots/'+plotFileSamplingName])
-    subprocess.call(['mv','cls.pdf','cls_plots/'+plotFileName])
-    # read this model point (now with limits) from temp file
-    file = open(tempFileName, 'r')
-    lines = file.readlines()
-    file.close()
-    os.remove(tempFileName)
-    thisModelPoint = ReadFromLines(lines)[0]
+    massString = str(int(modelPoint.mass))
+    outputFile = Farm_Directories[2]+'limits_k_'+couplingStr+'_m'+massString+'.txt'
+    with open(outputFile, 'r') as file:
+      lines = file.readlines()
+    mpFileArr = ReadFromLines(lines)
+    if len(mpFileArr) < 1:
+      print 'ERROR: Did find model point in file:',outputFile
+      print 'Perhaps the limit-setting job failed? Quitting.'
+      exit(-1)
+    thisModelPoint = mpFileArr[0]
+    if thisModelPoint.expLimit==-1:
+      print 'ERROR: Did find exp. limit result for k=',modelPoint.coupling,'mass=',str(modelPoint.mass),'in file:',outputFile
+      print 'Perhaps the limit-setting job failed? Quitting.'
+      exit(-1)
     thisModelPoint.fileName = thisMPFileName
     thisModelPoint.kFactor = thisMPKFactor
-    #FIXME/TODO: store all info besides limit info like this and don't use ComputeLimit.C to write it out...
-    # replace this model point in the array
-    for index,mp in enumerate(modelPointArray):
-      if mp.mass==thisModelPoint.mass and mp.coupling==thisModelPoint.coupling:
-        modelPointArray[index] = thisModelPoint
-    # write out the result file
-    if os.path.isfile(fileName):
-      os.remove(fileName)
-    with open(fileName,'w') as file:
-      for mp in modelPointArray:
-        mp.Write(file)
-  print 'Used StatisticalTools/RooStatsRoutine CVS tag:',GetRooStatsMacroCVSTag(cl95MacroPath)
+    newModelPointArray.append(thisModelPoint)
+    ## replace this model point in the array
+    #for index,mp in enumerate(modelPointArray):
+    #  if mp.mass==thisModelPoint.mass and mp.coupling==thisModelPoint.coupling:
+    #    modelPointArray[index] = thisModelPoint
+    ## write out the result file
+    #if os.path.isfile(fileName):
+    #  os.remove(fileName)
+  for mp in newModelPointArray:
+    couplingString = str(mp.coupling).replace('.','p')
+    fileName=limitsFileNameBase+couplingString+'.txt'
+    with open(fileName,'a') as file:
+      mp.Write(file)
 
 
 # FIXME: make git-compatible somehow
