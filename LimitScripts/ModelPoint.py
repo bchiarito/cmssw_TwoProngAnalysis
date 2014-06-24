@@ -17,6 +17,9 @@ class ModelPoint:
     self.mass                   = kwargs.get('mass',-1)
     self.totalXSec              = kwargs.get('totalXSec',-1)
     self.kFactor                = kwargs.get('kFactor',1.0)
+    self.acceptance             = kwargs.get('acceptance',0.0)
+    self.totalSignalEvents      = kwargs.get('totalSignalEvents',0.0)
+    self.preMWEff               = kwargs.get('preMWEff',-1)
     self.totalEff               = kwargs.get('totalEff',-1)
     self.totalEffErrStat        = kwargs.get('totalEffErrStat',-1)
     self.totalEffErrSyst        = kwargs.get('totalEffErrSyst',-1)
@@ -54,6 +57,9 @@ class ModelPoint:
     print "Mass: ",self.mass
     print "TotalXSection: " , self.totalXSec
     print "KFactor: " , self.kFactor
+    print "Acceptance: " , self.acceptance
+    print "Total Signal Events: " , self.totalSignalEvents
+    print "Efficiency before mass window:",self.preMWEff
     print "TotalEff: %.5f"%self.totalEff , " +/- %.5f (stat)"%self.totalEffErrStat, " +/- %.5f (syst)"%self.totalEffErrSyst
     print "TotalEffMScaleSystUp: %.5f"%self.totalEffMScaleSystUp
     print "TotalEffMScaleSystDown: %.5f"%self.totalEffMScaleSystDown
@@ -77,6 +83,9 @@ class ModelPoint:
     file.write("FileName: " + self.fileName + "\n")
     file.write("TotalXSection: " + str(self.totalXSec) + "\n")
     file.write("KFactor: " + str(self.kFactor) + "\n")
+    file.write("Acceptance: " + str(self.acceptance) + "\n")
+    file.write("TotalSignalEvents: " + str(self.totalSignalEvents) + "\n")
+    file.write("PreMWEff: " + str(self.preMWEff) + "\n")
     file.write("TotalEff: " + str(self.totalEff) + "\n")
     file.write("TotalEffErrStat: " + str(self.totalEffErrStat) + "\n")
     file.write("TotalEffErrSyst: " + str(self.totalEffErrSyst) + "\n")
@@ -194,6 +203,12 @@ def ReadFromLines(lines):
       mp.totalXSec = value
     elif "KFactor:" in line:
       mp.kFactor = value
+    elif "Acceptance:" in line:
+      mp.acceptance = value
+    elif "TotalSignalEvents:" in line:
+      mp.totalSignalEvents = value
+    elif "PreMWEff:" in line:
+      mp.preMWEff = value
     elif "TotalEff:" in line:
       mp.totalEff = value
     elif "TotalEffErrStat:" in line:

@@ -84,7 +84,7 @@ def AddJobToCmdFile(PathCmd,PathShell,PathLog,PathError,doBatch,QueueName):
   cmd_file.close()
 
 
-def CreateShellFile(modelPoint,useKFactor,lumi,lumiErr,limitsDir):
+def CreateShellFile(modelPoint,lumi,lumiErr,limitsDir):
   global Farm_Directories
   couplingStr = str(modelPoint.coupling).replace('.','p')
   massString = str(int(modelPoint.mass))
@@ -115,16 +115,6 @@ def CreateShellFile(modelPoint,useKFactor,lumi,lumiErr,limitsDir):
   #float totalEffPileupSystUp, float totalEffPileupSystDown,
   #int mass, float coupling, float halfWidth,
   #float totalXSec, int massWindowLow, int massWindowHigh, std::string fileName)
-  if useKFactor:
-    modelPoint.totalEff*=modelPoint.kFactor
-    modelPoint.totalEffErrStat*=modelPoint.kFactor
-    modelPoint.totalEffErrSyst*=modelPoint.kFactor
-    modelPoint.totalEffMScaleSystUp*=modelPoint.kFactor
-    modelPoint.totalEffMScaleSystDown*=modelPoint.kFactor
-    modelPoint.totalEffMResSystUp*=modelPoint.kFactor
-    modelPoint.totalEffMResSystDown*=modelPoint.kFactor
-    modelPoint.totalEffPileupSystUp*=modelPoint.kFactor
-    modelPoint.totalEffPileupSystDown*=modelPoint.kFactor
   command = os.getcwd()+'/'
   command+= 'ComputeLimit.C('+str(lumi)+','+str(lumiErr)+','+str(modelPoint.totalEff)+','
   command+=str(modelPoint.totalEffErrStat)+','+str(modelPoint.totalEffErrSyst)+','
@@ -149,7 +139,7 @@ def SubmitJobs(pathCmd):
   os.system('source '+pathCmd)
 
 
-def ComputeLimits(cl95MacroPath,doBatch,queueName,lumi,lumiErr,modelPointArray,limitsDir,useKFactor):
+def ComputeLimits(cl95MacroPath,doBatch,queueName,lumi,lumiErr,modelPointArray,limitsDir):
   global Farm_Directories
   if not os.path.isdir(limitsDir+'/cls_plots'):
     os.mkdir(limitsDir+'/cls_plots')
@@ -158,7 +148,7 @@ def ComputeLimits(cl95MacroPath,doBatch,queueName,lumi,lumiErr,modelPointArray,l
   cmdPath = farmDirBase+'/submit.sh'
   CreateTheCmdFile(cmdPath)
   for modelPoint in modelPointArray:
-    pathShell,pathLog,pathError = CreateShellFile(modelPoint,useKFactor,lumi,lumiErr,limitsDir)
+    pathShell,pathLog,pathError = CreateShellFile(modelPoint,lumi,lumiErr,limitsDir)
     AddJobToCmdFile(cmdPath,pathShell,pathLog,pathError,doBatch,queueName)
   print 'Submit all jobs'
   SubmitJobs(cmdPath)
@@ -176,6 +166,9 @@ def MergeLimitJobs(modelPointArray,limitsDir,limitsFileNameBase):
     # TODO removing from pass-through in ComputeLimit.C macro
     thisMPFileName = modelPoint.fileName
     thisMPKFactor = modelPoint.kFactor
+    thisMPAcceptance = modelPoint.acceptance
+    thisMPpreMWEff = modelPoint.preMWEff
+    thisMPsignalEvents = modelPoint.totalSignalEvents
     # read this model point (now with limits) from output file
     couplingStr = str(modelPoint.coupling).replace('.','p')
     massString = str(int(modelPoint.mass))
@@ -194,6 +187,9 @@ def MergeLimitJobs(modelPointArray,limitsDir,limitsFileNameBase):
       exit(-1)
     thisModelPoint.fileName = thisMPFileName
     thisModelPoint.kFactor = thisMPKFactor
+    thisModelPoint.acceptance = thisMPAcceptance
+    thisModelPoint.preMWEff = thisMPpreMWEff
+    thisModelPoint.totalSignalEvents = thisMPsignalEvents
     newModelPointArray.append(thisModelPoint)
     ## replace this model point in the array
     #for index,mp in enumerate(modelPointArray):
@@ -321,6 +317,8 @@ def FillModelPointInfoForWindow(modelPoint,minBin,maxBin):
   modelPoint.nBackgroundErrStat = errorStatBG
   modelPoint.nBackgroundErrSyst = math.sqrt(errSystGamJet*errSystGamJet+errSystJetJet*errSystJetJet+errSystMC*errSystMC)
   totalBGErr = math.sqrt(pow(modelPoint.nBackgroundErrStat,2)+pow(modelPoint.nBackgroundErrSyst,2))
+  modelPoint.totalSignalEvents = 1.0*signalEntriesTotal
+  modelPoint.preMWEff = 1.0*signalHistogram.Integral()/signalEntriesTotal
   modelPoint.totalEff = 1.0*signalHistogram.Integral(minBin,maxBin)/signalEntriesTotal
   modelPoint.totalEffErrStat = math.sqrt(modelPoint.totalEff*(1-modelPoint.totalEff)/signalEntriesTotal)
   modelPoint.totalEffMScaleSystUp = 1.0*signalHistogramScaleShiftUp.Integral(minBin,maxBin)/signalEntriesTotal
@@ -334,10 +332,13 @@ def FillModelPointInfoForWindow(modelPoint,minBin,maxBin):
   sigMScaleSyst = max(math.fabs(modelPoint.totalEffMScaleSystUp-modelPoint.totalEff)/modelPoint.totalEff,math.fabs(modelPoint.totalEffMScaleSystDown-modelPoint.totalEff)/modelPoint.totalEff)
   sigMResSyst = math.fabs(modelPoint.totalEffMResSystUp-modelPoint.totalEff)/modelPoint.totalEff
   acceptance = 1.0*signalAccOnlyHistogram.Integral(minBin,maxBin)/signalEntriesTotal
-  singlePhotonEff = modelPoint.totalEff/acceptance
-  sigEffSystSingleGammaToTwoGamma = 2*singlePhotonEff*math.sqrt(pow(SigScaleFactorSystOneGamma,2)+pow(SigPtSFSystOneGamma,2))
+  singlePhotonEff = math.sqrt(modelPoint.totalEff/acceptance) # singlePhEff =~ sqrt(diPhotonEff)
+  sigEffSystSingleGammaToTwoGamma = (2*singlePhotonEff*math.sqrt(pow(SigScaleFactorSystOneGamma,2)+pow(SigPtSFSystOneGamma,2)))/modelPoint.totalEff
+  # above without /totalEff is absolute error on sigma_eff_diphoton; we need % to add with other sigma_eff_diphoton effects here (next line)
   sigEffSyst = math.sqrt(pow(sigMScaleSyst,2)+pow(sigMResSyst,2)+pow(SigPUSyst,2)+pow(SigPDFSyst,2)+pow(sigEffSystSingleGammaToTwoGamma,2))
-  modelPoint.totalEffErrSyst = sigEffSyst*modelPoint.totalEff # make into number of events, not %
+  # now we make it into absolute error, starting from %
+  modelPoint.totalEffErrSyst = sigEffSyst*modelPoint.totalEff
+  modelPoint.acceptance = acceptance
   totalEffErr = math.sqrt(pow(modelPoint.totalEffErrStat,2)+pow(modelPoint.totalEffErrSyst,2))
   optMassLow = modelPoint.optMassWindowLow
   optMassHigh = modelPoint.optMassWindowHigh
@@ -346,6 +347,7 @@ def FillModelPointInfoForWindow(modelPoint,minBin,maxBin):
   print 'Fill model point coupling=',modelPoint.coupling,'mass=',modelPoint.mass
   print 'Mass peak:',peakMass
   print 'totalEff =',modelPoint.totalEff,'+/-',modelPoint.totalEffErrStat,'(stat) +/-',modelPoint.totalEffErrSyst,'(syst) = ',totalEffErr
+  print 'acceptance =',modelPoint.acceptance
   print 'totalEffMScaleSystDown =',modelPoint.totalEffMScaleSystDown
   print 'totalEffMScaleSystUp =',modelPoint.totalEffMScaleSystUp
   print 'totalEffMResSystDown =',modelPoint.totalEffMResSystDown
