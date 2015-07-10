@@ -13,6 +13,7 @@ using namespace std;
 void PlottingCodeLoop::Loop()
 {
 
+  string useID = "loose"; // "tight" or "medium" or "loose"
   bool useDataMCEffScaleFactor = true;
   bool useDeltaPhiCut = false;
 
@@ -40,12 +41,15 @@ void PlottingCodeLoop::Loop()
   // end of computing shifted pileup weight hists
 
   cout<<"PlottingCodeLoop::Loop(): for signal; "<<fChain->GetEntries()<<" entries in Tree Chain"<<endl;
+  cout<<"Using ID: " << useID << endl;
 
   Double_t PUweight = 1.;
   Double_t PUweightUpwardShift = 1.;
   Double_t PUweightDownwardShift = 1.;
   Double_t dataMCEffScaleFactorPhoton1 = 1.;
   Double_t dataMCEffScaleFactorPhoton2 = 1.;
+
+  int nEventsPassingIDAcc = 0;
 
   Long64_t nentries = fChain->GetEntriesFast();
 
@@ -77,15 +81,52 @@ void PlottingCodeLoop::Loop()
     if(useDataMCEffScaleFactor)
     {
       // scale factor numbers for tight PF, full 2012 at 8 TeV taken from our twiki page
-      // tight PF ID * electronVeto
-      if(fabs(Photon1_detEta) < 0.8)
-        dataMCEffScaleFactorPhoton1 = 0.9703*0.9976;
-      else // can only be in higher eta region in EB
-        dataMCEffScaleFactorPhoton1 = 0.9764*0.9976;
-      if(fabs(Photon2_detEta) < 0.8)
-        dataMCEffScaleFactorPhoton2 = 0.9703*0.9976;
-      else // can only be in higher eta region in EB
-        dataMCEffScaleFactorPhoton2 = 0.9764*0.9976;
+      // FIXME: these are outdated
+      if(useID=="tight")
+      {
+        // tight PF ID * electronVeto
+        // FIXME update e-veto
+        float eVetoSF = 0.9976;
+        if(fabs(Photon1_detEta) < 0.8)
+          dataMCEffScaleFactorPhoton1 = 0.9703*eVetoSF;
+        else // can only be in higher eta region in EB
+          dataMCEffScaleFactorPhoton1 = 0.9764*eVetoSF;
+        if(fabs(Photon2_detEta) < 0.8)
+          dataMCEffScaleFactorPhoton2 = 0.9703*eVetoSF;
+        else // can only be in higher eta region in EB
+          dataMCEffScaleFactorPhoton2 = 0.9764*eVetoSF;
+      }
+      else if(useID=="medium")
+      {
+        // medium PF ID * electronVeto
+        float eVetoSF = 0.9999;
+        if(fabs(Photon1_detEta) < 0.8)
+          dataMCEffScaleFactorPhoton1 = 0.9718*eVetoSF;
+        else // can only be in higher eta region in EB
+          dataMCEffScaleFactorPhoton1 = 0.9768*eVetoSF;
+        if(fabs(Photon2_detEta) < 0.8)
+          dataMCEffScaleFactorPhoton2 = 0.9718*eVetoSF;
+        else // can only be in higher eta region in EB
+          dataMCEffScaleFactorPhoton2 = 0.9768*eVetoSF;
+      }
+      else if(useID=="loose")
+      {
+        // loose PF ID * electronVeto
+        float eVetoSF = 0.9999;
+        if(fabs(Photon1_detEta) < 0.8)
+          dataMCEffScaleFactorPhoton1 = 1.0*eVetoSF;
+        else // can only be in higher eta region in EB
+          dataMCEffScaleFactorPhoton1 = 1.0*eVetoSF;
+        if(fabs(Photon2_detEta) < 0.8)
+          dataMCEffScaleFactorPhoton2 = 1.0*eVetoSF;
+        else // can only be in higher eta region in EB
+          dataMCEffScaleFactorPhoton2 = 1.0*eVetoSF;
+      }
+      else
+      {
+          dataMCEffScaleFactorPhoton1 = 0;
+          dataMCEffScaleFactorPhoton2 = 0;
+      }
     }
     PUweight = MCPUWeight;
     // get pileup-shifted weights for pileup syst
@@ -115,7 +156,14 @@ void PlottingCodeLoop::Loop()
     if(!(Photon1_isEB && Photon2_isEB)) acceptedSmearedDiPhotonEvent = false;
     if(fabs(Photon1_detEta) > 1.4442 || fabs(Photon2_detEta) > 1.4442) acceptedSmearedDiPhotonEvent = false;
     //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) acceptedSmearedDiPhotonEvent = false;
-    if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) acceptedSmearedDiPhotonEvent = false;
+    if(useID=="tight")
+      if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) acceptedSmearedDiPhotonEvent = false;
+    else if(useID=="medium")
+      if( !(Photon1_isMediumPFPhoton && Photon2_isMediumPFPhoton) ) acceptedSmearedDiPhotonEvent = false;
+    else if(useID=="loose")
+      if( !(Photon1_isLoosePFPhoton && Photon2_isLoosePFPhoton) ) acceptedSmearedDiPhotonEvent = false;
+    else
+      acceptedSmearedDiPhotonEvent = false;
     // fill for those passing selections
     if(acceptedSmearedDiPhotonEvent)
     {
@@ -147,7 +195,14 @@ void PlottingCodeLoop::Loop()
     if(!(Photon1_isEB && Photon2_isEB)) acceptedShiftedUpDiPhotonEvent = false;
     if(fabs(Photon1_detEta) > 1.4442 || fabs(Photon2_detEta) > 1.4442) acceptedShiftedUpDiPhotonEvent = false;
     //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) acceptedShiftedUpDiPhotonEvent = false;
-    if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) acceptedShiftedUpDiPhotonEvent = false;
+    if(useID=="tight")
+      if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) acceptedShiftedUpDiPhotonEvent = false;
+    else if(useID=="medium")
+      if( !(Photon1_isMediumPFPhoton && Photon2_isMediumPFPhoton) ) acceptedShiftedUpDiPhotonEvent = false;
+    else if(useID=="loose")
+      if( !(Photon1_isLoosePFPhoton && Photon2_isLoosePFPhoton) ) acceptedShiftedUpDiPhotonEvent = false;
+    else
+      acceptedShiftedUpDiPhotonEvent = false;
     // fill for those passing selections
     if(acceptedShiftedUpDiPhotonEvent)
     {
@@ -178,7 +233,14 @@ void PlottingCodeLoop::Loop()
     if(!(Photon1_isEB && Photon2_isEB)) acceptedShiftedDownDiPhotonEvent = false;
     if(fabs(Photon1_detEta) > 1.4442 || fabs(Photon2_detEta) > 1.4442) acceptedShiftedDownDiPhotonEvent = false;
     //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) acceptedShiftedDownDiPhotonEvent = false;
-    if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) acceptedShiftedDownDiPhotonEvent = false;
+    if(useID=="tight")
+      if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) acceptedShiftedDownDiPhotonEvent = false;
+    else if(useID=="medium")
+      if( !(Photon1_isMediumPFPhoton && Photon2_isMediumPFPhoton) ) acceptedShiftedDownDiPhotonEvent = false;
+    else if(useID=="loose")
+      if( !(Photon1_isLoosePFPhoton && Photon2_isLoosePFPhoton) ) acceptedShiftedDownDiPhotonEvent = false;
+    else
+      acceptedShiftedDownDiPhotonEvent = false;
     // fill for those passing selections
     if(acceptedShiftedDownDiPhotonEvent)
     {
@@ -219,13 +281,15 @@ void PlottingCodeLoop::Loop()
     h_Diphoton_Minv_acceptedOnly->Fill(Diphoton_Minv,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
     h_Diphoton_Minv_FineBinning_acceptedOnly->Fill(Diphoton_Minv,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
     // efficiency hists
-    if(Photon1_isTightPFPhoton)
+    if((useID=="tight" && Photon1_isTightPFPhoton) || (useID=="medium" && Photon1_isMediumPFPhoton) ||
+        (useID=="loose" && Photon1_isLoosePFPhoton))
     {
       acceptedAndPFIDedEventsBothPhotonsNVtxVsGenPt->Fill(GenPhoton1_pt,Vtx_Nvtx,PUweight);
       acceptedAndPFIDedEventsBothPhotonsNVtxVsDetEta->Fill(Photon1_detEta,Vtx_Nvtx,PUweight);
       acceptedAndPFIDedEventsBothPhotonsGenPt->Fill(GenPhoton1_pt,PUweight);
     }
-    if(Photon2_isTightPFPhoton)
+    if((useID=="tight" && Photon2_isTightPFPhoton) || (useID=="medium" && Photon2_isMediumPFPhoton) ||
+        (useID=="loose" && Photon2_isLoosePFPhoton))
     {
       acceptedAndPFIDedEventsBothPhotonsNVtxVsGenPt->Fill(GenPhoton2_pt,Vtx_Nvtx,PUweight);
       acceptedAndPFIDedEventsBothPhotonsNVtxVsDetEta->Fill(Photon2_detEta,Vtx_Nvtx,PUweight);
@@ -236,8 +300,23 @@ void PlottingCodeLoop::Loop()
 
     // apply detector or PF ID  selection
     //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) continue;
-    if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) continue;
+    //
+    if(useID=="tight")
+    {
+      if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) continue;
+    }
+    else if(useID=="medium")
+    {
+      if( !(Photon1_isMediumPFPhoton && Photon2_isMediumPFPhoton) ) continue;
+    }
+    else if(useID=="loose")
+    {
+      if( !(Photon1_isLoosePFPhoton && Photon2_isLoosePFPhoton) ) continue;
+    }
+    else
+      continue;
 
+    ++nEventsPassingIDAcc;
     // fill selected events hist here
     h_nSelectedEvents->Fill(0.5,MCPUWeight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
 
@@ -297,6 +376,7 @@ void PlottingCodeLoop::Loop()
 
   }//end of loop over entries    
 
+  cout << nEventsPassingIDAcc << " events passing ID and acceptance" << endl;
 
   _outputfile->cd();
   h_nEvents->Write();

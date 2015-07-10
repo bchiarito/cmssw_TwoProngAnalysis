@@ -51,6 +51,15 @@ def makeEffArrays(modelPointArray):
   return masses, efficiency
 
 
+def makeAccArrays(modelPointArray):
+  masses = []
+  acceptances = []
+  for modelPoint in modelPointArray:
+    masses.append(modelPoint.mass)
+    acceptances.append(modelPoint.acceptance)
+  return masses, acceptances
+
+
 def makeArrays(modelPointArray):
   errMass = [0]*len(modelPointArray)
   errUp = []
@@ -65,12 +74,13 @@ def makeArrays(modelPointArray):
   limitExp = []
   limitObs = []
   totalXSec = []
+  kFactor = []
   # test last model point to see if there are limits for all points
   # if not, return empty arrays
   try:
     value = float(modelPointArray[len(modelPointArray)-1].expLimit)
   except ValueError:
-    return errMass, errUp, errDn, err2Up, err2Dn, masses, expUp, expDn, exp2Up, exp2Dn, limitExp, limitObs, totalXSec
+    return errMass, errUp, errDn, err2Up, err2Dn, masses, expUp, expDn, exp2Up, exp2Dn, limitExp, limitObs, totalXSec, kFactor
   for modelPoint in modelPointArray:
     errUp.append(modelPoint.expLimitOneSigmaHigh-modelPoint.expLimit)
     errDn.append(modelPoint.expLimit-modelPoint.expLimitOneSigmaLow)
@@ -84,7 +94,8 @@ def makeArrays(modelPointArray):
     limitExp.append(modelPoint.expLimit)
     limitObs.append(modelPoint.obsLimit)
     totalXSec.append(modelPoint.totalXSec)
-  return errMass, errUp, errDn, err2Up, err2Dn, masses, expUp, expDn, exp2Up, exp2Dn, limitExp, limitObs, totalXSec
+    kFactor.append(modelPoint.kFactor)
+  return errMass, errUp, errDn, err2Up, err2Dn, masses, expUp, expDn, exp2Up, exp2Dn, limitExp, limitObs, totalXSec, kFactor
 
 
 def SetCustomGStyle():
@@ -525,7 +536,7 @@ def MakeOptGraphImages(rootFile,outputDir,modelPointArray, plotSRootBCurve):
     graphNameTemplate = 'ssbOpt_k{coupling}_m{mass}'
     graphName = graphNameTemplate.format(coupling=str(mp.coupling).replace('.','p'),mass=str(mp.mass))
     mg.Draw('a')
-    #mg.GetXaxis().SetTitle('Window Size (GeV)')
+    mg.GetXaxis().SetTitle('Half Window Size (GeV)')
     #mg.GetYaxis().SetTitle('Opt. Var.')
     leg.Draw()
     #
@@ -946,24 +957,27 @@ def MakeOptSSBVsMassImages(rootFile, outputDir):
   ConvertToPng(savePath)
 
 
-def PlotAllBands(modelPointArrays, lumi, rootFile, imageDir):
+def PlotAllBands(modelPointArrays, lumi, useKFactor, rootFile, imageDir):
   print 'PlotAllBands'
   # this function takes a list of modelPointArrays: [mpsCoupling0.01, mpsCoupling0.05, ...]
   # fill arrays that we care about
   # TODO reuse this code in the plotbands section
+  # each of these arrays contains one array per coupling
   massesArrs = []
   limitExpArrs = []
   limitObsArrs = []
   totalXSecArrs = []
+  totalXSecKFactorArrs = []
   couplings = []
   for mpArray in modelPointArrays:
-    errMass, errUp, errDn, err2Up, err2Dn, masses, expUp, expDn, exp2Up, exp2Dn, limitExp, limitObs, totalXSec = makeArrays(mpArray)
+    errMass, errUp, errDn, err2Up, err2Dn, masses, expUp, expDn, exp2Up, exp2Dn, limitExp, limitObs, totalXSec, kFactor = makeArrays(mpArray)
     if len(errUp)==0:
       continue
     massesArrs.append(masses)
     limitExpArrs.append(limitExp)
     limitObsArrs.append(limitObs)
     totalXSecArrs.append(totalXSec)
+    totalXSecKFactorArrs.append([a*b for a,b in zip(totalXSec,kFactor)])
     couplings.append(mpArray[0].coupling)
 
   if len(massesArrs)==0:
@@ -978,10 +992,13 @@ def PlotAllBands(modelPointArrays, lumi, rootFile, imageDir):
   limitObsGraphs = []
   limitExpGraphs = []
   thGraphs = []
-  for massesArr, limitExpArr, limitObsArr, thArr in itertools.izip(massesArrs,limitExpArrs,limitObsArrs,totalXSecArrs):
+  for massesArr, limitExpArr, limitObsArr, thArr, thKFArr in itertools.izip(massesArrs,limitExpArrs,limitObsArrs,totalXSecArrs,totalXSecKFactorArrs):
     limitObsGraphs.append(TGraph(len(massesArr), array.array("f",massesArr),array.array("f",limitObsArr)))
     limitExpGraphs.append(TGraph(len(massesArr), array.array("f",massesArr), array.array("f",limitExpArr)))
-    thGraphs.append(TGraph(len(massesArr), array.array("f",massesArr), array.array("f",thArr)))
+    if useKFactor:
+      thGraphs.append(TGraph(len(massesArr), array.array("f",massesArr), array.array("f",thKFArr)))
+    else:
+      thGraphs.append(TGraph(len(massesArr), array.array("f",massesArr), array.array("f",thArr)))
 
   SetCustomGStyle()
 
@@ -1019,7 +1036,7 @@ def PlotAllBands(modelPointArrays, lumi, rootFile, imageDir):
     mg.Add(limitObsGraph,"LP")
     legend.AddEntry(limitObsGraph,"95%"+" CL limit #tilde{k} = "+str(coupling),"LP")
     mg.Add(thGraph,"L")
-    legend.AddEntry(thGraph,"G_{KK} #tilde{k} = "+str(coupling),"l")
+    legend.AddEntry(thGraph,"G_{KK} (K-Factor) #tilde{k} = "+str(coupling),"l")
     if colorIndex==2:
       colorIndex = 4
     elif colorIndex==4:
@@ -1032,7 +1049,8 @@ def PlotAllBands(modelPointArrays, lumi, rootFile, imageDir):
   h = TH1F("test","test",10,750,3500)
   h.SetStats(False)
   #h.GetYaxis().SetRangeUser(3e-4,3e-3)
-  h.GetYaxis().SetRangeUser(2.4e-4,3e-3)
+  #h.GetYaxis().SetRangeUser(2.4e-4,3e-3)
+  h.GetYaxis().SetRangeUser(1e-4,3e-3)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
   h.GetYaxis().SetTitle("RS graviton #sigma [pb]     ")
   h.GetXaxis().SetLabelFont(42)
@@ -1071,27 +1089,30 @@ def PlotAllBands(modelPointArrays, lumi, rootFile, imageDir):
 
   gPad.RedrawAxis()
 
-  plotname = "allLimits.pdf"
-  savename = TString(plotname)
+  if useKFactor:
+    plotname = "allLimits_KFactor"
+    graphName = "limitsKFactorAllCouplingsMultiGraph"
+  else:
+    plotname = "allLimits"
+    graphName = "limitsAllCouplingsMultiGraph"
+  savename = TString(plotname+'.pdf')
   pdfName = savename.Data()
   c.SaveAs(imageDir+'/'+savename.Data())
-  plotname = "allLimits.C"
-  savename = TString(plotname)
+  savename = TString(plotname+'.C')
   c.SaveAs(imageDir+'/'+savename.Data())
   # png output looks strange, so convert from pdf instead
-  plotname = "allLimits.png"
-  savename = TString(plotname)
+  savename = TString(plotname+'.png')
   subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
   # write
-  mg.SetName("limitsAllCouplingsMultiGraph")
+  mg.SetName(graphName)
   mg.Write()
 
 
-def PlotBands(modelPointArray, lumi, rootFile, imageDir):
+def PlotBands(modelPointArray, plotObsLimit, lumi, useKFactor, rootFile, imageDir):
   #print '----- PlotBands -----'
   #print 'Coupling:',modelPointArray[0].coupling
   # fill arrays
-  errMass, errUp, errDn, err2Up, err2Dn, masses, expUp, expDn, exp2Up, exp2Dn, limitExp, limitObs, totalXSec = makeArrays(modelPointArray)
+  errMass, errUp, errDn, err2Up, err2Dn, masses, expUp, expDn, exp2Up, exp2Dn, limitExp, limitObs, totalXSec, kFactor = makeArrays(modelPointArray)
 
   if len(errUp)==0:
     return
@@ -1183,8 +1204,10 @@ def PlotBands(modelPointArray, lumi, rootFile, imageDir):
                                  array.array("f",errMass),array.array("f",errMass),
                                  array.array("f",errDn),array.array("f",errUp))
 
-
-  g01_theory = TGraph(len(masses), array.array("f",masses), array.array("f",totalXSec))
+  if useKFactor:
+    g01_theory = TGraph(len(masses), array.array("f",masses), array.array("f",[a*b for a,b in zip(totalXSec,kFactor)]))
+  else:
+    g01_theory = TGraph(len(masses), array.array("f",masses), array.array("f",totalXSec))
 
   SetCustomGStyle()
 
@@ -1277,7 +1300,8 @@ def PlotBands(modelPointArray, lumi, rootFile, imageDir):
   mg.Add(g01_exp_2s,"3C")
   mg.Add(g01_exp_1s,"3C")
   mg.Add(g01_exp,"C")
-  mg.Add(g01_obs,"LP")
+  if plotObsLimit:
+    mg.Add(g01_obs,"LP")
   mg.Add(g01_theory,"L")
   mg.Draw("AL")
   # To have diff. x-axes for each limit graph (TMultiGraph doesn't exactly respect zoomed x-axis)
@@ -1315,8 +1339,11 @@ def PlotBands(modelPointArray, lumi, rootFile, imageDir):
   #h.Draw()
   #mg.Draw("L")
   #
-
-  titlename = "G_{KK} #tilde{k} = "+str(modelPointArray[0].coupling)
+  
+  if useKFactor:
+    titlename = "G_{KK} (K-Factor) #tilde{k} = "+str(modelPointArray[0].coupling)
+  else:
+    titlename = "G_{KK} #tilde{k} = "+str(modelPointArray[0].coupling)
   legend = TLegend(.42,0.71,.73,.88)
   #  legend.AddEntry((TObject*)0,title,"")
   #legend.AddEntry(gr_exp_out ,"median expected","l")
@@ -1324,7 +1351,8 @@ def PlotBands(modelPointArray, lumi, rootFile, imageDir):
   legend.AddEntry(g01_exp_1s ,"68% expected","lf")
   legend.AddEntry(g01_exp_2s ,"95% expected","lf")
   legend.AddEntry(g01_theory ,titlename,"l")
-  legend.AddEntry(g01_obs ,"95% CL limit","l")
+  if plotObsLimit:
+    legend.AddEntry(g01_obs ,"95% CL limit","l")
   legend.SetBorderSize(0)
   legend.SetFillColor(0)
   legend.Draw()
@@ -1349,29 +1377,65 @@ def PlotBands(modelPointArray, lumi, rootFile, imageDir):
 
   gPad.RedrawAxis()
 
-  plotname = "limit_k_%.2f.pdf" % modelPointArray[0].coupling
+  if plotObsLimit:
+    if useKFactor:
+      plotname = "limit_k_%.2f_kFactor.pdf" % modelPointArray[0].coupling
+    else:
+      plotname = "limit_k_%.2f.pdf" % modelPointArray[0].coupling
+  else:
+    if useKFactor:
+      plotname = "limit_k_%.2f_kFactor_expOnly.pdf" % modelPointArray[0].coupling
+    else:
+      plotname = "limit_k_%.2f_expOnly.pdf" % modelPointArray[0].coupling
   savename = TString(plotname)
   indexstring = savename.Index(".")
   savename.Replace(indexstring,1,"p")
   pdfName = savename.Data()
   c.SaveAs(imageDir+'/'+savename.Data())
-  plotname = "limit_k_%.2f.C" % modelPointArray[0].coupling
+  if plotObsLimit:
+    if useKFactor:
+      plotname = "limit_k_%.2f_kFactor.C" % modelPointArray[0].coupling
+    else:
+      plotname = "limit_k_%.2f.C" % modelPointArray[0].coupling
+  else:
+    if useKFactor:
+      plotname = "limit_k_%.2f_kFactor_expOnly.C" % modelPointArray[0].coupling
+    else:
+      plotname = "limit_k_%.2f_expOnly.C" % modelPointArray[0].coupling
   savename = TString(plotname)
   indexstring = savename.Index(".")
   savename.Replace(indexstring,1,"p")
   c.SaveAs(imageDir+'/'+savename.Data())
   # png output looks strange, so convert from pdf instead
-  plotname = "limit_k_%.2f.png" % modelPointArray[0].coupling
+  if plotObsLimit:
+    if useKFactor:
+      plotname = "limit_k_%.2f_kFactor.png" % modelPointArray[0].coupling
+    else:
+      plotname = "limit_k_%.2f.png" % modelPointArray[0].coupling
+  else:
+    if useKFactor:
+      plotname = "limit_k_%.2f_kFactor_expOnly.png" % modelPointArray[0].coupling
+    else:
+      plotname = "limit_k_%.2f_expOnly.png" % modelPointArray[0].coupling
   savename = TString(plotname)
   indexstring = savename.Index(".")
   savename.Replace(indexstring,1,"p")
   subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
   # write
-  mg.SetName("limit_k_%.2f_MultiGraph" % modelPointArray[0].coupling)
+  if plotObsLimit:
+    if useKFactor:
+      mg.SetName("limit_k_%.2f_kFactor_MultiGraph" % modelPointArray[0].coupling)
+    else:
+      mg.SetName("limit_k_%.2f_MultiGraph" % modelPointArray[0].coupling)
+  else:
+    if useKFactor:
+      mg.SetName("limit_k_%.2f_kFactor_MultiGraph_expOnly" % modelPointArray[0].coupling)
+    else:
+      mg.SetName("limit_k_%.2f_MultiGraph_expOnly" % modelPointArray[0].coupling)
   mg.Write()
 
 
-def GetMassLimit(modelPointArray):
+def GetMassLimit(modelPointArray,useKFactor):
   #print '----- GetMassLimit -----'
   #print 'Coupling:',modelPointArray[0].coupling
   # fill arrays
@@ -1379,6 +1443,7 @@ def GetMassLimit(modelPointArray):
   limitExp = []
   limitObs = []
   totalXSec = []
+  totalXSecKF = []
   # test last model point to see if there are limits for all points
   # if not, return -1
   try:
@@ -1390,13 +1455,19 @@ def GetMassLimit(modelPointArray):
     limitExp.append(modelPoint.expLimit)
     limitObs.append(modelPoint.obsLimit)
     totalXSec.append(modelPoint.totalXSec)
+    totalXSecKF.append(modelPoint.totalXSec*modelPoint.kFactor)
  
   # scan for r = 1
   for i in range(len(modelPointArray)):
-    if modelPointArray[i].obsLimit/modelPointArray[i].totalXSec < 1 and \
-       modelPointArray[i+1].obsLimit/modelPointArray[i+1].totalXSec > 1:
-      rLow = modelPointArray[i].obsLimit/modelPointArray[i].totalXSec
-      rHigh = modelPointArray[i+1].obsLimit/modelPointArray[i+1].totalXSec
+    totalXSec = modelPointArray[i].totalXSec
+    totalXSec2 = modelPointArray[i+1].totalXSec
+    if useKFactor:
+      totalXSec*=modelPointArray[i].kFactor
+      totalXSec2*=modelPointArray[i+1].kFactor
+    if modelPointArray[i].obsLimit/totalXSec < 1 and \
+       modelPointArray[i+1].obsLimit/totalXSec2 > 1:
+      rLow = modelPointArray[i].obsLimit/totalXSec
+      rHigh = modelPointArray[i+1].obsLimit/totalXSec2
       xsLow = modelPointArray[i].obsLimit
       xsHigh = modelPointArray[i+1].obsLimit
       mLow = modelPointArray[i].mass
@@ -1416,10 +1487,15 @@ def GetMassLimit(modelPointArray):
   #   EXPECTED LIMITS SECTION
   #     do it again for expected limits
   for i in range(len(modelPointArray)):
-    if modelPointArray[i].expLimit/modelPointArray[i].totalXSec < 1 and \
-       modelPointArray[i+1].expLimit/modelPointArray[i+1].totalXSec > 1:
-      rLowExp = modelPointArray[i].expLimit/modelPointArray[i].totalXSec
-      rHighExp = modelPointArray[i+1].expLimit/modelPointArray[i+1].totalXSec
+    totalXSec = modelPointArray[i].totalXSec
+    totalXSec2 = modelPointArray[i+1].totalXSec
+    if useKFactor:
+      totalXSec*=modelPointArray[i].kFactor
+      totalXSec2*=modelPointArray[i+1].kFactor
+    if modelPointArray[i].expLimit/totalXSec < 1 and \
+       modelPointArray[i+1].expLimit/totalXSec2 > 1:
+      rLowExp = modelPointArray[i].expLimit/totalXSec
+      rHighExp = modelPointArray[i+1].expLimit/totalXSec2
       xsLowExp = modelPointArray[i].expLimit
       xsHighExp = modelPointArray[i+1].expLimit
       mLowExp = modelPointArray[i].mass
@@ -1446,9 +1522,9 @@ def GetMassLimit(modelPointArray):
   return m,xs,mExp,xsExp
 
 
-def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile, lumi, imageDir):
+def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, useKFactor, rootFile, lumi, imageDir):
   rootFile.cd()
-  cLimit = TCanvas("cLimit","cLimit",800,600)
+  cLimit = TCanvas("cLimit","cLimit",1000,750)
   gStyle.SetOptStat(0)
   #cLimit.Range(595.5973,-0.03483694,1345.283,0.2539571)
   cLimit.SetFillColor(0)
@@ -1473,8 +1549,15 @@ def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile, l
   graph.SetMarkerColor(obsLimFillColor)
   graph.SetMarkerStyle(20)
   graph.SetMarkerSize(1.0)
+  #for i in range(0,len(couplingList)):
+  #  graph.SetPoint(i,obsMassLimList[i],couplingList[i])
+  # slope+x-intercept at y=1
+  slope = (couplingList[1]-couplingList[0])/(obsMassLimList[1]-obsMassLimList[0])
+  xInt = (couplingList[0]-1)/slope + obsMassLimList[0]
+  graph.SetPoint(0,xInt,1)
   for i in range(0,len(couplingList)):
-    graph.SetPoint(i,obsMassLimList[i],couplingList[i])
+    graph.SetPoint(i+1,obsMassLimList[i],couplingList[i])
+  graph.SetPoint(len(couplingList)+1,obsMassLimList[len(couplingList)-1],1)
 
   # Expected limits
   graph2 = TGraph(len(couplingList))
@@ -1577,26 +1660,22 @@ def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile, l
   mg = TMultiGraph()
   mg.Add(LambdaPiGraph,'C')
   mg.Add(graphEW,'C')
-  mg.Add(graph,'L')
+  #mg.Add(graph,'L')
+  mg.Add(graph,'FL')
   mg.Add(graph2,'L')
   mg.Add(graphPrevCMS,'L')
   mg.Add(graphAtlas,'L')
-  xArray = graph.GetX()
-  xArray.SetSize(graph.GetN())
-  xList = list(xArray)
   cLimit.Clear()
-  mg.Draw('a')
-  #mg.GetXaxis().SetRangeUser(xList[0],xList[len(xList)-1])
-  mg.GetXaxis().SetRangeUser(xList[0],xList[len(xList)-1]-200)
-  mg.SetMinimum(0)
-  mg.SetMaximum(0.12)
+  gPad.DrawFrame(obsMassLimList[0]-20,0,obsMassLimList[len(obsMassLimList)-1],couplingList[len(couplingList)-1]+0.02)
+  mg.Draw()
   mg.GetXaxis().SetTitle("M_{1} [GeV]")
   mg.GetYaxis().SetTitle("Coupling k/#bar{M}_{Pl}")
   mg.GetXaxis().SetLabelFont(42)
   mg.GetYaxis().SetLabelFont(42)
   mg.GetXaxis().SetLabelSize(0.04)
   mg.GetYaxis().SetLabelSize(0.04)
-  mg.GetYaxis().SetTitleOffset(1.19)
+  mg.GetXaxis().SetLabelOffset(0.01)
+  mg.GetYaxis().SetTitleOffset(1.18)
   mg.GetXaxis().SetTitleOffset(1.0)
   mg.GetXaxis().SetTickLength()
   mg.GetYaxis().SetTickLength()
@@ -1657,14 +1736,33 @@ def CouplingVsMassPlot(couplingList, expMassLimList, obsMassLimList, rootFile, l
   cLimit.cd()
   cLimit.SetSelected(cLimit)
   cLimit.Update()
-  cLimit.Print(imageDir+'/RSMassVsCouplingLimits.C')
-  cLimit.Print(imageDir+'/RSMassVsCouplingLimits.pdf')
-  cLimit.Print(imageDir+'/RSMassVsCouplingLimits.eps')
-  #cLimit.Print(imageDir+'/RSMassVsCouplingLimits.png')
-  baseName=imageDir+'/RSMassVsCouplingLimits'
-  subprocess.call(['gs','-dTextAlphaBits=4','-dBATCH','-dNOPAUSE','-dQUIET','-dEPSCrop','-sDEVICE=png16m','-sOutputFile='+baseName+'.png',baseName+'.eps'])
-  cLimit.SetName("RSMassVsCouplingLimits")
-  cLimit.Write()
+  if useKFactor:
+    cLimit.Print(imageDir+'/RSMassVsCouplingLimits_kFactor.C')
+    cLimit.Print(imageDir+'/RSMassVsCouplingLimits_kFactor.pdf')
+    cLimit.Print(imageDir+'/RSMassVsCouplingLimits_kFactor.eps')
+    #cLimit.Print(imageDir+'/RSMassVsCouplingLimits_kFactor.png')
+    baseName=imageDir+'/RSMassVsCouplingLimits_kFactor'
+    subprocess.call(['gs','-dTextAlphaBits=4','-dBATCH','-dNOPAUSE','-dQUIET','-dEPSCrop','-sDEVICE=png16m','-sOutputFile='+baseName+'.png',baseName+'.eps'])
+    cLimit.SetName("RSMassVsCouplingLimits_kFactor")
+    cLimit.Write()
+  else:
+    cLimit.Print(imageDir+'/RSMassVsCouplingLimits.C')
+    cLimit.Print(imageDir+'/RSMassVsCouplingLimits.pdf')
+    cLimit.Print(imageDir+'/RSMassVsCouplingLimits.eps')
+    #cLimit.Print(imageDir+'/RSMassVsCouplingLimits.png')
+    baseName=imageDir+'/RSMassVsCouplingLimits'
+    subprocess.call(['gs','-dTextAlphaBits=4','-dBATCH','-dNOPAUSE','-dQUIET','-dEPSCrop','-sDEVICE=png16m','-sOutputFile='+baseName+'.png',baseName+'.eps'])
+    cLimit.SetName("RSMassVsCouplingLimits")
+    cLimit.Write()
+
+
+def GetEffShiftError(effShifted,totalSignalEvents):
+    return math.sqrt(effShifted*(1-effShifted)/totalSignalEvents)
+
+
+def GetRelEffShiftErr(eff,effErr,effShifted,totalSignalEvents):
+  effShiftErr = GetEffShiftError(effShifted,totalSignalEvents)
+  return (1.0/eff)*sqrt(effErr**2*effShifted**2/eff**2 + effShiftErr**2)
 
 
 def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
@@ -1678,6 +1776,8 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
   effMScaleDownArrs = []
   effMScaleUpNonAbsArrs = []
   effMScaleDownNonAbsArrs = []
+  effMScaleUpErrArrs = []
+  effMScaleDownErrArrs = []
   for mpArray in modelPointArrays:
     if len(mpArray) < 1:
       continue
@@ -1689,29 +1789,38 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
     effMScaleDown = []
     effMScaleUpNonAbs = []
     effMScaleDownNonAbs = []
+    effMScaleUpErrs = []
+    effMScaleDownErrs = []
     for mp in mpArray:
       effMScaleUp.append(math.fabs(mp.totalEffMScaleSystUp-mp.totalEff)/mp.totalEff)
+      effMScaleUpErrs.append(GetRelEffShiftErr(mp.totalEff,mp.totalEffErrStat,mp.totalEffMScaleSystUp,mp.totalSignalEvents))
       effMScaleDown.append(math.fabs(mp.totalEffMScaleSystDown-mp.totalEff)/mp.totalEff)
+      effMScaleDownErrs.append(GetRelEffShiftErr(mp.totalEff,mp.totalEffErrStat,mp.totalEffMScaleSystDown,mp.totalSignalEvents))
       effMScaleUpNonAbs.append((mp.totalEffMScaleSystUp-mp.totalEff)/mp.totalEff)
       effMScaleDownNonAbs.append((mp.totalEffMScaleSystDown-mp.totalEff)/mp.totalEff)
     effMScaleUpArrs.append(effMScaleUp)
     effMScaleDownArrs.append(effMScaleDown)
     effMScaleUpNonAbsArrs.append(effMScaleUpNonAbs)
     effMScaleDownNonAbsArrs.append(effMScaleDownNonAbs)
+    effMScaleUpErrArrs.append(effMScaleUpErrs)
+    effMScaleDownErrArrs.append(effMScaleDownErrs)
 
   rootFile.cd()
   # turn the arrays into graphs
   effGraphs = []
   effGraphsNonAbsUp = []
   effGraphsNonAbsDown = []
-  for massesArr, effsArr, effMScaleDownArr, effMScaleUpArr, effMScaleUpNonAbsArr, effMScaleDownNonAbsArr in itertools.izip(massesArrs,effArrs,effMScaleDownArrs,effMScaleUpArrs,effMScaleUpNonAbsArrs,effMScaleDownNonAbsArrs):
+  for massesArr, effsArr, effMScaleDownArr, effMScaleUpArr, effMScaleUpNonAbsArr, effMScaleDownNonAbsArr, eMScaleUpErr, \
+  eMScaleDownErr \
+  in itertools.izip(massesArrs,effArrs,effMScaleDownArrs,effMScaleUpArrs,effMScaleUpNonAbsArrs,effMScaleDownNonAbsArrs,
+      effMScaleUpErrArrs,effMScaleDownErrArrs):
     massErrs = [0]*len(massesArr)
     nominals = [1]*len(massesArr)
     effGraphs.append(TGraphAsymmErrors(len(massesArr), array.array("f",massesArr),array.array("f",nominals),array.array("f",massErrs),array.array("f",massErrs),array.array("f",effMScaleDownArr),array.array("f",effMScaleUpArr)))
-    effGraphsNonAbsUp.append(TGraph(len(massesArr), array.array("f",massesArr), array.array("f",effMScaleUpNonAbsArr)))
-    effGraphsNonAbsDown.append(TGraph(len(massesArr), array.array("f",massesArr), array.array("f",effMScaleDownNonAbsArr)))
-    #print 'effMScaleDownArr:',effMScaleDownArr
-    #print 'effMScaleDownArr:',effMScaleDownArr
+    #effGraphsNonAbsUp.append(TGraph(len(massesArr), array.array("f",massesArr), array.array("f",effMScaleUpNonAbsArr)))
+    #effGraphsNonAbsDown.append(TGraph(len(massesArr), array.array("f",massesArr), array.array("f",effMScaleDownNonAbsArr)))
+    effGraphsNonAbsUp.append(TGraphErrors(len(massesArr), array.array("f",massesArr), array.array("f",effMScaleUpNonAbsArr), array.array("f",[0]*len(massesArr)),array.array("f",eMScaleUpErr)))
+    effGraphsNonAbsDown.append(TGraphErrors(len(massesArr), array.array("f",massesArr), array.array("f",effMScaleDownNonAbsArr), array.array("f",[0]*len(massesArr)),array.array("f",eMScaleDownErr)))
 
   SetCustomGStyle()
   c = TCanvas("c","c",100,100,600,600)
@@ -1721,6 +1830,7 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
   c.SetGridy()
   # Multigraph
   mg = TMultiGraph()
+  # Multigraph non-abs
   mgNonAbs = TMultiGraph()
   legend = TLegend(0.2,0.75,0.5,0.9)
   legendNonAbs = TLegend(0.2,0.75,0.5,0.9)
@@ -1765,7 +1875,7 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
   # To make the separate graphs share the same axes
   h = TH1F("test","",10,750,3500)
   h.SetStats(False)
-  h.GetYaxis().SetRangeUser(0.8,1.2)
+  h.GetYaxis().SetRangeUser(0.65,1.35)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
   h.GetYaxis().SetTitle("rel. efficiency*acc change")
   h.GetXaxis().SetLabelFont(42)
@@ -1822,6 +1932,7 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
   mg.SetName(name.Data())
   mg.Write()
   #
+  ################################################################
   # for non-abs
   c = TCanvas("c","c",100,100,600,600)
   c.cd()
@@ -1830,7 +1941,7 @@ def PlotAllEfficienciesMScale(modelPointArrays, lumi, rootFile, imageDir):
   # To make the separate graphs share the same axes
   h = TH1F("test","",10,750,3500)
   h.SetStats(False)
-  h.GetYaxis().SetRangeUser(-0.2,0.2)
+  h.GetYaxis().SetRangeUser(-0.1,0.4)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
   h.GetYaxis().SetTitle("rel. efficiency*acc change")
   h.GetXaxis().SetLabelFont(42)
@@ -1897,6 +2008,8 @@ def PlotAllEfficienciesMRes(modelPointArrays, lumi, rootFile, imageDir):
   effArrs = []
   effMResUpArrs = []
   effMResDownArrs = []
+  effMResUpErrArrs = []
+  effMResDownErrArrs = []
   for mpArray in modelPointArrays:
     if len(mpArray) < 1:
       continue
@@ -1906,23 +2019,28 @@ def PlotAllEfficienciesMRes(modelPointArrays, lumi, rootFile, imageDir):
     couplings.append(mpArray[0].coupling)
     effMResUp = []
     effMResDown = []
+    effMResUpErrs = []
+    effMResDownErrs = []
     for mp in mpArray:
-      #print 'mp.totalEffMResSystUp=',mp.totalEffMResSystUp,'mp.totalEff=',mp.totalEff,'relDiff=',(mp.totalEffMResSystUp-mp.totalEff)/mp.totalEff
-      #print 'mp.totalEffMResSystDown=',mp.totalEffMResSystDown,'mp.totalEff=',mp.totalEff,'relDiff=',(mp.totalEffMResSystDown-mp.totalEff)/mp.totalEff
       #effMResUp.append(math.fabs(mp.totalEffMResSystUp-mp.totalEff)/mp.totalEff)
       effMResUp.append((mp.totalEffMResSystUp-mp.totalEff)/mp.totalEff)
       effMResDown.append(math.fabs(mp.totalEffMResSystDown-mp.totalEff)/mp.totalEff) # not used
+      effMResUpErrs.append(GetRelEffShiftErr(mp.totalEff,mp.totalEffErrStat,mp.totalEffMResSystUp,mp.totalSignalEvents))
+      effMResDownErrs.append(GetRelEffShiftErr(mp.totalEff,mp.totalEffErrStat,mp.totalEffMResSystDown,mp.totalSignalEvents))
     effMResUpArrs.append(effMResUp)
     effMResDownArrs.append(effMResDown)
+    effMResUpErrArrs.append(effMResUpErrs)
+    effMResDownErrArrs.append(effMResDownErrs)
 
   rootFile.cd()
   # turn the arrays into graphs
   effGraphs = []
-  for massesArr, effsArr, effMResDownArr, effMResUpArr in itertools.izip(massesArrs,effArrs,effMResDownArrs,effMResUpArrs):
+  for massesArr, effsArr, effMResDownArr, effMResUpArr, effMResUpErrArr, effMResDownErrArr in itertools.izip(massesArrs,effArrs,effMResDownArrs,effMResUpArrs,effMResUpErrArrs,effMResDownErrArrs):
     massErrs = [0]*len(massesArr)
     nominals = [1]*len(massesArr)
     #effGraphs.append(TGraphAsymmErrors(len(massesArr), array.array("f",massesArr),array.array("f",nominals),array.array("f",massErrs),array.array("f",massErrs),array.array("f",effMResDownArr),array.array("f",effMResUpArr)))
-    effGraphs.append(TGraph(len(massesArr), array.array("f",massesArr),array.array("f",effMResUpArr)))
+    #effGraphs.append(TGraph(len(massesArr), array.array("f",massesArr),array.array("f",effMResUpArr)))
+    effGraphs.append(TGraphAsymmErrors(len(massesArr), array.array("f",massesArr),array.array("f",effMResUpArr),array.array("f",massErrs),array.array("f",massErrs),array.array("f",effMResDownErrArr),array.array("f",effMResUpErrArr)))
 
   SetCustomGStyle()
   gStyle.SetFuncColor(1)
@@ -1964,7 +2082,7 @@ def PlotAllEfficienciesMRes(modelPointArrays, lumi, rootFile, imageDir):
   h = TH1F("test","",10,750,3500)
   h.SetStats(False)
   #h.GetYaxis().SetRangeUser(0.8,1.2)
-  h.GetYaxis().SetRangeUser(-0.25,0.25)
+  h.GetYaxis().SetRangeUser(-0.05,0.35)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
   h.GetYaxis().SetTitle("rel. efficiency*acc change")
   h.GetXaxis().SetLabelFont(42)
@@ -1975,6 +2093,7 @@ def PlotAllEfficienciesMRes(modelPointArrays, lumi, rootFile, imageDir):
   h.GetXaxis().SetTitleOffset(1.2)
   h.GetXaxis().SetTitleSize(0.04)
   h.GetYaxis().SetTitleSize(0.04)
+  gStyle.SetOptFit(0)
   h.Draw()
   mg.Draw()
   # draw legend
@@ -2147,6 +2266,116 @@ def PlotAllEfficienciesPileup(modelPointArrays, lumi, rootFile, imageDir):
   mg.Write()
 
 
+def PlotAllAcceptances(modelPointArrays, lumi, rootFile, imageDir):
+  # this function takes a list of modelPointArrays: [mpsCoupling0.01, mpsCoupling0.05, ...]
+  # fill arrays that we care about
+  # TODO reuse this code in the plotbands section
+  massesArrs = []
+  couplings = []
+  accArrs = []
+  for mpArray in modelPointArrays:
+    if len(mpArray) < 1:
+      continue
+    masses, accs = makeAccArrays(mpArray)
+    massesArrs.append(masses)
+    accArrs.append(accs)
+    couplings.append(mpArray[0].coupling)
+
+  rootFile.cd()
+  # turn the arrays into graphs
+  accGraphs = []
+  for massesArr, accsArr in itertools.izip(massesArrs,accArrs):
+    accGraphs.append(TGraph(len(massesArr), array.array("f",massesArr),array.array("f",accsArr)))
+
+  SetCustomGStyle()
+  c = TCanvas("c","c",100,100,600,600)
+  c.cd()
+  #c.SetLogy()
+  c.SetRightMargin(0.04)
+  # Multigraph
+  mg = TMultiGraph()
+  #legend = TLegend(0.45,0.73,0.73,0.92)
+  legend = TLegend(0.62,0.22,0.92,0.42)
+  colorIndex = 2 
+  #drawOpt = 'lx'
+  drawOpt = 'lp'
+  for accGraph, coupling in itertools.izip(accGraphs,couplings):
+    accGraph.SetMarkerSize(0.8)
+    accGraph.SetMarkerColor(colorIndex)
+    accGraph.SetMarkerStyle(21)
+    accGraph.SetLineColor(colorIndex)
+    accGraph.SetLineWidth(4)
+    #accGraph.SetLineStyle(2)
+    accGraph.SetFillColor(colorIndex)
+    accGraph.SetFillStyle(3003)
+    mg.Add(accGraph,drawOpt)
+    legend.AddEntry(accGraph," #tilde{k} = "+str(coupling),drawOpt)
+    if colorIndex==2:
+      colorIndex = 4
+    elif colorIndex==4:
+      colorIndex = 8
+    elif colorIndex>=8:
+      colorIndex+=1
+  # To make the separate graphs share the same axes
+  h = TH1F("test","",10,750,3500)
+  h.SetStats(False)
+  # range is set here
+  h.GetYaxis().SetRangeUser(0.2,1.0)
+  h.GetXaxis().SetTitle("M_{1} [GeV]")
+  h.GetYaxis().SetTitle("acceptance")
+  h.GetXaxis().SetLabelFont(42)
+  h.GetYaxis().SetLabelFont(42)
+  h.GetXaxis().SetLabelSize(0.04)
+  h.GetYaxis().SetLabelSize(0.04)
+  h.GetYaxis().SetTitleOffset(1.5)
+  h.GetXaxis().SetTitleOffset(1.2)
+  h.GetXaxis().SetTitleSize(0.04)
+  h.GetYaxis().SetTitleSize(0.04)
+  h.Draw()
+  mg.Draw("L")
+  # draw legend
+  legend.SetBorderSize(0)
+  legend.SetFillColor(0)
+  legend.Draw()
+  ## CMS
+  #pt = TPaveText(0.645973,0.629371,0.845638,0.699301,"blNDC")
+  #pt.SetName("CMS Preliminary")
+  #pt.SetBorderSize(1)
+  #pt.SetLineColor(0)
+  #pt.SetFillColor(0)
+  #pt.SetTextSize(0.0354545)
+  #text = pt.AddText("CMS Preliminary")
+  #pt.Draw()
+  ## lumi
+  #pt2 = TPaveText(0.654362,0.585664,0.825503,0.652098,"blNDC")
+  #pt2.SetFillColor(0)
+  #pt2.SetBorderSize(1)
+  #pt2.SetLineColor(0)
+  #pt2.SetTextSize(0.0354545)
+  #text = pt2.AddText("%.1f" % (lumi/1000)+" fb^{-1} at 8 TeV")
+  #pt2.Draw()
+  gPad.RedrawAxis()
+  basename = 'allAcceptances'
+  plotname = basename+'.pdf'
+  savename = TString(plotname)
+  pdfName = savename.Data()
+  c.SaveAs(imageDir+'/'+savename.Data())
+  plotname = basename+'.C'
+  savename = TString(plotname)
+  c.SaveAs(imageDir+'/'+savename.Data())
+  # png output looks strange, so convert from pdf instead
+  plotname = basename+'.eps'
+  savename = TString(plotname)
+  c.SaveAs(imageDir+'/'+savename.Data())
+  basename=imageDir+'/allAcceptances'
+  subprocess.call(['gs','-dTextAlphaBits=4','-dBATCH','-dNOPAUSE','-dQUIET','-dEPSCrop','-sDEVICE=png16m','-sOutputFile='+basename+'.png',basename+'.eps'])
+  #subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
+  # write
+  name = TString('allAcceptances')
+  mg.SetName(name.Data())
+  mg.Write()
+
+
 def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   # this function takes a list of modelPointArrays: [mpsCoupling0.01, mpsCoupling0.05, ...]
   # fill arrays that we care about
@@ -2174,8 +2403,8 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   # turn the arrays into graphs
   effGraphs = []
   for massesArr, effsArr, effSystArr in itertools.izip(massesArrs,effArrs,effSystArrs):
-    #effGraphs.append(TGraph(len(massesArr), array.array("f",massesArr),array.array("f",effsArr)))
-    effGraphs.append(TGraphErrors(len(massesArr), array.array("f",massesArr), array.array("f",effsArr), array.array("f",[0]*len(massesArr)),array.array("f",effSystArr)))
+    effGraphs.append(TGraph(len(massesArr), array.array("f",massesArr),array.array("f",effsArr)))
+    #effGraphs.append(TGraphErrors(len(massesArr), array.array("f",massesArr), array.array("f",effsArr), array.array("f",[0]*len(massesArr)),array.array("f",effSystArr)))
 
   SetCustomGStyle()
   c = TCanvas("c","c",100,100,600,600)
@@ -2184,10 +2413,11 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   c.SetRightMargin(0.04)
   # Multigraph
   mg = TMultiGraph()
-  legend = TLegend(0.45,0.73,0.73,0.92)
+  #legend = TLegend(0.45,0.73,0.73,0.92)
+  legend = TLegend(0.62,0.22,0.92,0.42)
   colorIndex = 2 
   #drawOpt = 'lx'
-  drawOpt = 'lpx'
+  drawOpt = 'lp'
   for effGraph, coupling in itertools.izip(effGraphs,couplings):
     effGraph.SetMarkerSize(0.8)
     effGraph.SetMarkerColor(colorIndex)
@@ -2211,7 +2441,8 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   # To make the separate graphs share the same axes
   h = TH1F("test","",10,750,3500)
   h.SetStats(False)
-  h.GetYaxis().SetRangeUser(0.2,0.6)
+  # range is set here
+  h.GetYaxis().SetRangeUser(0.2,0.9)
   h.GetXaxis().SetTitle("M_{1} [GeV]")
   h.GetYaxis().SetTitle("efficiency*acc")
   h.GetXaxis().SetLabelFont(42)
@@ -2262,7 +2493,7 @@ def PlotAllEfficiencies(modelPointArrays, lumi, rootFile, imageDir):
   subprocess.call(['gs','-dTextAlphaBits=4','-dBATCH','-dNOPAUSE','-dQUIET','-dEPSCrop','-sDEVICE=png16m','-sOutputFile='+basename+'.png',basename+'.eps'])
   #subprocess.Popen(['convert','-trim',imageDir+'/'+pdfName,imageDir+'/'+savename.Data()])
   # write
-  name = TString(basename)
+  name = TString('allEfficiencies')
   mg.SetName(name.Data())
   mg.Write()
 
