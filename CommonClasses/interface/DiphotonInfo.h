@@ -71,6 +71,16 @@ namespace ExoDiPhotons{
       
     }
 
+  // same function, but with reco::Candidates
+    void FillDiphotonInfo(diphotonInfo_t &fDiphotonInfo, const reco::Candidate *photon1, const reco::Candidate *photon2) {
+      
+      reco::LeafCandidate::LorentzVector photon_vector1 = photon1->p4();
+      reco::LeafCandidate::LorentzVector photon_vector2 = photon2->p4();
+      
+      FillDiphotonInfo(fDiphotonInfo,photon_vector1,photon_vector2);
+      
+    }
+
 
   
 

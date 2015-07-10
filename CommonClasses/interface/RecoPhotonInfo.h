@@ -31,6 +31,9 @@
 //#include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
 //#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
 #include "Geometry/EcalAlgo/interface/EcalPreshowerGeometry.h"
+#include "RecoCaloTools/Navigation/interface/CaloNavigator.h"
+#include "Geometry/CaloTopology/interface/CaloTopology.h"
+#include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
 
 
 // for ecal
@@ -101,6 +104,12 @@ namespace ExoDiPhotons
 
     // rec hit timing
     Double_t maxRecHitTime;
+
+    //sum of energy rechits in 5x5
+    //which do not have kGood
+    //and the ratio to the photon energy;
+    Double_t sumRecHitsEnergiesNoKGood;
+    Double_t RecHitsNoKGoodEnergyRatio;
 
     Double_t hadOverEm;  
     Double_t hadTowerOverEm;  
@@ -174,6 +183,9 @@ namespace ExoDiPhotons
     Int_t iEtaY; // iEta if EB, iY if EE
     Int_t iPhiX; // iPhi if EB, iX if EE
 
+    //number of rechits in 5x5
+    //which do not have kGood
+    Int_t numRecHitsNoKGood;
 
     // seed cluster info
   
@@ -200,15 +212,16 @@ namespace ExoDiPhotons
     Bool_t isTightPFPhoton;
     Bool_t isMediumPFPhoton;
     Bool_t isLoosePFPhoton;
-  };
 
+    Bool_t hasGoodRecHits;
+  };
 
 
   // also include a string that can be used to define the tree branch
   // obviously this needs to be kept up-to-date with the struct definition
   // but now at least this only needs to be done here in this file, 
   // rather than in each individual analyser 
-  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:r9/D:sigmaIetaIeta:sigmaEtaEta:sigmaIphiIphi:sigmaPhiPhi:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:maxRecHitTime/D:hadOverEm:hadTowerOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04:hcalIso03:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoSumPtHollow03:trkIsoSumPtSolid03:PFIsoCharged04:PFIsoNeutral04:PFIsoPhoton04:PFIsoAll04:PFIsoCharged03:PFIsoNeutral03:PFIsoPhoton03:PFIsoAll03:PFIsoCharged02:PFIsoNeutral02:PFIsoPhoton02:PFIsoAll02:rhocorPFIsoCharged04:rhocorPFIsoNeutral04:rhocorPFIsoPhoton04:rhocorPFIsoAll04:rhocorPFIsoCharged03:rhocorPFIsoNeutral03:rhocorPFIsoPhoton03:rhocorPFIsoAll03:rhocorPFIsoCharged02:rhocorPFIsoNeutral02:rhocorPFIsoPhoton02:rhocorPFIsoAll02:esRatio:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:severityLevel/I:recHitFlag/I:detId/I:iEtaY/I:iPhiX/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:hasMatchedPromptElec:isFakeable:isTightDetPhoton:isTightPFPhoton:isMediumPFPhoton:isLoosePFPhoton");
+  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:r9/D:sigmaIetaIeta:sigmaEtaEta:sigmaIphiIphi:sigmaPhiPhi:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:maxRecHitTime/D:sumRecHitsEnergiesNoKGood/D:RecHitsNoKGoodEnergyRatio/D:hadOverEm:hadTowerOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04:hcalIso03:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoSumPtHollow03:trkIsoSumPtSolid03:PFIsoCharged04:PFIsoNeutral04:PFIsoPhoton04:PFIsoAll04:PFIsoCharged03:PFIsoNeutral03:PFIsoPhoton03:PFIsoAll03:PFIsoCharged02:PFIsoNeutral02:PFIsoPhoton02:PFIsoAll02:rhocorPFIsoCharged04:rhocorPFIsoNeutral04:rhocorPFIsoPhoton04:rhocorPFIsoAll04:rhocorPFIsoCharged03:rhocorPFIsoNeutral03:rhocorPFIsoPhoton03:rhocorPFIsoAll03:rhocorPFIsoCharged02:rhocorPFIsoNeutral02:rhocorPFIsoPhoton02:rhocorPFIsoAll02:esRatio:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:severityLevel/I:recHitFlag/I:detId/I:iEtaY/I:iPhiX/I:numRecHitsNoKGood/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:hasMatchedPromptElec:isFakeable:isTightDetPhoton:isTightPFPhoton:isMediumPFPhoton:isLoosePFPhoton:hasGoodRecHits");
 
 
   // useful function for ESratio
@@ -470,6 +483,50 @@ namespace ExoDiPhotons
   }
   
 
+
+  void check5x5recHitFlags(recoPhotonInfo_t &recoPhotonInfo, const EcalRecHitCollection &recHits, const CaloTopology* topology, DetId id, int ixMin, int ixMax, int iyMin, int iyMax)
+  {
+    //take into account fractions
+    //fast version
+    Bool_t photonflagisgood = true;
+    Double_t sumEnergies = 0.;
+    Double_t energyRatio = 0.;
+    Int_t numRecHits = 0;
+
+    /* std::cout<<"blabla"<<std::endl; */
+    /* std::cout<<id.det()<<" "<<id.subdetId()<<" "<<id.rawId()<<std::endl; */
+
+    CaloNavigator<DetId> cursor = CaloNavigator<DetId>( id, topology->getSubdetectorTopology( id ) );
+    //std::cout<<cursor.pos()<<std::endl;
+    for ( int i = ixMin; i <= ixMax; ++i ) {
+      for ( int j = iyMin; j <= iyMax; ++j ) {
+	cursor.home();
+	cursor.offsetBy( i, j );
+	EcalRecHitCollection::const_iterator it = recHits.find(*cursor);
+	/* std::cout<<it->detid().det()<<" " */
+	/* 	 <<it->detid().subdetId()<<" " */
+	/* 	 <<it->detid().rawId()<<" " */
+	/* 	 <<it->energy()<<" " */
+	/* 	 <<it->checkFlag(EcalRecHit::kGood)<<" " */
+	/* 	 <<std::endl; */
+	if(!it->checkFlag(EcalRecHit::kGood)){
+	  numRecHits++;
+	  sumEnergies+=it->energy();
+	}	
+	photonflagisgood = photonflagisgood && it->checkFlag(EcalRecHit::kGood);
+      }//end of loop over j
+    }//end of loop over i
+
+    energyRatio = sumEnergies/(recoPhotonInfo.pt*cosh(recoPhotonInfo.eta));
+
+    recoPhotonInfo.hasGoodRecHits = photonflagisgood;
+    recoPhotonInfo.sumRecHitsEnergiesNoKGood = sumEnergies;
+    recoPhotonInfo.RecHitsNoKGoodEnergyRatio = energyRatio;
+    recoPhotonInfo.numRecHitsNoKGood = numRecHits;
+  }//end of method
+   
+
+
   // also want a Fill function, that can fill the struct values from the appropriate objects
   // again, so that all editing only needs to be done here in this file
 
@@ -485,6 +542,13 @@ namespace ExoDiPhotons
 
   void FillRecoPhotonInfo(recoPhotonInfo_t &recoPhotonInfo, const reco::Photon *photon, EcalClusterLazyTools* lazyTools_,const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE, const EcalChannelStatus *ch_status,const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     
+    //std::cout<<"beginning of FillRecoPhotonInfo"<<std::endl;
+
+
+
+    edm::ESHandle<CaloTopology> theCaloTopo_;
+    iSetup.get<CaloTopologyRecord>().get(theCaloTopo_);
+    const CaloTopology *topology = theCaloTopo_.product();
 
     recoPhotonInfo.pt = photon->et();
     recoPhotonInfo.eta = photon->eta();
@@ -565,6 +629,29 @@ namespace ExoDiPhotons
       //iSetup.get<EcalSeverityLevelAlgoRcd>().get(sevlv);
       //severity = sevlv->severityLevel( id, rechits);
     }
+
+
+    recoPhotonInfo.hasGoodRecHits = false;
+    recoPhotonInfo.sumRecHitsEnergiesNoKGood = 0.;
+    recoPhotonInfo.RecHitsNoKGoodEnergyRatio = 0.;
+    recoPhotonInfo.numRecHitsNoKGood = 0;
+
+    /* std::cout<<"before check5x5 " */
+    /* 	     <<recoPhotonInfo.hasGoodRecHits<<" " */
+    /* 	     <<recoPhotonInfo.sumRecHitsEnergiesNoKGood<<" " */
+    /* 	     <<recoPhotonInfo.RecHitsNoKGoodEnergyRatio<<" " */
+    /* 	     <<recoPhotonInfo.numRecHitsNoKGood<<" " */
+    /* 	     <<std::endl; */
+
+    //recoPhotonInfo.hasGoodRecHits = check5x5recHitFlags(recoPhotonInfo, rechits, topology, id, -2, 2, -2, 2);
+    check5x5recHitFlags(recoPhotonInfo, rechits, topology, id, -2, 2, -2, 2);
+
+    /* std::cout<<"after check5x5 " */
+    /* 	     <<recoPhotonInfo.hasGoodRecHits<<" " */
+    /* 	     <<recoPhotonInfo.sumRecHitsEnergiesNoKGood<<" " */
+    /* 	     <<recoPhotonInfo.RecHitsNoKGoodEnergyRatio<<" " */
+    /* 	     <<recoPhotonInfo.numRecHitsNoKGood<<" " */
+    /* 	     <<std::endl; */
 
      
     EcalChannelStatusMap::const_iterator chit;
@@ -659,11 +746,118 @@ namespace ExoDiPhotons
 
   }// end of fill reco photon info
 
+
+  void InitRecoPhotonInfo(recoPhotonInfo_t &recoPhotonInfo) {
+
+    recoPhotonInfo.pt = -999999.; 
+    recoPhotonInfo.eta = -999999.; 
+    recoPhotonInfo.phi = -999999.; 
+    recoPhotonInfo.detEta = -999999.; 
+    recoPhotonInfo.detPhi = -999999.; 
+    recoPhotonInfo.r9 = -999999.; 
+    recoPhotonInfo.sigmaIetaIeta = -999999.; 
+    recoPhotonInfo.sigmaEtaEta = -999999.; 
+    recoPhotonInfo.sigmaIphiIphi = -999999.; 
+    recoPhotonInfo.sigmaPhiPhi = -999999.; 
+    recoPhotonInfo.maxEnergyXtal = -999999.; 
+    recoPhotonInfo.e1x5 = -999999.; 
+    recoPhotonInfo.e2x5 = -999999.; 
+    recoPhotonInfo.e3x3 = -999999.; 
+    recoPhotonInfo.e5x5 = -999999.; 
+    recoPhotonInfo.r1x5 = -999999.; 
+    recoPhotonInfo.r2x5 = -999999.; 
+    recoPhotonInfo.swisscross = -999999.; 
+    recoPhotonInfo.eMax = -999999.; 
+    recoPhotonInfo.eLeft = -999999.; 
+    recoPhotonInfo.eRight = -999999.; 
+    recoPhotonInfo.eTop = -999999.; 
+    recoPhotonInfo.eBottom = -999999.; 
+    recoPhotonInfo.eSecond = -999999.; 
+    recoPhotonInfo.e2x2 = -999999.; 
+    recoPhotonInfo.e4x4 = -999999.; 
+    recoPhotonInfo.e2e9 = -999999.; 
+    recoPhotonInfo.maxRecHitTime = -999999.; 
+    recoPhotonInfo.hadOverEm = -999999.; 
+    recoPhotonInfo.hadTowerOverEm = -999999.; 
+    recoPhotonInfo.hadDepth1OverEm = -999999.; 
+    recoPhotonInfo.hadDepth2OverEm = -999999.; 
+    recoPhotonInfo.hcalIso04 = -999999.; 
+    recoPhotonInfo.hcalIso03 = -999999.; 
+    recoPhotonInfo.ecalIso04 = -999999.; 
+    recoPhotonInfo.ecalIso03 = -999999.; 
+    recoPhotonInfo.trkIsoSumPtHollow04 = -999999.; 
+    recoPhotonInfo.trkIsoSumPtSolid04 = -999999.; 
+    recoPhotonInfo.trkIsoSumPtHollow03 = -999999.; 
+    recoPhotonInfo.trkIsoSumPtSolid03 = -999999.; 
+    recoPhotonInfo.PFIsoCharged04 = -999999.; 
+    recoPhotonInfo.PFIsoNeutral04 = -999999.; 
+    recoPhotonInfo.PFIsoPhoton04 = -999999.; 
+    recoPhotonInfo.PFIsoAll04 = -999999.; 
+    recoPhotonInfo.PFIsoCharged03 = -999999.; 
+    recoPhotonInfo.PFIsoNeutral03 = -999999.; 
+    recoPhotonInfo.PFIsoPhoton03 = -999999.; 
+    recoPhotonInfo.PFIsoAll03 = -999999.; 
+    recoPhotonInfo.PFIsoCharged02 = -999999.; 
+    recoPhotonInfo.PFIsoNeutral02 = -999999.; 
+    recoPhotonInfo.PFIsoPhoton02 = -999999.; 
+    recoPhotonInfo.PFIsoAll02 = -999999.; 
+    recoPhotonInfo.rhocorPFIsoCharged04 = -999999.; 
+    recoPhotonInfo.rhocorPFIsoNeutral04 = -999999.; 
+    recoPhotonInfo.rhocorPFIsoPhoton04 = -999999.; 
+    recoPhotonInfo.rhocorPFIsoAll04 = -999999.; 
+    recoPhotonInfo.rhocorPFIsoCharged03 = -999999.; 
+    recoPhotonInfo.rhocorPFIsoNeutral03 = -999999.; 
+    recoPhotonInfo.rhocorPFIsoPhoton03 = -999999.; 
+    recoPhotonInfo.rhocorPFIsoAll03 = -999999.; 
+    recoPhotonInfo.rhocorPFIsoCharged02 = -999999.; 
+    recoPhotonInfo.rhocorPFIsoNeutral02 = -999999.; 
+    recoPhotonInfo.rhocorPFIsoPhoton02 = -999999.; 
+    recoPhotonInfo.rhocorPFIsoAll02 = -999999.; 
+    recoPhotonInfo.esRatio = -999999.; 
+    recoPhotonInfo.scRawEnergy = -999999.; 
+    recoPhotonInfo.scPreshowerEnergy = -999999.; 
+    recoPhotonInfo.scPhiWidth = -999999.; 
+    recoPhotonInfo.scEtaWidth = -999999.; 
+    recoPhotonInfo.scNumBasicClusters = -999999; 
+    recoPhotonInfo.trkIsoNtrksHollow04 = -999999; 
+    recoPhotonInfo.trkIsoNtrksSolid04 = -999999; 
+    recoPhotonInfo.trkIsoNtrksHollow03 = -999999; 
+    recoPhotonInfo.trkIsoNtrksSolid03 = -999999; 
+    recoPhotonInfo.severityLevel = -999999; 
+    recoPhotonInfo.recHitFlag = -999999; 
+    recoPhotonInfo.detId = -999999; 
+    recoPhotonInfo.iEtaY = -999999; 
+    recoPhotonInfo.iPhiX = -999999; 
+    recoPhotonInfo.isEB = false; 
+    recoPhotonInfo.isEE = false; 
+    recoPhotonInfo.isEBEtaGap = false; 
+    recoPhotonInfo.isEBPhiGap = false; 
+    recoPhotonInfo.isEERingGap = false; 
+    recoPhotonInfo.isEEDeeGap = false; 
+    recoPhotonInfo.isEBEEGap = false; 
+    recoPhotonInfo.hasPixelSeed = false; 
+    recoPhotonInfo.hasMatchedPromptElec = false; 
+    recoPhotonInfo.isFakeable = false; 
+    recoPhotonInfo.isTightDetPhoton = false; 
+    recoPhotonInfo.isTightPFPhoton = false; 
+    recoPhotonInfo.isMediumPFPhoton = false; 
+    recoPhotonInfo.isLoosePFPhoton = false; 
+    recoPhotonInfo.hasGoodRecHits = false; 
+
+  }//end of init reco photon info
+
   // new compare function for sorting reco photon vectors
   bool comparePhotonsByPt(const reco::Photon &photon1, const reco::Photon &photon2) {
 
     // sorts such that highest pt photon first
     return(photon1.pt()>=photon2.pt());
+  }
+
+  // new compare function for sorting reco photon vectors
+  bool comparePhotonPointersByPt(const reco::Photon *photon1, const reco::Photon *photon2) {
+
+    // sorts such that highest pt photon first
+    return(photon1->pt()>=photon2->pt());
   }
 
   // and also for std::pairs of reco photon with an int for tight/fakeable status

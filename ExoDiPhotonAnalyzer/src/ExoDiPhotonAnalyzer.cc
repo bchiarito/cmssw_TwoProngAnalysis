@@ -825,18 +825,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   // photon loop
   for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
-    /*
-      cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
-      cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
-      cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
-      cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
-      cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
-      cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
-      cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
-      cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
-      cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();      cout << endl;
-    */
-
+    
     // now add selected photons to vector if:
     // tight ID
     // not in gap
@@ -868,8 +857,23 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     //and we also have to test the conversion safe electron veto
     bool passelecveto = !ConversionTools::hasMatchedPromptElectron(recoPhoton->superCluster(), hElectrons, hConversions, beamSpot.position());
 
-    if(ExoDiPhotons::isBarrelPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt)) {
-      //     if( (recoPhoton->pt()>=fMin_pt)) {       
+    //       cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
+    //       cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
+    //       cout << "; eMax/e3x3 = " << recoPhoton->maxEnergyXtal()/recoPhoton->e3x3();
+    //       cout << "; hadOverEm = " << recoPhoton->hadronicOverEm();
+    //       cout << "; trkIso = " << recoPhoton->trkSumPtHollowConeDR04();
+    //       cout << "; ecalIso = " << recoPhoton->ecalRecHitSumEtConeDR04();
+    //       cout << "; hcalIso = " << recoPhoton->hcalTowerSumEtConeDR04();
+    //       cout << "; pixelSeed = " << recoPhoton->hasPixelSeed();
+    //       cout << "; sigmaietaieta = " << recoPhoton->sigmaIetaIeta();
+    //       cout << "; CHiso = " << rhocorPFIsoCH;
+    //       cout << "; NHiso = " << rhocorPFIsoNH;
+    //       cout << "; PHiso = " << rhocorPFIsoPH;
+    //       cout<<""<<endl;
+
+    //if(ExoDiPhotons::isBarrelPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=fMin_pt)) {
+    //if(ExoDiPhotons::isBarrelPhoton(&(*recoPhoton)) && (recoPhoton->pt()>=50.)) {
+    if( (recoPhoton->pt()>=fMin_pt)) {       
 
       //Now we choose which ID to use (PF or Det)
       if(MethodID.Contains("Detector")){
@@ -884,6 +888,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	   !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {
 	  //	    if( !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {   
 	  selectedPhotons.push_back(*recoPhoton);
+	  //cout<<"This photon has been selected "<<endl;
 	}
       }
        
@@ -909,7 +914,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	}
       }
       else if(MethodID.Contains("ParticleFlow")){
-	if(ExoDiPhotons::isPFFakeableObject(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,CategoryPFID) ) {
+	if(ExoDiPhotons::isPFFakeableObject(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,passelecveto,CategoryPFID) ) {
 	 
 	  //        cout << "Fakeable photon! ";
 	  //        cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
@@ -1015,6 +1020,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&allTightOrFakeableObjects[0].first,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
     fRecoPhotonInfo1.isFakeable = allTightOrFakeableObjects[0].second;
     fRecoPhotonInfo1.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron((&allTightOrFakeableObjects[0].first)->superCluster(), hElectrons, hConversions, beamSpot.position());
+    //fRecoPhotonInfo1.hasGoodRecHits = ExoDiPhotons::check5x5recHitFlags(rechits, topology, id, -2, 2, -2, 2);
 
     //Now we store all PF isolation variables for the 1st photon
     std::vector<double> photon1TorFEffAreas = ExoDiPhotons::EffectiveAreas((&allTightOrFakeableObjects[0].first));

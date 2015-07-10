@@ -10,7 +10,7 @@ void storePUHisto(TString inputfilepath, TString outputfilepath, TString histona
 
   TFile *inputFile = TFile::Open(inputfilepath.Data());
   //This should have always the same name
-  TH1F *histo = (TH1F*)inputFile->Get("diphotonAnalyzer/fpu_n_BeforeCuts");
+  TH1F *histo = (TH1F*)inputFile->Get("diphotonPileUpExtractor/fpu_n_BeforeCuts");
   //set the name according to the name provided in cfg for crab
   histo->SetName(histoname.Data());
   histo->SetBins(80,0,80);

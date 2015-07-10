@@ -198,7 +198,7 @@ namespace ExoDiPhotons{
   /*   } */
 
 
-  bool isPFFakeableObject(const reco::Photon *photon,double thisCHIso,double thisNHIso,double thisPHIso,TString CategoryID) {
+  bool isPFFakeableObject(const reco::Photon *photon,double thisCHIso,double thisNHIso,double thisPHIso,bool passesElectronVeto,TString CategoryID) {
 
     bool result = false;
 
@@ -320,6 +320,7 @@ namespace ExoDiPhotons{
 	thisCHIso < CHIsoLooseLimit &&
 	thisPHIso < PHIsoLooseLimit &&
 	thisNHIso < NHIsoLooseLimit  && 
+	//passesElectronVeto && 
 	( thisCHIso > CHIsoExclusion || thisPHIso > PHIsoExclusion || thisNHIso > NHIsoExclusion || !passesPFSigmaIetaIetaCut(photon,CategoryID) )
 	) {
       // then this passes our fakeable definition
