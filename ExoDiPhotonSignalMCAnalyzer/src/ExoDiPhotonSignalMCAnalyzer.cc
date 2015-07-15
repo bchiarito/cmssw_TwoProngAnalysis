@@ -86,7 +86,7 @@
 #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerRecord.h" 
 #include "CondFormats/L1TObjects/interface/L1GtTriggerMenu.h"
 #include "CondFormats/DataRecord/interface/L1GtTriggerMenuRcd.h"
-#include "L1Trigger/GlobalTrigger/interface/L1GlobalTrigger.h"
+#include "L1Trigger/GlobalTrigger/plugins/L1GlobalTrigger.h"
 #include "L1Trigger/GlobalTriggerAnalyzer/interface/L1GtUtils.h"
 
 // for MC
