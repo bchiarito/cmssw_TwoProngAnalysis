@@ -124,7 +124,7 @@ namespace ExoDiPhotons{
   }
 
 
-  bool passesPFSigmaIetaIetaCut(const reco::Photon *photon,TString CategoryID) {
+  bool passesPFSigmaIetaIetaCut(const reco::Photon *photon,double full5x5SigmaIetaIeta,TString CategoryID) {
     
     bool result = false;
 
@@ -142,7 +142,7 @@ namespace ExoDiPhotons{
       if(CategoryID.Contains("Loose")) sigmaIetaIetaCut = 0.034;
     }
 
-    if(photon->sigmaIetaIeta()<sigmaIetaIetaCut)
+    if(full5x5SigmaIetaIeta<sigmaIetaIetaCut)
       result = true;
 
     return result;
@@ -150,15 +150,16 @@ namespace ExoDiPhotons{
 
 
 
-  bool isPFTightPhoton(const reco::Photon *photon,double rhocorPFChargedHadronIso,double rhocorPFNeutralHadronIso,double rhocorPFPhotonIso,bool passesElectronVeto,TString CategoryID) {
+  //bool isPFTightPhoton(const reco::Photon *photon,double rhocorPFChargedHadronIso,double rhocorPFNeutralHadronIso,double rhocorPFPhotonIso,bool passesElectronVeto,TString CategoryID) {
+  bool isPFTightPhoton(const reco::Photon *photon,double rhocorPFChargedHadronIso,double rhocorPFNeutralHadronIso,double rhocorPFPhotonIso,double full5x5SigmaIetaIeta,bool passesElectronVeto,TString CategoryID) {
 
     bool result = false;
 
-    if(passesHadTowerOverEmCut(photon,CategoryID) && 
-       passesChargedHadronCut(photon,rhocorPFChargedHadronIso,CategoryID) && 
-       passesPhotonCut(photon,rhocorPFPhotonIso,CategoryID) && 
-       passesNeutralHadronCut(photon,rhocorPFNeutralHadronIso,CategoryID) && 
-       passesPFSigmaIetaIetaCut(photon,CategoryID) && 
+    if(passesHadTowerOverEmCut(photon,CategoryID) &&
+       passesChargedHadronCut(photon,rhocorPFChargedHadronIso,CategoryID) &&
+       passesPhotonCut(photon,rhocorPFPhotonIso,CategoryID) &&
+       passesNeutralHadronCut(photon,rhocorPFNeutralHadronIso,CategoryID) &&
+       passesPFSigmaIetaIetaCut(photon,full5x5SigmaIetaIeta,CategoryID) &&
        passesElectronVeto)
       result = true;
 
@@ -198,7 +199,7 @@ namespace ExoDiPhotons{
   /*   } */
 
 
-  bool isPFFakeableObject(const reco::Photon *photon,double thisCHIso,double thisNHIso,double thisPHIso,bool passesElectronVeto,TString CategoryID) {
+  bool isPFFakeableObject(const reco::Photon *photon,double thisCHIso,double thisNHIso,double thisPHIso,double thisSigmaIetaIeta, bool passesElectronVeto,TString CategoryID) {
 
     bool result = false;
 
@@ -209,120 +210,129 @@ namespace ExoDiPhotons{
 
     double hadTowerOverEmCut = 0.;
     double sigmaIetaIetaCut = 0.;
-    std::pair<double,double> CHIsoCut (0.,0.);
-    std::pair<double,double> PHIsoCut (0.,0.);
-    std::pair<double,double> NHIsoCut (0.,0.);
+
+    float arrCHIso[] = {0.,0.,0.};
+    float arrNHIso[] = {0.,0.,0.};
+    float arrPHIso[] = {0.,0.,0.};
+
+    std::vector<float> CHIsoCut(arrCHIso, arrCHIso + sizeof(arrCHIso) / sizeof(arrCHIso[0]) );
+    std::vector<float> NHIsoCut(arrNHIso, arrNHIso + sizeof(arrNHIso) / sizeof(arrNHIso[0]) );
+    std::vector<float> PHIsoCut(arrPHIso, arrPHIso + sizeof(arrPHIso) / sizeof(arrPHIso[0]) );
 
     //Set cut values for Single Tower H/E
     if(photon->isEB()){
-      if(CategoryID.Contains("Tight")) hadTowerOverEmCut = 0.05;
-      if(CategoryID.Contains("Medium")) hadTowerOverEmCut = 0.05;
-      if(CategoryID.Contains("Loose")) hadTowerOverEmCut = 0.05;
+      if(CategoryID.Contains("Tight")) hadTowerOverEmCut = 0.010;
+      if(CategoryID.Contains("Medium")) hadTowerOverEmCut = 0.012;
+      if(CategoryID.Contains("Loose")) hadTowerOverEmCut = 0.028;
     }
 
     if(photon->isEE()){
-      if(CategoryID.Contains("Tight")) hadTowerOverEmCut = 0.05;
-      if(CategoryID.Contains("Medium")) hadTowerOverEmCut = 0.05;
-      if(CategoryID.Contains("Loose")) hadTowerOverEmCut = 0.05;
+      if(CategoryID.Contains("Tight")) hadTowerOverEmCut = 0.015;
+      if(CategoryID.Contains("Medium")) hadTowerOverEmCut = 0.023;
+      if(CategoryID.Contains("Loose")) hadTowerOverEmCut = 0.093;
     }
+
 
     //Set cut values for Charged Hadron Isolation
     if(photon->isEB()){
-      if(CategoryID.Contains("Tight")) {CHIsoCut.first = 0.7;CHIsoCut.second=0.;}
-      if(CategoryID.Contains("Medium")) {CHIsoCut.first = 1.5;CHIsoCut.second=0.;}
-      if(CategoryID.Contains("Loose")) {CHIsoCut.first = 2.6;CHIsoCut.second=0.;}
+      if(CategoryID.Contains("Tight")) {CHIsoCut[0] = 0.;CHIsoCut[1]=1.66;CHIsoCut[2]=0.;}
+      if(CategoryID.Contains("Medium")) {CHIsoCut[0] = 0.;CHIsoCut[1]=1.79;CHIsoCut[2]=0.;}
+      if(CategoryID.Contains("Loose")) {CHIsoCut[0] = 0.;CHIsoCut[1]=2.67;CHIsoCut[2]=0.;}
     }
 
     if(photon->isEE()){
-      if(CategoryID.Contains("Tight")) {CHIsoCut.first = 0.5;CHIsoCut.second=0.;}
-      if(CategoryID.Contains("Medium")) {CHIsoCut.first = 1.2;CHIsoCut.second=0.;}
-      if(CategoryID.Contains("Loose")) {CHIsoCut.first = 2.3;CHIsoCut.second=0.;}
+      if(CategoryID.Contains("Tight")) {CHIsoCut[0] = 0.;CHIsoCut[1]=1.04;CHIsoCut[2]=0.;}
+      if(CategoryID.Contains("Medium")) {CHIsoCut[0] = 0.;CHIsoCut[1]=1.09;CHIsoCut[2]=0.;}
+      if(CategoryID.Contains("Loose")) {CHIsoCut[0] = 0.;CHIsoCut[1]=1.79;CHIsoCut[2]=0.;}
     }
 
     //Set cut values for Photon isolation
     if(photon->isEB()){
-      if(CategoryID.Contains("Tight")) {PHIsoCut.first = 0.5;PHIsoCut.second=0.005;}
-      if(CategoryID.Contains("Medium")) {PHIsoCut.first = 0.7;PHIsoCut.second=0.005;}
-      if(CategoryID.Contains("Loose")) {PHIsoCut.first = 1.3;PHIsoCut.second=0.005;}
+      if(CategoryID.Contains("Tight")) {PHIsoCut[0] = 0.;PHIsoCut[1]=1.40;PHIsoCut[2]=0.0014;}
+      if(CategoryID.Contains("Medium")) {PHIsoCut[0] = 0.;PHIsoCut[1]=1.90;PHIsoCut[2]=0.0014;}
+      if(CategoryID.Contains("Loose")) {PHIsoCut[0] = 0.;PHIsoCut[1]=2.11;PHIsoCut[2]=0.0014;}
     }
 
     if(photon->isEE()){
-      if(CategoryID.Contains("Tight")) {PHIsoCut.first = 1.0;PHIsoCut.second=0.005;}
-      if(CategoryID.Contains("Medium")) {PHIsoCut.first = 1.0;PHIsoCut.second=0.005;}
-      if(CategoryID.Contains("Loose")) {PHIsoCut.first = 99999.;PHIsoCut.second=99999.;}
+      if(CategoryID.Contains("Tight")) {PHIsoCut[0] = 0.;PHIsoCut[1]=1.40;PHIsoCut[2]=0.0091;}
+      if(CategoryID.Contains("Medium")) {PHIsoCut[0] = 0.;PHIsoCut[1]=1.90;PHIsoCut[2]=0.0091;}
+      if(CategoryID.Contains("Loose")) {PHIsoCut[0] = 0.;PHIsoCut[1]=3.09;PHIsoCut[2]=0.0091;}
     }
 
     //Set cut values for Neutral Hadron Isolation
     if(photon->isEB()){
-      if(CategoryID.Contains("Tight")) {NHIsoCut.first = 0.4;NHIsoCut.second=0.04;}
-      if(CategoryID.Contains("Medium")) {NHIsoCut.first = 1.0;NHIsoCut.second=0.04;}
-      if(CategoryID.Contains("Loose")) {NHIsoCut.first = 3.5;NHIsoCut.second=0.04;}
+      if(CategoryID.Contains("Tight")) {NHIsoCut[0] = 0.14;NHIsoCut[1]=0.04;NHIsoCut[2]=0.005;}
+      if(CategoryID.Contains("Medium")) {NHIsoCut[0] = 0.16;NHIsoCut[1]=0.04;NHIsoCut[2]=0.005;}
+      if(CategoryID.Contains("Loose")) {NHIsoCut[0] = 7.23;NHIsoCut[1]=0.04;NHIsoCut[2]=0.005;}
     }
 
     if(photon->isEE()){
-      if(CategoryID.Contains("Tight")) {NHIsoCut.first = 1.5;NHIsoCut.second=0.04;}
-      if(CategoryID.Contains("Medium")) {NHIsoCut.first = 1.5;NHIsoCut.second=0.04;}
-      if(CategoryID.Contains("Loose")) {NHIsoCut.first = 2.9;NHIsoCut.second=0.04;}
+      if(CategoryID.Contains("Tight")) {NHIsoCut[0] = 0.;NHIsoCut[1]=3.89;NHIsoCut[2]=0.0172;}
+      if(CategoryID.Contains("Medium")) {NHIsoCut[0] = 0.;NHIsoCut[1]=4.31;NHIsoCut[2]=0.0172;}
+      if(CategoryID.Contains("Loose")) {NHIsoCut[0] = 0.;NHIsoCut[1]=8.89;NHIsoCut[2]=0.01725;}
     }
 
-    //Set cut values for sigmaIetaIeta 
+    //Set cut values for sigmaIetaIeta
     if(photon->isEB()){
-      if(CategoryID.Contains("Tight")) sigmaIetaIetaCut = 0.011;
-      if(CategoryID.Contains("Medium")) sigmaIetaIetaCut = 0.011;
-      if(CategoryID.Contains("Loose")) sigmaIetaIetaCut = 0.012;
+      if(CategoryID.Contains("Tight")) sigmaIetaIetaCut = 0.0100;
+      if(CategoryID.Contains("Medium")) sigmaIetaIetaCut = 0.0100;
+      if(CategoryID.Contains("Loose")) sigmaIetaIetaCut = 0.0107;
     }
 
     if(photon->isEE()){
-      if(CategoryID.Contains("Tight")) sigmaIetaIetaCut = 0.031;
-      if(CategoryID.Contains("Medium")) sigmaIetaIetaCut = 0.033;
-      if(CategoryID.Contains("Loose")) sigmaIetaIetaCut = 0.034;
+      if(CategoryID.Contains("Tight")) sigmaIetaIetaCut = 0.0265;
+      if(CategoryID.Contains("Medium")) sigmaIetaIetaCut = 0.0267;
+      if(CategoryID.Contains("Loose")) sigmaIetaIetaCut = 0.0272;
     }
 
 
-    //For the moment we overwrite the parameters that define the Fakeable status
-    //to be the always the ones that correspond to Loose 
-    //Difference should not be so big, even in worst case
-    //as only constant terms change
+    /* //For the moment we overwrite the parameters that define the Fakeable status */
+    /* //to be the always the ones that correspond to Loose  */
+    /* //Difference should not be so big, even in worst case */
+    /* //as only constant terms change */
 
 
-    if(photon->isEB()){
-      hadTowerOverEmCut = 0.05;
-      CHIsoCut.first = 2.6;CHIsoCut.second=0.;
-      PHIsoCut.first = 1.3;PHIsoCut.second=0.005;
-      NHIsoCut.first = 3.5;NHIsoCut.second=0.04;
-      sigmaIetaIetaCut = 0.012;
-    }
+    /* if(photon->isEB()){ */
+    /*   hadTowerOverEmCut = 0.05; */
+    /*   CHIsoCut.first = 2.6;CHIsoCut.second=0.; */
+    /*   PHIsoCut.first = 1.3;PHIsoCut.second=0.005; */
+    /*   NHIsoCut.first = 3.5;NHIsoCut.second=0.04; */
+    /*   sigmaIetaIetaCut = 0.012; */
+    /* } */
 
 
 
-    if(photon->isEE()){
-      hadTowerOverEmCut = 0.05;
-      CHIsoCut.first = 2.3;CHIsoCut.second=0.;
-      PHIsoCut.first = 99999.;PHIsoCut.second=99999.;
-      NHIsoCut.first = 2.9;NHIsoCut.second=0.04;
-      sigmaIetaIetaCut = 0.034;
-    }
+    /* if(photon->isEE()){ */
+    /*   hadTowerOverEmCut = 0.05; */
+    /*   CHIsoCut.first = 2.3;CHIsoCut.second=0.; */
+    /*   PHIsoCut.first = 99999.;PHIsoCut.second=99999.; */
+    /*   NHIsoCut.first = 2.9;NHIsoCut.second=0.04; */
+    /*   sigmaIetaIetaCut = 0.034; */
+    /* } */
 
 
-    double CHIsoSwingValue = CHIsoCut.first + CHIsoCut.second * photon->et();
+    double CHIsoSwingValue = CHIsoCut[1] + CHIsoCut[2] * photon->et();
     double CHIsoLooseLimit = TMath::Min( 5.0*(CHIsoSwingValue), 0.2*photon->et() );
     double CHIsoExclusion = CHIsoSwingValue;
 
-    double PHIsoSwingValue = PHIsoCut.first + PHIsoCut.second * photon->et();
+    double PHIsoSwingValue = PHIsoCut[1] + PHIsoCut[2] * photon->et();
     double PHIsoLooseLimit = TMath::Min( 5.0*(PHIsoSwingValue), 0.2*photon->et() );
     double PHIsoExclusion = PHIsoSwingValue;
 
-    double NHIsoSwingValue = NHIsoCut.first + NHIsoCut.second * photon->et();
+    double NHIsoSwingValue = NHIsoCut[0] + exp(NHIsoCut[1] + NHIsoCut[2] * photon->et());
+    if(photon->isEE()) NHIsoSwingValue = NHIsoCut[1] + NHIsoCut[2] * photon->et();
     double NHIsoLooseLimit = TMath::Min( 5.0*(NHIsoSwingValue), 0.2*photon->et() );
     double NHIsoExclusion = NHIsoSwingValue;
     
-    if( photon->hadTowOverEm() < hadTowerOverEmCut && 
-	thisCHIso < CHIsoLooseLimit &&
-	thisPHIso < PHIsoLooseLimit &&
-	thisNHIso < NHIsoLooseLimit  && 
-	//passesElectronVeto && 
-	( thisCHIso > CHIsoExclusion || thisPHIso > PHIsoExclusion || thisNHIso > NHIsoExclusion || !passesPFSigmaIetaIetaCut(photon,CategoryID) )
-	) {
+    std::cout<<sigmaIetaIetaCut<<std::endl;
+
+    if( photon->hadTowOverEm() < hadTowerOverEmCut &&
+    	thisCHIso < CHIsoLooseLimit &&
+    	thisPHIso < PHIsoLooseLimit &&
+    	thisNHIso < NHIsoLooseLimit  &&
+    	passesElectronVeto &&
+    	( thisCHIso > CHIsoExclusion || thisPHIso > PHIsoExclusion || thisNHIso > NHIsoExclusion || thisSigmaIetaIeta > sigmaIetaIetaCut)
+    	) {
       // then this passes our fakeable definition
       result = true;
     }
