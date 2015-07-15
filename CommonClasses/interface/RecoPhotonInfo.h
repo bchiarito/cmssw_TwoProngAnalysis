@@ -540,7 +540,7 @@ namespace ExoDiPhotons
   // and in the analyser, pass just the underlying pointer via lazyTools.get()
   // This seems to work, miraculously enough
 
-  void FillRecoPhotonInfo(recoPhotonInfo_t &recoPhotonInfo, const reco::Photon *photon, EcalClusterLazyTools* lazyTools_,const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE, const EcalChannelStatus *ch_status,const edm::Event& iEvent, const edm::EventSetup& iSetup) {
+  void FillRecoPhotonInfo(recoPhotonInfo_t &recoPhotonInfo, const reco::Photon *photon, noZS::EcalClusterLazyTools* lazyTools_,const EcalRecHitCollection * recHitsEB, const EcalRecHitCollection * recHitsEE, const EcalChannelStatus *ch_status,const edm::Event& iEvent, const edm::EventSetup& iSetup) {
     
     //std::cout<<"beginning of FillRecoPhotonInfo"<<std::endl;
 
@@ -615,16 +615,16 @@ namespace ExoDiPhotons
     const reco::CaloClusterPtr  seed = sc1->seed();
 
     DetId id = lazyTools_->getMaximum(*seed).first; 
-    float time  = -999., outOfTimeChi2 = -999., chi2 = -999.;
+    float time  = -999.;//, outOfTimeChi2 = -999., chi2 = -999.;
     int   flags=-1, severity = -1; 
 
     const EcalRecHitCollection & rechits = ( photon->isEB() ? *recHitsEB : *recHitsEE); 
     EcalRecHitCollection::const_iterator it = rechits.find( id );
     if( it != rechits.end() ) { 
-      time = it->time(); 
-      outOfTimeChi2 = it->outOfTimeChi2();
-      chi2 = it->chi2();
-      flags = it->recoFlag();
+      //time = it->time(); 
+      //outOfTimeChi2 = it->outOfTimeChi2();
+      //chi2 = it->chi2();
+      //flags = it->recoFlag();
       // edm::ESHandle<EcalSeverityLevelAlgo> sevlv;
       //iSetup.get<EcalSeverityLevelAlgoRcd>().get(sevlv);
       //severity = sevlv->severityLevel( id, rechits);
@@ -654,13 +654,13 @@ namespace ExoDiPhotons
     /* 	     <<std::endl; */
 
      
-    EcalChannelStatusMap::const_iterator chit;
-    chit = ch_status->getMap().find(id.rawId());
-    int mystatus = -99;
-    if( chit != ch_status->getMap().end() ){
-      EcalChannelStatusCode ch_code = (*chit);
-      mystatus = ch_code.getStatusCode();
-    }
+    /* EcalChannelStatusMap::const_iterator chit; */
+    /* chit = ch_status->getMap().find(id.rawId()); */
+    /* int mystatus = -99; */
+    /* if( chit != ch_status->getMap().end() ){ */
+    /*   EcalChannelStatusCode ch_code = (*chit); */
+    /*   mystatus = ch_code.getStatusCode(); */
+    /* } */
 
     recoPhotonInfo.severityLevel = severity;
     recoPhotonInfo.recHitFlag = flags;
@@ -683,10 +683,12 @@ namespace ExoDiPhotons
 
 
 
-    recoPhotonInfo.sigmaIetaIeta = photon->sigmaIetaIeta();
-    recoPhotonInfo.sigmaEtaEta = photon->sigmaEtaEta();
-    recoPhotonInfo.maxEnergyXtal = photon->maxEnergyXtal();
+    /* recoPhotonInfo.sigmaIetaIeta = photon->sigmaIetaIeta(); */
+    /* recoPhotonInfo.sigmaEtaEta = photon->sigmaEtaEta(); */
+    /* recoPhotonInfo.maxEnergyXtal = photon->maxEnergyXtal(); */
 
+    recoPhotonInfo.sigmaIetaIeta = sqrt(localcov[0]);
+    recoPhotonInfo.sigmaEtaEta = sqrt(cov[0]);
     recoPhotonInfo.sigmaIphiIphi = sqrt(localcov[2]);
     recoPhotonInfo.sigmaPhiPhi = sqrt(cov[2]);
 

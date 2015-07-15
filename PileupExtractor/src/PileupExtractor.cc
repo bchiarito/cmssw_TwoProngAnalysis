@@ -23,6 +23,7 @@ Implementation:
 #include <algorithm>
 #include <vector>
 #include <utility> 
+#include <iostream> 
 
 // to use TfileService for histograms and trees
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -121,7 +122,7 @@ PileupExtractor::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   iEvent.getByLabel(fpileupCollectionTag, pileupHandle);
   std::vector<PileupSummaryInfo>::const_iterator PUI;
    
-  if (!pileupHandle.isValid()) cout<<"pu handle not valid"<<endl;
+  if (!pileupHandle.isValid()) std::cout<<"pu handle not valid"<<std::endl;
 
   if (pileupHandle.isValid()){
     for (PUI = pileupHandle->begin();PUI != pileupHandle->end(); ++PUI){      
