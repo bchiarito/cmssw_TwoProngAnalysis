@@ -55,37 +55,40 @@ halfWidths0p1[3000] = 38.7399
 halfWidths0p1[3250] = 41.8178
 halfWidths0p1[3500] = 40.2991
 # mapping of couplings/masses to crossSections --> taken from AN-12-305
+# XXX: Update 2 Sep 2014 with 25k GEN Pythia cross sections
+# 0.01
 totalXSecs0p01 = dict()
-totalXSecs0p01[750] =  1.023e-02
-totalXSecs0p01[1000] = 2.072e-03
-totalXSecs0p01[1250] = 5.21e-04
-totalXSecs0p01[1500] = 1.604e-04
-totalXSecs0p01[1750] = 5.408e-05
-totalXSecs0p01[2000] = 1.853e-05
-totalXSecs0p01[2250] = 7.207e-06
-totalXSecs0p01[2500] = 2.945e-06
-totalXSecs0p01[3000] = 4.703e-07
+totalXSecs0p01[750] = 1.003e-02
+totalXSecs0p01[1000] = 1.958e-03
+totalXSecs0p01[1250] = 5.045e-04 
+totalXSecs0p01[1500] = 1.534e-04 
+totalXSecs0p01[1750] = 5.195e-05 
+totalXSecs0p01[2000] = 1.882e-05 
+totalXSecs0p01[2250] = 7.203e-06 
+totalXSecs0p01[2500] = 2.849e-06 
+totalXSecs0p01[3000] = 4.586e-07
 # 0.05
 totalXSecs0p05 = dict()
-totalXSecs0p05[1250] = 1.28e-02
-totalXSecs0p05[1500] = 3.866e-03
-totalXSecs0p05[1750] = 1.331e-03
-totalXSecs0p05[2000] = 4.665e-04
-totalXSecs0p05[2250] = 1.774e-04
-totalXSecs0p05[2500] = 7.226e-05
-totalXSecs0p05[2750] = 2.803e-05
-totalXSecs0p05[3000] = 1.169e-05
+totalXSecs0p05[1250] = 1.261e-02
+totalXSecs0p05[1500] = 3.814e-03
+totalXSecs0p05[1750] = 1.289e-03
+totalXSecs0p05[2000] = 4.684e-04
+totalXSecs0p05[2250] = 1.802e-04
+totalXSecs0p05[2500] = 7.073e-05
+totalXSecs0p05[2750] = 2.831e-05
+totalXSecs0p05[3000] = 1.151e-05
 # 0.1
 totalXSecs0p1 = dict()
-totalXSecs0p1[1500] = 1.5e-02
-totalXSecs0p1[1750] = 5.2e-03
-totalXSecs0p1[2000] = 1.8e-03
-totalXSecs0p1[2250] = 7.04e-04
-totalXSecs0p1[2500] = 2.79e-04
-totalXSecs0p1[2750] = 1.14e-04
-totalXSecs0p1[3000] = 4.68e-05
-totalXSecs0p1[3250] = 1.19e-05
-totalXSecs0p1[3500] = 7.7e-06
+totalXSecs0p1[1500] = 1.518e-02
+totalXSecs0p1[1750] = 5.131e-03
+totalXSecs0p1[2000] = 1.872e-03
+totalXSecs0p1[2250] = 7.194e-04
+totalXSecs0p1[2500] = 2.861e-04
+totalXSecs0p1[2750] = 1.151e-04
+totalXSecs0p1[3000] = 4.684e-05
+totalXSecs0p1[3250] = 1.925e-05
+totalXSecs0p1[3500] = 7.751e-06
+
 
 
 # for writing to log file+stdout
@@ -348,12 +351,14 @@ def DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle):
   CouplingVsMassPlot(couplings,mLimExp,mLimObs,True,rootFile,lumi,plotsOutputDir)
   print 'PlotAllAcceptances'
   PlotAllAcceptances([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllAcceptancesMassWindows([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
   # efficiencies for all couplings/masses on same axes
   print 'PlotAllEfficiencies'
   PlotAllEfficiencies([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficienciesMScale([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1], lumi, rootFile, plotsOutputDir)
   PlotAllEfficienciesMRes([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficienciesPileup([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesMScaleEffAcc([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
   # half widths
   print 'PlotAllHalfWidths'
   PlotAllHalfWidths([readModelPoints0p01,readModelPoints0p05,readModelPoints0p1],lumi,rootFile,plotsOutputDir)
@@ -629,7 +634,6 @@ def GetConfigurationString():
   configString+='K-factor file='+kFactorFile+'\n'
   # overall systematics
   configString+='SigPUSyst='+str(SigPUSyst)+'\n'
-  configString+='SigPDFSyst='+str(SigPDFSyst)+'\n'
   configString+='SigScaleFactorSystOneGamma='+str(SigScaleFactorSystOneGamma)+'\n'
   configString+='SigPtSFSystOneGamma='+str(SigPtSFSystOneGamma)+'\n'
   configString+='BGSystsFromHists'+'\n'+'-----------------------------------------------\n'
@@ -642,9 +646,9 @@ def GetConfigurationString():
 
 def Usage():
   print 'Usage: python RunLimitsAndPlots.py [arg] where arg can be:'
-  print '    optimize      --> Calculate optimal inv. mass windows using histograms in root files (from CreateHistogramFiles).'
-  print '    limits        --> Compute limits for all model points.'
-  print '    mergeLimits   --> Merge/check limit results for all model points. Run after batch jobs done.  Also makes plots and tables.'
+  print '    1) optimize      --> Calculate optimal inv. mass windows using histograms in root files (from CreateHistogramFiles).'
+  print '    2) limits        --> Compute limits for all model points.'
+  print '    3) mergeLimits   --> Merge/check limit results for all model points. Run after batch jobs done.  Also makes plots and tables.'
   print '    plots         --> Read limit results from text files and make limit plots.'
   print '    tables        --> Read limit results from text files and make results tables (text/latex/twiki).'
   print '    optimizePlots --> Print optimization graphs as images (use after optimize has been run; done automatically by default).'
@@ -670,14 +674,18 @@ cl95MacroPath = os.environ['CMSSW_BASE']+'/src/StatisticalTools/RooStatsRoutines
 cl95MacroName = 'roostats_cl95.C'
 
 
+###################################################################################################
 # Configurable stuff here
+###################################################################################################
 now = datetime.datetime.now()
 Date = now.strftime("%b%d")
-#outputDirBase = Date.lower()+'_systsBugFix_symmWindowSSBOpt_loosePFIDJun12_local'
-outputDirBase = 'jun23_systsBugFix_symmWindowSSBOpt_loosePFIDJun12_local'
-#outputDirBase = 'jun17_systsBugFix_symmWindowSSBOpt_loosePFIDJun12'
-#outputDirBase = 'jun15_symmWindowSSBOpt_0pctOptMWindowMarginSmoothed_loosePFIDJun12'
-#outputDirBase = 'mar11_TEST_results_lumiErr2p6_newFakeAndBGSysts_sherpaBG_noDPhi_symmWindowSSBOpt_BGSystsFromHists_0pctOptMWindowMarginSmoothed_loosePFID'
+#outputDirBase = Date.lower()+'_5pctPtSystTest_1p5pctScaleShifts_symmWindowSSBOpt_loosePFIDJun12_local'
+outputDirBase = 'dec9_sigPDFSystFunc_symmWindowSSBOpt_loosePFID_local'
+#outputDirBase = 'oct16_5pctPtSystTest_1p5pctScaleShifts_symmWindowSSBOpt_loosePFIDJun12_local'
+#outputDirBase = 'sep29_1p5pctScaleShifts_symmWindowSSBOpt_loosePFIDJun12_local'
+#outputDirBase = 'sep02_newThXSecs_newJul31FakeRates_symmWindowSSBOpt_loosePFIDJun12_local'
+#outputDirBase = 'aug7_updateSmearingSystBugFix_symmWindowSSBOpt_loosePFIDJun12_local'
+#outputDirBase = 'aug7_newFakeRatesJul31_updateSmearingSystBugFix_symmWindowSSBOpt_local'
 optimizationOutputDir = outputDirBase+'_optimization'
 limitsOutputDir = outputDirBase+'_limits'
 plotsOutputDir = outputDirBase+'_plots'
@@ -693,7 +701,8 @@ optimizationPlotFileName = optimizationOutputDir+'/plots.root'
 #signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_deltaPhi2p8_19p6invFb/'
 #signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb/'
 #signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb_mediumID/'
-signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb_looseID/'
+#signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb_looseID/'
+signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p5invFb_looseID_photon1p5pctScaleShifts/'
 # location of data/fake root files from CreateHistogramFiles code
 ## OLD #rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/ExoDiPhotonAnalyzer_PFDec14th_DataABCD/'
 #rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/ForDiPhoton/'
@@ -701,13 +710,17 @@ signalRootFileLocation = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistog
 #rootFileLocationDataFake = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb_mediumID/'
 #DataSample = 'ExoDiPhotonAnalyzer_MediumDataABCD2012'
 #rootFileLocationDataFake = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb_looseID/'
-rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/LooseResults12June2014/NtuplesForSethLimits/'
+#rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/LooseResults12June2014/NtuplesForSethLimits/'
+#rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/ForDiPhoton/NewLooseCorrectedResults31072014/NtuplesForSethLimits/'
+rootFileLocationDataFake = '/afs/cern.ch/work/c/charaf/public/ForDiPhoton/SethNtuplesDec14/'
 DataSample = 'ExoDiPhotonAnalyzer_NEWLoose_DataABCD'
 # location of backgroundMC root files from CreateHistogramFiles code
 #rootFileBackgroundMC = '/afs/cern.ch/work/c/charaf/public/ForDiPhoton/histograms_diphoton_tree_MC_all.root' # SHERPA, no dphi
 ## OLD #rootFileBackgroundMC= '/afs/cern.ch/work/c/charaf/public/DiPhotonTrees/Histograms/diphoton_tree_MC_all/histograms_diphoton_tree_MC_all.root' # PYTHIA
 #rootFileBackgroundMC = '/afs/cern.ch/user/s/scooper/work/public/DiPhotonHistograms/PFID_19p6invFb_mediumID/histograms_diphoton_tree_MC_all.root'
-rootFileBackgroundMC = '/afs/cern.ch/work/c/charaf/public/LooseResults12June2014/NtuplesForSethLimits/histograms_diphoton_tree_MC_all.root'
+#rootFileBackgroundMC = '/afs/cern.ch/work/c/charaf/public/LooseResults12June2014/NtuplesForSethLimits/histograms_diphoton_tree_MC_all.root'
+#rootFileBackgroundMC = '/afs/cern.ch/work/c/charaf/public/ForDiPhoton/NewLooseCorrectedResults31072014/NtuplesForSethLimits/histograms_diphoton_tree_MC_all.root'
+rootFileBackgroundMC = '/afs/cern.ch/work/c/charaf/public/ForDiPhoton/SethNtuplesDec14/histograms_diphoton_tree_MC_all.root'
 # k-factors to compute mass limit (optimization always done with k-factor=1)
 kFactorFile = 'RS-KF-LHC-8TeV-y1.4442-ptcut80.dat'
 # launch limit-setting jobs on lxbatch
@@ -722,9 +735,12 @@ masses0p01 = [750,1000,1250,1500,1750,2000,2250,2500,3000]
 masses0p05 = [1250,1500,1750,2000,2250,2500,2750,3000]
 masses0p1 = [1500,1750,2000,2250,2500,2750,3000,3250,3500]
 #
-
 configString = GetConfigurationString()
 print configString
+# to print the func
+print 'SigPDFSystFunc:'
+SigPDFSystFunc.Print()
+print '----------------------------------------------- End of configuration info'
 
 # List signal histogram file template; rest of quantities are filled from functions (xsec, width, etc.) or histograms in the files
 # initialize signal points
@@ -776,10 +792,12 @@ elif sys.argv[1]=='optimizePlots':
     readModelPointsC0p1 = ReadFromLines(lines)
     FillKFactors(readModelPointsC0p1)
   PlotAllAcceptances([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllAcceptancesMassWindows([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficiencies([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficienciesMScale([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficienciesMRes([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficienciesPileup([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesMScaleEffAcc([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
 elif sys.argv[1]=='effAccPlots':
   print 'effAccPlots: make efficiency and acceptance plots (inc. systematics plots)'
   rootFile = TFile(optimizationPlotFileName,'update')
@@ -798,10 +816,12 @@ elif sys.argv[1]=='effAccPlots':
     readModelPointsC0p1 = ReadFromLines(lines)
     FillKFactors(readModelPointsC0p1)
   PlotAllAcceptances([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllAcceptancesMassWindows([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficiencies([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficienciesMScale([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficienciesMRes([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficienciesPileup([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesMScaleEffAcc([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
 elif sys.argv[1]=='optimize':
   print 'optimize: OptimizeSignalMassWindows'
   print 'warning: will overwrite file',optimizationPlotFileName,'if it already exists.'
@@ -816,10 +836,12 @@ elif sys.argv[1]=='optimize':
   if not os.path.isdir(plotsOutputDir):
     os.mkdir(plotsOutputDir)
   PlotAllAcceptances([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllAcceptancesMassWindows([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficienciesMScale([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficienciesMRes([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficienciesPileup([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllEfficienciesMScaleEffAcc([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
 elif sys.argv[1]=='yields':
   print 'yields: CalculateYieldsForMassRanges'
   if not os.path.isdir(optimizationOutputDir):
@@ -831,6 +853,7 @@ elif sys.argv[1]=='yields':
   if not os.path.isdir(plotsOutputDir):
     os.mkdir(plotsOutputDir)
   PlotAllAcceptances([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllAcceptancesMassWindows([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
 elif sys.argv[1]=='limits':
   print 'limits: DoLimitsAllPoints'
@@ -841,6 +864,12 @@ elif sys.argv[1]=='limits':
     file.write(configString)
   rootFile = TFile(limitsPlotFileName,'recreate')
   DoLimitsAllPoints(cl95MacroPath+cl95MacroName,DoBatch,QueueName,lumi,lumiErr,limitsFileName,limitsOutputDir)
+  if not DoBatch: # do mergeLimits automatically if locally running
+    print '(auto) mergeLimits: DoMergeCheckAllPoints, DoPlotsAllPoints, DoTablesAllPoints'
+    print 'Warning: will overwrite files',limitsFileName+'0p01.txt',limitsFileName+'0p05.txt',limitsFileName+'0p1.txt','if they already exist.'
+    DoMergeCheckAllPoints(limitsOutputDir,limitsFileName)
+    DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle)
+    DoTablesAllPoints(lumi,limitsOutputDir)
 elif sys.argv[1]=='mergeLimits':
   print 'mergeLimits: DoMergeCheckAllPoints, DoPlotsAllPoints, DoTablesAllPoints'
   print 'Warning: will overwrite files',limitsFileName+'0p01.txt',limitsFileName+'0p05.txt',limitsFileName+'0p1.txt','if they already exist.'

@@ -18,6 +18,7 @@ class ModelPoint:
     self.totalXSec              = kwargs.get('totalXSec',-1)
     self.kFactor                = kwargs.get('kFactor',1.0)
     self.acceptance             = kwargs.get('acceptance',0.0)
+    self.acceptanceMassWindow   = kwargs.get('acceptanceMassWindow',0.0)
     self.totalSignalEvents      = kwargs.get('totalSignalEvents',0.0)
     self.preMWEff               = kwargs.get('preMWEff',-1)
     self.totalEff               = kwargs.get('totalEff',-1)
@@ -58,6 +59,7 @@ class ModelPoint:
     print "TotalXSection: " , self.totalXSec
     print "KFactor: " , self.kFactor
     print "Acceptance: " , self.acceptance
+    print "AcceptanceMassWindow: " , self.acceptanceMassWindow
     print "Total Signal Events: " , self.totalSignalEvents
     print "Efficiency before mass window:",self.preMWEff
     print "TotalEff: %.5f"%self.totalEff , " +/- %.5f (stat)"%self.totalEffErrStat, " +/- %.5f (syst)"%self.totalEffErrSyst
@@ -84,6 +86,7 @@ class ModelPoint:
     file.write("TotalXSection: " + str(self.totalXSec) + "\n")
     file.write("KFactor: " + str(self.kFactor) + "\n")
     file.write("Acceptance: " + str(self.acceptance) + "\n")
+    file.write("AcceptanceMassWindow: " + str(self.acceptanceMassWindow) + "\n")
     file.write("TotalSignalEvents: " + str(self.totalSignalEvents) + "\n")
     file.write("PreMWEff: " + str(self.preMWEff) + "\n")
     file.write("TotalEff: " + str(self.totalEff) + "\n")
@@ -205,6 +208,8 @@ def ReadFromLines(lines):
       mp.kFactor = value
     elif "Acceptance:" in line:
       mp.acceptance = value
+    elif "AcceptanceMassWindow:" in line:
+      mp.acceptanceMassWindow = value
     elif "TotalSignalEvents:" in line:
       mp.totalSignalEvents = value
     elif "PreMWEff:" in line:
