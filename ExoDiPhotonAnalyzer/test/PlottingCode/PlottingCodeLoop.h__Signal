@@ -696,6 +696,9 @@ class PlottingCodeLoop {
   TH1F* acceptedEventsBothPhotonsGenPt;
   TH1F* acceptedAndPFIDedEventsBothPhotonsGenPt;
 
+  float minv, minvShiftUp, minvShiftDown;
+  float pileupWeight, mcDataEffScalePhoton1, mcDataEffScalePhoton2;
+
 
   Double_t _cutPhoton1pt;
   Double_t _cutPhoton2pt;
