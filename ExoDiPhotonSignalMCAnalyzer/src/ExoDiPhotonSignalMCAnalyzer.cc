@@ -670,8 +670,8 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      return;
    }
 
-   const reco::PhotonCollection *myPhotonColl = photonColl.product();
-   cout<<"photoncoll size "<<myPhotonColl->size()<<endl;
+   //   const reco::PhotonCollection *myPhotonColl = photonColl.product();
+   //cout<<"photoncoll size "<<myPhotonColl->size()<<endl;
    //   cout << "N reco photons = " << photonColl->size() <<endl;
 
 
@@ -701,10 +701,11 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    // then sort at end by pt
    // also allows to count how often a third photon could be considered a candidate
 
+   /*
    std::vector<reco::Photon> selectedPhotons; 
 
    int phoIndex = -1;
-
+  
    // photon loop
    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
      
@@ -823,7 +824,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
        selectedPhotons.push_back(*recoPhoton);
      }
 
-     /*      
+     // / *      
      // also check for fakeable objects
      //if(ExoDiPhotons::isFakeableObject(&(*recoPhoton)) ) {
      if(MethodID.Contains("Detector")){
@@ -863,7 +864,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 	 fakeablePhotons.push_back(*recoPhoton);
 	 }
        }
-     */
+   // * /
    } //end reco photon loop
    
 
@@ -1002,6 +1003,8 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 
    } //end of 2 TT exception
 
+*/
+
 
    //   Handle<HepMCProduct> mcProduct;
    //   iEvent.getByLabel("generator",mcProduct);
@@ -1042,6 +1045,9 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    const reco::Photon *matchPhoton1 = NULL;
    const reco::Photon *matchPhoton2 = NULL;
 
+   int matchPhoton1Index = -1;
+   int matchPhoton2Index = -1;
+
    //cout<<"HereGenLoop"<<endl;
    for(reco::GenParticleCollection::const_iterator genParticle = genParticles->begin(); genParticle != genParticles->end(); ++genParticle) {
    //for(reco::GenParticle::const_iterator genParticle = genParticles->begin(); genParticle != genParticles->end(); ++genParticle) {
@@ -1053,16 +1059,22 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      //cout<<genParticle->pdgId()<<endl;
      //cout<<"ROLLTIDE"<<endl;
    
-     if(genParticle->status()==1&&genParticle->pdgId()==22) {
-       //cout<<"1"<<endl;
+     if (genParticle->pdgId()==5100039) {
+       cout << "RS Graviton status: " << genParticle->status() << endl;
+     }
+
+     if(genParticle->status()==1 && genParticle->pdgId()==22) {
+       cout<<"1"<<endl;
        if(genParticle->numberOfMothers()>0) {
-	 // cout<<"2"<<endl;
-	 if(genParticle->mother()->status()==3&&genParticle->mother()->pdgId()==22) {
-	   //   cout<<"3"<<endl;
+	 cout<<"2"<<endl;
+	 //cout << "Status 1 Photon Mother: Status, PDGID: " << genParticle->mother()->status() << ", " << genParticle->mother()->pdgId() << endl;
+	 if(/*genParticle->mother()->status()>30 && genParticle->mother()->status()<40 &&*/ genParticle->mother()->pdgId()==22) {
+	   cout<<"3"<<endl;
            // further require that this status 3 photon itself came from the RS graviton 
 	   if(genParticle->mother()->numberOfMothers()>0) {
-	     //     cout<<"4"<<endl;
+	     cout<<"4"<<endl;
 	     if(genParticle->mother()->mother()->pdgId()==5000039) {
+	       cout<<"5"<<endl;
 	       //cout<<genParticle->mother()->mother()->pdgId()<<endl;
 	       //cout << "MC particle: Status = "<< genParticle->status() << "; pdg id = "<< genParticle->pdgId() << "; pt, eta, phi = "
 	       //     << genParticle->pt() << ", "<< genParticle->eta() << ", " << genParticle->phi() << endl;	   	       
@@ -1071,7 +1083,12 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 	       const reco::Photon *tempMatchPhoton = NULL;
 	       double minDeltaR = 1.0;
 	       
+	       int phoIndex = -1;
+	       
 	       for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {	 
+		 
+		 phoIndex++;
+		 
 		 // there's a CMS function for deltaPhi in DataFormats/Math
 		 double deltaPhi = reco::deltaPhi(genParticle->phi(),recoPhoton->phi());
 		 double deltaEta = genParticle->eta()-recoPhoton->eta();
@@ -1081,6 +1098,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 		   // then this is the best match so far
 		   minDeltaR = deltaR;
 		   tempMatchPhoton = &(*recoPhoton); //deref the iter to get what it points to
+		   
 		 }
 	       } //end recoPhoton loop to match to the present signal photon
 	       
@@ -1090,11 +1108,13 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 		 signalPhoton1 = &(*genParticle);
                  //cout<<signalPhoton1<<endl;
 		 matchPhoton1 = tempMatchPhoton;
+		 matchPhoton1Index = phoIndex;
 	       }
 	       else {
 		 // we have already found one, so this is the second
 		 signalPhoton2 = &(*genParticle);
 		 matchPhoton2 = tempMatchPhoton;
+		 matchPhoton2Index = phoIndex;
 	       }
 	     }
 	    
@@ -1148,10 +1168,13 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    if(signalPhoton2->pt()>signalPhoton1->pt()) {
      const reco::GenParticle *tempSignalPhoton = signalPhoton1;
      const reco::Photon *tempMatchPhoton = matchPhoton1;
+     int tempMatchPhotonIndex = matchPhoton1Index;
      signalPhoton1 = signalPhoton2;
      signalPhoton2 = tempSignalPhoton;
      matchPhoton1 = matchPhoton2;
+     matchPhoton1Index = matchPhoton2Index;
      matchPhoton2 = tempMatchPhoton;
+     matchPhoton2Index = tempMatchPhotonIndex;
    }
    
    if(signalPhoton1) {
@@ -1176,7 +1199,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      //      fSignalPhoton2Info.phi = signalPhoton2->phi();		 
    }
    
-   /*
+   
    // if no match found, then the match photon pointers are certainly NULL
    if(matchPhoton1) {		 
      //      cout << "Matched to signal photon!" <<endl;
@@ -1204,24 +1227,49 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      // cout << "; passesSigmaIetaIetaCut = " << ExoDiPhotons::passesSigmaIetaIetaCut(matchPhoton1) << endl;
      // cout << endl << endl;
      //}
-
+     
+     
      // fill info into tree
      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,matchPhoton1,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup);
      // SIC add all this to the function above?
      fRecoPhotonInfo1.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron(matchPhoton1->superCluster(), hElectrons, hConversions, beamSpot.position());
+
+
+     edm::Ptr<reco::Photon> matchPho1Ptr(photonColl,matchPhoton1Index);
+
+     fRecoPhotonInfo1.sigmaIetaIeta = (*full5x5SigmaIEtaIEtaMap)[matchPho1Ptr];
+     fRecoPhotonInfo1.PFIsoCharged03 = (*phoChargedIsolationMap)[matchPho1Ptr];
+     fRecoPhotonInfo1.PFIsoNeutral03 = (*phoNeutralHadronIsolationMap)[matchPho1Ptr];
+     fRecoPhotonInfo1.PFIsoPhoton03 = (*phoPhotonIsolationMap)[matchPho1Ptr];
+     fRecoPhotonInfo1.PFIsoAll03 = fRecoPhotonInfo1.PFIsoCharged03 + fRecoPhotonInfo1.PFIsoNeutral03 + fRecoPhotonInfo1.PFIsoPhoton03;
+
+     
+     float matchPho1Eta = abs(matchPho1Ptr->superCluster()->eta());
+     
+     //now the corrected PF isolation variables
+     fRecoPhotonInfo1.rhocorPFIsoCharged03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoCharged03-rho_*effAreaChHadrons_.getEffectiveArea(matchPho1Eta));
+     fRecoPhotonInfo1.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoNeutral03-rho_*effAreaChHadrons_.getEffectiveArea(matchPho1Eta));
+     fRecoPhotonInfo1.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoPhoton03-rho_*effAreaChHadrons_.getEffectiveArea(matchPho1Eta));
+     fRecoPhotonInfo1.rhocorPFIsoAll03 = fRecoPhotonInfo1.rhocorPFIsoCharged03 + fRecoPhotonInfo1.rhocorPFIsoNeutral03 + fRecoPhotonInfo1.rhocorPFIsoPhoton03;
+
+
+     //fill 02 and 04 cones?
+
+
+
      //we retrieve the effective areas
      //Remember effareaCH = 1st, effareaNH = 2nd, effareaPH = 3rd
-     std::vector<double> photon1TorFEffAreas = ExoDiPhotons::EffectiveAreas(matchPhoton1);
-     double pfisoall = isolator03.fGetIsolation(matchPhoton1,pfCandidates,firstVtx,vertexColl);
-     double rhocorPFIsoCH = max(isolator03.getIsolationCharged()-fRho25*photon1TorFEffAreas[0],0.);
-     double rhocorPFIsoNH = max(isolator03.getIsolationNeutral()-fRho25*photon1TorFEffAreas[1],0.);
-     double rhocorPFIsoPH = max(isolator03.getIsolationPhoton()-fRho25*photon1TorFEffAreas[2],0.);
+     // std::vector<double> photon1TorFEffAreas = ExoDiPhotons::EffectiveAreas(matchPhoton1);
+     // double pfisoall = isolator03.fGetIsolation(matchPhoton1,pfCandidates,firstVtx,vertexColl);
+     // double rhocorPFIsoCH = max(isolator03.getIsolationCharged()-fRho25*photon1TorFEffAreas[0],0.);
+     //double rhocorPFIsoNH = max(isolator03.getIsolationNeutral()-fRho25*photon1TorFEffAreas[1],0.);
+     //double rhocorPFIsoPH = max(isolator03.getIsolationPhoton()-fRho25*photon1TorFEffAreas[2],0.);
      
-     fRecoPhotonInfo1.PFIsoAll03 = pfisoall;
-     fRecoPhotonInfo1.PFIsoCharged03 = isolator03.getIsolationCharged();
-     fRecoPhotonInfo1.PFIsoNeutral03 = isolator03.getIsolationNeutral();
-     fRecoPhotonInfo1.PFIsoPhoton03 = isolator03.getIsolationPhoton();      
-
+     //fRecoPhotonInfo1.PFIsoAll03 = pfisoall;
+     //fRecoPhotonInfo1.PFIsoCharged03 = isolator03.getIsolationCharged();
+     //fRecoPhotonInfo1.PFIsoNeutral03 = isolator03.getIsolationNeutral();
+     //fRecoPhotonInfo1.PFIsoPhoton03 = isolator03.getIsolationPhoton();      
+/*
      fRecoPhotonInfo1.PFIsoAll04 = isolator04.fGetIsolation(matchPhoton1,pfCandidates,firstVtx,vertexColl);
      fRecoPhotonInfo1.PFIsoCharged04 = isolator04.getIsolationCharged();
      fRecoPhotonInfo1.PFIsoNeutral04 = isolator04.getIsolationNeutral();
@@ -1237,17 +1285,27 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      fRecoPhotonInfo1.rhocorPFIsoNeutral04 = max(fRecoPhotonInfo1.PFIsoNeutral04-fRho25*photon1TorFEffAreas[1],0.);
      fRecoPhotonInfo1.rhocorPFIsoPhoton04 = max(fRecoPhotonInfo1.PFIsoPhoton04-fRho25*photon1TorFEffAreas[2],0.);
      fRecoPhotonInfo1.rhocorPFIsoAll04 = fRecoPhotonInfo1.rhocorPFIsoCharged04 + fRecoPhotonInfo1.rhocorPFIsoNeutral04 + fRecoPhotonInfo1.rhocorPFIsoPhoton04;
-
-     fRecoPhotonInfo1.rhocorPFIsoCharged03 = rhocorPFIsoCH;
-     fRecoPhotonInfo1.rhocorPFIsoNeutral03 = rhocorPFIsoNH;
-     fRecoPhotonInfo1.rhocorPFIsoPhoton03 = rhocorPFIsoPH;
-     fRecoPhotonInfo1.rhocorPFIsoAll03 = fRecoPhotonInfo1.rhocorPFIsoCharged03 + fRecoPhotonInfo1.rhocorPFIsoNeutral03 + fRecoPhotonInfo1.rhocorPFIsoPhoton03;
-
+ */
+     //fRecoPhotonInfo1.rhocorPFIsoCharged03 = rhocorPFIsoCH;
+     //fRecoPhotonInfo1.rhocorPFIsoNeutral03 = rhocorPFIsoNH;
+     //fRecoPhotonInfo1.rhocorPFIsoPhoton03 = rhocorPFIsoPH;
+     //fRecoPhotonInfo1.rhocorPFIsoAll03 = fRecoPhotonInfo1.rhocorPFIsoCharged03 + fRecoPhotonInfo1.rhocorPFIsoNeutral03 + fRecoPhotonInfo1.rhocorPFIsoPhoton03;
+     /*
      fRecoPhotonInfo1.rhocorPFIsoCharged02 = max(fRecoPhotonInfo1.PFIsoCharged02-fRho25*photon1TorFEffAreas[0],0.);
      fRecoPhotonInfo1.rhocorPFIsoNeutral02 = max(fRecoPhotonInfo1.PFIsoNeutral02-fRho25*photon1TorFEffAreas[1],0.);
      fRecoPhotonInfo1.rhocorPFIsoPhoton02 = max(fRecoPhotonInfo1.PFIsoPhoton02-fRho25*photon1TorFEffAreas[2],0.);
      fRecoPhotonInfo1.rhocorPFIsoAll02 = fRecoPhotonInfo1.rhocorPFIsoCharged02 + fRecoPhotonInfo1.rhocorPFIsoNeutral02 + fRecoPhotonInfo1.rhocorPFIsoPhoton02;
+     */
 
+     
+     fRecoPhotonInfo1.isTightPFPhoton = (*tight_id_decisions)[matchPho1Ptr];
+     fRecoPhotonInfo1.isMediumPFPhoton = (*medium_id_decisions)[matchPho1Ptr];
+     fRecoPhotonInfo1.isLoosePFPhoton = (*loose_id_decisions)[matchPho1Ptr]; 
+
+
+     // fill DET info?
+
+     /*
      // now we fill the ID variables for det and PFID
      if(ExoDiPhotons::isTightPhoton(&(*matchPhoton1),fRho25) &&
         !ExoDiPhotons::isGapPhoton(&(*matchPhoton1)) &&
@@ -1255,7 +1313,9 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
        fRecoPhotonInfo1.isTightDetPhoton = true;
      else
        fRecoPhotonInfo1.isTightDetPhoton = false;
-    
+     */
+
+     /*    
      // test the conversion safe electron veto
      bool passElecVeto = !ConversionTools::hasMatchedPromptElectron(matchPhoton1->superCluster(), hElectrons, hConversions, beamSpot.position());
      if(ExoDiPhotons::isPFTightPhoton(&(*matchPhoton1),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,passElecVeto,TString("Tight")) && 
@@ -1276,6 +1336,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
        fRecoPhotonInfo1.isLoosePFPhoton = true;
      else
        fRecoPhotonInfo1.isLoosePFPhoton = false;
+     */  
    }
    else {
      //     cout << "No match to signal photon1!" <<endl;
@@ -1316,6 +1377,32 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,matchPhoton2,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
      // SIC add all this to the function above?
      fRecoPhotonInfo2.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron(matchPhoton2->superCluster(), hElectrons, hConversions, beamSpot.position());
+
+
+
+     edm::Ptr<reco::Photon> matchPho2Ptr(photonColl,matchPhoton2Index);
+     
+
+     fRecoPhotonInfo2.sigmaIetaIeta = (*full5x5SigmaIEtaIEtaMap)[matchPho2Ptr];
+     fRecoPhotonInfo2.PFIsoCharged03 = (*phoChargedIsolationMap)[matchPho2Ptr];
+     fRecoPhotonInfo2.PFIsoNeutral03 = (*phoNeutralHadronIsolationMap)[matchPho2Ptr];
+     fRecoPhotonInfo2.PFIsoPhoton03 = (*phoPhotonIsolationMap)[matchPho2Ptr];
+     fRecoPhotonInfo2.PFIsoAll03 = fRecoPhotonInfo2.PFIsoCharged03 + fRecoPhotonInfo2.PFIsoNeutral03 + fRecoPhotonInfo2.PFIsoPhoton03;
+
+     
+     float matchPho2Eta = abs(matchPho2Ptr->superCluster()->eta());
+     
+     //now the corrected PF isolation variables
+     fRecoPhotonInfo2.rhocorPFIsoCharged03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoCharged03-rho_*effAreaChHadrons_.getEffectiveArea(matchPho2Eta));
+     fRecoPhotonInfo2.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoNeutral03-rho_*effAreaChHadrons_.getEffectiveArea(matchPho2Eta));
+     fRecoPhotonInfo2.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoPhoton03-rho_*effAreaChHadrons_.getEffectiveArea(matchPho2Eta));
+     fRecoPhotonInfo2.rhocorPFIsoAll03 = fRecoPhotonInfo2.rhocorPFIsoCharged03 + fRecoPhotonInfo2.rhocorPFIsoNeutral03 + fRecoPhotonInfo2.rhocorPFIsoPhoton03;
+
+
+     //fill 02 and 04 cones?
+
+
+     /*
      //we retrieve the effective areas
      //Remember effareaCH = 1st, effareaNH = 2nd, effareaPH = 3rd
      //Now we store all PF isolation variables for the 2nd photon
@@ -1355,7 +1442,17 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      fRecoPhotonInfo2.rhocorPFIsoNeutral02 = max(fRecoPhotonInfo2.PFIsoNeutral02-fRho25*photon2TorFEffAreas[1],0.);
      fRecoPhotonInfo2.rhocorPFIsoPhoton02 = max(fRecoPhotonInfo2.PFIsoPhoton02-fRho25*photon2TorFEffAreas[2],0.);
      fRecoPhotonInfo2.rhocorPFIsoAll02 = fRecoPhotonInfo2.rhocorPFIsoCharged02 + fRecoPhotonInfo2.rhocorPFIsoNeutral02 + fRecoPhotonInfo2.rhocorPFIsoPhoton02;
+     */
 
+
+     fRecoPhotonInfo2.isTightPFPhoton = (*tight_id_decisions)[matchPho2Ptr];
+     fRecoPhotonInfo2.isMediumPFPhoton = (*medium_id_decisions)[matchPho2Ptr];
+     fRecoPhotonInfo2.isLoosePFPhoton = (*loose_id_decisions)[matchPho2Ptr]; 
+
+
+     // fill DET info?
+
+     /*
      // now we fill the ID variables for det and PFID
      if(ExoDiPhotons::isTightPhoton(matchPhoton2,fRho25) &&
         !ExoDiPhotons::isGapPhoton(matchPhoton2) &&
@@ -1384,6 +1481,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
        fRecoPhotonInfo2.isLoosePFPhoton = true;
      else
        fRecoPhotonInfo2.isLoosePFPhoton = false;
+     */
    }
    else {
      //     cout << "No match to signal photon2!" <<endl;
@@ -1414,7 +1512,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      ExoDiPhotons::FillDiphotonInfo(fDiphotonRecoInfo,matchPhoton1,matchPhoton2);
    }
 
-   */
+   
 
    // for this signal MC, want to fill the tree every event
    fTree->Fill();
