@@ -22,7 +22,7 @@ namespace ExoDiPhotons{
 
 
   // diphoton info: Minv, q_T, delta phi, etc
-
+  
   struct diphotonInfo_t{
     double Minv;
     double qt;
@@ -36,9 +36,9 @@ namespace ExoDiPhotons{
   std::string diphotonInfoBranchDefString("Minv/D:qt:deltaPhi:deltaEta:deltaR:cosThetaStar");
   
 
-    // the internal function which gets called by the others
+  // the internal function which gets called by the others
   void FillDiphotonInfo(diphotonInfo_t &fDiphotonInfo, reco::LeafCandidate::LorentzVector photon_vector1, reco::LeafCandidate::LorentzVector photon_vector2) {
-
+    
     fDiphotonInfo.Minv = (photon_vector1+photon_vector2).M();
     // pt of the pair
     fDiphotonInfo.qt = (photon_vector1+photon_vector2).pt();
@@ -50,40 +50,45 @@ namespace ExoDiPhotons{
     //    double mymom = diphoton.P();
     fDiphotonInfo.cosThetaStar = fabs(photon_vector1.P() - photon_vector2.P())/(photon_vector1+photon_vector2).P();
 
-    }
+  }
 
   // filling function for reco photons  
   void FillDiphotonInfo(diphotonInfo_t &fDiphotonInfo, const reco::Photon *photon1, const reco::Photon *photon2) {
-
+    
     reco::LeafCandidate::LorentzVector photon_vector1 = photon1->p4();
     reco::LeafCandidate::LorentzVector photon_vector2 = photon2->p4();
-
+    
     FillDiphotonInfo(fDiphotonInfo,photon_vector1,photon_vector2);
   }
 
   // same function, but for MC signal photons
-    void FillDiphotonInfo(diphotonInfo_t &fDiphotonInfo, const reco::GenParticle *photon1, const reco::GenParticle *photon2) {
-      
-      reco::LeafCandidate::LorentzVector photon_vector1 = photon1->p4();
-      reco::LeafCandidate::LorentzVector photon_vector2 = photon2->p4();
-      
-      FillDiphotonInfo(fDiphotonInfo,photon_vector1,photon_vector2);
-      
-    }
-
-  // same function, but with reco::Candidates
-    void FillDiphotonInfo(diphotonInfo_t &fDiphotonInfo, const reco::Candidate *photon1, const reco::Candidate *photon2) {
-      
-      reco::LeafCandidate::LorentzVector photon_vector1 = photon1->p4();
-      reco::LeafCandidate::LorentzVector photon_vector2 = photon2->p4();
-      
-      FillDiphotonInfo(fDiphotonInfo,photon_vector1,photon_vector2);
-      
-    }
-
-
+  void FillDiphotonInfo(diphotonInfo_t &fDiphotonInfo, const reco::GenParticle *photon1, const reco::GenParticle *photon2) {
+    
+    reco::LeafCandidate::LorentzVector photon_vector1 = photon1->p4();
+    reco::LeafCandidate::LorentzVector photon_vector2 = photon2->p4();
+    
+    FillDiphotonInfo(fDiphotonInfo,photon_vector1,photon_vector2);  
+  }
   
-
+  // same function, but with reco::Candidates
+  void FillDiphotonInfo(diphotonInfo_t &fDiphotonInfo, const reco::Candidate *photon1, const reco::Candidate *photon2) {
+    
+    reco::LeafCandidate::LorentzVector photon_vector1 = photon1->p4();
+    reco::LeafCandidate::LorentzVector photon_vector2 = photon2->p4();
+    
+    FillDiphotonInfo(fDiphotonInfo,photon_vector1,photon_vector2);
+    
+  }
+  
+  void InitDiphotonInfo(diphotonInfo_t &diphotonInfo) {
+    
+    diphotonInfo.Minv = -99999.99;
+    diphotonInfo.qt = -99999.99;
+    diphotonInfo.deltaPhi = -99999.99;
+    diphotonInfo.deltaEta = -99999.99;
+    diphotonInfo.deltaR = -99999.99;
+    diphotonInfo.cosThetaStar = -99999.99;
+  }
 
 } //end of namespace
 
