@@ -873,10 +873,19 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 	   }
 	   // assign gen photons CASE 2
 	   // check if one photon pair produces (the other has a final state photon dau)
-	   else if (nDauDau == 1 && dau->daughter(0)->pdgId() == 22 && dau->daughter(0)->status() == 1) {
-	     const Candidate *dauDau = dau->daughter(0);
-	     if (!genPhoton1) genPhoton1 = dauDau;
-	     else genPhoton2 = dauDau;
+	   else if (nDauDau == 1 && dau->daughter(0)->pdgId() == 22) {
+	     if (dau->daughter(0)->status() == 1) {
+	       const Candidate *dauDau = dau->daughter(0);
+	       if (!genPhoton1) genPhoton1 = dauDau;
+	       else genPhoton2 = dauDau;
+	     }
+	     else if (dau->daughter(0)->numberOfDaughters()==2
+		      && fabs(dau->daughter(0)->daughter(0)->pdgId()) == fabs(dau->daughter(0)->daughter(1)->pdgId())) {
+	       const Candidate *dauDauDau = dau->daughter(0)->daughter(0); // take either, choose 1st
+	       cout << "  *Signal photon pair produced.*" << endl;
+	       if (!genPhoton1) genPhoton1 = dauDauDau;
+	       else genPhoton2 = dauDauDau;
+	     }
 	   }
 	   else if (nDauDau == 2 && fabs(dau->daughter(0)->pdgId()) == fabs(dau->daughter(1)->pdgId())) {
 	     const Candidate *dauDau = dau->daughter(0); // take either, choose 1st
@@ -897,6 +906,16 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 	     cout << "     numberOfDaughters: " << dauDau->numberOfDaughters() << endl;
 	     cout << "     dauStatus: " << dauDau->status() << endl;
 	     cout << "     dauPt, Eta, Phi: " << dauDau->pt() << ", " << dauDau->eta() << ", " << dauDau->phi() << endl;
+	     
+	     //print dauDauDau info
+	     unsigned nDauDauDau = dauDau->numberOfDaughters();
+	     for (unsigned j=0; j<nDauDauDau; ++j) {
+	       const Candidate *dauDauDau = dauDau->daughter( j );
+	       cout << "   ---dauID: " << dauDauDau->pdgId() << endl;
+	       cout << "       numberOfDaughters: " << dauDauDau->numberOfDaughters() << endl;
+	       cout << "       dauStatus: " << dauDauDau->status() << endl;
+	       cout << "       dauPt, Eta, Phi: " << dauDauDau->pt() << ", " << dauDauDau->eta() << ", " << dauDauDau->phi() << endl;
+	     } // end dauDauDau loop
 	   } // end dauDau loop
 	 
 	 } // end 2 photon check
@@ -948,23 +967,28 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      genPhoton2 = tempGenPhoton;
    }
 
-   // if signal photon pair produced, change gen photon values
+   // if genPhoton1 pair produces, swap with genPhoton2 (which may also have pair produced)
+   // careful: if genPhoton1 pair produces and we dont have genPhoton2
    if(genPhoton1 && genPhoton1->pdgId() != 22) {
-     // genPhoton1 is part of pair production, so
-     // reorder photons, again!
      const reco::Candidate *tempGenPhoton = genPhoton1;
      genPhoton1 = genPhoton2;
      genPhoton2 = tempGenPhoton;
-
-     //fGenPhoton1Info.status = -77;
-     //fGenPhoton1Info.PdgId = fabs(genPhoton1->pdgId());
-     //fGenPhoton1Info.pt = -77.77;
+   }
+   if(genPhoton1 && genPhoton1->pdgId() != 22) {
+     cout << "GenPhoton1 is part of pair production." << endl;
+     fGenPhoton1Info.status = -77;
+     fGenPhoton1Info.PdgId = fabs(genPhoton1->pdgId());
+     fGenPhoton1Info.pt= -77.77;
+     fGenPhoton1Info.eta= -77.77;
+     fGenPhoton1Info.phi= -77.77;
    }
    if(genPhoton2 && genPhoton2->pdgId() != 22) {
      cout << "GenPhoton2 is part of pair production." << endl;
      fGenPhoton2Info.status = -77;
      fGenPhoton2Info.PdgId = fabs(genPhoton2->pdgId());
      fGenPhoton2Info.pt= -77.77;
+     fGenPhoton2Info.eta= -77.77;
+     fGenPhoton2Info.phi= -77.77;
    }
 
    if(signalPhoton1) {
@@ -1031,7 +1055,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      
      // we have the gen photons
      // lets match each separately
-     if (genPhoton1) {
+     if (genPhoton1 && genPhoton1->pdgId()==22) {
        // there's a CMS function for deltaPhi in DataFormats/Math
        double deltaPhi = reco::deltaPhi(genPhoton1->phi(),recoPhoton->phi());
        double deltaEta = genPhoton1->eta()-recoPhoton->eta();
