@@ -1271,8 +1271,8 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      
      //now the corrected PF isolation variables
      fRecoPhoton1Info.rhocorPFIsoCharged03 = std::max((float)0.0,(float)fRecoPhoton1Info.PFIsoCharged03-rho_*effAreaChHadrons_.getEffectiveArea(matchPho1Eta));
-     fRecoPhoton1Info.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhoton1Info.PFIsoNeutral03-rho_*effAreaChHadrons_.getEffectiveArea(matchPho1Eta));
-     fRecoPhoton1Info.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhoton1Info.PFIsoPhoton03-rho_*effAreaChHadrons_.getEffectiveArea(matchPho1Eta));
+     fRecoPhoton1Info.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhoton1Info.PFIsoNeutral03-rho_*effAreaNeuHadrons_.getEffectiveArea(matchPho1Eta));
+     fRecoPhoton1Info.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhoton1Info.PFIsoPhoton03-rho_*effAreaPhotons_.getEffectiveArea(matchPho1Eta));
      fRecoPhoton1Info.rhocorPFIsoAll03 = fRecoPhoton1Info.rhocorPFIsoCharged03 + fRecoPhoton1Info.rhocorPFIsoNeutral03 + fRecoPhoton1Info.rhocorPFIsoPhoton03;
 
 
@@ -1417,8 +1417,8 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      
      //now the corrected PF isolation variables
      fRecoPhoton2Info.rhocorPFIsoCharged03 = std::max((float)0.0,(float)fRecoPhoton2Info.PFIsoCharged03-rho_*effAreaChHadrons_.getEffectiveArea(matchPho2Eta));
-     fRecoPhoton2Info.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhoton2Info.PFIsoNeutral03-rho_*effAreaChHadrons_.getEffectiveArea(matchPho2Eta));
-     fRecoPhoton2Info.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhoton2Info.PFIsoPhoton03-rho_*effAreaChHadrons_.getEffectiveArea(matchPho2Eta));
+     fRecoPhoton2Info.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhoton2Info.PFIsoNeutral03-rho_*effAreaNeuHadrons_.getEffectiveArea(matchPho2Eta));
+     fRecoPhoton2Info.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhoton2Info.PFIsoPhoton03-rho_*effAreaPhotons_.getEffectiveArea(matchPho2Eta));
      fRecoPhoton2Info.rhocorPFIsoAll03 = fRecoPhoton2Info.rhocorPFIsoCharged03 + fRecoPhoton2Info.rhocorPFIsoNeutral03 + fRecoPhoton2Info.rhocorPFIsoPhoton03;
 
 
