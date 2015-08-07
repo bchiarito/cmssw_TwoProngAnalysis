@@ -74,6 +74,8 @@
 #include "DataFormats/Math/interface/deltaPhi.h"
 #include "TMath.h"
 
+#include "DataFormats/Math/interface/deltaR.h"
+
 //for trigger
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "FWCore/Common/interface/TriggerNames.h"
@@ -174,17 +176,17 @@ class ExoDiPhotonSignalMCAnalyzer : public edm::EDAnalyzer {
   
   ExoDiPhotons::hltTrigInfo_t fHLTInfo;
   
-  ExoDiPhotons::mcTrueObjectInfo_t fSignalPhoton1Info; // leading signal photon (from Grav. decay)
-  ExoDiPhotons::mcTrueObjectInfo_t fSignalPhoton2Info;
+  ExoDiPhotons::mcTrueObjectInfo_t fUnstablePhoton1Info; // leading photon directly from RSG decay
+  ExoDiPhotons::mcTrueObjectInfo_t fUnstablePhoton2Info;
 
-  ExoDiPhotons::mcTrueObjectInfo_t fGenPhoton1Info; // leading gen photon (final state)
-  ExoDiPhotons::mcTrueObjectInfo_t fGenPhoton2Info;
+  ExoDiPhotons::mcTrueObjectInfo_t fStablePhoton1Info; // leading final state photon coming from RSG decay (may pair produce)
+  ExoDiPhotons::mcTrueObjectInfo_t fStablePhoton2Info;
 
   ExoDiPhotons::recoPhotonInfo_t fRecoPhoton1Info; // leading matched reco photon 
-  ExoDiPhotons::recoPhotonInfo_t fRecoPhoton2Info; // second photon
+  ExoDiPhotons::recoPhotonInfo_t fRecoPhoton2Info; // subleading photon
   
-  ExoDiPhotons::diphotonInfo_t fDiphotonSignalInfo;
-  ExoDiPhotons::diphotonInfo_t fDiphotonGenInfo;
+  ExoDiPhotons::diphotonInfo_t fDiphotonGenUnstableInfo;
+  ExoDiPhotons::diphotonInfo_t fDiphotonGenStableInfo;
   ExoDiPhotons::diphotonInfo_t fDiphotonRecoInfo;
  
   // Store PileUp Info
@@ -325,11 +327,11 @@ ExoDiPhotonSignalMCAnalyzer::ExoDiPhotonSignalMCAnalyzer(const edm::ParameterSet
   fTree->Branch("BeamSpot",&fBeamSpotInfo,ExoDiPhotons::beamSpotInfoBranchDefString.c_str());
   fTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
 
-  fTree->Branch("SignalPhoton1",&fSignalPhoton1Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
-  fTree->Branch("SignalPhoton2",&fSignalPhoton2Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
+  fTree->Branch("UnstablePhoton1",&fUnstablePhoton1Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
+  fTree->Branch("UnstablePhoton2",&fUnstablePhoton2Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
 
-  fTree->Branch("GenPhoton1",&fGenPhoton1Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
-  fTree->Branch("GenPhoton2",&fGenPhoton2Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
+  fTree->Branch("StablePhoton1",&fStablePhoton1Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
+  fTree->Branch("StablePhoton2",&fStablePhoton2Info,ExoDiPhotons::mcTrueObjectInfoBranchDefString.c_str());
 
   fTree->Branch("Photon1",&fRecoPhoton1Info,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree->Branch("Photon2",&fRecoPhoton2Info,ExoDiPhotons::recoPhotonBranchDefString.c_str());
@@ -337,8 +339,8 @@ ExoDiPhotonSignalMCAnalyzer::ExoDiPhotonSignalMCAnalyzer(const edm::ParameterSet
   // signal diphoton info? eg to probe true MC width?
   // reco diphoton info?
   
-  fTree->Branch("DiphotonSignal",&fDiphotonSignalInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
-  fTree->Branch("DiphotonGen",&fDiphotonGenInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+  fTree->Branch("DiphotonGenUnstable",&fDiphotonGenUnstableInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+  fTree->Branch("DiphotonGenStable",&fDiphotonGenStableInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
   fTree->Branch("Diphoton",&fDiphotonRecoInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
    
   
@@ -785,46 +787,46 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      return;
    }
    /*
-   fSignalPhoton1Info.status = -999999;
-   fSignalPhoton1Info.PdgId = -999999;
-   fSignalPhoton1Info.MotherPdgId = -999999;
-   fSignalPhoton1Info.GrandmotherPdgId = -999999;
-   fSignalPhoton1Info.pt = -999999.99;
-   fSignalPhoton1Info.eta = -999999.99;
-   fSignalPhoton1Info.phi = -999999.99;
-   fSignalPhoton1Info.isol04 = -999999.99;
-   fSignalPhoton1Info.isol04ratio = -999999.99;
-   fSignalPhoton1Info.isol03 = -999999.99;
-   fSignalPhoton1Info.isol03ratio = -999999.99;
-   fSignalPhoton1Info.isol02 = -999999.99;
-   fSignalPhoton1Info.isol02ratio = -999999.99;
+   fUnstablePhoton1Info.status = -999999;
+   fUnstablePhoton1Info.PdgId = -999999;
+   fUnstablePhoton1Info.MotherPdgId = -999999;
+   fUnstablePhoton1Info.GrandmotherPdgId = -999999;
+   fUnstablePhoton1Info.pt = -999999.99;
+   fUnstablePhoton1Info.eta = -999999.99;
+   fUnstablePhoton1Info.phi = -999999.99;
+   fUnstablePhoton1Info.isol04 = -999999.99;
+   fUnstablePhoton1Info.isol04ratio = -999999.99;
+   fUnstablePhoton1Info.isol03 = -999999.99;
+   fUnstablePhoton1Info.isol03ratio = -999999.99;
+   fUnstablePhoton1Info.isol02 = -999999.99;
+   fUnstablePhoton1Info.isol02ratio = -999999.99;
 
-   fSignalPhoton2Info.status = -999999;
-   fSignalPhoton2Info.PdgId = -999999;
-   fSignalPhoton2Info.MotherPdgId = -999999;
-   fSignalPhoton2Info.GrandmotherPdgId = -999999;
-   fSignalPhoton2Info.pt = -999999.99;
-   fSignalPhoton2Info.eta = -999999.99;
-   fSignalPhoton2Info.phi = -999999.99;
-   fSignalPhoton2Info.isol04 = -999999.99;
-   fSignalPhoton2Info.isol04ratio = -999999.99;
-   fSignalPhoton2Info.isol03 = -999999.99;
-   fSignalPhoton2Info.isol03ratio = -999999.99;
-   fSignalPhoton2Info.isol02 = -999999.99;
-   fSignalPhoton2Info.isol02ratio = -999999.99;
+   fUnstablePhoton2Info.status = -999999;
+   fUnstablePhoton2Info.PdgId = -999999;
+   fUnstablePhoton2Info.MotherPdgId = -999999;
+   fUnstablePhoton2Info.GrandmotherPdgId = -999999;
+   fUnstablePhoton2Info.pt = -999999.99;
+   fUnstablePhoton2Info.eta = -999999.99;
+   fUnstablePhoton2Info.phi = -999999.99;
+   fUnstablePhoton2Info.isol04 = -999999.99;
+   fUnstablePhoton2Info.isol04ratio = -999999.99;
+   fUnstablePhoton2Info.isol03 = -999999.99;
+   fUnstablePhoton2Info.isol03ratio = -999999.99;
+   fUnstablePhoton2Info.isol02 = -999999.99;
+   fUnstablePhoton2Info.isol02ratio = -999999.99;
    */
 
-   ExoDiPhotons::InitMCTrueObjectInfo(fSignalPhoton1Info);
-   ExoDiPhotons::InitMCTrueObjectInfo(fSignalPhoton2Info);
+   ExoDiPhotons::InitMCTrueObjectInfo(fUnstablePhoton1Info);
+   ExoDiPhotons::InitMCTrueObjectInfo(fUnstablePhoton2Info);
 
-   ExoDiPhotons::InitMCTrueObjectInfo(fGenPhoton1Info);
-   ExoDiPhotons::InitMCTrueObjectInfo(fGenPhoton2Info);
+   ExoDiPhotons::InitMCTrueObjectInfo(fStablePhoton1Info);
+   ExoDiPhotons::InitMCTrueObjectInfo(fStablePhoton2Info);
 
-   const reco::Candidate *signalPhoton1 = NULL;
-   const reco::Candidate *signalPhoton2 = NULL;
+   const reco::Candidate *unstablePhoton1 = NULL;
+   const reco::Candidate *unstablePhoton2 = NULL;
 
-   const reco::Candidate *genPhoton1 = NULL;
-   const reco::Candidate *genPhoton2 = NULL;
+   const reco::Candidate *stablePhoton1 = NULL;
+   const reco::Candidate *stablePhoton2 = NULL;
 
    using namespace reco;
 
@@ -863,38 +865,38 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 	   cout << "   dauPt, Eta, Phi: " << dau->pt() << ", " << dau->eta() << ", " << dau->phi() << endl;
 	   
 	   // assign signal photons
-	   if (!signalPhoton1) signalPhoton1 = dau;
-	   else signalPhoton2 = dau;
+	   if (!unstablePhoton1) unstablePhoton1 = dau;
+	   else unstablePhoton2 = dau;
 	   
 	   // assign gen photons CASE 1
 	   if (nDauDau == 0 && dau->status() == 1) {
-	     if (!genPhoton1) genPhoton1 = dau;
-	     else genPhoton2 = dau;
+	     if (!stablePhoton1) stablePhoton1 = dau;
+	     else stablePhoton2 = dau;
 	   }
 	   // assign gen photons CASE 2
 	   // check if one photon pair produces (the other has a final state photon dau)
 	   else if (nDauDau == 1 && dau->daughter(0)->pdgId() == 22) {
 	     if (dau->daughter(0)->status() == 1) {
 	       const Candidate *dauDau = dau->daughter(0);
-	       if (!genPhoton1) genPhoton1 = dauDau;
-	       else genPhoton2 = dauDau;
+	       if (!stablePhoton1) stablePhoton1 = dauDau;
+	       else stablePhoton2 = dauDau;
 	     }
 	     else if (dau->daughter(0)->numberOfDaughters()==2
 		      && fabs(dau->daughter(0)->daughter(0)->pdgId()) == fabs(dau->daughter(0)->daughter(1)->pdgId())) {
 	       const Candidate *dauDauDau = dau->daughter(0)->daughter(0); // take either, choose 1st
-	       cout << "  *Signal photon pair produced.*" << endl;
-	       if (!genPhoton1) genPhoton1 = dauDauDau;
-	       else genPhoton2 = dauDauDau;
+	       cout << "  *Unstable photon pair produced.*" << endl;
+	       if (!stablePhoton1) stablePhoton1 = dauDauDau;
+	       else stablePhoton2 = dauDauDau;
 	     }
 	   }
 	   else if (nDauDau == 2 && fabs(dau->daughter(0)->pdgId()) == fabs(dau->daughter(1)->pdgId())) {
 	     const Candidate *dauDau = dau->daughter(0); // take either, choose 1st
-	     cout << "  *Signal photon pair produced.*" << endl;
-	     if (!genPhoton1) genPhoton1 = dauDau;
-	     else genPhoton2 = dauDau;
+	     cout << "  *Unstable photon pair produced.*" << endl;
+	     if (!stablePhoton1) stablePhoton1 = dauDau;
+	     else stablePhoton2 = dauDau;
 	   }
 	   else {
-	     cout << "Didnt find Gen Photon!" << endl;
+	     cout << "Didnt find Stable Photon!" << endl;
 	   }
 	   
 	   // print dauDau info
@@ -925,103 +927,103 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    } // end genParticle loop
 
 
-   // what if some of the signal photons arent found? 
-   if(!signalPhoton1) {
-     cout << "Couldnt find signal Photon1 !" <<endl;
-     fSignalPhoton1Info.status = -99;
+   // what if some of the unstable photons arent found? 
+   if(!unstablePhoton1) {
+     cout << "Couldnt find Unstable Photon 1 !" <<endl;
+     fUnstablePhoton1Info.status = -99;
      fTree->Fill();
      return;
    }
-   if(!signalPhoton2) {
-     cout << "Couldnt find signal Photon2 !" <<endl;
-     fSignalPhoton2Info.status = -99;
+   if(!unstablePhoton2) {
+     cout << "Couldnt find Unstable Photon 2 !" <<endl;
+     fUnstablePhoton2Info.status = -99;
      fTree->Fill();
      return;
    }
 
-   // what if some of the gen photons arent found? 
-   if(!genPhoton1) {
-     cout << "Couldnt find gen Photon1 !" <<endl;
-     fGenPhoton1Info.status = -888.888;
+   // what if some of the stable photons arent found? 
+   if(!stablePhoton1) {
+     cout << "Couldnt find Stable Photon 1 !" <<endl;
+     fStablePhoton1Info.status = -888.888;
      //fTree->Fill();
      //return;
    }
-   if(!genPhoton2) {
-     cout << "Couldnt find gen Photon2 !" <<endl;
-     fGenPhoton2Info.status = -888.888;
+   if(!stablePhoton2) {
+     cout << "Couldnt find Stable Photon 2 !" <<endl;
+     fStablePhoton2Info.status = -888.888;
      //fTree->Fill();
      //return;
    }
 
-   // reorder the signal photons by pt
-   if(signalPhoton1 && signalPhoton2 && signalPhoton2->pt()>signalPhoton1->pt()) {
-     const reco::Candidate *tempSignalPhoton = signalPhoton1;
-     signalPhoton1 = signalPhoton2;
-     signalPhoton2 = tempSignalPhoton;
+   // reorder the unstable photons by pt
+   if(unstablePhoton1 && unstablePhoton2 && unstablePhoton2->pt()>unstablePhoton1->pt()) {
+     const reco::Candidate *tempUnstablePhoton = unstablePhoton1;
+     unstablePhoton1 = unstablePhoton2;
+     unstablePhoton2 = tempUnstablePhoton;
    }
   
-   // reorder the gen photons by pt
-   if(genPhoton1 && genPhoton2 && genPhoton2->pt()>genPhoton1->pt()) {
-     const reco::Candidate *tempGenPhoton = genPhoton1;
-     genPhoton1 = genPhoton2;
-     genPhoton2 = tempGenPhoton;
+   // reorder the stable photons by pt
+   if(stablePhoton1 && stablePhoton2 && stablePhoton2->pt()>stablePhoton1->pt()) {
+     const reco::Candidate *tempStablePhoton = stablePhoton1;
+     stablePhoton1 = stablePhoton2;
+     stablePhoton2 = tempStablePhoton;
    }
 
-   // if genPhoton1 pair produces, swap with genPhoton2 (which may also have pair produced)
-   // careful: if genPhoton1 pair produces and we dont have genPhoton2
-   if(genPhoton1 && genPhoton1->pdgId() != 22) {
-     const reco::Candidate *tempGenPhoton = genPhoton1;
-     genPhoton1 = genPhoton2;
-     genPhoton2 = tempGenPhoton;
+   // if stablePhoton1 pair produces, swap with stablePhoton2 (which may also have pair produced)
+   // careful: if stablePhoton1 pair produces and we dont have stablePhoton2
+   if(stablePhoton1 && stablePhoton1->pdgId() != 22) {
+     const reco::Candidate *tempStablePhoton = stablePhoton1;
+     stablePhoton1 = stablePhoton2;
+     stablePhoton2 = tempStablePhoton;
    }
-   if(genPhoton1 && genPhoton1->pdgId() != 22) {
-     cout << "GenPhoton1 is part of pair production." << endl;
-     fGenPhoton1Info.status = -77;
-     fGenPhoton1Info.PdgId = fabs(genPhoton1->pdgId());
-     fGenPhoton1Info.pt= -77.77;
-     fGenPhoton1Info.eta= -77.77;
-     fGenPhoton1Info.phi= -77.77;
+   if(stablePhoton1 && stablePhoton1->pdgId() != 22) {
+     cout << "StablePhoton1 is part of pair production." << endl;
+     fStablePhoton1Info.status = -77;
+     fStablePhoton1Info.PdgId = fabs(stablePhoton1->pdgId());
+     fStablePhoton1Info.pt= -77.77;
+     fStablePhoton1Info.eta= -77.77;
+     fStablePhoton1Info.phi= -77.77;
    }
-   if(genPhoton2 && genPhoton2->pdgId() != 22) {
-     cout << "GenPhoton2 is part of pair production." << endl;
-     fGenPhoton2Info.status = -77;
-     fGenPhoton2Info.PdgId = fabs(genPhoton2->pdgId());
-     fGenPhoton2Info.pt= -77.77;
-     fGenPhoton2Info.eta= -77.77;
-     fGenPhoton2Info.phi= -77.77;
-   }
-
-   if(signalPhoton1) {
-     ExoDiPhotons::FillMCTrueObjectInfo(fSignalPhoton1Info,signalPhoton1);
-     //      fSignalPhoton1Info.status = signalPhoton1->status();
-     //      fSignalPhoton1Info.PdgId = signalPhoton1->pdgId();
-     //      fSignalPhoton1Info.MotherPdgId = signalPhoton1->mother()->pdgId();
-     //      fSignalPhoton1Info.GrandmotherPdgId = signalPhoton1->mother()->mother()->pdgId();
-     //      fSignalPhoton1Info.pt = signalPhoton1->pt();
-     //      fSignalPhoton1Info.eta = signalPhoton1->eta();
-     //      fSignalPhoton1Info.phi = signalPhoton1->phi();
-   }
-   if(signalPhoton2) {
-     ExoDiPhotons::FillMCTrueObjectInfo(fSignalPhoton2Info,signalPhoton2);
-     //      fSignalPhoton2Info.status = signalPhoton2->status();
-     //      fSignalPhoton2Info.PdgId = signalPhoton2->pdgId();
-     //      fSignalPhoton2Info.MotherPdgId = signalPhoton2->mother()->pdgId();
-     //      fSignalPhoton2Info.GrandmotherPdgId = signalPhoton2->mother()->mother()->pdgId();
-     //      fSignalPhoton2Info.pt = signalPhoton2->pt();
-     //      fSignalPhoton2Info.eta = signalPhoton2->eta();
-     //      fSignalPhoton2Info.phi = signalPhoton2->phi();		 
+   if(stablePhoton2 && stablePhoton2->pdgId() != 22) {
+     cout << "StablePhoton2 is part of pair production." << endl;
+     fStablePhoton2Info.status = -77;
+     fStablePhoton2Info.PdgId = fabs(stablePhoton2->pdgId());
+     fStablePhoton2Info.pt= -77.77;
+     fStablePhoton2Info.eta= -77.77;
+     fStablePhoton2Info.phi= -77.77;
    }
 
-   if(genPhoton1 && genPhoton1->pdgId() == 22) ExoDiPhotons::FillMCTrueObjectInfo(fGenPhoton1Info,genPhoton1);
-   if(genPhoton2 && genPhoton2->pdgId() == 22) ExoDiPhotons::FillMCTrueObjectInfo(fGenPhoton2Info,genPhoton2);
+   if(unstablePhoton1) {
+     ExoDiPhotons::FillMCTrueObjectInfo(fUnstablePhoton1Info,unstablePhoton1);
+     //      fUnstablePhoton1Info.status = unstablePhoton1->status();
+     //      fUnstablePhoton1Info.PdgId = unstablePhoton1->pdgId();
+     //      fUnstablePhoton1Info.MotherPdgId = unstablePhoton1->mother()->pdgId();
+     //      fUnstablePhoton1Info.GrandmotherPdgId = unstablePhoton1->mother()->mother()->pdgId();
+     //      fUnstablePhoton1Info.pt = unstablePhoton1->pt();
+     //      fUnstablePhoton1Info.eta = unstablePhoton1->eta();
+     //      fUnstablePhoton1Info.phi = unstablePhoton1->phi();
+   }
+   if(unstablePhoton2) {
+     ExoDiPhotons::FillMCTrueObjectInfo(fUnstablePhoton2Info,unstablePhoton2);
+     //      fUnstablePhoton2Info.status = unstablePhoton2->status();
+     //      fUnstablePhoton2Info.PdgId = unstablePhoton2->pdgId();
+     //      fUnstablePhoton2Info.MotherPdgId = unstablePhoton2->mother()->pdgId();
+     //      fUnstablePhoton2Info.GrandmotherPdgId = unstablePhoton2->mother()->mother()->pdgId();
+     //      fUnstablePhoton2Info.pt = unstablePhoton2->pt();
+     //      fUnstablePhoton2Info.eta = unstablePhoton2->eta();
+     //      fUnstablePhoton2Info.phi = unstablePhoton2->phi();		 
+   }
+
+   if(stablePhoton1 && stablePhoton1->pdgId() == 22) ExoDiPhotons::FillMCTrueObjectInfo(fStablePhoton1Info,stablePhoton1);
+   if(stablePhoton2 && stablePhoton2->pdgId() == 22) ExoDiPhotons::FillMCTrueObjectInfo(fStablePhoton2Info,stablePhoton2);
 
 
    cout << endl;
-   cout << "SignalPhoton1 status, pdgId, pt: " << fSignalPhoton1Info.status << ", " << fSignalPhoton1Info.PdgId << ", " << fSignalPhoton1Info.pt << endl;
-   cout << "SignalPhoton2 status, pdgId, pt: " << fSignalPhoton2Info.status << ", " << fSignalPhoton2Info.PdgId << ", " << fSignalPhoton2Info.pt << endl;
+   cout << "UnstablePhoton1 status, pdgId, pt: " << fUnstablePhoton1Info.status << ", " << fUnstablePhoton1Info.PdgId << ", " << fUnstablePhoton1Info.pt << endl;
+   cout << "UnstablePhoton2 status, pdgId, pt: " << fUnstablePhoton2Info.status << ", " << fUnstablePhoton2Info.PdgId << ", " << fUnstablePhoton2Info.pt << endl;
    cout << endl;
-   cout << "GenPhoton1 status, pdgId, pt: " << fGenPhoton1Info.status << ", " << fGenPhoton1Info.PdgId << ", " << fGenPhoton1Info.pt << endl;
-   cout << "GenPhoton2 status, pdgId, pt: " << fGenPhoton2Info.status << ", " << fGenPhoton2Info.PdgId << ", " << fGenPhoton2Info.pt << endl;   
+   cout << "StablePhoton1 status, pdgId, pt: " << fStablePhoton1Info.status << ", " << fStablePhoton1Info.PdgId << ", " << fStablePhoton1Info.pt << endl;
+   cout << "StablePhoton2 status, pdgId, pt: " << fStablePhoton2Info.status << ", " << fStablePhoton2Info.PdgId << ", " << fStablePhoton2Info.pt << endl;   
    cout << endl;
 
 
@@ -1055,14 +1057,15 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      
      // we have the gen photons
      // lets match each separately
-     if (genPhoton1 && genPhoton1->pdgId()==22) {
+     if (stablePhoton1 && stablePhoton1->pdgId()==22) {
        // there's a CMS function for deltaPhi in DataFormats/Math
-       double deltaPhi = reco::deltaPhi(genPhoton1->phi(),recoPhoton->phi());
-       double deltaEta = genPhoton1->eta()-recoPhoton->eta();
-       double deltaR = TMath::Sqrt(deltaPhi*deltaPhi+deltaEta*deltaEta);
-	
-       cout << "GenPhoton1 deltaR   : " << deltaR << endl;
-       cout << "GenPhoton1 minDeltaR: " << minDeltaR1 << endl;
+       //double deltaPhi = reco::deltaPhi(stablePhoton1->phi(),recoPhoton->phi());
+       //double deltaEta = stablePhoton1->eta()-recoPhoton->eta();
+       //double deltaR = TMath::Sqrt(deltaPhi*deltaPhi+deltaEta*deltaEta);
+       double deltaR = reco::deltaR(recoPhoton->eta(),recoPhoton->phi(),stablePhoton1->eta(),stablePhoton1->phi());
+
+       cout << "StablePhoton1 deltaR   : " << deltaR << endl;
+       cout << "StablePhoton1 minDeltaR: " << minDeltaR1 << endl;
 
        if (deltaR < minDeltaR1) {
 	 // then this is the best match so far
@@ -1071,14 +1074,15 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 	 matchPhoton1Index = phoIndex;
        }       
      }
-     if (genPhoton2 && genPhoton2->pdgId()==22) {
+     if (stablePhoton2 && stablePhoton2->pdgId()==22) {
        // there's a CMS function for deltaPhi in DataFormats/Math
-       double deltaPhi = reco::deltaPhi(genPhoton2->phi(),recoPhoton->phi());
-       double deltaEta = genPhoton2->eta()-recoPhoton->eta();
-       double deltaR = TMath::Sqrt(deltaPhi*deltaPhi+deltaEta*deltaEta);
-       
-       cout << "GenPhoton2 deltaR   : " << deltaR << endl;
-       cout << "GenPhoton2 minDeltaR: " << minDeltaR2 << endl;
+       //double deltaPhi = reco::deltaPhi(stablePhoton2->phi(),recoPhoton->phi());
+       //double deltaEta = stablePhoton2->eta()-recoPhoton->eta();
+       //double deltaR = TMath::Sqrt(deltaPhi*deltaPhi+deltaEta*deltaEta);
+       double deltaR = reco::deltaR(recoPhoton->eta(),recoPhoton->phi(),stablePhoton2->eta(),stablePhoton2->phi());       
+
+       cout << "StablePhoton2 deltaR   : " << deltaR << endl;
+       cout << "StablePhoton2 minDeltaR: " << minDeltaR2 << endl;
 		 
        if (deltaR < minDeltaR2) {
 	 // then this is the best match so far
@@ -1093,7 +1097,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 
 
    // reorder match photons by pt
-   // (lose direct genPhoton  matchPhoton correspondance)
+   // (lose direct stablePhoton  matchPhoton correspondance)
    if (matchPhoton1 && matchPhoton2) {
      if (matchPhoton2->pt() > matchPhoton1->pt()) {
        const reco::Photon *tempMatchPhoton = matchPhoton1;
@@ -1179,16 +1183,16 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 	 } //end recoPhoton loop to match to the present signal photon
 	       
 	 // now assign our signal and matched photons to 1 or 2
-	 if(!signalPhoton1) {
+	 if(!unstablePhoton1) {
 	   // then we havent found the first one yet, so this is it
-	   //signalPhoton1 = &(*genParticle);
-	   //cout<<signalPhoton1<<endl;
+	   //unstablePhoton1 = &(*genParticle);
+	   //cout<<unstablePhoton1<<endl;
 	   matchPhoton1 = tempMatchPhoton;
 	   matchPhoton1Index = phoIndex;
 	 }
 	 else {
 	   // we have already found one, so this is the second
-	   //signalPhoton2 = &(*genParticle);
+	   //unstablePhoton2 = &(*genParticle);
 	   matchPhoton2 = tempMatchPhoton;
 	   matchPhoton2Index = phoIndex;
 	 }
@@ -1268,7 +1272,8 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 
      
      float matchPho1Eta = abs(matchPho1Ptr->superCluster()->eta());
-     
+     cout << "fRecoPhoton1Info.scEta: " << fRecoPhoton1Info.scEta << endl;
+     cout << "abs(scEta): " << matchPho1Eta << endl;     
      //now the corrected PF isolation variables
      fRecoPhoton1Info.rhocorPFIsoCharged03 = std::max((float)0.0,(float)fRecoPhoton1Info.PFIsoCharged03-rho_*effAreaChHadrons_.getEffectiveArea(matchPho1Eta));
      fRecoPhoton1Info.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhoton1Info.PFIsoNeutral03-rho_*effAreaNeuHadrons_.getEffectiveArea(matchPho1Eta));
@@ -1525,16 +1530,16 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    // fill diphoton info
 
    // start with silly values
-   ExoDiPhotons::InitDiphotonInfo(fDiphotonSignalInfo);
-   ExoDiPhotons::InitDiphotonInfo(fDiphotonGenInfo);
+   ExoDiPhotons::InitDiphotonInfo(fDiphotonGenUnstableInfo);
+   ExoDiPhotons::InitDiphotonInfo(fDiphotonGenStableInfo);
    ExoDiPhotons::InitDiphotonInfo(fDiphotonRecoInfo);
    
-   if (signalPhoton1 && signalPhoton2) {
-     ExoDiPhotons::FillDiphotonInfo(fDiphotonSignalInfo,signalPhoton1,signalPhoton2);
+   if (unstablePhoton1 && unstablePhoton2) {
+     ExoDiPhotons::FillDiphotonInfo(fDiphotonGenUnstableInfo,unstablePhoton1,unstablePhoton2);
    }
 
-   if (genPhoton1 && genPhoton2 && genPhoton1->pdgId()==22 && genPhoton2->pdgId()==22) {
-     ExoDiPhotons::FillDiphotonInfo(fDiphotonGenInfo,genPhoton1,genPhoton2);
+   if (stablePhoton1 && stablePhoton2 && stablePhoton1->pdgId()==22 && stablePhoton2->pdgId()==22) {
+     ExoDiPhotons::FillDiphotonInfo(fDiphotonGenStableInfo,stablePhoton1,stablePhoton2);
    }
 
    if (matchPhoton1 && matchPhoton2) {
