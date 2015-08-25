@@ -29,10 +29,18 @@ from MakePlots import *
 
 # systematics for all model points
 SigPUSyst = 0.007
-SigPDFSyst = 0.05
+# below is no longer used, replaced with function
+#SigPDFSyst = 0.05
+# from Otman's November 26, 2014 slides: https://indico.cern.ch/event/351663/session/1/contribution/0/material/slides/0.pdf
+# updated December 9 2014
+SigPDFSystFunc = TF1('SigPDFSystFunc','TMath::Exp([0]+[1]*x)',0,4000) # function of M_gg
+SigPDFSystFunc.SetParameters(0.156947,2.67595e-4)
+#
+#
 #SigScaleFactorSystOneGamma = 0.005
 SigScaleFactorSystOneGamma = 0.0014
-SigPtSFSystOneGamma = 0.03
+#SigPtSFSystOneGamma = 0.03
+SigPtSFSystOneGamma = 0.05 # for oct16 test
 # background --> take from hists in root files
 
 # globally defined hists
@@ -461,6 +469,7 @@ def MergeLimitsRooStats(modelPointsArray,limitsDir,limitsFileNameBase):
     thisMPFileName = modelPoint.fileName
     thisMPKFactor = modelPoint.kFactor
     thisMPAcceptance = modelPoint.acceptance
+    thisMPAccMassW = modelPoint.acceptanceMassWindow
     thisMPpreMWEff = modelPoint.preMWEff
     thisMPsignalEvents = modelPoint.totalSignalEvents
     # read this model point (now with limits) from output file
@@ -482,6 +491,7 @@ def MergeLimitsRooStats(modelPointsArray,limitsDir,limitsFileNameBase):
     thisModelPoint.fileName = thisMPFileName
     thisModelPoint.kFactor = thisMPKFactor
     thisModelPoint.acceptance = thisMPAcceptance
+    thisModelPoint.acceptanceMassWindow = thisMPAccMassW
     thisModelPoint.preMWEff = thisMPpreMWEff
     thisModelPoint.totalSignalEvents = thisMPsignalEvents
     newModelPointArray.append(thisModelPoint)
@@ -817,6 +827,7 @@ def FillModelPointInfoForWindow(modelPoint,minBin,maxBin):
   totalBGErr = math.sqrt(pow(modelPoint.nBackgroundErrStat,2)+pow(modelPoint.nBackgroundErrSyst,2))
   modelPoint.totalSignalEvents = 1.0*signalEntriesTotal
   modelPoint.preMWEff = 1.0*signalHist.Integral()/signalEntriesTotal
+  # "totalEff" here is actually acceptance*efficiency
   modelPoint.totalEff = 1.0*signalHist.Integral(minBin,maxBin)/signalEntriesTotal
   modelPoint.totalEffErrStat = math.sqrt(modelPoint.totalEff*(1-modelPoint.totalEff)/signalEntriesTotalUnscaled)
   modelPoint.totalEffMScaleSystUp = 1.0*signalHistScaleShiftUp.Integral(minBin,maxBin)/signalEntriesTotal
@@ -834,9 +845,17 @@ def FillModelPointInfoForWindow(modelPoint,minBin,maxBin):
   singlePhotonEff = math.sqrt(modelPoint.totalEff/acceptance) # singlePhEff =~ sqrt(diPhotonEff)
   sigEffSystSingleGammaToTwoGamma = (2*singlePhotonEff*math.sqrt(pow(SigScaleFactorSystOneGamma,2)+pow(SigPtSFSystOneGamma,2)))/modelPoint.totalEff
   # above without /totalEff is absolute error on sigma_eff_diphoton; we need % to add with other sigma_eff_diphoton effects here (next line)
-  sigEffSyst = math.sqrt(pow(sigMScaleSyst,2)+pow(sigMResSyst,2)+pow(SigPUSyst,2)+pow(SigPDFSyst,2)+pow(sigEffSystSingleGammaToTwoGamma,2))
-  # now we make it into absolute error, starting from %
-  modelPoint.totalEffErrSyst = sigEffSyst*modelPoint.totalEff
+  #sigEffSyst = math.sqrt(pow(sigMScaleSyst,2)+pow(sigMResSyst,2)+pow(SigPUSyst,2)+pow(SigPDFSyst,2)+pow(sigEffSystSingleGammaToTwoGamma,2))
+  # remove PDF syst and calculate below
+  sigEffSyst = math.sqrt(pow(sigMScaleSyst,2)+pow(sigMResSyst,2)+pow(SigPUSyst,2)+pow(sigEffSystSingleGammaToTwoGamma,2))
+  # convert % err to absolute error
+  totalEffErrSyst1 = sigEffSyst*modelPoint.totalEff
+  # now calculate _absolute_ PDF syst
+  absSigEffPDFSyst = 0
+  for bin in xrange(minBin,maxBin+1):
+    absSigEffPDFSyst+=signalHist.GetBinContent(bin)*SigPDFSystFunc.Eval(signalHist.GetBinCenter(bin))*0.01 # convert % to frac
+  absSigEffPDFSyst/=signalEntriesTotal
+  modelPoint.totalEffErrSyst = math.sqrt(pow(totalEffErrSyst1,2)+pow(absSigEffPDFSyst,2))
   modelPoint.acceptance = acceptance
   modelPoint.acceptanceMassWindow = acceptanceMassWindow
   totalEffErr = math.sqrt(pow(modelPoint.totalEffErrStat,2)+pow(modelPoint.totalEffErrSyst,2))
@@ -861,7 +880,9 @@ def FillModelPointInfoForWindow(modelPoint,minBin,maxBin):
   print 'totalEffMResSystUp =',modelPoint.totalEffMResSystUp
   print 'totalEffPileupSystDown =',modelPoint.totalEffPileupSystDown
   print 'totalEffPileupSystUp =',modelPoint.totalEffPileupSystUp
-  print 'background = ',modelPoint.nBackground,'+/-',modelPoint.nBackgroundErrStat,'(stat) +/-',modelPoint.nBackgroundErrSyst,'(syst) = ',totalBGErr
+  print 'absSigEffPDFSyst =',absSigEffPDFSyst
+  print 'totalEffErrSyst1 (Mscale[+]Mres[+]PU[+]EffSF) =',totalEffErrSyst1
+  print 'background = ',modelPoint.nBackground,'+/-',modelPoint.nBackgroundErrStat,'(stat) +/-',modelPoint.nBackgroundErrSyst,'(syst) = ',totalBGErr,'(tot)'
   #print 'binRange mScaleDown=',minBinMassScaleSystDown,'-',maxBinMassScaleSystDown
   #print 'binRange mScaleUp=',minBinMassScaleSystUp,'-',maxBinMassScaleSystUp
   print 'entriesNominal=',signalHist.Integral(minBin,maxBin)

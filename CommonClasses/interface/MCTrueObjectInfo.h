@@ -25,10 +25,10 @@
 namespace ExoDiPhotons
 {
   struct mcTrueObjectInfo_t {
-    int status; // will be 3 or 1 
+    int status;
     int PdgId;
     int MotherPdgId;
-    int GrandmotherPdgId; 
+    int GrandmotherPdgId;
     double pt;
     double eta;
     double phi;
@@ -42,7 +42,7 @@ namespace ExoDiPhotons
   };
 
   // string to define the tree branch
-  std::string mcTrueObjectInfoBranchDefString("status/I:PdgId:MotherPdgId:GrandmotherPdgId:pt/D:eta/D:phi/D:isol04/D:isol04ratio/D:isol03/D:isol03ratio/D:isol02/D:isol02ratio/D");
+  std::string mcTrueObjectInfoBranchDefString("status/I:PdgId:MotherPdgId:GrandmotherPdgId:pt/D:eta:phi:isol04:isol04ratio:isol03:isol03ratio:isol02:isol02ratio");
 
   // convenient function to fill the struct (pass by reference) from the desired object
   void FillMCTrueObjectInfo(mcTrueObjectInfo_t &mcTrueObjectInfo, const reco::GenParticle *genParticle) {
@@ -66,13 +66,12 @@ namespace ExoDiPhotons
     }
 
 
-
     mcTrueObjectInfo.pt = genParticle->pt();
     mcTrueObjectInfo.eta = genParticle->eta();
     mcTrueObjectInfo.phi = genParticle->phi();
 
   }
-  
+
   // Same FillMCTrueObjectInfo method but with reco::Candidates
   void FillMCTrueObjectInfo(mcTrueObjectInfo_t &mcTrueObjectInfo, const reco::Candidate *genParticle) {
     
@@ -101,9 +100,30 @@ namespace ExoDiPhotons
     mcTrueObjectInfo.phi = genParticle->phi();
 
   }
-  
+
   // also want to store MC truth event-level info
   // like signalProcess ID, and pthat value
+
+
+  void InitMCTrueObjectInfo(mcTrueObjectInfo_t &mcTrueObjectInfo) {
+
+    mcTrueObjectInfo.status = -999999;
+    mcTrueObjectInfo.PdgId = -999999;
+    mcTrueObjectInfo.MotherPdgId = -999999;
+    mcTrueObjectInfo.GrandmotherPdgId = -999999;
+    mcTrueObjectInfo.pt = -999999.99;
+    mcTrueObjectInfo.eta = -999999.99;
+    mcTrueObjectInfo.phi = -999999.99;
+    mcTrueObjectInfo.isol04 = -999999.99;
+    mcTrueObjectInfo.isol04ratio = -999999.99;
+    mcTrueObjectInfo.isol03 = -999999.99;
+    mcTrueObjectInfo.isol03ratio = -999999.99;
+    mcTrueObjectInfo.isol02 = -999999.99;
+    mcTrueObjectInfo.isol02ratio = -999999.99;
+
+  }
+
+
 
   struct mcEventInfo_t {
     double binningValue;

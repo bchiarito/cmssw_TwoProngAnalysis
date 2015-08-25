@@ -16,6 +16,7 @@ void PlottingCodeLoop::Loop()
   string useID = "loose"; // "tight" or "medium" or "loose"
   bool useDataMCEffScaleFactor = true;
   bool useDeltaPhiCut = false;
+  double diphotonMinvCut = 300.0; // GeV
 
   if (fChain == 0) return;
 
@@ -39,6 +40,17 @@ void PlottingCodeLoop::Loop()
   TH1D* pileupWeightsDownShiftHist = (TH1D*)dataPUShiftDownHist->Clone();
   pileupWeightsDownShiftHist->Divide(signalPUHist);
   // end of computing shifted pileup weight hists
+
+  _outputfile->cd();
+  TTree* outputTree_;
+  outputTree_ = new TTree("tree","tree");
+  outputTree_->Branch("minv",&minv);
+  outputTree_->Branch("minvShiftUp",&minvShiftUp);
+  outputTree_->Branch("minvShiftDown",&minvShiftDown);
+  outputTree_->Branch("pileupWeight",&pileupWeight);
+  outputTree_->Branch("mcDataEffScalePhoton1",&mcDataEffScalePhoton1);
+  outputTree_->Branch("mcDataEffScalePhoton2",&mcDataEffScalePhoton2);
+
 
   cout<<"PlottingCodeLoop::Loop(): for signal; "<<fChain->GetEntries()<<" entries in Tree Chain"<<endl;
   cout<<"Using ID: " << useID << endl;
@@ -129,6 +141,9 @@ void PlottingCodeLoop::Loop()
       }
     }
     PUweight = MCPUWeight;
+    pileupWeight = PUweight;
+    mcDataEffScalePhoton1 = dataMCEffScaleFactorPhoton1;
+    mcDataEffScalePhoton2 = dataMCEffScaleFactorPhoton2;
     // get pileup-shifted weights for pileup syst
     PUweightUpwardShift = pileupWeightsUpShiftHist->GetBinContent(pileupWeightsUpShiftHist->GetXaxis()->FindBin(pu_n));
     PUweightDownwardShift = pileupWeightsDownShiftHist->GetBinContent(pileupWeightsDownShiftHist->GetXaxis()->FindBin(pu_n));
@@ -136,7 +151,8 @@ void PlottingCodeLoop::Loop()
     // now we have a well-matched photon, so calculate smearing and flag
     bool acceptedSmearedDiPhotonEvent = true;
     // smear both
-    float dataOverMCResRatio = 1.32;
+    //float dataOverMCResRatio = 1.32;
+    float dataOverMCResRatio = 1.01; // SIC Aug 6: Use 1% ratio
     float smearedPtPhoton1 = max(0.0,GenPhoton1_pt+dataOverMCResRatio*(Photon1_pt-GenPhoton1_pt));
     float smearedPtPhoton2 = max(0.0,GenPhoton2_pt+dataOverMCResRatio*(Photon2_pt-GenPhoton2_pt));
     float smearedEPhoton1 = smearedPtPhoton1*cosh(Photon1_eta);
@@ -147,7 +163,7 @@ void PlottingCodeLoop::Loop()
     smearedFourVectorPhoton2.SetPtEtaPhiE(smearedPtPhoton2,Photon2_eta,Photon2_phi,smearedEPhoton2);
     float diphotonSmearedMass = (smearedFourVectorPhoton1+smearedFourVectorPhoton2).M();
     // check for passing selections: minv, dPhi, EB, Pt, detEta, ID
-    if(diphotonSmearedMass < 200.) acceptedSmearedDiPhotonEvent = false;
+    if(diphotonSmearedMass < diphotonMinvCut) acceptedSmearedDiPhotonEvent = false;
     if(useDeltaPhiCut)
     {
       if(fabs(Diphoton_deltaPhi) < 2.8) acceptedSmearedDiPhotonEvent = false;
@@ -157,11 +173,17 @@ void PlottingCodeLoop::Loop()
     if(fabs(Photon1_detEta) > 1.4442 || fabs(Photon2_detEta) > 1.4442) acceptedSmearedDiPhotonEvent = false;
     //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) acceptedSmearedDiPhotonEvent = false;
     if(useID=="tight")
+    {
       if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) acceptedSmearedDiPhotonEvent = false;
+    }
     else if(useID=="medium")
+    {
       if( !(Photon1_isMediumPFPhoton && Photon2_isMediumPFPhoton) ) acceptedSmearedDiPhotonEvent = false;
+    }
     else if(useID=="loose")
+    {
       if( !(Photon1_isLoosePFPhoton && Photon2_isLoosePFPhoton) ) acceptedSmearedDiPhotonEvent = false;
+    }
     else
       acceptedSmearedDiPhotonEvent = false;
     // fill for those passing selections
@@ -171,8 +193,10 @@ void PlottingCodeLoop::Loop()
       h_Diphoton_Minv_Smeared_FineBinning->Fill(diphotonSmearedMass,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
     }
     // end of smearing
+
     // scale shift up and flag
-    float scaleShift = 0.01; // controls both up and down shift amount
+    //float scaleShift = 0.01; // controls both up and down shift amount
+    float scaleShift = 0.015; // controls both up and down shift amount
     bool acceptedShiftedUpDiPhotonEvent = true;
     // shift both photons
     float scaleShiftUp = 1+scaleShift;
@@ -186,7 +210,7 @@ void PlottingCodeLoop::Loop()
     shiftedUpFourVectorPhoton2.SetPtEtaPhiE(shiftedUpPtPhoton2,Photon2_eta,Photon2_phi,shiftedUpEPhoton2);
     float diphotonShiftedUpMass = (shiftedUpFourVectorPhoton1+shiftedUpFourVectorPhoton2).M();
     // check for passing selections: minv, dPhi, EB, Pt, detEta, ID
-    if(diphotonShiftedUpMass < 200.) acceptedShiftedUpDiPhotonEvent = false;
+    if(diphotonShiftedUpMass < diphotonMinvCut) acceptedShiftedUpDiPhotonEvent = false;
     if(useDeltaPhiCut)
     {
       if(fabs(Diphoton_deltaPhi) < 2.8) acceptedShiftedUpDiPhotonEvent = false;
@@ -196,11 +220,17 @@ void PlottingCodeLoop::Loop()
     if(fabs(Photon1_detEta) > 1.4442 || fabs(Photon2_detEta) > 1.4442) acceptedShiftedUpDiPhotonEvent = false;
     //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) acceptedShiftedUpDiPhotonEvent = false;
     if(useID=="tight")
+    {
       if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) acceptedShiftedUpDiPhotonEvent = false;
+    }
     else if(useID=="medium")
+    {
       if( !(Photon1_isMediumPFPhoton && Photon2_isMediumPFPhoton) ) acceptedShiftedUpDiPhotonEvent = false;
+    }
     else if(useID=="loose")
+    {
       if( !(Photon1_isLoosePFPhoton && Photon2_isLoosePFPhoton) ) acceptedShiftedUpDiPhotonEvent = false;
+    }
     else
       acceptedShiftedUpDiPhotonEvent = false;
     // fill for those passing selections
@@ -208,6 +238,7 @@ void PlottingCodeLoop::Loop()
     {
       h_Diphoton_Minv_ScaleShiftedUp->Fill(diphotonShiftedUpMass,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
       h_Diphoton_Minv_ScaleShiftedUp_FineBinning->Fill(diphotonShiftedUpMass,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+      minvShiftUp = diphotonShiftedUpMass;
     }
     // end of shift up
     // scale shift down and flag
@@ -224,7 +255,7 @@ void PlottingCodeLoop::Loop()
     shiftedDownFourVectorPhoton2.SetPtEtaPhiE(shiftedDownPtPhoton2,Photon2_eta,Photon2_phi,shiftedDownEPhoton2);
     float diphotonShiftedDownMass = (shiftedDownFourVectorPhoton1+shiftedDownFourVectorPhoton2).M();
     // check for passing selections: minv, dPhi, EB, Pt, detEta, ID
-    if(diphotonShiftedDownMass < 200.) acceptedShiftedDownDiPhotonEvent = false;
+    if(diphotonShiftedDownMass < diphotonMinvCut) acceptedShiftedDownDiPhotonEvent = false;
     if(useDeltaPhiCut)
     {
       if(fabs(Diphoton_deltaPhi) < 2.8) acceptedShiftedDownDiPhotonEvent = false;
@@ -234,11 +265,17 @@ void PlottingCodeLoop::Loop()
     if(fabs(Photon1_detEta) > 1.4442 || fabs(Photon2_detEta) > 1.4442) acceptedShiftedDownDiPhotonEvent = false;
     //if( !(Photon1_isTightDetPhoton && Photon2_isTightDetPhoton) ) acceptedShiftedDownDiPhotonEvent = false;
     if(useID=="tight")
+    {
       if( !(Photon1_isTightPFPhoton && Photon2_isTightPFPhoton) ) acceptedShiftedDownDiPhotonEvent = false;
+    }
     else if(useID=="medium")
+    {
       if( !(Photon1_isMediumPFPhoton && Photon2_isMediumPFPhoton) ) acceptedShiftedDownDiPhotonEvent = false;
+    }
     else if(useID=="loose")
+    {
       if( !(Photon1_isLoosePFPhoton && Photon2_isLoosePFPhoton) ) acceptedShiftedDownDiPhotonEvent = false;
+    }
     else
       acceptedShiftedDownDiPhotonEvent = false;
     // fill for those passing selections
@@ -246,12 +283,13 @@ void PlottingCodeLoop::Loop()
     {
       h_Diphoton_Minv_ScaleShiftedDown->Fill(diphotonShiftedDownMass,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
       h_Diphoton_Minv_ScaleShiftedDown_FineBinning->Fill(diphotonShiftedDownMass,PUweight*dataMCEffScaleFactorPhoton1*dataMCEffScaleFactorPhoton2);
+      minvShiftDown = diphotonShiftedDownMass;
     }
     // end of shift down
     
 
     // Event-level cuts (minv, deltaPhi if selected)
-    if(Diphoton_Minv < 200.) continue;
+    if(Diphoton_Minv < diphotonMinvCut) continue;
     if(useDeltaPhiCut)
     {
       if(fabs(Diphoton_deltaPhi) < 2.8) continue;
@@ -371,7 +409,9 @@ void PlottingCodeLoop::Loop()
     h_Photon2_hcalIso04_log->Fill(Photon2_hcalIso04,PUweight*dataMCEffScaleFactorPhoton2);
     h_Photon2_ecalIso04->Fill(Photon2_ecalIso04,PUweight*dataMCEffScaleFactorPhoton2);
     h_Photon2_detEta->Fill(Photon2_detEta,PUweight*dataMCEffScaleFactorPhoton2);
+    minv = Diphoton_Minv;
     //
+    outputTree_->Fill();
 
 
   }//end of loop over entries    
@@ -447,6 +487,7 @@ void PlottingCodeLoop::Loop()
   acceptedAndPFIDedEventsBothPhotonsNVtxVsDetEta->Write();
   acceptedEventsBothPhotonsGenPt->Write();
   acceptedAndPFIDedEventsBothPhotonsGenPt->Write();
+  outputTree_->Write();
 
   _outputfile->Close();   
 

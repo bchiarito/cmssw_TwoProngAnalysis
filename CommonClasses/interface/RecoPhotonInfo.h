@@ -165,6 +165,7 @@ namespace ExoDiPhotons
     // es ratio
     Double_t esRatio;
     // supercluster info
+    Double_t scEta;
     Double_t scRawEnergy;
     Double_t scPreshowerEnergy;
     Double_t scPhiWidth;
@@ -221,7 +222,7 @@ namespace ExoDiPhotons
   // obviously this needs to be kept up-to-date with the struct definition
   // but now at least this only needs to be done here in this file, 
   // rather than in each individual analyser 
-  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:r9/D:sigmaIetaIeta:sigmaEtaEta:sigmaIphiIphi:sigmaPhiPhi:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:maxRecHitTime/D:sumRecHitsEnergiesNoKGood/D:RecHitsNoKGoodEnergyRatio/D:hadOverEm:hadTowerOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04:hcalIso03:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoSumPtHollow03:trkIsoSumPtSolid03:PFIsoCharged04:PFIsoNeutral04:PFIsoPhoton04:PFIsoAll04:PFIsoCharged03:PFIsoNeutral03:PFIsoPhoton03:PFIsoAll03:PFIsoCharged02:PFIsoNeutral02:PFIsoPhoton02:PFIsoAll02:rhocorPFIsoCharged04:rhocorPFIsoNeutral04:rhocorPFIsoPhoton04:rhocorPFIsoAll04:rhocorPFIsoCharged03:rhocorPFIsoNeutral03:rhocorPFIsoPhoton03:rhocorPFIsoAll03:rhocorPFIsoCharged02:rhocorPFIsoNeutral02:rhocorPFIsoPhoton02:rhocorPFIsoAll02:esRatio:scRawEnergy/D:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:severityLevel/I:recHitFlag/I:detId/I:iEtaY/I:iPhiX/I:numRecHitsNoKGood/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:hasMatchedPromptElec:isFakeable:isTightDetPhoton:isTightPFPhoton:isMediumPFPhoton:isLoosePFPhoton:hasGoodRecHits");
+  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:r9/D:sigmaIetaIeta:sigmaEtaEta:sigmaIphiIphi:sigmaPhiPhi:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:maxRecHitTime/D:sumRecHitsEnergiesNoKGood/D:RecHitsNoKGoodEnergyRatio/D:hadOverEm:hadTowerOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04:hcalIso03:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoSumPtHollow03:trkIsoSumPtSolid03:PFIsoCharged04:PFIsoNeutral04:PFIsoPhoton04:PFIsoAll04:PFIsoCharged03:PFIsoNeutral03:PFIsoPhoton03:PFIsoAll03:PFIsoCharged02:PFIsoNeutral02:PFIsoPhoton02:PFIsoAll02:rhocorPFIsoCharged04:rhocorPFIsoNeutral04:rhocorPFIsoPhoton04:rhocorPFIsoAll04:rhocorPFIsoCharged03:rhocorPFIsoNeutral03:rhocorPFIsoPhoton03:rhocorPFIsoAll03:rhocorPFIsoCharged02:rhocorPFIsoNeutral02:rhocorPFIsoPhoton02:rhocorPFIsoAll02:esRatio:scEta/D:scRawEnergy:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:severityLevel/I:recHitFlag/I:detId/I:iEtaY/I:iPhiX/I:numRecHitsNoKGood/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:hasMatchedPromptElec:isFakeable:isTightDetPhoton:isTightPFPhoton:isMediumPFPhoton:isLoosePFPhoton:hasGoodRecHits");
 
 
   // useful function for ESratio
@@ -734,6 +735,7 @@ namespace ExoDiPhotons
     recoPhotonInfo.isEEDeeGap	 = photon->isEEDeeGap();	 
     recoPhotonInfo.isEBEEGap   = photon->isEBEEGap();
      
+    recoPhotonInfo.scEta = photon->superCluster()->eta();
     recoPhotonInfo.scRawEnergy = photon->superCluster()->rawEnergy();
     recoPhotonInfo.scPreshowerEnergy = photon->superCluster()->preshowerEnergy();
     recoPhotonInfo.scPhiWidth = photon->superCluster()->phiWidth();
@@ -816,6 +818,7 @@ namespace ExoDiPhotons
     recoPhotonInfo.rhocorPFIsoPhoton02 = -999999.; 
     recoPhotonInfo.rhocorPFIsoAll02 = -999999.; 
     recoPhotonInfo.esRatio = -999999.; 
+    recoPhotonInfo.scEta = -999999.;
     recoPhotonInfo.scRawEnergy = -999999.; 
     recoPhotonInfo.scPreshowerEnergy = -999999.; 
     recoPhotonInfo.scPhiWidth = -999999.; 

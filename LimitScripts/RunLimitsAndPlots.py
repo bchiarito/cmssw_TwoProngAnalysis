@@ -55,37 +55,40 @@ halfWidths0p1[3000] = 38.7399
 halfWidths0p1[3250] = 41.8178
 halfWidths0p1[3500] = 40.2991
 # mapping of couplings/masses to crossSections --> taken from AN-12-305
+# XXX: Update 2 Sep 2014 with 25k GEN Pythia cross sections
+# 0.01
 totalXSecs0p01 = dict()
-totalXSecs0p01[750] =  1.023e-02
-totalXSecs0p01[1000] = 2.072e-03
-totalXSecs0p01[1250] = 5.21e-04
-totalXSecs0p01[1500] = 1.604e-04
-totalXSecs0p01[1750] = 5.408e-05
-totalXSecs0p01[2000] = 1.853e-05
-totalXSecs0p01[2250] = 7.207e-06
-totalXSecs0p01[2500] = 2.945e-06
-totalXSecs0p01[3000] = 4.703e-07
+totalXSecs0p01[750] = 1.003e-02
+totalXSecs0p01[1000] = 1.958e-03
+totalXSecs0p01[1250] = 5.045e-04 
+totalXSecs0p01[1500] = 1.534e-04 
+totalXSecs0p01[1750] = 5.195e-05 
+totalXSecs0p01[2000] = 1.882e-05 
+totalXSecs0p01[2250] = 7.203e-06 
+totalXSecs0p01[2500] = 2.849e-06 
+totalXSecs0p01[3000] = 4.586e-07
 # 0.05
 totalXSecs0p05 = dict()
-totalXSecs0p05[1250] = 1.28e-02
-totalXSecs0p05[1500] = 3.866e-03
-totalXSecs0p05[1750] = 1.331e-03
-totalXSecs0p05[2000] = 4.665e-04
-totalXSecs0p05[2250] = 1.774e-04
-totalXSecs0p05[2500] = 7.226e-05
-totalXSecs0p05[2750] = 2.803e-05
-totalXSecs0p05[3000] = 1.169e-05
+totalXSecs0p05[1250] = 1.261e-02
+totalXSecs0p05[1500] = 3.814e-03
+totalXSecs0p05[1750] = 1.289e-03
+totalXSecs0p05[2000] = 4.684e-04
+totalXSecs0p05[2250] = 1.802e-04
+totalXSecs0p05[2500] = 7.073e-05
+totalXSecs0p05[2750] = 2.831e-05
+totalXSecs0p05[3000] = 1.151e-05
 # 0.1
 totalXSecs0p1 = dict()
-totalXSecs0p1[1500] = 1.5e-02
-totalXSecs0p1[1750] = 5.2e-03
-totalXSecs0p1[2000] = 1.8e-03
-totalXSecs0p1[2250] = 7.04e-04
-totalXSecs0p1[2500] = 2.79e-04
-totalXSecs0p1[2750] = 1.14e-04
-totalXSecs0p1[3000] = 4.68e-05
-totalXSecs0p1[3250] = 1.19e-05
-totalXSecs0p1[3500] = 7.7e-06
+totalXSecs0p1[1500] = 1.518e-02
+totalXSecs0p1[1750] = 5.131e-03
+totalXSecs0p1[2000] = 1.872e-03
+totalXSecs0p1[2250] = 7.194e-04
+totalXSecs0p1[2500] = 2.861e-04
+totalXSecs0p1[2750] = 1.151e-04
+totalXSecs0p1[3000] = 4.684e-05
+totalXSecs0p1[3250] = 1.925e-05
+totalXSecs0p1[3500] = 7.751e-06
+
 
 
 # for writing to log file+stdout
@@ -660,7 +663,6 @@ def GetConfigurationString():
   configString+='K-factor file='+kFactorFile+'\n'
   # overall systematics
   configString+='SigPUSyst='+str(SigPUSyst)+'\n'
-  configString+='SigPDFSyst='+str(SigPDFSyst)+'\n'
   configString+='SigScaleFactorSystOneGamma='+str(SigScaleFactorSystOneGamma)+'\n'
   configString+='SigPtSFSystOneGamma='+str(SigPtSFSystOneGamma)+'\n'
   configString+='BGSystsFromHists'+'\n'+'-----------------------------------------------\n'
@@ -673,9 +675,9 @@ def GetConfigurationString():
 
 def Usage():
   print 'Usage: python RunLimitsAndPlots.py [arg] where arg can be:'
-  print '    optimize      --> Calculate optimal inv. mass windows using histograms in root files (from CreateHistogramFiles).'
-  print '    limits        --> Compute limits for all model points.'
-  print '    mergeLimits   --> Merge/check limit results for all model points. Run after batch jobs done.  Also makes plots and tables.'
+  print '    1) optimize      --> Calculate optimal inv. mass windows using histograms in root files (from CreateHistogramFiles).'
+  print '    2) limits        --> Compute limits for all model points.'
+  print '    3) mergeLimits   --> Merge/check limit results for all model points. Run after batch jobs done.  Also makes plots and tables.'
   print '    plots         --> Read limit results from text files and make limit plots.'
   print '    tables        --> Read limit results from text files and make results tables (text/latex/twiki).'
   print '    optimizePlots --> Print optimization graphs as images (use after optimize has been run; done automatically by default).'
@@ -701,7 +703,9 @@ cl95MacroPath = os.environ['CMSSW_BASE']+'/src/StatisticalTools/RooStatsRoutines
 cl95MacroName = 'roostats_cl95.C'
 
 
+###################################################################################################
 # Configurable stuff here
+###################################################################################################
 now = datetime.datetime.now()
 Date = now.strftime("%b%d")
 #outputDirBase = Date.lower()+'_symmWindowSSBOpt_loosePFID_test'
@@ -754,6 +758,10 @@ channels = ['BB','BE','EB','EE']
 
 configString = GetConfigurationString()
 print configString
+# to print the func
+print 'SigPDFSystFunc:'
+SigPDFSystFunc.Print()
+print '----------------------------------------------- End of configuration info'
 
 # List signal histogram file template; rest of quantities are filled from functions (xsec, width, etc.) or histograms in the files
 # initialize signal points
@@ -811,10 +819,12 @@ elif sys.argv[1]=='optimizePlots':
     readModelPointsC0p1 = ReadFromLines(lines)
     FillKFactors(readModelPointsC0p1)
   PlotAllAcceptances([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,optimizationPlotFileNameTemplate,plotsOutputDir)
+  #PlotAllAcceptancesMassWindows([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficiencies([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,optimizationPlotFileNameTemplate,plotsOutputDir)
   PlotAllEfficienciesMScale([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,optimizationPlotFileNameTemplate,plotsOutputDir)
   PlotAllEfficienciesMRes([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,optimizationPlotFileNameTemplate,plotsOutputDir)
   PlotAllEfficienciesPileup([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,optimizationPlotFileNameTemplate,plotsOutputDir)
+  #PlotAllEfficienciesMScaleEffAcc([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
 elif sys.argv[1]=='effAccPlots':
   print 'effAccPlots: make efficiency and acceptance plots (inc. systematics plots)'
   rootFile = TFile(optimizationPlotFileName,'update')
@@ -833,10 +843,12 @@ elif sys.argv[1]=='effAccPlots':
     readModelPointsC0p1 = ReadFromLines(lines)
     FillKFactors(readModelPointsC0p1)
   PlotAllAcceptances([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,optimizationPlotFile,plotsOutputDir)
+  #PlotAllAcceptancesMassWindows([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficiencies([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,optimizationPlotFile,plotsOutputDir)
   PlotAllEfficienciesMScale([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,optimizationPlotFile,plotsOutputDir)
   PlotAllEfficienciesMRes([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,optimizationPlotFile,plotsOutputDir)
   PlotAllEfficienciesPileup([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,optimizationPlotFile,plotsOutputDir)
+  #PlotAllEfficienciesMScaleEffAcc([readModelPointsC0p01,readModelPointsC0p05,readModelPointsC0p1],lumi,rootFile,plotsOutputDir)
 elif sys.argv[1]=='optimize':
   print 'optimize: OptimizeSignalMassWindows'
   print 'warning: will overwrite file',optimizationPlotFileName,'if it already exists.'
@@ -851,6 +863,7 @@ elif sys.argv[1]=='optimize':
   if not os.path.isdir(plotsOutputDir):
     os.mkdir(plotsOutputDir)
   PlotAllAcceptances([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
+  PlotAllAcceptancesMassWindows([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficiencies([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficienciesMScale([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
   PlotAllEfficienciesMRes([modelPointsC0p01,modelPointsC0p05,modelPointsC0p1],lumi,rootFile,plotsOutputDir)
@@ -877,6 +890,12 @@ elif sys.argv[1]=='limits':
     file.write(configString)
   rootFile = TFile(limitsPlotFileName,'recreate')
   DoLimitsAllPoints(cl95MacroPath+cl95MacroName,DoBatch,QueueName,lumi,lumiErr,limitsFileName,limitsOutputDir)
+  if not DoBatch: # do mergeLimits automatically if locally running
+    print '(auto) mergeLimits: DoMergeCheckAllPoints, DoPlotsAllPoints, DoTablesAllPoints'
+    print 'Warning: will overwrite files',limitsFileName+'0p01.txt',limitsFileName+'0p05.txt',limitsFileName+'0p1.txt','if they already exist.'
+    DoMergeCheckAllPoints(limitsOutputDir,limitsFileName)
+    DoPlotsAllPoints(lumi,rootFile,pathToTDRStyle)
+    DoTablesAllPoints(lumi,limitsOutputDir)
 elif sys.argv[1]=='mergeLimits':
   print 'mergeLimits: DoMergeCheckAllPoints, DoPlotsAllPoints, DoTablesAllPoints'
   print 'Warning: will overwrite files',limitsFileName+'0p01.txt',limitsFileName+'0p05.txt',limitsFileName+'0p1.txt','if they already exist.'
