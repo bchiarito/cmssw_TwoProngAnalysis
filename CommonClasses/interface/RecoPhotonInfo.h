@@ -215,6 +215,7 @@ namespace ExoDiPhotons
     Bool_t isLoosePFPhoton;
 
     Bool_t hasGoodRecHits;
+    Bool_t isSaturated;
   };
 
 
@@ -222,7 +223,7 @@ namespace ExoDiPhotons
   // obviously this needs to be kept up-to-date with the struct definition
   // but now at least this only needs to be done here in this file, 
   // rather than in each individual analyser 
-  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:r9/D:sigmaIetaIeta:sigmaEtaEta:sigmaIphiIphi:sigmaPhiPhi:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:maxRecHitTime/D:sumRecHitsEnergiesNoKGood/D:RecHitsNoKGoodEnergyRatio/D:hadOverEm:hadTowerOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04:hcalIso03:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoSumPtHollow03:trkIsoSumPtSolid03:PFIsoCharged04:PFIsoNeutral04:PFIsoPhoton04:PFIsoAll04:PFIsoCharged03:PFIsoNeutral03:PFIsoPhoton03:PFIsoAll03:PFIsoCharged02:PFIsoNeutral02:PFIsoPhoton02:PFIsoAll02:rhocorPFIsoCharged04:rhocorPFIsoNeutral04:rhocorPFIsoPhoton04:rhocorPFIsoAll04:rhocorPFIsoCharged03:rhocorPFIsoNeutral03:rhocorPFIsoPhoton03:rhocorPFIsoAll03:rhocorPFIsoCharged02:rhocorPFIsoNeutral02:rhocorPFIsoPhoton02:rhocorPFIsoAll02:esRatio:scEta/D:scRawEnergy:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:severityLevel/I:recHitFlag/I:detId/I:iEtaY/I:iPhiX/I:numRecHitsNoKGood/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:hasMatchedPromptElec:isFakeable:isTightDetPhoton:isTightPFPhoton:isMediumPFPhoton:isLoosePFPhoton:hasGoodRecHits");
+  std::string recoPhotonBranchDefString("pt/D:eta:phi:detEta:detPhi:r9/D:sigmaIetaIeta:sigmaEtaEta:sigmaIphiIphi:sigmaPhiPhi:maxEnergyXtal:e1x5:e2x5:e3x3:e5x5:r1x5:r2x5:swisscross:eMax:eLeft:eRight:eTop:eBottom:eSecond:e2x2:e4x4:e2e9:maxRecHitTime/D:sumRecHitsEnergiesNoKGood/D:RecHitsNoKGoodEnergyRatio/D:hadOverEm:hadTowerOverEm:hadDepth1OverEm:hadDepth2OverEm:hcalIso04:hcalIso03:ecalIso04:ecalIso03:trkIsoSumPtHollow04:trkIsoSumPtSolid04:trkIsoSumPtHollow03:trkIsoSumPtSolid03:PFIsoCharged04:PFIsoNeutral04:PFIsoPhoton04:PFIsoAll04:PFIsoCharged03:PFIsoNeutral03:PFIsoPhoton03:PFIsoAll03:PFIsoCharged02:PFIsoNeutral02:PFIsoPhoton02:PFIsoAll02:rhocorPFIsoCharged04:rhocorPFIsoNeutral04:rhocorPFIsoPhoton04:rhocorPFIsoAll04:rhocorPFIsoCharged03:rhocorPFIsoNeutral03:rhocorPFIsoPhoton03:rhocorPFIsoAll03:rhocorPFIsoCharged02:rhocorPFIsoNeutral02:rhocorPFIsoPhoton02:rhocorPFIsoAll02:esRatio:scEta/D:scRawEnergy:scPreshowerEnergy:scPhiWidth:scEtaWidth:scNumBasicClusters/I:trkIsoNtrksHollow04/I:trkIsoNtrksSolid04/I:trkIsoNtrksHollow03/I:trkIsoNtrksSolid03/I:severityLevel/I:recHitFlag/I:detId/I:iEtaY/I:iPhiX/I:numRecHitsNoKGood/I:isEB/O:isEE:isEBEtaGap:isEBPhiGap:isEERingGap:isEEDeeGap:isEBEEGap:hasPixelSeed:hasMatchedPromptElec:isFakeable:isTightDetPhoton:isTightPFPhoton:isMediumPFPhoton:isLoosePFPhoton:hasGoodRecHits:isSaturated");
 
 
   // useful function for ESratio
@@ -525,8 +526,26 @@ namespace ExoDiPhotons
     recoPhotonInfo.RecHitsNoKGoodEnergyRatio = energyRatio;
     recoPhotonInfo.numRecHitsNoKGood = numRecHits;
   }//end of method
-   
-
+    
+    Bool_t check5x5recHitFlagsForSat(const EcalRecHitCollection &recHits, const CaloTopology* topology, DetId id, int ixMin, int ixMax, int iyMin, int iyMax)
+    {
+	//take into account fractions
+	//fast version
+	Bool_t photonflagisgood = true;
+	
+	CaloNavigator<DetId> cursor = CaloNavigator<DetId>( id, topology->getSubdetectorTopology( id ) );
+	for ( int i = ixMin; i <= ixMax; ++i ) {
+	    for ( int j = iyMin; j <= iyMax; ++j ) {
+		cursor.home();
+		cursor.offsetBy( i, j );
+		EcalRecHitCollection::const_iterator it = recHits.find(*cursor);
+		photonflagisgood = photonflagisgood && !(it->checkFlag(EcalRecHit::kSaturated));
+	    }//end of loop over j
+	}//end of loop over i
+	
+	return photonflagisgood;
+    }//end of method
+ 
 
   // also want a Fill function, that can fill the struct values from the appropriate objects
   // again, so that all editing only needs to be done here in this file
@@ -647,6 +666,8 @@ namespace ExoDiPhotons
     //recoPhotonInfo.hasGoodRecHits = check5x5recHitFlags(recoPhotonInfo, rechits, topology, id, -2, 2, -2, 2);
     check5x5recHitFlags(recoPhotonInfo, rechits, topology, id, -2, 2, -2, 2);
 
+    recoPhotonInfo.isSaturated = !(check5x5recHitFlagsForSat(rechits, topology, id, -2, 2, -2, 2));
+    
     /* std::cout<<"after check5x5 " */
     /* 	     <<recoPhotonInfo.hasGoodRecHits<<" " */
     /* 	     <<recoPhotonInfo.sumRecHitsEnergiesNoKGood<<" " */
@@ -847,7 +868,8 @@ namespace ExoDiPhotons
     recoPhotonInfo.isTightPFPhoton = false; 
     recoPhotonInfo.isMediumPFPhoton = false; 
     recoPhotonInfo.isLoosePFPhoton = false; 
-    recoPhotonInfo.hasGoodRecHits = false; 
+    recoPhotonInfo.hasGoodRecHits = false;
+    recoPhotonInfo.isSaturated = false;
 
   }//end of init reco photon info
 
