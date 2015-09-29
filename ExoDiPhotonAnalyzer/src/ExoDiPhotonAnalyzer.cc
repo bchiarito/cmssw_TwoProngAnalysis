@@ -500,7 +500,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   using namespace reco;
 
 
-  //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
+  cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
   // basic event info
   ExoDiPhotons::InitEventInfo(fEventInfo,-5000.);
@@ -916,12 +916,37 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     float nhIso =  (*phoNeutralHadronIsolationMap)[testPhoPtr];
     float phIso = (*phoPhotonIsolationMap)[testPhoPtr];
     
+    float abseta = fabs( recoPhoton->superCluster()->eta());
+
+    //we set the effective areas
+    //based on whether we use egamma ID
+    //or high pt photon ID
+    float CHeffarea = 0.;
+    float NHeffarea = 0.;
+    float PHeffarea = 0.;
+
+    //let's retrieve the effective areas
+    //from exodiphotons (in case of high pt ID)
+    //Remember effareaCH = 1st, effareaNH = 2nd, effareaPH = 3rd
+    std::vector<double> effareas = ExoDiPhotons::EffectiveAreas(&(*recoPhoton),MethodID,CategoryPFID);
+
+    if(MethodID.Contains("highpt")){
+      CHeffarea = effareas[0];
+      NHeffarea = effareas[1];
+      PHeffarea = effareas[2];
+    }
+
+    if(MethodID.Contains("egamma")){
+      CHeffarea = effAreaChHadrons_.getEffectiveArea(abseta);
+      NHeffarea = effAreaNeuHadrons_.getEffectiveArea(abseta);
+      PHeffarea = effAreaPhotons_.getEffectiveArea(abseta);
+    }
+
     //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
-    float abseta = fabs( recoPhoton->superCluster()->eta());
-    float isoChargedHadronsWithEA = std::max( (float)0.0, chIso - rho_*effAreaChHadrons_.getEffectiveArea(abseta));
-    float isoNeutralHadronsWithEA = std::max( (float)0.0, nhIso - rho_*effAreaNeuHadrons_.getEffectiveArea(abseta));
-    float isoPhotonsWithEA = std::max( (float)0.0, phIso - rho_*effAreaPhotons_.getEffectiveArea(abseta));
+    float isoChargedHadronsWithEA = std::max( (float)0.0, chIso - rho_*CHeffarea);
+    float isoNeutralHadronsWithEA = std::max( (float)0.0, nhIso - rho_*NHeffarea);
+    float isoPhotonsWithEA = std::max( (float)0.0, phIso - rho_*PHeffarea);
     
     //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
@@ -964,9 +989,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     //We need to compute only 03 isol variables so far
     //because they are the official ones
 
-    //we retrieve the effective areas
-    //Remember effareaCH = 1st, effareaNH = 2nd, effareaPH = 3rd
-    std::vector<double> effareas = ExoDiPhotons::EffectiveAreas(&(*recoPhoton));
     double rhocorPFIsoCH = isoChargedHadronsWithEA;
     double rhocorPFIsoNH = isoNeutralHadronsWithEA;
     double rhocorPFIsoPH = isoPhotonsWithEA;
@@ -999,32 +1021,22 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     // 	<<isoPhotonsWithEA<<" "
     // 	<<endl;
 
-    //CAREFUL UNCOMMENT THAT WHEN DONE
     if(recoPhoton->pt() < fMin_pt) continue;
-
+    if(ExoDiPhotons::isGapPhoton(&(*recoPhoton))) continue;
+    if(ExoDiPhotons::isASpike(&(*recoPhoton))) continue;
+    
     //Now we choose which ID to use (PF or Det)
-    if(MethodID.Contains("Detector")){
-      if(ExoDiPhotons::isTightPhoton(&(*recoPhoton),fRho25) && !ExoDiPhotons::isGapPhoton(&(*recoPhoton)) && !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {
-	//	    if( !ExoDiPhotons::isASpike(&(*recoPhoton))  ) {   
-	selectedPhotons.push_back(*recoPhoton);
-      }
+    if(MethodID.Contains("highpt")){
+      if(ExoDiPhotons::isPFTightPhoton(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID)) selectedPhotons.push_back(*recoPhoton);
     }
-    else if(MethodID.Contains("ParticleFlow")){
-      //CAREFUL UNCOMMENT THAT WHEN DONE
-      // if(!(ExoDiPhotons::isPFTightPhoton(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,CategoryPFID))) continue;
-      if(!isPassLoose) continue;
-      if(ExoDiPhotons::isGapPhoton(&(*recoPhoton))) continue;
-      if(ExoDiPhotons::isASpike(&(*recoPhoton))) continue;
-      selectedPhotons.push_back(*recoPhoton);
+    else if(MethodID.Contains("egamma")){
+      if(isPassLoose) selectedPhotons.push_back(*recoPhoton);
     }
 
-
-       
     // also check for fakeable objects
-    //if(ExoDiPhotons::isFakeableObject(&(*recoPhoton)) ) {
-    if(MethodID.Contains("Detector")){
-      if(ExoDiPhotons::isFakeableObject(&(*recoPhoton),fRho25) ) {
-	 
+    if(MethodID.Contains("highpt")){
+      if(ExoDiPhotons::isPFFakeableObject(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID) ) {
+
 	//        cout << "Fakeable photon! ";
 	//        cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
 	//      //     cout << "; calo position eta = " << recoPhoton->caloPosition().eta();
@@ -1041,8 +1053,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	fakeablePhotons.push_back(*recoPhoton);
       }
     }
-    else if(MethodID.Contains("ParticleFlow")){
-      if(ExoDiPhotons::isPFFakeableObject(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,CategoryPFID) ) {
+    else if(MethodID.Contains("egamma")){
+      if(ExoDiPhotons::isPFFakeableObject(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID) ) {
 	 
 	//        cout << "Fakeable photon! ";
 	//        cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
@@ -1075,7 +1087,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // now count many candidate photons we have in this event
   //   cout << "N candidate photons = " << selectedPhotons.size() <<endl;
   fNTightPhotons = selectedPhotons.size();
-
+  if(fNTightPhotons >= 2) cout<<"great we have two tight photons"<<endl;
 
   // now consider possible Fakeable objects
 
@@ -1208,10 +1220,26 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     float torfObject1Eta = abs(TorFObject1Ptr->superCluster()->eta());
 
+    float CHeffarea = 0.;
+    float NHeffarea = 0.;
+    float PHeffarea = 0.;
+
+    std::vector<double> effareas = ExoDiPhotons::EffectiveAreas((&allTightOrFakeableObjects[0].first),MethodID,CategoryPFID);
+    if(MethodID.Contains("highpt")){
+      CHeffarea = effareas[0];
+      NHeffarea = effareas[1];
+      PHeffarea = effareas[2];
+    }
+    if(MethodID.Contains("egamma")){
+      CHeffarea = effAreaChHadrons_.getEffectiveArea(torfObject1Eta);
+      NHeffarea = effAreaNeuHadrons_.getEffectiveArea(torfObject1Eta);
+      PHeffarea = effAreaPhotons_.getEffectiveArea(torfObject1Eta);
+    }
+
     //now the corrected PF isolation variables
-    fRecoPhotonInfo1.rhocorPFIsoCharged03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoCharged03-rho_*effAreaChHadrons_.getEffectiveArea(torfObject1Eta));
-    fRecoPhotonInfo1.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoNeutral03-rho_*effAreaChHadrons_.getEffectiveArea(torfObject1Eta));
-    fRecoPhotonInfo1.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoPhoton03-rho_*effAreaChHadrons_.getEffectiveArea(torfObject1Eta));
+    fRecoPhotonInfo1.rhocorPFIsoCharged03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoCharged03-rho_*CHeffarea);
+    fRecoPhotonInfo1.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoNeutral03-rho_*NHeffarea);
+    fRecoPhotonInfo1.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoPhoton03-rho_*PHeffarea);
     fRecoPhotonInfo1.rhocorPFIsoAll03 = fRecoPhotonInfo1.rhocorPFIsoCharged03 + fRecoPhotonInfo1.rhocorPFIsoNeutral03 + fRecoPhotonInfo1.rhocorPFIsoPhoton03
       ;
 
@@ -1234,10 +1262,27 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     float torfObject2Eta = abs(TorFObject2Ptr->superCluster()->eta());
 
+    CHeffarea = 0.;
+    NHeffarea = 0.;
+    PHeffarea = 0.;
+
+    effareas.clear();
+    effareas = ExoDiPhotons::EffectiveAreas((&allTightOrFakeableObjects[1].first),MethodID,CategoryPFID);
+    if(MethodID.Contains("highpt")){
+      CHeffarea = effareas[0];
+      NHeffarea = effareas[1];
+      PHeffarea = effareas[2];
+    }
+    if(MethodID.Contains("egamma")){
+      CHeffarea = effAreaChHadrons_.getEffectiveArea(torfObject2Eta);
+      NHeffarea = effAreaNeuHadrons_.getEffectiveArea(torfObject2Eta);
+      PHeffarea = effAreaPhotons_.getEffectiveArea(torfObject2Eta);
+    }
+
     //now the corrected PF isolation variables
-    fRecoPhotonInfo2.rhocorPFIsoCharged03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoCharged03-rho_*effAreaChHadrons_.getEffectiveArea(torfObject2Eta));
-    fRecoPhotonInfo2.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoNeutral03-rho_*effAreaChHadrons_.getEffectiveArea(torfObject2Eta));
-    fRecoPhotonInfo2.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoPhoton03-rho_*effAreaChHadrons_.getEffectiveArea(torfObject2Eta));
+    fRecoPhotonInfo2.rhocorPFIsoCharged03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoCharged03-rho_*CHeffarea);
+    fRecoPhotonInfo2.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoNeutral03-rho_*NHeffarea);
+    fRecoPhotonInfo2.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoPhoton03-rho_*PHeffarea);
     fRecoPhotonInfo2.rhocorPFIsoAll03 = fRecoPhotonInfo2.rhocorPFIsoCharged03 + fRecoPhotonInfo2.rhocorPFIsoNeutral03 + fRecoPhotonInfo2.rhocorPFIsoPhoton03
       ;
 
@@ -1331,12 +1376,28 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
       float tObject1Eta = abs(TObject1Ptr->superCluster()->eta());
 
+      CHeffarea = 0.;
+      NHeffarea = 0.;
+      PHeffarea = 0.;
+      
+      effareas.clear();
+      effareas = ExoDiPhotons::EffectiveAreas((&selectedPhotons[0]),MethodID,CategoryPFID);
+      if(MethodID.Contains("highpt")){
+	CHeffarea = effareas[0];
+	NHeffarea = effareas[1];
+	PHeffarea = effareas[2];
+      }
+      if(MethodID.Contains("egamma")){
+	CHeffarea = effAreaChHadrons_.getEffectiveArea(tObject1Eta);
+	NHeffarea = effAreaNeuHadrons_.getEffectiveArea(tObject1Eta);
+	PHeffarea = effAreaPhotons_.getEffectiveArea(tObject1Eta);
+      }
+
       //now the corrected PF isolation variables
-      fRecoPhotonInfo1.rhocorPFIsoCharged03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoCharged03-rho_*effAreaChHadrons_.getEffectiveArea(tObject1Eta));
-      fRecoPhotonInfo1.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoNeutral03-rho_*effAreaChHadrons_.getEffectiveArea(tObject1Eta));
-      fRecoPhotonInfo1.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoPhoton03-rho_*effAreaChHadrons_.getEffectiveArea(tObject1Eta));
-      fRecoPhotonInfo1.rhocorPFIsoAll03 = fRecoPhotonInfo1.rhocorPFIsoCharged03 + fRecoPhotonInfo1.rhocorPFIsoNeutral03 + fRecoPhotonInfo1.rhocorPFIsoPhoton03
-	;
+      fRecoPhotonInfo1.rhocorPFIsoCharged03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoCharged03-rho_*CHeffarea);
+      fRecoPhotonInfo1.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoNeutral03-rho_*NHeffarea);
+      fRecoPhotonInfo1.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhotonInfo1.PFIsoPhoton03-rho_*PHeffarea);
+      fRecoPhotonInfo1.rhocorPFIsoAll03 = fRecoPhotonInfo1.rhocorPFIsoCharged03 + fRecoPhotonInfo1.rhocorPFIsoNeutral03 + fRecoPhotonInfo1.rhocorPFIsoPhoton03;
 
 
       ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,&selectedPhotons[1],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
@@ -1359,13 +1420,29 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       fRecoPhotonInfo2.PFIsoAll03 = fRecoPhotonInfo2.PFIsoCharged03 + fRecoPhotonInfo2.PFIsoNeutral03 + fRecoPhotonInfo2.PFIsoPhoton03;
 
       float tObject2Eta = abs(TObject2Ptr->superCluster()->eta());
+      
+      CHeffarea = 0.;
+      NHeffarea = 0.;
+      PHeffarea = 0.;
+      
+      effareas.clear();
+      effareas = ExoDiPhotons::EffectiveAreas((&selectedPhotons[1]),MethodID,CategoryPFID);
+      if(MethodID.Contains("highpt")){
+	CHeffarea = effareas[0];
+	NHeffarea = effareas[1];
+	PHeffarea = effareas[2];
+      }
+      if(MethodID.Contains("egamma")){
+	CHeffarea = effAreaChHadrons_.getEffectiveArea(tObject2Eta);
+	NHeffarea = effAreaNeuHadrons_.getEffectiveArea(tObject2Eta);
+	PHeffarea = effAreaPhotons_.getEffectiveArea(tObject2Eta);
+      }
 
       //now the corrected PF isolation variables
-      fRecoPhotonInfo2.rhocorPFIsoCharged03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoCharged03-rho_*effAreaChHadrons_.getEffectiveArea(tObject2Eta));
-      fRecoPhotonInfo2.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoNeutral03-rho_*effAreaChHadrons_.getEffectiveArea(tObject2Eta));
-      fRecoPhotonInfo2.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoPhoton03-rho_*effAreaChHadrons_.getEffectiveArea(tObject2Eta));
-      fRecoPhotonInfo2.rhocorPFIsoAll03 = fRecoPhotonInfo2.rhocorPFIsoCharged03 + fRecoPhotonInfo2.rhocorPFIsoNeutral03 + fRecoPhotonInfo2.rhocorPFIsoPhoton03
-	;
+      fRecoPhotonInfo2.rhocorPFIsoCharged03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoCharged03-rho_*CHeffarea);
+      fRecoPhotonInfo2.rhocorPFIsoNeutral03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoNeutral03-rho_*NHeffarea);
+      fRecoPhotonInfo2.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhotonInfo2.PFIsoPhoton03-rho_*PHeffarea);
+      fRecoPhotonInfo2.rhocorPFIsoAll03 = fRecoPhotonInfo2.rhocorPFIsoCharged03 + fRecoPhotonInfo2.rhocorPFIsoNeutral03 + fRecoPhotonInfo2.rhocorPFIsoPhoton03;
 
       // fill diphoton info                                                                                                   
       ExoDiPhotons::FillDiphotonInfo(fDiphotonInfo,&selectedPhotons[0],&selectedPhotons[1]);
