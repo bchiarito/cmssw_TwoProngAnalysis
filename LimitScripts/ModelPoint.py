@@ -5,9 +5,12 @@
 #
 # Seth I. Cooper, U. Alabama
 # November 21 2012
+#  update for individual channels
+#    July-August 2015
 
 # important note: when modifying this class, ComputeLimit.C must also be modified
 # to pass in and write out any new data members!
+# NB: No longer needed with move to combine for limits
 
 import string
 
@@ -15,35 +18,41 @@ class ModelPoint:
   def __init__(self, *args, **kwargs):
     self.coupling               = kwargs.get('coupling',-1)
     self.mass                   = kwargs.get('mass',-1)
+    self.channel                = kwargs.get('channel','None')
     self.totalXSec              = kwargs.get('totalXSec',-1)
     self.kFactor                = kwargs.get('kFactor',1.0)
     self.acceptance             = kwargs.get('acceptance',0.0)
     self.acceptanceMassWindow   = kwargs.get('acceptanceMassWindow',0.0)
     self.totalSignalEvents      = kwargs.get('totalSignalEvents',0.0)
-    self.preMWEff               = kwargs.get('preMWEff',-1)
+    self.preMWEff               = kwargs.get('preMWEff',0.0)
+    self.massPeak               = kwargs.get('massPeak',-1)
+    self.optSSBValue            = kwargs.get('optSSBValue',-1)
     self.totalEff               = kwargs.get('totalEff',-1)
-    self.totalEffErrStat        = kwargs.get('totalEffErrStat',-1)
-    self.totalEffErrSyst        = kwargs.get('totalEffErrSyst',-1)
-    self.totalEffMScaleSystUp   = kwargs.get('totalEffMScaleSystUp',-1)
-    self.totalEffMScaleSystDown = kwargs.get('totalEffMScaleSystDown',-1)
-    self.totalEffMResSystUp     = kwargs.get('totalEffMResSystUp',-1)
-    self.totalEffMResSystDown   = kwargs.get('totalEffMResSystDown',-1)
-    self.totalEffPileupSystUp   = kwargs.get('totalEffPileupSystUp',-1)
-    self.totalEffPileupSystDown = kwargs.get('totalEffPileupSystDown',-1)
+    self.totalEffErrStat        = kwargs.get('totalEffErrStat',0.0)
+    self.totalEffErrSyst        = kwargs.get('totalEffErrSyst',0.0)
+    self.totalEffMScaleSystUp   = kwargs.get('totalEffMScaleSystUp',0.0)
+    self.totalEffMScaleSystDown = kwargs.get('totalEffMScaleSystDown',0.0)
+    self.totalEffMResSystUp     = kwargs.get('totalEffMResSystUp',0.0)
+    self.totalEffMResSystDown   = kwargs.get('totalEffMResSystDown',0.0)
+    self.totalEffPileupSystUp   = kwargs.get('totalEffPileupSystUp',0.0)
+    self.totalEffPileupSystDown = kwargs.get('totalEffPileupSystDown',0.0)
     self.halfWidth              = kwargs.get('halfWidth',-1)
     self.optMassWindowLow       = kwargs.get('optMassWindowLow',-1)
     self.optMassWindowHigh      = kwargs.get('optMassWindowHigh',-1)
     self.nDataObs               = kwargs.get('nDataObs',-1)
     self.nBackground            = kwargs.get('nBg',-1)
-    self.nBackgroundErrStat     = kwargs.get('nBgErrStat',-1)
-    self.nBackgroundErrSyst     = kwargs.get('nBgErrSyst',-1)
+    self.nBackgroundErrStat     = kwargs.get('nBgErrStat',0.0)
+    self.nBackgroundErrSyst     = kwargs.get('nBgErrSyst',0.0)
     self.expLimit               = kwargs.get('expLimit',-1)
     self.expLimitOneSigmaHigh   = kwargs.get('expLimitOneSigmaHigh',-1)
     self.expLimitOneSigmaLow    = kwargs.get('expLimitOneSigmaLow',-1)
     self.expLimitTwoSigmaHigh   = kwargs.get('expLimitTwoSigmaHigh',-1)
     self.expLimitTwoSigmaLow    = kwargs.get('expLimitTwoSigmaLow',-1)
     self.obsLimit               = kwargs.get('obsLimit',-1)
+    self.obsLimitErr            = kwargs.get('obsLimitErr',0.0)
     self.fileName               = kwargs.get('fileName','None')
+    self.bgFileName             = kwargs.get('bgFileName','None')
+    self.dFileName             = kwargs.get('dFileName','None')
 
   def AddLimitResult(self,lr):
     self.expLimit = lr.GetExpectedLimit()
@@ -56,12 +65,15 @@ class ModelPoint:
   def Print(self):
     print "Coupling : " , self.coupling
     print "Mass: ",self.mass
+    print "Channel: ",self.channel
     print "TotalXSection: " , self.totalXSec
     print "KFactor: " , self.kFactor
     print "Acceptance: " , self.acceptance
     print "AcceptanceMassWindow: " , self.acceptanceMassWindow
     print "Total Signal Events: " , self.totalSignalEvents
     print "Efficiency before mass window:",self.preMWEff
+    print "Mass peak:",self.massPeak
+    print "Opt. s/sqrt{s+b} value:",self.optSSBValue
     print "TotalEff: %.5f"%self.totalEff , " +/- %.5f (stat)"%self.totalEffErrStat, " +/- %.5f (syst)"%self.totalEffErrSyst
     print "TotalEffMScaleSystUp: %.5f"%self.totalEffMScaleSystUp
     print "TotalEffMScaleSystDown: %.5f"%self.totalEffMScaleSystDown
@@ -74,21 +86,28 @@ class ModelPoint:
     print "NDataObs: " , self.nDataObs
     print "NBackground: %.5f"%self.nBackground , " +/- %.5f (stat)"%self.nBackgroundErrStat, " +/- %.5f (syst)"%self.nBackgroundErrSyst
     print "Filename:",self.fileName
+    print "BG MC Filename:",self.bgFileName
+    print "Data Filename:",self.dFileName
     print "Expected Limit:" , self.expLimit , " + " , self.expLimitOneSigmaHigh , " - " , self.expLimitOneSigmaLow
     print "Expected Limit2SigmaBounds: + " , self.expLimitTwoSigmaHigh , " - " , self.expLimitTwoSigmaLow
-    print "Observed Limit: " , self.obsLimit
+    print "Observed Limit: %.5f"%self.obsLimit, " +/- %.5f "%self.obsLimitErr
 
 
   def Write(self,file):
     file.write("Coupling: " + str(self.coupling) + "\n")
     file.write("Mass: " + str(self.mass) + "\n")
+    file.write("Channel: " + self.channel + "\n")
     file.write("FileName: " + self.fileName + "\n")
+    file.write("BG FileName: " + self.bgFileName + "\n")
+    file.write("Data FileName: " + self.dFileName + "\n")
     file.write("TotalXSection: " + str(self.totalXSec) + "\n")
     file.write("KFactor: " + str(self.kFactor) + "\n")
     file.write("Acceptance: " + str(self.acceptance) + "\n")
     file.write("AcceptanceMassWindow: " + str(self.acceptanceMassWindow) + "\n")
     file.write("TotalSignalEvents: " + str(self.totalSignalEvents) + "\n")
     file.write("PreMWEff: " + str(self.preMWEff) + "\n")
+    file.write("MassPeak: " + str(self.massPeak) + "\n")
+    file.write("OptSSBValue: " + str(self.optSSBValue) + "\n")
     file.write("TotalEff: " + str(self.totalEff) + "\n")
     file.write("TotalEffErrStat: " + str(self.totalEffErrStat) + "\n")
     file.write("TotalEffErrSyst: " + str(self.totalEffErrSyst) + "\n")
@@ -110,7 +129,8 @@ class ModelPoint:
     file.write("ExpectedLimitOneSigmaLow: " + str(self.expLimitOneSigmaLow) + "\n")
     file.write("ExpectedLimitTwoSigmaHigh: " + str(self.expLimitTwoSigmaHigh) + "\n")
     file.write("ExpectedLimitTwoSigmaLow: " + str(self.expLimitTwoSigmaLow) + "\n")
-    file.write("ObservedLimit: " + str(self.obsLimit) + "\n\n")
+    file.write("ObservedLimit: " + str(self.obsLimit) + "\n")
+    file.write("ObservedLimitErr: " + str(self.obsLimitErr) + "\n\n")
 
 
   def LatexTableLine(self,lumi):
@@ -139,6 +159,7 @@ class ModelPoint:
 
   def StringTableLine(self,lumi):
     tableString=string.ljust(str(self.coupling),6)+string.ljust(str(int(self.mass)),6)
+    tableString+=string.ljust(self.channel,10)
     massWindowString=str(int(self.optMassWindowLow))+'-'+str(int(self.optMassWindowHigh))
     tableString+=string.ljust(massWindowString,11)
     tableString+=string.ljust('%0.3f'%self.totalEff,8)
@@ -162,6 +183,7 @@ class ModelPoint:
 
   def TwikiTableLine(self,lumi):
     tableString='|'+string.ljust(str(self.coupling),9)+'|'+string.ljust(str(int(self.mass)),6)+'|'
+    tableString+=string.ljust(self.channel,6)+'|'
     if not self.optMassWindowLow is None:
       tableString+=str(int(self.optMassWindowLow))+' to '+str(int(self.optMassWindowHigh))
     else:
@@ -189,10 +211,10 @@ def ReadFromLines(lines):
     if len(line) < 2:
       continue
     try:
-      value = float(line.split(': ')[1])
+      value = float(line.split(': ')[1].rstrip())
     except ValueError:
       try:
-        value = str(line.split(': ')[1])
+        value = str(line.split(': ')[1]).rstrip()
       except ValueError:
         value = None
     if "Coupling:" in line:
@@ -200,8 +222,15 @@ def ReadFromLines(lines):
       mp.coupling = value
     elif "Mass:" in line:
       mp.mass = value
+    elif "Channel" in line:
+      mp.channel = value.strip()
     elif "FileName" in line:
-      mp.fileName = value
+      if "BG" in line:
+        mp.bgFileName = value
+      elif "Data" in line:
+        mp.dFileName = value
+      else:
+        mp.fileName = value
     elif "TotalXSection:" in line:
       mp.totalXSec = value
     elif "KFactor:" in line:
@@ -214,6 +243,10 @@ def ReadFromLines(lines):
       mp.totalSignalEvents = value
     elif "PreMWEff:" in line:
       mp.preMWEff = value
+    elif "MassPeak:" in line:
+      mp.massPeak = value
+    elif "OptSSBValue:" in line:
+      mp.optSSBValue = value
     elif "TotalEff:" in line:
       mp.totalEff = value
     elif "TotalEffErrStat:" in line:
@@ -256,9 +289,11 @@ def ReadFromLines(lines):
       mp.expLimitTwoSigmaHigh = value
     elif "ExpectedLimitTwoSigmaLow:" in line:
       mp.expLimitTwoSigmaLow = value
+    elif "ObservedLimitErr" in line:
+      mp.obsLimitErr = value
+      outputModelPoints.append(mp) # since this is the last var written for this MP
     elif "ObservedLimit:" in line:
       mp.obsLimit = value
-      outputModelPoints.append(mp)
   return outputModelPoints
 
 

@@ -34,11 +34,11 @@ diphotonSignalMCAnalyzer = cms.EDAnalyzer('ExoDiPhotonSignalMCAnalyzer',
                                           # Locations of files with the effective area constants.
                                           # The constants in these files below are derived for PHYS14 MC.
                                           effAreaChHadFile = cms.FileInPath
-                                          ("EgammaAnalysis/PhotonTools/data/PHYS14/effAreaPhotons_cone03_pfChargedHadrons_V2.txt"),
+                                          ("RecoEgamma/PhotonIdentification/data/PHYS14/effAreaPhotons_cone03_pfChargedHadrons_V2.txt"),
                                           effAreaNeuHadFile= cms.FileInPath
-                                          ("EgammaAnalysis/PhotonTools/data/PHYS14/effAreaPhotons_cone03_pfNeutralHadrons_V2.txt"),
+                                          ("RecoEgamma/PhotonIdentification/data/PHYS14/effAreaPhotons_cone03_pfNeutralHadrons_V2.txt"),
                                           effAreaPhoFile   = cms.FileInPath
-                                          ("EgammaAnalysis/PhotonTools/data/PHYS14/effAreaPhotons_cone03_pfPhotons_V2.txt"),
+                                          ("RecoEgamma/PhotonIdentification/data/PHYS14/effAreaPhotons_cone03_pfPhotons_V2.txt"),
                                           # ID decisions (common to all formats)
                                           phoLooseIdMap = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-PHYS14-PU20bx25-V2-standalone-loose"),
                                           phoMediumIdMap = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-PHYS14-PU20bx25-V2-standalone-medium"),

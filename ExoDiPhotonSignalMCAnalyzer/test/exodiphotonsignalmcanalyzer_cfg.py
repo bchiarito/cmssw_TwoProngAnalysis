@@ -8,7 +8,7 @@ process.MessageLogger = cms.Service("MessageLogger",
     destinations = cms.untracked.vstring('cout')
 )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 #process.source = cms.Source("PoolSource",
 #    fileNames = cms.untracked.vstring(
@@ -20,7 +20,7 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 
 inputFilesAOD = cms.untracked.vstring(
     # AOD test files
-    'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/RSGravToGG_kMpl-01_M-1250_TuneCUEP8M1_13TeV-pythia8/AODSIM/Asympt25ns_MCRUN2_74_V9-v1/70000/18D3BCE6-6105-E511-8177-02163E010D77.root'
+    #'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/RSGravToGG_kMpl-01_M-1250_TuneCUEP8M1_13TeV-pythia8/AODSIM/Asympt25ns_MCRUN2_74_V9-v1/70000/18D3BCE6-6105-E511-8177-02163E010D77.root'
     )    
 
 inputFilesMiniAOD = cms.untracked.vstring(
@@ -46,7 +46,8 @@ process.source = cms.Source ("PoolSource", fileNames = inputFiles )
 
 # global tag for MC because now we need geometry
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = 'MCRUN2_74_V9::All'
+process.GlobalTag.globaltag = 'MCRUN2_74_V9A::All' #50 ns 
+#'MCRUN2_74_V9::All' 25 ns
 
 # geometry for ecal 
 process.load("Configuration.Geometry.GeometryIdeal_cff")
