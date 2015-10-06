@@ -415,15 +415,15 @@ namespace ExoDiPhotons{
 
 
   std::vector<double> EffectiveAreas(const reco::Photon *photon,TString MethodID,TString CategoryID){
-
+    
     std::vector<double> effarea;
     effarea.reserve(3);
     
     double effareaCH = 0.;
     double effareaNH = 0.;
     double effareaPH = 0.;
-
-
+    
+    
     //std::cout<<"photon abs eta in eff areas method in PFPhotonId.h "<<fabs(photon->superCluster()->eta())<<std::endl;
 
     //Setting effective areas for charged hadrons (CH), neutral hadrons (NH) and photons (PH)
@@ -452,6 +452,66 @@ namespace ExoDiPhotons{
     return effarea;
   }
 
+  double alphaPhotonHighPtID(const reco::Photon *photon)
+  {
+
+    double alpha = 0;
+    
+    if (fabs(photon->superCluster()->eta()) < 0.9) {alpha = 1.5;}
+    if (0.9 < fabs(photon->superCluster()->eta())   && fabs(photon->superCluster()->eta()) < 1.4442 ) {alpha = 1.5;}
+    if (1.560 < fabs(photon->superCluster()->eta()) && fabs(photon->superCluster()->eta()) < 2.0 ) {alpha = 2.0;}
+    if (2.0 < fabs(photon->superCluster()->eta())   && fabs(photon->superCluster()->eta()) < 2.2 ) {alpha = 2.0;}
+    if (2.2 < fabs(photon->superCluster()->eta())   && fabs(photon->superCluster()->eta()) < 2.5 ) {alpha = 2.0;}
+
+    return alpha;
+  }
+
+  double kappaPhotonHighPtID(const reco::Photon *photon)
+  {
+
+    double kappa = 0;
+    
+    if (fabs(photon->superCluster()->eta()) < 0.9) {kappa = 0.002;}
+    if (0.9 < fabs(photon->superCluster()->eta())   && fabs(photon->superCluster()->eta()) < 1.4442 ) {kappa = 0.002;}
+    if (1.560 < fabs(photon->superCluster()->eta()) && fabs(photon->superCluster()->eta()) < 2.0 ) {kappa = 0.002;}
+    if (2.0 < fabs(photon->superCluster()->eta())   && fabs(photon->superCluster()->eta()) < 2.2 ) {kappa = 0.002;}
+    if (2.2 < fabs(photon->superCluster()->eta())   && fabs(photon->superCluster()->eta()) < 2.5 ) {kappa = 0.002;}
+
+    return kappa;
+  }
+
+  double corPhoIsoHighPtID(const reco::Photon *photon, TString MethodID, TString CategoryID, double phoIso, double rho)
+  {
+    std::vector<double> EA = EffectiveAreas(photon,MethodID,CategoryID);
+    double corPhoIso =
+      alphaPhotonHighPtID(photon) + phoIso - rho*EA[2] - kappaPhotonHighPtID(photon)*photon->pt();
+    
+    return corPhoIso;
+  }
+
+  bool passCorPhoIsoHighPtID(const reco::Photon *photon, TString MethodID, TString CategoryID, double phoIso, double rho)
+  {
+    bool passCorPhoIso = false;
+    double corPhoIsoCut = 0;
+    double corPhoIso = corPhoIsoHighPtID(photon, MethodID, CategoryID, phoIso, rho);
+
+    if (photon->isEB()) corPhoIsoCut = 2.5;
+    if (photon->isEE()) corPhoIsoCut = 2.0;
+
+    if (corPhoIso < corPhoIsoCut) passCorPhoIso = true;
+    
+    return passCorPhoIso;
+  }
+  
+  bool passHighPtID(const reco::Photon *photon, TString MethodID, TString CategoryID, double chIso, double phoIso, double sigIeIe, double rho, bool passCSEV)
+  {
+    return (passesHadTowerOverEmCut(photon, MethodID, CategoryID) &&
+	    passesChargedHadronCut(photon, chIso, MethodID, CategoryID) &&
+	    passCorPhoIsoHighPtID(photon, MethodID, CategoryID, phoIso, rho) &&
+	    passesPFSigmaIetaIetaCut(photon, sigIeIe, MethodID, CategoryID) &&
+	    passCSEV);
+  }
+  
 }
 
 #endif
