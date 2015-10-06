@@ -139,7 +139,7 @@ process.diphotonSignalMCAnalyzer.PUDataHistName = "pileup" #Name of histogram in
 process.diphotonSignalMCAnalyzer.PUMCHistName = "MCPileUpHisto"  #Name of histogram in PUMCFileName  Need to be binned to 80
 
 #process.diphotonSignalMCAnalyzer.isMC = False #MC = True or  Data = False
-process.diphotonSignalMCAnalyzer.IDMethod = cms.untracked.string("ParticleFlow")
+process.diphotonSignalMCAnalyzer.IDMethod = cms.untracked.string("highpt")
 process.diphotonSignalMCAnalyzer.PFIDCategory = cms.untracked.string("Loose")
 process.diphotonSignalMCAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")
 

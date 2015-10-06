@@ -288,7 +288,7 @@ ExoDiPhotonSignalMCAnalyzer::ExoDiPhotonSignalMCAnalyzer(const edm::ParameterSet
 {
    //now do what ever initialization is needed
 
-  std::cout << "ExoDiPhotonAnalyzer: ID Method used " << fIDMethod.c_str()
+  std::cout << "ExoDiPhotonAnalyzer: ID Method used " << fIDMethod.c_str() << ", "
 	    << "PF ID Category " << fPFIDCategory.c_str()
 	    << std::endl;
 
@@ -1099,6 +1099,23 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      fRecoPhoton1Info.rhocorPFIsoAll03 = fRecoPhoton1Info.rhocorPFIsoCharged03 + fRecoPhoton1Info.rhocorPFIsoNeutral03 + fRecoPhoton1Info.rhocorPFIsoPhoton03;
 
 
+     // highPt ID
+     std::vector<double> matchPhoton1EA = ExoDiPhotons::EffectiveAreas(matchPhoton1,MethodID,CategoryPFID);
+     fRecoPhoton1Info.EAPhotonHighPtID = matchPhoton1EA[2];
+     fRecoPhoton1Info.alphaPhotonHighPtID = ExoDiPhotons::alphaPhotonHighPtID(matchPhoton1);
+     fRecoPhoton1Info.kappaPhotonHighPtID = ExoDiPhotons::kappaPhotonHighPtID(matchPhoton1);;
+     fRecoPhoton1Info.corPhotonIsoHighPtID = ExoDiPhotons::corPhoIsoHighPtID(matchPhoton1,MethodID,CategoryPFID,fRecoPhoton1Info.PFIsoPhoton03,rho_);
+     fRecoPhoton1Info.isHighPtPFPhoton = ExoDiPhotons::passHighPtID(matchPhoton1,MethodID,CategoryPFID,fRecoPhoton1Info.PFIsoCharged03,
+								      fRecoPhoton1Info.PFIsoPhoton03,fRecoPhoton1Info.sigmaIetaIeta,rho_,!fRecoPhoton1Info.hasMatchedPromptElec);
+
+     /*
+     cout << "fRecoPhoton1Info.EAPhotonHighPtID: " << fRecoPhoton1Info.EAPhotonHighPtID << endl;
+     cout << "fRecoPhoton1Info.alphaPhotonHighPtID: " << fRecoPhoton1Info.alphaPhotonHighPtID << endl;
+     cout << "fRecoPhoton1Info.kappaPhotonHighPtID: " << fRecoPhoton1Info.kappaPhotonHighPtID << endl;
+     cout << "fRecoPhoton1Info.corPhotonIsoHighPtID : " << fRecoPhoton1Info.corPhotonIsoHighPtID << endl;
+     cout << "fRecoPhoton1Info.isHighPtPFPhoton : " << fRecoPhoton1Info.isHighPtPFPhoton << endl;
+     */
+     
      //fill 02 and 04 cones?
 
 
@@ -1214,6 +1231,15 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      fRecoPhoton2Info.rhocorPFIsoPhoton03 = std::max((float)0.0,(float)fRecoPhoton2Info.PFIsoPhoton03-rho_*effAreaPhotons_.getEffectiveArea(matchPho2Eta));
      fRecoPhoton2Info.rhocorPFIsoAll03 = fRecoPhoton2Info.rhocorPFIsoCharged03 + fRecoPhoton2Info.rhocorPFIsoNeutral03 + fRecoPhoton2Info.rhocorPFIsoPhoton03;
 
+     // highPt ID
+     std::vector<double> matchPhoton2EA = ExoDiPhotons::EffectiveAreas(matchPhoton2,MethodID,CategoryPFID);
+     fRecoPhoton2Info.EAPhotonHighPtID = matchPhoton2EA[2];
+     fRecoPhoton2Info.alphaPhotonHighPtID = ExoDiPhotons::alphaPhotonHighPtID(matchPhoton2);
+     fRecoPhoton2Info.kappaPhotonHighPtID = ExoDiPhotons::kappaPhotonHighPtID(matchPhoton2);;
+     fRecoPhoton2Info.corPhotonIsoHighPtID = ExoDiPhotons::corPhoIsoHighPtID(matchPhoton2,MethodID,CategoryPFID,fRecoPhoton2Info.PFIsoPhoton03,rho_);
+     fRecoPhoton2Info.isHighPtPFPhoton = ExoDiPhotons::passHighPtID(matchPhoton2,MethodID,CategoryPFID,fRecoPhoton2Info.PFIsoCharged03,
+								      fRecoPhoton2Info.PFIsoPhoton03,fRecoPhoton2Info.sigmaIetaIeta,rho_,!fRecoPhoton2Info.hasMatchedPromptElec);
+     
      fRecoPhoton2Info.isTightPFPhoton = (*tight_id_decisions)[matchPho2Ptr];
      fRecoPhoton2Info.isMediumPFPhoton = (*medium_id_decisions)[matchPho2Ptr];
      fRecoPhoton2Info.isLoosePFPhoton = (*loose_id_decisions)[matchPho2Ptr]; 
