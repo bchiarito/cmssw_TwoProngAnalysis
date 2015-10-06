@@ -8,7 +8,7 @@ process.MessageLogger = cms.Service("MessageLogger",
     destinations = cms.untracked.vstring('cout')
 )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(50) )
 
 #process.source = cms.Source("PoolSource",
 #    fileNames = cms.untracked.vstring(
@@ -21,6 +21,10 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 inputFilesAOD = cms.untracked.vstring(
     # AOD test files
     #'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/RSGravToGG_kMpl-01_M-1250_TuneCUEP8M1_13TeV-pythia8/AODSIM/Asympt25ns_MCRUN2_74_V9-v1/70000/18D3BCE6-6105-E511-8177-02163E010D77.root'
+    #'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/RSGravToGG_kMpl-01_M-7000_TuneCUEP8M1_13TeV-pythia8/AODSIM/Asympt50ns_MCRUN2_74_V9A-v1/30000/02A5CCDF-FA29-E511-8E27-A0040420FE80.root'
+    #'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/ADDGravToGG_MS-3000_NED-4_KK-1_M-1000To2000_13TeV-sherpa/AODSIM/Asympt25ns_MCRUN2_74_V9-v2/40000/001DBC9D-862A-E511-B134-008CFA0647D8.root'
+    'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/RSGravToGG_kMpl-01_M-5000_TuneCUEP8M1_13TeV-pythia8/AODSIM/Asympt50ns_MCRUN2_74_V9A-v1/80000/0A46E521-8F28-E511-8B31-A4BADB0B6427.root'
+    #'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/RSGravToGG_kMpl-01_M-7000_TuneCUEP8M1_13TeV-pythia8/AODSIM/Asympt50ns_MCRUN2_74_V9A-v1/30000/02A5CCDF-FA29-E511-8E27-A0040420FE80.root'
     )    
 
 inputFilesMiniAOD = cms.untracked.vstring(
@@ -47,7 +51,8 @@ process.source = cms.Source ("PoolSource", fileNames = inputFiles )
 # global tag for MC because now we need geometry
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
 process.GlobalTag.globaltag = 'MCRUN2_74_V9A::All' #50 ns 
-#'MCRUN2_74_V9::All' 25 ns
+#'MCRUN2_74_V9::All' #25 ns
+#'MCRUN2_74_V9A::All' #50 ns
 
 # geometry for ecal 
 process.load("Configuration.Geometry.GeometryIdeal_cff")
@@ -111,7 +116,7 @@ else :
 switchOnVIDPhotonIdProducer(process, dataFormat)
 
 # define which IDs we want to produce
-my_id_modules = ['RecoEgamma.PhotonIdentification.Identification.cutBasedPhotonID_PHYS14_PU20bx25_V2_cff']
+my_id_modules = ['RecoEgamma.PhotonIdentification.Identification.cutBasedPhotonID_Spring15_50ns_V1_cff']
 
 #add them to the VID producer
 for idmod in my_id_modules:
