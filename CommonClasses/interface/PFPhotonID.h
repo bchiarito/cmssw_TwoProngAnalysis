@@ -424,25 +424,25 @@ namespace ExoDiPhotons{
     double effareaPH = 0.;
 
 
-    //std::cout<<"photon abs eta in eff areas method in PFPhotonId.h "<<fabs(photon->eta())<<std::endl;
+    //std::cout<<"photon abs eta in eff areas method in PFPhotonId.h "<<fabs(photon->superCluster()->eta())<<std::endl;
 
     //Setting effective areas for charged hadrons (CH), neutral hadrons (NH) and photons (PH)
     if(MethodID.EqualTo("egamma")){
-      if(fabs(photon->eta()) < 1.){effareaCH = 0.012;effareaNH = 0.030;effareaPH = 0.148;}
-      if( (fabs(photon->eta()) > 1.) && (fabs(photon->eta()) < 1.479) ){effareaCH = 0.010;effareaNH = 0.057;effareaPH = 0.130;}
-      if( (fabs(photon->eta()) > 1.479) && (fabs(photon->eta()) < 2.) ){effareaCH = 0.014;effareaNH = 0.039;effareaPH = 0.112;}
-      if( (fabs(photon->eta()) > 2.) && (fabs(photon->eta()) < 2.2) ){effareaCH = 0.012;effareaNH = 0.015;effareaPH = 0.216;}
-      if( (fabs(photon->eta()) > 2.2) && (fabs(photon->eta()) < 2.3) ){effareaCH = 0.016;effareaNH = 0.024;effareaPH = 0.262;}
-      if( (fabs(photon->eta()) > 2.3) && (fabs(photon->eta()) < 2.4) ){effareaCH = 0.020;effareaNH = 0.039;effareaPH = 0.260;}
-      if(fabs(photon->eta()) > 2.4){effareaCH = 0.012;effareaNH = 0.072;effareaPH = 0.266;}
+      if(fabs(photon->superCluster()->eta()) < 1.){effareaCH = 0.012;effareaNH = 0.030;effareaPH = 0.148;}
+      if( (fabs(photon->superCluster()->eta()) > 1.) && (fabs(photon->superCluster()->eta()) < 1.479) ){effareaCH = 0.010;effareaNH = 0.057;effareaPH = 0.130;}
+      if( (fabs(photon->superCluster()->eta()) > 1.479) && (fabs(photon->superCluster()->eta()) < 2.) ){effareaCH = 0.014;effareaNH = 0.039;effareaPH = 0.112;}
+      if( (fabs(photon->superCluster()->eta()) > 2.) && (fabs(photon->superCluster()->eta()) < 2.2) ){effareaCH = 0.012;effareaNH = 0.015;effareaPH = 0.216;}
+      if( (fabs(photon->superCluster()->eta()) > 2.2) && (fabs(photon->superCluster()->eta()) < 2.3) ){effareaCH = 0.016;effareaNH = 0.024;effareaPH = 0.262;}
+      if( (fabs(photon->superCluster()->eta()) > 2.3) && (fabs(photon->superCluster()->eta()) < 2.4) ){effareaCH = 0.020;effareaNH = 0.039;effareaPH = 0.260;}
+      if(fabs(photon->superCluster()->eta()) > 2.4){effareaCH = 0.012;effareaNH = 0.072;effareaPH = 0.266;}
     }
 
     if(MethodID.EqualTo("highpt")){
-      if(fabs(photon->eta()) < 0.9){effareaPH = 0.21;}
-      if( (fabs(photon->eta()) > 0.9) && (fabs(photon->eta()) < 1.4442) ){effareaPH = 0.2;}
-      if( (fabs(photon->eta()) > 1.560) && (fabs(photon->eta()) < 2.) ){effareaPH = 0.14;}
-      if( (fabs(photon->eta()) > 2.) && (fabs(photon->eta()) < 2.2) ){effareaPH = 0.22;}
-      if( (fabs(photon->eta()) > 2.2) && (fabs(photon->eta()) < 2.5) ){effareaPH = 0.33;}
+      if(fabs(photon->superCluster()->eta()) < 0.9){effareaPH = 0.21;}
+      if( (fabs(photon->superCluster()->eta()) > 0.9) && (fabs(photon->superCluster()->eta()) < 1.4442) ){effareaPH = 0.2;}
+      if( (fabs(photon->superCluster()->eta()) > 1.560) && (fabs(photon->superCluster()->eta()) < 2.) ){effareaPH = 0.14;}
+      if( (fabs(photon->superCluster()->eta()) > 2.) && (fabs(photon->superCluster()->eta()) < 2.2) ){effareaPH = 0.22;}
+      if( (fabs(photon->superCluster()->eta()) > 2.2) && (fabs(photon->superCluster()->eta()) < 2.5) ){effareaPH = 0.33;}
     }
 
     effarea.push_back(effareaCH);
