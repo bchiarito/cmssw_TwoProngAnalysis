@@ -8,7 +8,7 @@ process.MessageLogger = cms.Service("MessageLogger",
     destinations = cms.untracked.vstring('cout')
 )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(200) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 #process.source = cms.Source("PoolSource",
 #    fileNames = cms.untracked.vstring(
@@ -20,10 +20,10 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(200) )
 
 inputFilesAOD = cms.untracked.vstring(
     # AOD test files
-    #'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/RSGravToGG_kMpl-01_M-1250_TuneCUEP8M1_13TeV-pythia8/AODSIM/Asympt25ns_MCRUN2_74_V9-v1/70000/18D3BCE6-6105-E511-8177-02163E010D77.root'
+    'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/RSGravToGG_kMpl-01_M-1250_TuneCUEP8M1_13TeV-pythia8/AODSIM/Asympt25ns_MCRUN2_74_V9-v1/70000/18D3BCE6-6105-E511-8177-02163E010D77.root'
     #'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/RSGravToGG_kMpl-01_M-7000_TuneCUEP8M1_13TeV-pythia8/AODSIM/Asympt50ns_MCRUN2_74_V9A-v1/30000/02A5CCDF-FA29-E511-8E27-A0040420FE80.root'
     #'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/ADDGravToGG_MS-3000_NED-4_KK-1_M-1000To2000_13TeV-sherpa/AODSIM/Asympt25ns_MCRUN2_74_V9-v2/40000/001DBC9D-862A-E511-B134-008CFA0647D8.root'
-    'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/RSGravToGG_kMpl-01_M-5000_TuneCUEP8M1_13TeV-pythia8/AODSIM/Asympt50ns_MCRUN2_74_V9A-v1/80000/0A46E521-8F28-E511-8B31-A4BADB0B6427.root'
+    #'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/RSGravToGG_kMpl-01_M-5000_TuneCUEP8M1_13TeV-pythia8/AODSIM/Asympt50ns_MCRUN2_74_V9A-v1/80000/0A46E521-8F28-E511-8B31-A4BADB0B6427.root'
     #'root://cmsxrootd.fnal.gov///store/mc/RunIISpring15DR74/RSGravToGG_kMpl-01_M-7000_TuneCUEP8M1_13TeV-pythia8/AODSIM/Asympt50ns_MCRUN2_74_V9A-v1/30000/02A5CCDF-FA29-E511-8E27-A0040420FE80.root'
     )    
 
@@ -50,7 +50,7 @@ process.source = cms.Source ("PoolSource", fileNames = inputFiles )
 
 # global tag for MC because now we need geometry
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = 'MCRUN2_74_V9A::All' #50 ns 
+process.GlobalTag.globaltag = 'MCRUN2_74_V9::All' #25 ns
 #'MCRUN2_74_V9::All' #25 ns
 #'MCRUN2_74_V9A::All' #50 ns
 
