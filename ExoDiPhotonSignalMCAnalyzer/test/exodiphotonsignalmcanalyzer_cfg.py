@@ -8,7 +8,7 @@ process.MessageLogger = cms.Service("MessageLogger",
     destinations = cms.untracked.vstring('cout')
 )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(50) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(200) )
 
 #process.source = cms.Source("PoolSource",
 #    fileNames = cms.untracked.vstring(
@@ -146,4 +146,9 @@ process.diphotonSignalMCAnalyzer.photonCollection = cms.untracked.InputTag("gedP
 
 #process.p = cms.Path(process.primaryVertexFilter+process.noScraping+process.kt6PFJets25+process.diphotonSignalMCAnalyzer)
 
-process.p = cms.Path(process.primaryVertexFilter+process.noScraping+process.egmPhotonIDSequence+process.diphotonSignalMCAnalyzer)
+
+# cross section analyzer
+process.load("DiPhotonAnalysis.ExoDiPhotonSignalMCAnalyzer.ana")
+process.xSecAna = cms.EDAnalyzer("GenXSecAnalyzer")
+
+process.p = cms.Path(process.xSecAna*process.primaryVertexFilter*process.noScraping*process.egmPhotonIDSequence*process.diphotonSignalMCAnalyzer)
