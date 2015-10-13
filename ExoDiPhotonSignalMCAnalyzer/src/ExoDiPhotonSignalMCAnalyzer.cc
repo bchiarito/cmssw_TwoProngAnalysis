@@ -396,7 +396,7 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    using namespace std;
    using namespace reco;
 
-   //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
+   cout <<  "run: " << iEvent.id().run() << ", lumi: " <<  iEvent.id().luminosityBlock() << ", event: " << iEvent.id().event() << endl;
 
 
    //cout<<"event"<<endl;
@@ -1106,7 +1106,8 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      fRecoPhoton1Info.kappaPhotonHighPtID = ExoDiPhotons::kappaPhotonHighPtID(matchPhoton1);;
      fRecoPhoton1Info.corPhotonIsoHighPtID = ExoDiPhotons::corPhoIsoHighPtID(matchPhoton1,MethodID,CategoryPFID,fRecoPhoton1Info.PFIsoPhoton03,rho_);
      fRecoPhoton1Info.isHighPtPFPhoton = ExoDiPhotons::passHighPtID(matchPhoton1,MethodID,CategoryPFID,fRecoPhoton1Info.PFIsoCharged03,
-								      fRecoPhoton1Info.PFIsoPhoton03,fRecoPhoton1Info.sigmaIetaIeta,rho_,!fRecoPhoton1Info.hasMatchedPromptElec);
+								    fRecoPhoton1Info.PFIsoPhoton03,fRecoPhoton1Info.sigmaIetaIeta,rho_,
+								    !fRecoPhoton1Info.hasMatchedPromptElec,fRecoPhoton1Info.isSaturated);
 
      /*
      cout << "fRecoPhoton1Info.EAPhotonHighPtID: " << fRecoPhoton1Info.EAPhotonHighPtID << endl;
@@ -1238,7 +1239,8 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      fRecoPhoton2Info.kappaPhotonHighPtID = ExoDiPhotons::kappaPhotonHighPtID(matchPhoton2);;
      fRecoPhoton2Info.corPhotonIsoHighPtID = ExoDiPhotons::corPhoIsoHighPtID(matchPhoton2,MethodID,CategoryPFID,fRecoPhoton2Info.PFIsoPhoton03,rho_);
      fRecoPhoton2Info.isHighPtPFPhoton = ExoDiPhotons::passHighPtID(matchPhoton2,MethodID,CategoryPFID,fRecoPhoton2Info.PFIsoCharged03,
-								      fRecoPhoton2Info.PFIsoPhoton03,fRecoPhoton2Info.sigmaIetaIeta,rho_,!fRecoPhoton2Info.hasMatchedPromptElec);
+								    fRecoPhoton2Info.PFIsoPhoton03,fRecoPhoton2Info.sigmaIetaIeta,rho_,
+								    !fRecoPhoton2Info.hasMatchedPromptElec,fRecoPhoton2Info.isSaturated);
      
      fRecoPhoton2Info.isTightPFPhoton = (*tight_id_decisions)[matchPho2Ptr];
      fRecoPhoton2Info.isMediumPFPhoton = (*medium_id_decisions)[matchPho2Ptr];
