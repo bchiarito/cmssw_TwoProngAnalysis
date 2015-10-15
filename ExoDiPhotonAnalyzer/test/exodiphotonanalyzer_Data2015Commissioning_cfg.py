@@ -1,10 +1,25 @@
+from FWCore.ParameterSet.VarParsing import VarParsing
+
+options = VarParsing ('python')
+
+
+options.register('globalTag',
+                'MCRUN2_74_V9::All',
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.string,
+                "global tag to use when running")
+## 'maxEvents' is already registered by the Framework, changing default value
+options.setDefault('maxEvents', 100)
+
+options.parseArguments()
+
 import FWCore.ParameterSet.Config as cms
 
 process = cms.Process("ExoDiPhotonAnalysis")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( options.maxEvents ) )
 
 inputFilesAOD = cms.untracked.vstring(
     # AOD test files from a GJet PT40 dataset
@@ -13,7 +28,8 @@ inputFilesAOD = cms.untracked.vstring(
 #'root://eoscms//eos/cms/store/express/Run2015A/ExpressPhysics/FEVT/Express-v1/000/246/865/00000/0EA17D6D-B609-E511-9404-02163E014682.root'
 ##'root://eoscms//eos/cms/store/express/Run2015A/ExpressPhysics/FEVT/Express-v1/000/246/908/00000/448D1972-E909-E511-A7E0-02163E0125CE.root'
 #'/tmp/charaf/448D1972-E909-E511-A7E0-02163E0125CE.root'
-'root://xrootd.unl.edu//store/mc/RunIISpring15DR74/GGJets_M-200To500_Pt-50_13TeV-sherpa/AODSIM/Asympt25ns_MCRUN2_74_V9-v1/20000/109053D5-A022-E511-AD36-001E67A42BA2.root'
+# 'root://xrootd.unl.edu//store/mc/RunIISpring15DR74/GGJets_M-200To500_Pt-50_13TeV-sherpa/AODSIM/Asympt25ns_MCRUN2_74_V9-v1/20000/109053D5-A022-E511-AD36-001E67A42BA2.root'
+'root://cmsxrootd.fnal.gov//store/data/Run2015D/DoubleEG/AOD/PromptReco-v3/000/256/630/00000/2AE2E490-235F-E511-B4F3-02163E01383F.root'
     )    
 
 inputFilesMiniAOD = cms.untracked.vstring(
@@ -39,13 +55,17 @@ process.source = cms.Source ("PoolSource", fileNames = inputFiles )
 
 # need to introduce the global tag now
 # because the L1GtUtils method needs to fetch records...
-process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
+if options.globalTag == 'MCRUN2_74_V9::All':
+  process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
+else:
+  process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
 
 #use the right global tag!
 ##process.GlobalTag.globaltag = 'GR_P_V54::All'
 ##process.GlobalTag.globaltag = 'GR_E_V48::All'
 ##process.GlobalTag.globaltag = 'PHYS14_25_V1::All'
-process.GlobalTag.globaltag = 'MCRUN2_74_V9::All'
+# process.GlobalTag.globaltag = 'MCRUN2_74_V9::All'
+process.GlobalTag.globaltag = options.globalTag
 
 # geometry for ecal 
 #When in 5_3_X Need to use diff GeometryDB
@@ -133,10 +153,10 @@ process.diphotonAnalyzer.rho25Correction = cms.InputTag("fixedGridRhoFastjetAll"
 process.diphotonAnalyzer.ptMin = 50 # pt cut on all photons
 process.diphotonAnalyzer.removeSpikes = False # ie spikes will be exlcuded from tree
 process.diphotonAnalyzer.requireTightPhotons = False # ie only tight photons will be written 
-process.diphotonAnalyzer.requireGenEventInfo = True #write MC info when running on MC
+process.diphotonAnalyzer.requireGenEventInfo = False #write MC info when running on MC
 
 process.diphotonAnalyzer.isMC = False #MC = True or  Data = False
-process.diphotonAnalyzer.IDMethod = cms.untracked.string("ParticleFlow")
+process.diphotonAnalyzer.IDMethod = cms.untracked.string("highpt")
 process.diphotonAnalyzer.PFIDCategory = cms.untracked.string("Loose")
 process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")
 
@@ -145,7 +165,7 @@ process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")
 process.diphotonAnalyzer.PUDataFileName = 'PileupDataAug10thHistogram.root' #DataPileUp
 process.diphotonAnalyzer.PUMCFileName = 'PileUpMC.root'  #"MC PileUP"
 process.diphotonAnalyzer.PUDataHistName = "pileup" #Name of histogram in PUDataFileName Need to be binned to 80
-process.diphotonAnalyzer.PUMCHistName = "pu_n_BeforeCuts" #Name of histogram in PUMCFileName  Need to be binned to 80
+process.diphotonAnalyzer.PUMCHistName = "MCPileUpHisto" #Name of histogram in PUMCFileName  Need to be binned to 80
 
 ##process.path  = cms.Path(process.primaryVertexFilter+process.noScraping+process.kt6PFJets25+process.diphotonAnalyzer)
 ##process.path  = cms.Path(process.kt6PFJets25+process.photonIDValueMapProducer*process.diphotonAnalyzer)

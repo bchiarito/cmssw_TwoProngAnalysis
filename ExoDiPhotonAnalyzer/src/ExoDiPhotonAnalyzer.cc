@@ -995,6 +995,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     //double pfisoall = rhocorPFIsoCH + rhocorPFIsoNH + rhocorPFIsoPH;
     //and we also have to test the conversion safe electron veto
     bool passelecveto = !ConversionTools::hasMatchedPromptElectron(recoPhoton->superCluster(), hElectrons, hConversions, beamSpot.position());
+    if (passelecveto) cout << "Passed electron veto!" << endl;
+    else cout << "Failed electron veto!" << endl;
     //bool passelecveto = true;
     //TO DISENTANGLE BETWEEN MINIAOD AND AOD
 
@@ -1021,13 +1023,28 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     // 	<<isoPhotonsWithEA<<" "
     // 	<<endl;
 
+    //trick to use existing saturation code
+    ExoDiPhotons::recoPhotonInfo_t tempInfo;
+    ExoDiPhotons::FillRecoPhotonInfo(tempInfo,&(*recoPhoton),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
+    Bool_t isSaturated = tempInfo.isSaturated;
+
+    if(recoPhoton->pt() < fMin_pt) cout << "photon pt = " << recoPhoton->pt() << " which is less than " << fMin_pt << "!" << endl;
+    if(ExoDiPhotons::isGapPhoton(&(*recoPhoton))) cout << "this is a photon in the gap!" << endl;
+    if(ExoDiPhotons::isASpike(&(*recoPhoton))) cout << "this photon is a spike!" << endl;
+
     if(recoPhoton->pt() < fMin_pt) continue;
     if(ExoDiPhotons::isGapPhoton(&(*recoPhoton))) continue;
     if(ExoDiPhotons::isASpike(&(*recoPhoton))) continue;
+
+    cout << "pt, gap, and spike cuts passed!" << endl;
     
     //Now we choose which ID to use (PF or Det)
     if(MethodID.Contains("highpt")){
-      if(ExoDiPhotons::isPFTightPhoton(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID)) selectedPhotons.push_back(*recoPhoton);
+      if(ExoDiPhotons::isPFTightPhoton(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID,isSaturated)){
+        selectedPhotons.push_back(*recoPhoton);
+        cout << "photon passed the high pt id!" << endl;
+      }
+      else cout << "photon failed the high pt id!" << endl;
     }
     else if(MethodID.Contains("egamma")){
       if(isPassLoose) selectedPhotons.push_back(*recoPhoton);
@@ -1035,7 +1052,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     // also check for fakeable objects
     if(MethodID.Contains("highpt")){
-      if(ExoDiPhotons::isPFFakeableObject(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID) ) {
+      if(ExoDiPhotons::isPFFakeableObject(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID,isSaturated) ) {
 
 	//        cout << "Fakeable photon! ";
 	//        cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
@@ -1051,10 +1068,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	 
 	 
 	fakeablePhotons.push_back(*recoPhoton);
+  cout << "photon pased fakeable object cut" << endl;
       }
     }
     else if(MethodID.Contains("egamma")){
-      if(ExoDiPhotons::isPFFakeableObject(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID) ) {
+      if(ExoDiPhotons::isPFFakeableObject(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID,isSaturated) ) {
 	 
 	//        cout << "Fakeable photon! ";
 	//        cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
@@ -1088,6 +1106,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //   cout << "N candidate photons = " << selectedPhotons.size() <<endl;
   fNTightPhotons = selectedPhotons.size();
   if(fNTightPhotons >= 2) cout<<"great we have two tight photons"<<endl;
+  else cout << "only " << fNTightPhotons << "photons passed the cuts!" << endl;
 
   // now consider possible Fakeable objects
 
@@ -1130,7 +1149,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    
   // now sort according to photon pt
   sort(allTightOrFakeableObjects.begin(),allTightOrFakeableObjects.end(),ExoDiPhotons::comparePhotonPairsByPt);
-
+  cout << "allTightOrFakeableObjects.size(): " << allTightOrFakeableObjects.size() << endl;
   if(allTightOrFakeableObjects.size()>=2) {
 
     // now, we are always going to consider the top two objects
