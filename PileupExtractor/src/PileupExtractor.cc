@@ -127,8 +127,8 @@ PileupExtractor::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup
   if (pileupHandle.isValid()){
     for (PUI = pileupHandle->begin();PUI != pileupHandle->end(); ++PUI){      
       fBC = PUI->getBunchCrossing() ;
-      //Select only the in time bunch crossing with bunch crossing=0
-      if(fBC!=0) continue;      
+      ////Select only the in time bunch crossing with bunch crossing=0
+      //if(fBC!=0) continue;      
       PileupSummaryInfo oldpileup = (*pileupHandle.product())[0];
       fpu_n = PUI->getTrueNumInteractions();
       fpu_n_BeforeCuts->Fill(fpu_n);         
