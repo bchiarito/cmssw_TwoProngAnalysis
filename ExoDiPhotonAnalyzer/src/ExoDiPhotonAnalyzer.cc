@@ -584,8 +584,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   // get the vertex collection
   Handle<reco::VertexCollection> vertexColl;
-  iEvent.getByLabel("offlinePrimaryVertices",vertexColl);
-  //iEvent.getByLabel("offlineSlimmedPrimaryVertices",vertexColl);
+  if (isAOD) iEvent.getByLabel("offlinePrimaryVertices",vertexColl);
+  else iEvent.getByLabel("offlineSlimmedPrimaryVertices",vertexColl);
   //TO DISENTANGLE BETWEEN MINIAOD AND AOD
    
   if(!vertexColl.isValid()) {

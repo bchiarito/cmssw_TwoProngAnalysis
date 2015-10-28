@@ -79,8 +79,11 @@ process.TFileService = cms.Service("TFileService",
 
 # filter on good vertex
 # based on example in CMSSW/HeavyFlavorAnalysis/Onia2MuMu/test/onia2MuMuPATData_cfg.py
+vtxCollName = 'offlinePrimaryVertices'
+if not useAOD:
+  vtxCollName = 'offlineSlimmedPrimaryVertices'
 process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
-                                           vertexCollection = cms.InputTag('offlinePrimaryVertices'),
+                                           vertexCollection = cms.InputTag(vtxCollName),
                                            minimumNDOF = cms.uint32(4),
                                            maxAbsZ = cms.double(24),	
                                            maxd0 = cms.double(2)	
