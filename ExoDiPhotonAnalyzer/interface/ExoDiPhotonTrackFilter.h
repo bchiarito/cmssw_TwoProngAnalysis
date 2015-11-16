@@ -27,16 +27,21 @@
 #include "FWCore/MessageLogger/interface/MessageLogger.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackFwd.h"
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+
+// for plotting
+#include "FWCore/ServiceRegistry/interface/Service.h"
+#include "CommonTools/UtilAlgos/interface/TFileService.h"
 
 //
 // class declaration
 //
 
 
-class ExoDiphotonTrackFilter : public edm::EDFilter {
+class ExoDiPhotonTrackFilter : public edm::EDFilter {
 public:
-  explicit ExoDiphotonTrackFilter( const edm::ParameterSet & );
-  ~ExoDiphotonTrackFilter();
+  explicit ExoDiPhotonTrackFilter( const edm::ParameterSet & );
+  ~ExoDiPhotonTrackFilter();
   
 private:
   virtual bool filter ( edm::Event &, const edm::EventSetup&) override;
@@ -45,8 +50,14 @@ private:
   bool debugOn;
   double thresh;
   unsigned int numtrack;
-  edm::EDGetTokenT<pat::PackedCandidateCollection> candidates_;
-  reco::TrackBase::TrackQuality _trackQuality;
+  edm::EDGetTokenT<pat::PackedCandidateCollection> cands_;
+
+  // plots for debugging
+  edm::Service<TFileService> fs;
+  TH1D* hNumTracks;
+  TH1D* hNumHighPurity;
+  TH1D* hAccepted;
+  TH1D* hFraction;
 };
 
 #endif
