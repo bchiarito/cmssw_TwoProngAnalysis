@@ -263,6 +263,7 @@ private:
   
   // MiniAOD case data members
   edm::EDGetToken photonsMiniAODToken_;
+  edm::EDGetToken patPhotonToken_;
   edm::EDGetTokenT<edm::View<reco::GenParticle> > genParticlesMiniAODToken_;
   
   // Photon variables computed upstream in a special producer
@@ -358,6 +359,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   
   // MiniAOD tokens
   photonsMiniAODToken_ = mayConsume<edm::View<reco::Photon> >
+    (iConfig.getParameter<edm::InputTag>
+     ("photonsMiniAOD"));
+  patPhotonToken_ = mayConsume<edm::View<pat::Photon> >
     (iConfig.getParameter<edm::InputTag>
      ("photonsMiniAOD"));
   
@@ -698,7 +702,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
   edm::Handle<reco::GsfElectronCollection> hElectrons;
-  iEvent.getByLabel("gedGsfElectrons", hElectrons);
+  if (isAOD) iEvent.getByLabel("gedGsfElectrons", hElectrons); // don't need these for MiniAOD
   //edm::Handle<pat::ElectronCollection> hElectrons;
   //iEvent.getByLabel(edm::InputTag("slimmedElectrons"), hElectrons);
   //patElectrons_slimmedElectrons__PAT.obj.embeddedSuperCluster_
@@ -867,18 +871,18 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
   // get the photon collection
-  Handle<reco::PhotonCollection> photonColl;
-  iEvent.getByLabel(fPhotonTag,photonColl);
+  // Handle<reco::PhotonCollection> photonColl;
+  // iEvent.getByLabel(fPhotonTag,photonColl);
   // edm::Handle<pat::PhotonCollection> photonColl;
   // iEvent.getByLabel("slimmedPhotons",photonColl);
 
   // If photon collection is empty, exit
-  if (!photonColl.isValid()) {
-    cout << "No Photons! Move along, there's nothing to see here .." <<endl;
-    return;
-  }
-  const reco::PhotonCollection *myPhotonColl = photonColl.product();
-  cout<<"photoncoll size "<<myPhotonColl->size()<<endl;
+  // if (!photonColl.isValid()) {
+  //   cout << "No Photons! Move along, there's nothing to see here .." <<endl;
+  //   return;
+  // }
+  // const reco::PhotonCollection *myPhotonColl = photonColl.product();
+  // cout<<"photoncoll size "<<myPhotonColl->size()<<endl;
   //   cout << "N reco photons = " << photonColl->size() <<endl;
 
   TString CategoryPFID(fPFIDCategory.c_str());
@@ -898,15 +902,28 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   int phoIndex = -1;
 
+  std::map<float,bool> vetoMap;
+
+  // if using MiniAOD, build the vetoMap using pat::Photons (ConversionTools::hasMatchedPromptElectron was not working for pat::Photons even though they inherit from reco::Photons)
+
+  if (!isAOD){
+    edm::Handle<edm::View<pat::Photon> > patPhotons;
+    iEvent.getByToken(patPhotonToken_, patPhotons);
+    for (auto &p : *patPhotons){
+      std::pair<float,bool> tempPair = std::make_pair<float,bool>(p.pt(),p.passElectronVeto());
+      vetoMap.insert(tempPair);
+    }
+  }
+
   // photon loop
-  for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
+  for(edm::View<reco::Photon>::const_iterator recoPhoton = photons->begin(); recoPhoton!=photons->end(); recoPhoton++) {
     
     phoIndex++;
 
     //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
     const reco::Photon testPho = *recoPhoton;
-    edm::Ptr<reco::Photon> testPhoPtr(photonColl,phoIndex);
+    edm::Ptr<reco::Photon> testPhoPtr(photons,phoIndex);
 
     //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
@@ -995,6 +1012,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     //double pfisoall = rhocorPFIsoCH + rhocorPFIsoNH + rhocorPFIsoPH;
     //and we also have to test the conversion safe electron veto
     bool passelecveto = !ConversionTools::hasMatchedPromptElectron(recoPhoton->superCluster(), hElectrons, hConversions, beamSpot.position());
+    //fill the veto map
+    std::pair<float,bool> tempPair = std::make_pair(recoPhoton->pt(),passelecveto);
+    vetoMap.insert(tempPair);
     if (passelecveto) cout << "Passed electron veto!" << endl;
     else cout << "Failed electron veto!" << endl;
     //bool passelecveto = true;
@@ -1186,7 +1206,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     int indexTorFObject2 = -1;
     int myIndex = -1;
 
-    for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
+    for(edm::View<reco::Photon>::const_iterator recoPhoton = photons->begin(); recoPhoton!=photons->end(); recoPhoton++) {
       myIndex++;
       //const reco::Photon* myPhoton = &(*recoPhoton);
       //if(myPhoton == TorFObject1) {
@@ -1206,14 +1226,14 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     //photon collection
 
 
-    edm::Ptr<reco::Photon> TorFObject1Ptr(photonColl,indexTorFObject1);
+    edm::Ptr<reco::Photon> TorFObject1Ptr(photons,indexTorFObject1);
     cout<<TorFObject1Ptr->energy()<<" "
 	<<TorFObject1Ptr->eta()<<" "
 	<<TorFObject1Ptr->et()<<" "
 	<<TorFObject1Ptr->phi()<<" "
 	<<endl;
 
-    edm::Ptr<reco::Photon> TorFObject2Ptr(photonColl,indexTorFObject2);
+    edm::Ptr<reco::Photon> TorFObject2Ptr(photons,indexTorFObject2);
     cout<<TorFObject2Ptr->energy()<<" "
 	<<TorFObject2Ptr->eta()<<" "
 	<<TorFObject2Ptr->et()<<" "
@@ -1223,7 +1243,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&allTightOrFakeableObjects[0].first,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
     fRecoPhotonInfo1.isFakeable = allTightOrFakeableObjects[0].second;
-    fRecoPhotonInfo1.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron((&allTightOrFakeableObjects[0].first)->superCluster(), hElectrons, hConversions, beamSpot.position());
+    // fRecoPhotonInfo1.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron((&allTightOrFakeableObjects[0].first)->superCluster(), hElectrons, hConversions, beamSpot.position());
+    fRecoPhotonInfo1.hasMatchedPromptElec = !( vetoMap.at((&allTightOrFakeableObjects[0].first)->pt()) );
     
     fRecoPhotonInfo1.isTightPFPhoton = (*tight_id_decisions)[TorFObject1Ptr];
     fRecoPhotonInfo1.isMediumPFPhoton = (*medium_id_decisions)[TorFObject1Ptr];
@@ -1264,7 +1285,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,&allTightOrFakeableObjects[1].first,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
     fRecoPhotonInfo2.isFakeable = allTightOrFakeableObjects[1].second;
-    fRecoPhotonInfo2.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron((&allTightOrFakeableObjects[1].first)->superCluster(), hElectrons, hConversions, beamSpot.position());
+    // fRecoPhotonInfo2.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron((&allTightOrFakeableObjects[1].first)->superCluster(), hElectrons, hConversions, beamSpot.position());
+    fRecoPhotonInfo2.hasMatchedPromptElec = !( vetoMap.at((&allTightOrFakeableObjects[1].first)->pt()) );
 
     fRecoPhotonInfo2.isTightPFPhoton = (*tight_id_decisions)[TorFObject2Ptr];
     fRecoPhotonInfo2.isMediumPFPhoton = (*medium_id_decisions)[TorFObject2Ptr];
@@ -1337,7 +1359,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       int indexTObject2 = -1;
       myIndex = -1;
 
-      for(reco::PhotonCollection::const_iterator recoPhoton = photonColl->begin(); recoPhoton!=photonColl->end(); recoPhoton++) {
+      for(edm::View<reco::Photon>::const_iterator recoPhoton = photons->begin(); recoPhoton!=photons->end(); recoPhoton++) {
 	myIndex++;
 	//const reco::Photon* myPhoton = &(*recoPhoton);
 	if(recoPhoton->pt() == TObject1->pt()) {
@@ -1357,14 +1379,14 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       //photon collection
 
 
-      edm::Ptr<reco::Photon> TObject1Ptr(photonColl,indexTObject1);
+      edm::Ptr<reco::Photon> TObject1Ptr(photons,indexTObject1);
       cout<<TObject1Ptr->energy()<<" "
 	  <<TObject1Ptr->eta()<<" "
 	  <<TObject1Ptr->et()<<" "
 	  <<TObject1Ptr->phi()<<" "
 	  <<endl;
 
-      edm::Ptr<reco::Photon> TObject2Ptr(photonColl,indexTObject2);
+      edm::Ptr<reco::Photon> TObject2Ptr(photons,indexTObject2);
       cout<<TObject2Ptr->energy()<<" "
 	  <<TObject2Ptr->eta()<<" "
 	  <<TObject2Ptr->et()<<" "
@@ -1374,7 +1396,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
       // must specifically declare isFakeable status (should be Tight = not True = false                       
       ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&selectedPhotons[0],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
-      fRecoPhotonInfo1.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron((&selectedPhotons[0])->superCluster(), hElectrons, hConversions, beamSpot.position());
+      // fRecoPhotonInfo1.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron((&selectedPhotons[0])->superCluster(), hElectrons, hConversions, beamSpot.position());
+      fRecoPhotonInfo1.hasMatchedPromptElec = !( vetoMap.at((&selectedPhotons[0])->pt()) );
 
       fRecoPhotonInfo1.isTightPFPhoton = (*tight_id_decisions)[TObject1Ptr];
       fRecoPhotonInfo1.isMediumPFPhoton = (*medium_id_decisions)[TObject1Ptr];
@@ -1420,7 +1443,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
 
       ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo2,&selectedPhotons[1],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
-      fRecoPhotonInfo2.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron((&selectedPhotons[1])->superCluster(), hElectrons, hConversions, beamSpot.position());
+      // fRecoPhotonInfo2.hasMatchedPromptElec = ConversionTools::hasMatchedPromptElectron((&selectedPhotons[1])->superCluster(), hElectrons, hConversions, beamSpot.position());
+      fRecoPhotonInfo2.hasMatchedPromptElec = !( vetoMap.at((&selectedPhotons[1])->pt()) );
 
       fRecoPhotonInfo2.isTightPFPhoton = (*tight_id_decisions)[TObject2Ptr];
       fRecoPhotonInfo2.isMediumPFPhoton = (*medium_id_decisions)[TObject2Ptr];
