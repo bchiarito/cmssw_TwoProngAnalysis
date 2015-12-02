@@ -476,7 +476,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   // recHitsEEToken = consumes < EcalRecHitCollection > (recHitsEETag_);
   //TO DISENTANGLE BETWEEN MINIAOD AND AOD
 
-
+  cout << "got to end of constructor" << endl;
 }
 
 
@@ -503,7 +503,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   using namespace std;
   using namespace reco;
 
-
+  cout << "got to analyze method" << endl;
   cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
   // basic event info
@@ -519,9 +519,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   edm::Handle<edm::View<reco::Photon> > photons;
   bool isAOD = true;
   iEvent.getByToken(photonsToken_, photons);
+  cout << "Found AOD photon collection with size = " << (*photons).size() << endl;
   if( !photons.isValid() ){
     isAOD = false;
     iEvent.getByToken(photonsMiniAODToken_,photons);
+    cout << "Found MiniAOD photon collection with size = " << (*photons).size() << endl;
   }
 
   //-----------------taken from Ilya-----------------

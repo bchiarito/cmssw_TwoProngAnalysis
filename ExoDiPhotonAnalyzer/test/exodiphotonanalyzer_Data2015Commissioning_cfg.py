@@ -8,6 +8,11 @@ options.register('globalTag',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "global tag to use when running")
+options.register('useAOD',
+                True,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "whether or not to use AOD")
 ## 'maxEvents' is already registered by the Framework, changing default value
 options.setDefault('maxEvents', 100)
 
@@ -39,10 +44,8 @@ inputFilesMiniAOD = cms.untracked.vstring(
 
 # Set up input/output depending on the format
 # You can list here either AOD or miniAOD files, but not both types mixed
-#
-useAOD = True
 
-if useAOD == True :
+if options.useAOD :
     inputFiles = inputFilesAOD
     outputFile = "photon_ntuple.root"
     print("AOD input files are used")
@@ -80,8 +83,9 @@ process.TFileService = cms.Service("TFileService",
 # filter on good vertex
 # based on example in CMSSW/HeavyFlavorAnalysis/Onia2MuMu/test/onia2MuMuPATData_cfg.py
 vtxCollName = 'offlinePrimaryVertices'
-if not useAOD:
+if not options.useAOD:
   vtxCollName = 'offlineSlimmedPrimaryVertices'
+print "Using %s vtx collection"%vtxCollName
 process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
                                            vertexCollection = cms.InputTag(vtxCollName),
                                            minimumNDOF = cms.uint32(4),
@@ -95,13 +99,6 @@ process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
 # based on Onia example, and CMSSW/DPGAnalysis/Skims/python/MinBiasPDSkim_cfg.py for the GOODCOLL skim defn
 # this requires that if there is >10 tracks,
 # then at least 0.25 fraction of them must be 'high purity'
-
-process.noScraping = cms.EDFilter("FilterOutScraping",
-                                  applyfilter = cms.untracked.bool(True),
-                                  debugOn = cms.untracked.bool(False),
-                                  numtrack = cms.untracked.uint32(10),
-                                  thresh = cms.untracked.double(0.25)
-)
 
 
 ##process.load('RecoJets.Configuration.RecoPFJets_cff')
@@ -131,7 +128,7 @@ process.noScraping = cms.EDFilter("FilterOutScraping",
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
 # turn on VID producer, indicate data format  to be
 # DataFormat.AOD or DataFormat.MiniAOD, as appropriate
-if useAOD == True :
+if options.useAOD == True :
     dataFormat = DataFormat.AOD
 else :
     dataFormat = DataFormat.MiniAOD
@@ -172,7 +169,7 @@ process.diphotonAnalyzer.PUMCHistName = "MCPileUpHisto" #Name of histogram in PU
 
 ##process.path  = cms.Path(process.primaryVertexFilter+process.noScraping+process.kt6PFJets25+process.diphotonAnalyzer)
 ##process.path  = cms.Path(process.kt6PFJets25+process.photonIDValueMapProducer*process.diphotonAnalyzer)
-process.path  = cms.Path(process.primaryVertexFilter*process.noScraping*process.egmPhotonIDSequence*process.diphotonAnalyzer)
+process.path  = cms.Path(process.primaryVertexFilter*process.egmPhotonIDSequence*process.diphotonAnalyzer)
 ##process.path  = cms.Path(process.egmPhotonIDSequence*process.diphotonAnalyzer)
 ##process.path  = cms.Path(process.egmPhotonIDSequence)
 ##process.path  = cms.Path(process.diphotonAnalyzer)
