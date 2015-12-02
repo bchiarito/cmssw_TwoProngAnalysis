@@ -39,7 +39,7 @@ inputFilesAOD = cms.untracked.vstring(
 
 inputFilesMiniAOD = cms.untracked.vstring(
     # MiniAOD test files from a GJet PT40 dataset
-'root://eoscms//eos/cms/store/mc/Phys14DR/RSGravToGG_kMpl01_M-5000_Tune4C_13TeV-pythia8/MINIAODSIM/PU30bx50_PHYS14_25_V1-v1/00000/0EE85055-8967-E411-9D2E-002481E14D72.root'
+'root://eoscms.cern.ch//eos/cms/store/mc/Phys14DR/RSGravToGG_kMpl01_M-5000_Tune4C_13TeV-pythia8/MINIAODSIM/PU30bx50_PHYS14_25_V1-v1/00000/0EE85055-8967-E411-9D2E-002481E14D72.root'
     )
 
 # Set up input/output depending on the format
@@ -155,6 +155,7 @@ process.diphotonAnalyzer.removeSpikes = False # ie spikes will be exlcuded from 
 process.diphotonAnalyzer.requireTightPhotons = False # ie only tight photons will be written 
 process.diphotonAnalyzer.requireGenEventInfo = False #write MC info when running on MC
 
+process.diphotonAnalyzer.isAOD = cms.bool(options.useAOD) # True=AOD, False=MiniAOD
 process.diphotonAnalyzer.isMC = False #MC = True or  Data = False
 process.diphotonAnalyzer.IDMethod = cms.untracked.string("highpt")
 process.diphotonAnalyzer.PFIDCategory = cms.untracked.string("Loose")

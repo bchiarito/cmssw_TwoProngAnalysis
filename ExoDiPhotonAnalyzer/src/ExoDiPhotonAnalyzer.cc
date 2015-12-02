@@ -170,6 +170,7 @@ private:
   bool               fkRequireTightPhotons;  // option to require tight photon id in tree
   bool               fkRequireGenEventInfo;  // generated information for RS graviton files
   bool               fisMC;  //option to decide if MC or Data     
+  bool               isAOD;
   string             fPUMCFileName;
   string             fPUDataFileName;
   string             fPUDataHistName;
@@ -314,6 +315,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fkRequireTightPhotons(iConfig.getUntrackedParameter<bool>("requireTightPhotons")),
     fkRequireGenEventInfo(iConfig.getUntrackedParameter<bool>("requireGenEventInfo")),
     fisMC(iConfig.getUntrackedParameter<bool>("isMC")),
+    isAOD(iConfig.getParameter<bool>("isAOD")),
     fPUMCFileName(iConfig.getUntrackedParameter<string>("PUMCFileName")),
     fPUDataFileName(iConfig.getUntrackedParameter<string>("PUDataFileName")), 
     fPUDataHistName(iConfig.getUntrackedParameter<string>("PUDataHistName")),
@@ -466,17 +468,33 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   // isolator02.initializePhotonIsolation(kTRUE);
   // isolator02.setConeSize(0.2);
 
-  recHitsEBTag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEBTag",edm::InputTag("reducedEcalRecHitsEB"));
-  recHitsEETag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEETag",edm::InputTag("reducedEcalRecHitsEE"));
-  recHitsEBToken = consumes <edm::SortedCollection<EcalRecHit> > (recHitsEBTag_);
-  recHitsEEToken = consumes <edm::SortedCollection<EcalRecHit> > (recHitsEETag_);
-  // recHitsEBTag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEBTag",edm::InputTag("reducedEgamma:reducedEBRecHits"));
-  // recHitsEETag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEETag",edm::InputTag("reducedEgamma:reducedEERecHits"));
-  // recHitsEBToken = consumes < EcalRecHitCollection > (recHitsEBTag_);
-  // recHitsEEToken = consumes < EcalRecHitCollection > (recHitsEETag_);
+  if (isAOD){
+    recHitsEBTag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEBTag",edm::InputTag("reducedEcalRecHitsEB"));
+    recHitsEETag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEETag",edm::InputTag("reducedEcalRecHitsEE"));
+    recHitsEBToken = consumes <edm::SortedCollection<EcalRecHit> > (recHitsEBTag_);
+    recHitsEEToken = consumes <edm::SortedCollection<EcalRecHit> > (recHitsEETag_);
+  }
+  else{
+    recHitsEBTag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEBTag",edm::InputTag("reducedEgamma:reducedEBRecHits"));
+    recHitsEETag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEETag",edm::InputTag("reducedEgamma:reducedEERecHits"));
+    recHitsEBToken = consumes < EcalRecHitCollection > (recHitsEBTag_);
+    recHitsEEToken = consumes < EcalRecHitCollection > (recHitsEETag_);
+  }
+
+  // if (isAOD){
+  //   recHitsEBTag_ = iConfig.getParameter<edm::InputTag>("recHitsEB");
+  //   recHitsEETag_ = iConfig.getParameter<edm::InputTag>("recHitsEE");
+  //   recHitsEBToken = consumes< edm::SortedCollection<EcalRecHit> >(recHitsEBTag_);
+  //   recHitsEEToken = consumes< edm::SortedCollection<EcalRecHit> >(recHitsEETag_);
+  // }
+  // else{
+  //   recHitsEBTag_ = iConfig.getParameter<edm::InputTag>("recHitsEBMiniAOD");
+  //   recHitsEETag_ = iConfig.getParameter<edm::InputTag>("recHitsEEMiniAOD");
+  //   recHitsEBToken = consumes< edm::SortedCollection<EcalRecHit> >(recHitsEBTag_);
+  //   recHitsEEToken = consumes< edm::SortedCollection<EcalRecHit> >(recHitsEETag_);
+  // }
   //TO DISENTANGLE BETWEEN MINIAOD AND AOD
 
-  cout << "got to end of constructor" << endl;
 }
 
 
@@ -503,7 +521,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   using namespace std;
   using namespace reco;
 
-  cout << "got to analyze method" << endl;
   cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
   // basic event info
@@ -517,14 +534,15 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //   We use exactly the same handle for AOD and miniAOD formats
   // since pat::Photon objects can be recast as reco::Photon objects.
   edm::Handle<edm::View<reco::Photon> > photons;
-  bool isAOD = true;
-  iEvent.getByToken(photonsToken_, photons);
-  cout << "Found AOD photon collection with size = " << (*photons).size() << endl;
-  if( !photons.isValid() ){
-    isAOD = false;
-    iEvent.getByToken(photonsMiniAODToken_,photons);
-    cout << "Found MiniAOD photon collection with size = " << (*photons).size() << endl;
-  }
+  // bool isAOD = true;
+  if (isAOD) iEvent.getByToken(photonsToken_, photons);
+  else iEvent.getByToken(photonsMiniAODToken_,photons);
+  cout << "Found photon collection with size = " << (*photons).size() << endl;
+  // if( !photons.isValid() ){
+  //   // isAOD = false;
+  //   iEvent.getByToken(photonsMiniAODToken_,photons);
+  //   cout << "Found MiniAOD photon collection with size = " << (*photons).size() << endl;
+  // }
 
   //-----------------taken from Ilya-----------------
   // Get generator level info
@@ -697,9 +715,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
-  //for conversion safe electron veto
+  //for conversion safe electron veto, only needed in AOD
   edm::Handle<reco::ConversionCollection> hConversions;
-  iEvent.getByLabel("allConversions", hConversions);
+  if (isAOD) iEvent.getByLabel("allConversions", hConversions);
   
   //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
@@ -709,7 +727,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //iEvent.getByLabel(edm::InputTag("slimmedElectrons"), hElectrons);
   //patElectrons_slimmedElectrons__PAT.obj.embeddedSuperCluster_
   //TO DISENTANGLE BETWEEN MINIAOD AND AOD
-  if(!hElectrons.isValid()) {
+  if(!hElectrons.isValid() && isAOD) {
     cout<<"no ged gsf electrons "<<endl;
     return;
   }
@@ -835,8 +853,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   // get ecal barrel recHits for spike rejection
   edm::Handle<EcalRecHitCollection> recHitsEB_h;
-  iEvent.getByLabel(edm::InputTag("reducedEcalRecHitsEB"), recHitsEB_h );
-  // iEvent.getByLabel(edm::InputTag("reducedEgamma:reducedEBRecHits"), recHitsEB_h );
+  iEvent.getByToken(recHitsEBToken, recHitsEB_h );
   const EcalRecHitCollection * recHitsEB = 0;
   if ( ! recHitsEB_h.isValid() ) {
     LogError("ExoDiPhotonAnalyzer") << " ECAL Barrel RecHit Collection not available !"; return;
@@ -848,8 +865,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
   edm::Handle<EcalRecHitCollection> recHitsEE_h;
-  iEvent.getByLabel(edm::InputTag("reducedEcalRecHitsEE"), recHitsEE_h );
-  //iEvent.getByLabel(edm::InputTag("reducedEgamma:reducedEERecHits"), recHitsEE_h );
+  iEvent.getByToken(recHitsEEToken, recHitsEE_h );
   const EcalRecHitCollection * recHitsEE = 0;
   if ( ! recHitsEE_h.isValid() ) {
     LogError("ExoDiPhotonAnalyzer") << " ECAL Endcap RecHit Collection not available !"; return;
@@ -915,6 +931,15 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       std::pair<float,bool> tempPair = std::make_pair<float,bool>(p.pt(),p.passElectronVeto());
       vetoMap.insert(tempPair);
     }
+  }
+
+  else{
+    for(edm::View<reco::Photon>::const_iterator recoPhoton = photons->begin(); recoPhoton!=photons->end(); recoPhoton++) {
+      // bool passelecveto = !ConversionTools::hasMatchedPromptElectron(recoPhoton->superCluster(), hElectrons, hConversions, beamSpot.position());
+      std::pair<float,bool> tempPair = std::make_pair<float,bool>(recoPhoton->pt(),!ConversionTools::hasMatchedPromptElectron(recoPhoton->superCluster(), hElectrons, hConversions, beamSpot.position()));
+      vetoMap.insert(tempPair);
+    }
+
   }
 
   // photon loop
@@ -1012,13 +1037,13 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     double rhocorPFIsoNH = isoNeutralHadronsWithEA;
     double rhocorPFIsoPH = isoPhotonsWithEA;
     //double pfisoall = rhocorPFIsoCH + rhocorPFIsoNH + rhocorPFIsoPH;
-    //and we also have to test the conversion safe electron veto
-    bool passelecveto = !ConversionTools::hasMatchedPromptElectron(recoPhoton->superCluster(), hElectrons, hConversions, beamSpot.position());
-    //fill the veto map
-    std::pair<float,bool> tempPair = std::make_pair(recoPhoton->pt(),passelecveto);
-    vetoMap.insert(tempPair);
-    if (passelecveto) cout << "Passed electron veto!" << endl;
-    else cout << "Failed electron veto!" << endl;
+    
+    // conversion safe electron veto
+    bool passelecveto = vetoMap.at(recoPhoton->pt());
+    // bool passelecveto = !ConversionTools::hasMatchedPromptElectron(recoPhoton->superCluster(), hElectrons, hConversions, beamSpot.position());
+
+    // if (passelecveto) cout << "Passed electron veto!" << endl;
+    // else cout << "Failed electron veto!" << endl;
     //bool passelecveto = true;
     //TO DISENTANGLE BETWEEN MINIAOD AND AOD
 

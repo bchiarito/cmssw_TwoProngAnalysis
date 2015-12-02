@@ -42,5 +42,9 @@ diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   # ID decisions (common to all formats)
                                   phoLooseIdMap = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-PHYS14-PU20bx25-V2-standalone-loose"),
                                   phoMediumIdMap = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-PHYS14-PU20bx25-V2-standalone-medium"),
-                                  phoTightIdMap = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-PHYS14-PU20bx25-V2-standalone-tight")
+                                  phoTightIdMap = cms.InputTag("egmPhotonIDs:cutBasedPhotonID-PHYS14-PU20bx25-V2-standalone-tight"),
+                                  # recHitsEB = cms.InputTag("reducedEcalRecHitsEB"),
+                                  # recHitsEE = cms.InputTag("reducedEcalRecHitsEE"),
+                                  # recHitsEBMiniAOD = cms.InputTag("reducedEgamma:reducedEBRecHits"),
+                                  # recHitsEEMiniAOD = cms.InputTag("reducedEgamma:reducedEERecHits")
                                   )
