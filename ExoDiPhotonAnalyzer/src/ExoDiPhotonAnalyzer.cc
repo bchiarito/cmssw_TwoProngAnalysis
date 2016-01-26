@@ -959,6 +959,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     float chIso =  (*phoChargedIsolationMap)[testPhoPtr];
     float nhIso =  (*phoNeutralHadronIsolationMap)[testPhoPtr];
     float phIso = (*phoPhotonIsolationMap)[testPhoPtr];
+
+    // for MiniAOD, introduce chIso cut to avoid the case where a supercluster doesn't have rechit/cluster information that is counted on later
+    // cout << "SK" << recoPhoton->r9() << " " << chIso << " " << recoPhoton->chargedHadronIso() << " " << 0.3*recoPhoton->pt() << endl;
+    if (!isAOD && recoPhoton->chargedHadronIso() > 10.) continue;
     
     float abseta = fabs( recoPhoton->superCluster()->eta());
 
@@ -1071,6 +1075,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     // 	<<endl;
 
     //trick to use existing saturation code
+    // reco::SuperClusterRef sc1 = photon->superCluster();
+    // if (*sc1).size() == 0{
+      
+    // }
     ExoDiPhotons::recoPhotonInfo_t tempInfo;
     ExoDiPhotons::FillRecoPhotonInfo(tempInfo,&(*recoPhoton),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
     Bool_t isSaturated = tempInfo.isSaturated;

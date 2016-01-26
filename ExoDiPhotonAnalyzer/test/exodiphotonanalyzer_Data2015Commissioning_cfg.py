@@ -39,7 +39,9 @@ inputFilesAOD = cms.untracked.vstring(
 
 inputFilesMiniAOD = cms.untracked.vstring(
     # MiniAOD test files from a GJet PT40 dataset
-'root://eoscms.cern.ch//eos/cms/store/mc/Phys14DR/RSGravToGG_kMpl01_M-5000_Tune4C_13TeV-pythia8/MINIAODSIM/PU30bx50_PHYS14_25_V1-v1/00000/0EE85055-8967-E411-9D2E-002481E14D72.root'
+# 'root://eoscms.cern.ch//eos/cms/store/mc/Phys14DR/RSGravToGG_kMpl01_M-5000_Tune4C_13TeV-pythia8/MINIAODSIM/PU30bx50_PHYS14_25_V1-v1/00000/0EE85055-8967-E411-9D2E-002481E14D72.root'
+"root://cmsxrootd.fnal.gov//store/data/Run2015D/DoubleEG/MINIAOD/PromptReco-v3/000/257/969/00000/F24329DE-706A-E511-998A-02163E012B1A.root"
+# "file:pickevents.root"
     )
 
 # Set up input/output depending on the format
@@ -53,7 +55,12 @@ else :
     inputFiles = inputFilesMiniAOD
     outputFile = "photon_ntuple_mini.root"
     print("MiniAOD input files are used")
-process.source = cms.Source ("PoolSource", fileNames = inputFiles ) 
+process.source = cms.Source ("PoolSource", 
+                fileNames      = inputFiles,
+                # debugVerbosity = cms.untracked.uint32(200),
+                # debugFlag      = cms.untracked.bool(True)
+
+ ) 
 
 
 # need to introduce the global tag now
