@@ -962,7 +962,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     // for MiniAOD, introduce chIso cut to avoid the case where a supercluster doesn't have rechit/cluster information that is counted on later
     // cout << "SK" << recoPhoton->r9() << " " << chIso << " " << recoPhoton->chargedHadronIso() << " " << 0.3*recoPhoton->pt() << endl;
-    if (!isAOD && recoPhoton->chargedHadronIso() > 10.) continue;
+    if (recoPhoton->chargedHadronIso() > 10.){
+      cout << "Photon with chargedHadronIso="<<recoPhoton->chargedHadronIso() << " pt=" << recoPhoton->pt() << "skipped!" << endl;
+      continue;
+    }
     
     float abseta = fabs( recoPhoton->superCluster()->eta());
 
@@ -1095,7 +1098,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     
     //Now we choose which ID to use (PF or Det)
     if(MethodID.Contains("highpt")){
-      if(ExoDiPhotons::isPFTightPhoton(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID,isSaturated)){
+      // if(ExoDiPhotons::isPFTightPhoton(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID,isSaturated)){
+      if(ExoDiPhotons::passHighPtID(&(*recoPhoton),MethodID,CategoryPFID,rhocorPFIsoCH,phIso,full5x5sigmaIetaIeta,rho_,passelecveto,isSaturated)){
         selectedPhotons.push_back(*recoPhoton);
         cout << "photon passed the high pt id!" << endl;
       }
