@@ -2,7 +2,6 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 
 options = VarParsing ('python')
 
-
 options.register('globalTag',
                 'MCRUN2_74_V9::All',
                 VarParsing.multiplicity.singleton,
@@ -13,6 +12,16 @@ options.register('useAOD',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "whether or not to use AOD")
+options.register('isMC',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "whether to run over data or MC")
+options.register('pumcfilename',
+                'PileUpMC_DiPhotonJetsBox_M60_8TeV-sherpa_Summer12_DR53X-PU_S10_START53_V7C-v1_rebinned.root',
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.string,
+                "MC Pileup Filename")
 ## 'maxEvents' is already registered by the Framework, changing default value
 options.setDefault('maxEvents', 100)
 
@@ -163,7 +172,7 @@ process.diphotonAnalyzer.requireTightPhotons = False # ie only tight photons wil
 process.diphotonAnalyzer.requireGenEventInfo = False #write MC info when running on MC
 
 process.diphotonAnalyzer.isAOD = cms.bool(options.useAOD) # True=AOD, False=MiniAOD
-process.diphotonAnalyzer.isMC = False #MC = True or  Data = False
+process.diphotonAnalyzer.isMC = cms.untracked.bool(options.isMC) # False by default, run with isMC=True for MC
 process.diphotonAnalyzer.IDMethod = cms.untracked.string("highpt")
 process.diphotonAnalyzer.PFIDCategory = cms.untracked.string("Loose")
 process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")
@@ -171,7 +180,7 @@ process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")
 # If running on data the following four entries should not be changed. They are loaded into the analyzer as strings but in the case isMC = False then all the both old_pu_n and pu_n will both be filled with -9999.99
 
 process.diphotonAnalyzer.PUDataFileName = 'PileupDataAug10thHistogram.root' #DataPileUp
-process.diphotonAnalyzer.PUMCFileName = 'PileUpMC.root'  #"MC PileUP"
+process.diphotonAnalyzer.PUMCFileName = cms.untracked.string(options.pumcfilename)  #"MC PileUP"
 process.diphotonAnalyzer.PUDataHistName = "pileup" #Name of histogram in PUDataFileName Need to be binned to 80
 process.diphotonAnalyzer.PUMCHistName = "MCPileUpHisto" #Name of histogram in PUMCFileName  Need to be binned to 80
 
