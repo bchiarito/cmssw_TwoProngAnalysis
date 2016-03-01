@@ -17,3 +17,4 @@
 <use   name="PhysicsTools/Utilities"/>
 <use name="DataFormats/PatCandidates" />
 <flags   EDM_PLUGIN="1"/>
+<Flags CXXFLAGS="-g">

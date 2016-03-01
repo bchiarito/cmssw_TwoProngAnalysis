@@ -2,12 +2,26 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 
 options = VarParsing ('python')
 
-
 options.register('globalTag',
                 'MCRUN2_74_V9::All',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "global tag to use when running")
+options.register('useAOD',
+                True,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "whether or not to use AOD")
+options.register('isMC',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "whether to run over data or MC")
+options.register('pumcfilename',
+                'PileUpMC_DiPhotonJetsBox_M60_8TeV-sherpa_Summer12_DR53X-PU_S10_START53_V7C-v1_rebinned.root',
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.string,
+                "MC Pileup Filename")
 ## 'maxEvents' is already registered by the Framework, changing default value
 options.setDefault('maxEvents', 100)
 
@@ -34,15 +48,15 @@ inputFilesAOD = cms.untracked.vstring(
 
 inputFilesMiniAOD = cms.untracked.vstring(
     # MiniAOD test files from a GJet PT40 dataset
-'root://eoscms//eos/cms/store/mc/Phys14DR/RSGravToGG_kMpl01_M-5000_Tune4C_13TeV-pythia8/MINIAODSIM/PU30bx50_PHYS14_25_V1-v1/00000/0EE85055-8967-E411-9D2E-002481E14D72.root'
+# 'root://eoscms.cern.ch//eos/cms/store/mc/Phys14DR/RSGravToGG_kMpl01_M-5000_Tune4C_13TeV-pythia8/MINIAODSIM/PU30bx50_PHYS14_25_V1-v1/00000/0EE85055-8967-E411-9D2E-002481E14D72.root'
+"root://cmsxrootd.fnal.gov//store/data/Run2015D/DoubleEG/MINIAOD/PromptReco-v3/000/257/969/00000/F24329DE-706A-E511-998A-02163E012B1A.root"
+# "file:pickevents.root"
     )
 
 # Set up input/output depending on the format
 # You can list here either AOD or miniAOD files, but not both types mixed
-#
-useAOD = True
 
-if useAOD == True :
+if options.useAOD :
     inputFiles = inputFilesAOD
     outputFile = "photon_ntuple.root"
     print("AOD input files are used")
@@ -50,7 +64,12 @@ else :
     inputFiles = inputFilesMiniAOD
     outputFile = "photon_ntuple_mini.root"
     print("MiniAOD input files are used")
-process.source = cms.Source ("PoolSource", fileNames = inputFiles ) 
+process.source = cms.Source ("PoolSource", 
+                fileNames      = inputFiles,
+                # debugVerbosity = cms.untracked.uint32(200),
+                # debugFlag      = cms.untracked.bool(True)
+
+ ) 
 
 
 # need to introduce the global tag now
@@ -79,8 +98,12 @@ process.TFileService = cms.Service("TFileService",
 
 # filter on good vertex
 # based on example in CMSSW/HeavyFlavorAnalysis/Onia2MuMu/test/onia2MuMuPATData_cfg.py
+vtxCollName = 'offlinePrimaryVertices'
+if not options.useAOD:
+  vtxCollName = 'offlineSlimmedPrimaryVertices'
+print "Using %s vtx collection"%vtxCollName
 process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
-                                           vertexCollection = cms.InputTag('offlinePrimaryVertices'),
+                                           vertexCollection = cms.InputTag(vtxCollName),
                                            minimumNDOF = cms.uint32(4),
                                            maxAbsZ = cms.double(24),	
                                            maxd0 = cms.double(2)	
@@ -92,13 +115,6 @@ process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
 # based on Onia example, and CMSSW/DPGAnalysis/Skims/python/MinBiasPDSkim_cfg.py for the GOODCOLL skim defn
 # this requires that if there is >10 tracks,
 # then at least 0.25 fraction of them must be 'high purity'
-
-process.noScraping = cms.EDFilter("FilterOutScraping",
-                                  applyfilter = cms.untracked.bool(True),
-                                  debugOn = cms.untracked.bool(False),
-                                  numtrack = cms.untracked.uint32(10),
-                                  thresh = cms.untracked.double(0.25)
-)
 
 
 ##process.load('RecoJets.Configuration.RecoPFJets_cff')
@@ -128,7 +144,7 @@ process.noScraping = cms.EDFilter("FilterOutScraping",
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
 # turn on VID producer, indicate data format  to be
 # DataFormat.AOD or DataFormat.MiniAOD, as appropriate
-if useAOD == True :
+if options.useAOD == True :
     dataFormat = DataFormat.AOD
 else :
     dataFormat = DataFormat.MiniAOD
@@ -155,7 +171,8 @@ process.diphotonAnalyzer.removeSpikes = False # ie spikes will be exlcuded from 
 process.diphotonAnalyzer.requireTightPhotons = False # ie only tight photons will be written 
 process.diphotonAnalyzer.requireGenEventInfo = False #write MC info when running on MC
 
-process.diphotonAnalyzer.isMC = False #MC = True or  Data = False
+process.diphotonAnalyzer.isAOD = cms.bool(options.useAOD) # True=AOD, False=MiniAOD
+process.diphotonAnalyzer.isMC = cms.untracked.bool(options.isMC) # False by default, run with isMC=True for MC
 process.diphotonAnalyzer.IDMethod = cms.untracked.string("highpt")
 process.diphotonAnalyzer.PFIDCategory = cms.untracked.string("Loose")
 process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")
@@ -163,13 +180,13 @@ process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")
 # If running on data the following four entries should not be changed. They are loaded into the analyzer as strings but in the case isMC = False then all the both old_pu_n and pu_n will both be filled with -9999.99
 
 process.diphotonAnalyzer.PUDataFileName = 'PileupDataAug10thHistogram.root' #DataPileUp
-process.diphotonAnalyzer.PUMCFileName = 'PileUpMC.root'  #"MC PileUP"
+process.diphotonAnalyzer.PUMCFileName = cms.untracked.string(options.pumcfilename)  #"MC PileUP"
 process.diphotonAnalyzer.PUDataHistName = "pileup" #Name of histogram in PUDataFileName Need to be binned to 80
 process.diphotonAnalyzer.PUMCHistName = "MCPileUpHisto" #Name of histogram in PUMCFileName  Need to be binned to 80
 
 ##process.path  = cms.Path(process.primaryVertexFilter+process.noScraping+process.kt6PFJets25+process.diphotonAnalyzer)
 ##process.path  = cms.Path(process.kt6PFJets25+process.photonIDValueMapProducer*process.diphotonAnalyzer)
-process.path  = cms.Path(process.primaryVertexFilter*process.noScraping*process.egmPhotonIDSequence*process.diphotonAnalyzer)
+process.path  = cms.Path(process.primaryVertexFilter*process.egmPhotonIDSequence*process.diphotonAnalyzer)
 ##process.path  = cms.Path(process.egmPhotonIDSequence*process.diphotonAnalyzer)
 ##process.path  = cms.Path(process.egmPhotonIDSequence)
 ##process.path  = cms.Path(process.diphotonAnalyzer)
