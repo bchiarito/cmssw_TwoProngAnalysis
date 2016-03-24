@@ -797,11 +797,44 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
 
    using namespace reco;
 
+
+// count gluons and/or quarks to see if gg or qqbar initiated
+   int Ngluons=0;
+   int Nq = 0;
+   //int this_q = 0;
+   
    for(unsigned i = 0; i < genParticles->size(); ++ i) {
      
      const GenParticle & p = (*genParticles)[i];
      int id = p.pdgId();
      int st = p.status();  
+
+// search for partons in hard scttering to see if gluon-gluon or q-qbar initiated graviton production
+     // status 4 should be protons
+     if(p.isHardProcess()) {
+       cout << "Status = "<<st<<"; ID = " <<id<<"; pt = "<< p.pt()<<"; eta = "<< p.eta()<<endl;
+
+
+       if(id==21) { // then its a gluon
+	 Ngluons++;
+
+       }
+
+       if(abs(id)<=6) {  // q or qbar
+	 Nq++;
+	 
+       }
+       
+       // for(unsigned j = 0; j < p.numberOfDaughters(); ++ j) {
+		
+       // 	 const GenParticle * dau = (GenParticle *) p.daughter( j );
+
+       // 	 cout << "Status = "<<dau->status()<<"; ID = " <<dau->pdgId()<<"; pt = "<< dau->pt()<<"; eta = "<< dau->eta()<<endl;
+	 
+//       }
+     } //end of status 4
+
+
      
      //const Candidate * mom = p.mother();
      //double pt = p.pt(), eta = p.eta(), phi = p.phi(), mass = p.mass();
@@ -902,6 +935,9 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
      } // end RSG check
    } // end genParticle loop
 
+
+     
+     
 
    // what if some of the unstable photons arent found? 
    if (!unstablePhoton1) {
@@ -1264,6 +1300,24 @@ ExoDiPhotonSignalMCAnalyzer::analyze(const edm::Event& iEvent, const edm::EventS
    ExoDiPhotons::InitDiphotonInfo(fDiphotonGenUnstableInfo);
    ExoDiPhotons::InitDiphotonInfo(fDiphotonGenStableInfo);
    ExoDiPhotons::InitDiphotonInfo(fDiphotonRecoInfo);
+
+
+
+   // now check was it gg or qqbar initiated
+   if(Ngluons==2) {
+     cout << "Gluons init" <<endl;
+     fDiphotonGenStableInfo.ggInit = 1;
+    
+   }
+   else if(Nq==2) {
+     cout << "qqbar  init" <<endl;
+     fDiphotonGenStableInfo.qqbarInit = 1;
+   }
+   else {
+     cout <<"Neother gg nor qqbar init?"<<endl;
+   }
+
+
    
    if (unstablePhoton1 && unstablePhoton2) {
      ExoDiPhotons::FillDiphotonInfo(fDiphotonGenUnstableInfo,unstablePhoton1,unstablePhoton2);
