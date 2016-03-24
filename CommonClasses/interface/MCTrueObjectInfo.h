@@ -26,9 +26,11 @@ namespace ExoDiPhotons
 {
   struct mcTrueObjectInfo_t {
     int status;
-    int PdgId;
-    int MotherPdgId;
-    int GrandmotherPdgId;
+    int motherStatus;
+    int grandmotherStatus;
+    int pdgId;
+    int motherPdgId;
+    int grandmotherPdgId;
     double pt;
     double eta;
     double phi;
@@ -42,75 +44,126 @@ namespace ExoDiPhotons
   };
 
   // string to define the tree branch
-  std::string mcTrueObjectInfoBranchDefString("status/I:PdgId:MotherPdgId:GrandmotherPdgId:pt/D:eta:phi:isol04:isol04ratio:isol03:isol03ratio:isol02:isol02ratio");
+  std::string mcTrueObjectInfoBranchDefString("status/I:motherStatus:grandmotherStatus:pdgId:motherPdgId:grandmotherPdgId:pt/D:eta:phi:isol04:isol04ratio:isol03:isol03ratio:isol02:isol02ratio");
 
   // convenient function to fill the struct (pass by reference) from the desired object
   void FillMCTrueObjectInfo(mcTrueObjectInfo_t &mcTrueObjectInfo, const reco::GenParticle *genParticle) {
+
+    double minMotherDeltaR = 100000; // consider all mothers
+    double minGrandmotherDeltaR = 100000;
+    int motherIndex = 0;
+    int grandmotherIndex = 0;
     
     mcTrueObjectInfo.status = genParticle->status();
-    mcTrueObjectInfo.PdgId = genParticle->pdgId();
+    mcTrueObjectInfo.pdgId = genParticle->pdgId();
 
     // careful here when trying to get pointers to mother/grandmother
-    if(genParticle->numberOfMothers()>0) {
-      mcTrueObjectInfo.MotherPdgId = genParticle->mother()->pdgId();
-      if(genParticle->mother()->numberOfMothers()>0) {
-	mcTrueObjectInfo.GrandmotherPdgId = genParticle->mother()->mother()->pdgId();
+    if (genParticle->numberOfMothers() > 0) {
+      // find best match in deltaR among all mothers
+      for (unsigned int j = 0; j < genParticle->numberOfMothers(); j++) {
+	double deltaR = reco::deltaR(genParticle->eta(),genParticle->phi(),genParticle->mother(j)->eta(),genParticle->mother(j)->phi());
+	if (deltaR < minMotherDeltaR) {
+	  minMotherDeltaR = deltaR;
+	  motherIndex = j;
+	}
+      }
+      mcTrueObjectInfo.motherPdgId = genParticle->mother(motherIndex)->status();
+      mcTrueObjectInfo.motherPdgId = genParticle->mother(motherIndex)->pdgId();
+      
+      if (genParticle->mother(motherIndex)->numberOfMothers() > 0) {
+	// find best match in deltaR among all mothers
+	for (unsigned int j = 0; j < genParticle->mother(motherIndex)->numberOfMothers(); j++) {
+	  double deltaR = reco::deltaR(genParticle->mother(motherIndex)->eta(),genParticle->mother(motherIndex)->phi(),
+				       genParticle->mother(motherIndex)->mother(j)->eta(),genParticle->mother(motherIndex)->mother(j)->phi());
+	  if (deltaR < minGrandmotherDeltaR) {
+	    minGrandmotherDeltaR = deltaR;
+	    grandmotherIndex = j;
+	  }
+	}
+	mcTrueObjectInfo.grandmotherPdgId = genParticle->mother(motherIndex)->mother(grandmotherIndex)->status();
+	mcTrueObjectInfo.grandmotherPdgId = genParticle->mother(motherIndex)->mother(grandmotherIndex)->pdgId();
       }
       else {
-	mcTrueObjectInfo.GrandmotherPdgId = -9999999;
+	mcTrueObjectInfo.grandmotherStatus = -9999999;
+	mcTrueObjectInfo.grandmotherPdgId = -9999999;
       }
     }
     else {
-      mcTrueObjectInfo.MotherPdgId = -9999999;
-      mcTrueObjectInfo.GrandmotherPdgId = -9999999;
+      mcTrueObjectInfo.motherStatus = -9999999;
+      mcTrueObjectInfo.grandmotherStatus = -9999999;
+      mcTrueObjectInfo.motherPdgId = -9999999;
+      mcTrueObjectInfo.grandmotherPdgId = -9999999;
     }
-
-
+    
     mcTrueObjectInfo.pt = genParticle->pt();
     mcTrueObjectInfo.eta = genParticle->eta();
     mcTrueObjectInfo.phi = genParticle->phi();
-
   }
-
+  
   // Same FillMCTrueObjectInfo method but with reco::Candidates
   void FillMCTrueObjectInfo(mcTrueObjectInfo_t &mcTrueObjectInfo, const reco::Candidate *genParticle) {
+
+    double minMotherDeltaR = 100000; // consider all mothers
+    double minGrandmotherDeltaR = 100000;
+    int motherIndex = 0;
+    int grandmotherIndex = 0;
     
     mcTrueObjectInfo.status = genParticle->status();
-    mcTrueObjectInfo.PdgId = genParticle->pdgId();
+    mcTrueObjectInfo.pdgId = genParticle->pdgId();
 
     // careful here when trying to get pointers to mother/grandmother
-    if(genParticle->numberOfMothers()>0) {
-      mcTrueObjectInfo.MotherPdgId = genParticle->mother()->pdgId();
-      if(genParticle->mother()->numberOfMothers()>0) {
-	mcTrueObjectInfo.GrandmotherPdgId = genParticle->mother()->mother()->pdgId();
+    if (genParticle->numberOfMothers() > 0) {
+      // find best match in deltaR among all mothers
+      for (unsigned int j = 0; j < genParticle->numberOfMothers(); j++) {
+	double deltaR = reco::deltaR(genParticle->eta(),genParticle->phi(),genParticle->mother(j)->eta(),genParticle->mother(j)->phi());
+	if (deltaR < minMotherDeltaR) {
+	  minMotherDeltaR = deltaR;
+	  motherIndex = j;
+	}
+      }
+      mcTrueObjectInfo.motherPdgId = genParticle->mother(motherIndex)->status();
+      mcTrueObjectInfo.motherPdgId = genParticle->mother(motherIndex)->pdgId();
+
+      if (genParticle->mother(motherIndex)->numberOfMothers() > 0) {
+	// find best match in deltaR among all mothers
+	for (unsigned int j = 0; j < genParticle->mother(motherIndex)->numberOfMothers(); j++) {
+	  double deltaR = reco::deltaR(genParticle->mother(motherIndex)->eta(),genParticle->mother(motherIndex)->phi(),
+				       genParticle->mother(motherIndex)->mother(j)->eta(),genParticle->mother(motherIndex)->mother(j)->phi());
+	  if (deltaR < minGrandmotherDeltaR) {
+	    minGrandmotherDeltaR = deltaR;
+	    grandmotherIndex = j;
+	  }
+	}
+	mcTrueObjectInfo.grandmotherStatus = genParticle->mother(motherIndex)->mother(grandmotherIndex)->status();
+	mcTrueObjectInfo.grandmotherPdgId = genParticle->mother(motherIndex)->mother(grandmotherIndex)->pdgId();
       }
       else {
-	mcTrueObjectInfo.GrandmotherPdgId = -9999999;
+	mcTrueObjectInfo.grandmotherStatus = -9999999;
+	mcTrueObjectInfo.grandmotherPdgId = -9999999;
       }
     }
     else {
-      mcTrueObjectInfo.MotherPdgId = -9999999;
-      mcTrueObjectInfo.GrandmotherPdgId = -9999999;
+      mcTrueObjectInfo.motherStatus = -9999999;
+      mcTrueObjectInfo.grandmotherStatus = -9999999;
+      mcTrueObjectInfo.motherPdgId = -9999999;
+      mcTrueObjectInfo.grandmotherPdgId = -9999999;
     }
-
-
-
+    
     mcTrueObjectInfo.pt = genParticle->pt();
     mcTrueObjectInfo.eta = genParticle->eta();
     mcTrueObjectInfo.phi = genParticle->phi();
-
   }
-
+  
   // also want to store MC truth event-level info
   // like signalProcess ID, and pthat value
 
-
   void InitMCTrueObjectInfo(mcTrueObjectInfo_t &mcTrueObjectInfo) {
-
     mcTrueObjectInfo.status = -999999;
-    mcTrueObjectInfo.PdgId = -999999;
-    mcTrueObjectInfo.MotherPdgId = -999999;
-    mcTrueObjectInfo.GrandmotherPdgId = -999999;
+    mcTrueObjectInfo.motherStatus = -999999;
+    mcTrueObjectInfo.grandmotherStatus = -999999;
+    mcTrueObjectInfo.pdgId = -999999;
+    mcTrueObjectInfo.motherPdgId = -999999;
+    mcTrueObjectInfo.grandmotherPdgId = -999999;
     mcTrueObjectInfo.pt = -999999.99;
     mcTrueObjectInfo.eta = -999999.99;
     mcTrueObjectInfo.phi = -999999.99;
@@ -120,7 +173,6 @@ namespace ExoDiPhotons
     mcTrueObjectInfo.isol03ratio = -999999.99;
     mcTrueObjectInfo.isol02 = -999999.99;
     mcTrueObjectInfo.isol02ratio = -999999.99;
-
   }
 
 
