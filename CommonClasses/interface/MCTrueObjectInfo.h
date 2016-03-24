@@ -80,7 +80,7 @@ namespace ExoDiPhotons
 	    grandmotherIndex = j;
 	  }
 	}
-	mcTrueObjectInfo.grandmotherPdgId = genParticle->mother(motherIndex)->mother(grandmotherIndex)->status();
+	mcTrueObjectInfo.grandmotherStatus = genParticle->mother(motherIndex)->mother(grandmotherIndex)->status();
 	mcTrueObjectInfo.grandmotherPdgId = genParticle->mother(motherIndex)->mother(grandmotherIndex)->pdgId();
       }
       else {
