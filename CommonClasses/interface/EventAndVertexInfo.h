@@ -21,36 +21,35 @@ namespace ExoDiPhotons
   // event info 
 
   struct eventInfo_t{
+    Long64_t run;
+    Long64_t LS;
+    Long64_t evnum;
+    Long64_t processid;
     Float_t pthat;
     Float_t alphaqcd;
     Float_t alphaqed;
     Float_t qscale;
     Float_t weight;
 
-    Int_t run;
-    Int_t LS;
-    Int_t evnum;
-    Int_t processid;
-
   };
 
-  std::string eventInfoBranchDefString("pthat/F:alphaqcd:alphaqed:qscale:weight:run/I:LS:evnum:processid");
+  std::string eventInfoBranchDefString("run/L:LS:evnum:processid:pthat/F:alphaqcd:alphaqed:qscale:weight");
 
   void FillEventInfo(eventInfo_t &eventInfo,const edm::Event& iEvent) {
     
-    eventInfo.run = iEvent.id().run();
-    eventInfo.LS = iEvent.id().luminosityBlock();
-    eventInfo.evnum = iEvent.id().event();
+    eventInfo.run = (Long64_t)iEvent.id().run();
+    eventInfo.LS = (Long64_t)iEvent.id().luminosityBlock();
+    eventInfo.evnum = (Long64_t)iEvent.id().event();
     
   }
 
   void InitEventInfo(eventInfo_t &eventInfo, float value) {
     
-    eventInfo.run = (int)value;
-    eventInfo.LS = (int)value;
-    eventInfo.evnum = (int)value;
+    eventInfo.run = (Long64_t)value;
+    eventInfo.LS = (Long64_t)value;
+    eventInfo.evnum = (Long64_t)value;
     
-    eventInfo.processid = (int)value;
+    eventInfo.processid = (Long64_t)value;
     eventInfo.pthat = value;
     eventInfo.alphaqcd = value;
     eventInfo.alphaqed = value;

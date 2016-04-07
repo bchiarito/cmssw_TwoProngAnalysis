@@ -101,6 +101,8 @@
 #include "DiPhotonAnalysis/CommonClasses/interface/PhotonID.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/EventAndVertexInfo.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/DiphotonInfo.h"
+#include "DiPhotonAnalysis/CommonClasses/interface/JetInfo.h"
+#include "DiPhotonAnalysis/CommonClasses/interface/ConversionInfo.h"
 
 
 //new for PU gen
@@ -134,6 +136,9 @@
 
 #include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/Photon.h"
+
+// for jets
+#include "DataFormats/PatCandidates/interface/Jet.h"
 
 using namespace std;
 
@@ -241,12 +246,17 @@ private:
 
   ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo1; // leading photon 
   ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo2; // second photon
+
+  ExoDiPhotons::jetInfo_t fJetInfo;
+  ExoDiPhotons::conversionInfo_t fConvInfo;
+  ExoDiPhotons::conversionInfo_t fConvInfo_OneLeg;
    
   ExoDiPhotons::diphotonInfo_t fDiphotonInfo;
 
   // diphoton info based on using hte second or third vtx in event
   ExoDiPhotons::diphotonInfo_t fDiphotonInfoVtx2; 
   ExoDiPhotons::diphotonInfo_t fDiphotonInfoVtx3; 
+
 
   TH1F* fpu_n_BeforeCuts; 
   TH1F* fpu_n_BeforeCutsAfterReWeight;
@@ -277,6 +287,18 @@ private:
   edm::EDGetTokenT<edm::ValueMap<bool> > phoLooseIdMapToken_;
   edm::EDGetTokenT<edm::ValueMap<bool> > phoMediumIdMapToken_;
   edm::EDGetTokenT<edm::ValueMap<bool> > phoTightIdMapToken_;
+
+  // vertex token
+  edm::EDGetToken vtxToken_;
+
+  // beamspot
+  edm::EDGetToken bsToken_;
+
+  // trigger
+  edm::EDGetToken trigToken_;
+
+  // jets
+  edm::EDGetToken jetsToken_;
 
   Float_t rho_;      // the rho variable
 
@@ -370,6 +392,13 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   genParticlesMiniAODToken_ = mayConsume<edm::View<reco::GenParticle> >
     (iConfig.getParameter<edm::InputTag>
      ("genParticlesMiniAOD"));
+
+  if (isAOD) vtxToken_ = consumes<reco::VertexCollection>(edm::InputTag("offlinePrimaryVertices"));
+  else vtxToken_ = consumes<reco::VertexCollection>(edm::InputTag("offlineSlimmedPrimaryVertices"));
+
+  bsToken_ = consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
+  trigToken_ = consumes<edm::TriggerResults>(fHltInputTag);
+  if (!isAOD) jetsToken_ = consumes< edm::View<pat::Jet> >(edm::InputTag("selectedUpdatedPatJetsUpdatedJEC"));
   //-----------------taken from Ilya-----------------
  
   edm::Service<TFileService> fs;
@@ -399,6 +428,47 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   // now with CommonClasses, use the string defined in the header
   fTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  fTree->Branch("JetInfo.nJets",&fJetInfo.nJets,"nJets/I");
+  fTree->Branch("JetInfo.pt",fJetInfo.pt,"pt[nJets]/D");
+  fTree->Branch("JetInfo.eta",fJetInfo.eta,"eta[nJets]/D");
+  fTree->Branch("JetInfo.phi",fJetInfo.phi,"phi[nJets]/D");
+  fTree->Branch("JetInfo.mass",fJetInfo.mass,"mass[nJets]/D");
+  fTree->Branch("JetInfo.energy",fJetInfo.energy,"energy[nJets]/D");
+  fTree->Branch("JetInfo.passLooseID",fJetInfo.passLooseID,"passLooseID[nJets]/O");
+  fTree->Branch("JetInfo.passTightID",fJetInfo.passTightID,"passTightID[nJets]/O");
+
+  fTree->Branch("ConvInfo.nConversions",&fConvInfo.nConversions,"nConversions/I");
+  fTree->Branch("ConvInfo.x",fConvInfo.x,"x[nConversions]/D");
+  fTree->Branch("ConvInfo.y",fConvInfo.y,"y[nConversions]/D");
+  fTree->Branch("ConvInfo.z",fConvInfo.z,"z[nConversions]/D");
+  fTree->Branch("ConvInfo.r",fConvInfo.r,"r[nConversions]/D");
+  fTree->Branch("ConvInfo.phi",fConvInfo.phi,"phi[nConversions]/D");
+  fTree->Branch("ConvInfo.dPhiTracksAtVtx",fConvInfo.dPhiTracksAtVtx,"dPhiTracksAtVtx[nConversions]/D");
+  fTree->Branch("ConvInfo.dPhiTracksAtEcal",fConvInfo.dPhiTracksAtEcal,"dPhiTracksAtEcal[nConversions]/D");
+  fTree->Branch("ConvInfo.dEtaTracksAtEcal",fConvInfo.dEtaTracksAtEcal,"dEtaTracksAtEcal[nConversions]/D");
+  fTree->Branch("ConvInfo.nTracks",fConvInfo.nTracks,"nTracks[nConversions]/D");
+  fTree->Branch("ConvInfo.dxy",fConvInfo.dxy,"dxy[nConversions]/D");
+  fTree->Branch("ConvInfo.dz",fConvInfo.dz,"dz[nConversions]/D");
+  fTree->Branch("ConvInfo.pairCotThetaSeparation",fConvInfo.pairCotThetaSeparation,"pairCotThetaSeparation[nConversions]/D");
+  fTree->Branch("ConvInfo.photonPt",fConvInfo.photonPt,"photonPt[nConversions]/D");
+  fTree->Branch("ConvInfo.isConverted",fConvInfo.isConverted,"isConverted[nConversions]/O");
+
+  fTree->Branch("ConvInfo_OneLeg.nConversions",&fConvInfo_OneLeg.nConversions,"nConversions/I");
+  fTree->Branch("ConvInfo_OneLeg.x",fConvInfo_OneLeg.x,"x[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.y",fConvInfo_OneLeg.y,"y[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.z",fConvInfo_OneLeg.z,"z[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.r",fConvInfo_OneLeg.r,"r[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.phi",fConvInfo_OneLeg.phi,"phi[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.dPhiTracksAtVtx",fConvInfo_OneLeg.dPhiTracksAtVtx,"dPhiTracksAtVtx[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.dPhiTracksAtEcal",fConvInfo_OneLeg.dPhiTracksAtEcal,"dPhiTracksAtEcal[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.dEtaTracksAtEcal",fConvInfo_OneLeg.dEtaTracksAtEcal,"dEtaTracksAtEcal[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.nTracks",fConvInfo_OneLeg.nTracks,"nTracks[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.dxy",fConvInfo_OneLeg.dxy,"dxy[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.dz",fConvInfo_OneLeg.dz,"dz[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.pairCotThetaSeparation",fConvInfo_OneLeg.pairCotThetaSeparation,"pairCotThetaSeparation[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.photonPt",fConvInfo_OneLeg.photonPt,"photonPt[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.isConverted",fConvInfo_OneLeg.isConverted,"isConverted[nConversions]/O");
+
   fTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
   // diphoton info for second or thrid best vertex
   // only bothering to add this for tight-tight tree for now
@@ -511,8 +581,6 @@ ExoDiPhotonAnalyzer::~ExoDiPhotonAnalyzer()
 // member functions
 //
 
-
-
 // ------------ method called to for each event  ------------
 void
 ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
@@ -608,8 +676,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   // get the vertex collection
   Handle<reco::VertexCollection> vertexColl;
-  if (isAOD) iEvent.getByLabel("offlinePrimaryVertices",vertexColl);
-  else iEvent.getByLabel("offlineSlimmedPrimaryVertices",vertexColl);
+  iEvent.getByToken(vtxToken_,vertexColl);
+  // if (isAOD) iEvent.getByLabel("offlinePrimaryVertices",vertexColl);
+  // else iEvent.getByLabel("offlineSlimmedPrimaryVertices",vertexColl);
   //TO DISENTANGLE BETWEEN MINIAOD AND AOD
    
   if(!vertexColl.isValid()) {
@@ -742,7 +811,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // get offline beam spot
   reco::BeamSpot beamSpot;
   edm::Handle<reco::BeamSpot> beamSpotHandle;
-  iEvent.getByLabel("offlineBeamSpot", beamSpotHandle);
+  iEvent.getByToken(bsToken_, beamSpotHandle);
    
   fBeamSpotInfo.x0 = -99999999.99;
   fBeamSpotInfo.y0 = -99999999.99;
@@ -764,12 +833,31 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
+  // get jet information 
+  // RIGHT NOW ONLY FOR MINIAOD
+
+  edm::Handle<edm::View<pat::Jet>> jetsHandle;
+  iEvent.getByToken(jetsToken_,jetsHandle);
+  const edm::View<pat::Jet>* jets = jetsHandle.product();
+
+  // ExoDiPhotons::InitJetInfo(fJetInfo,jets);
+  ExoDiPhotons::FillJetInfo(fJetInfo,jets);
+
+  // for (unsigned int i=0; i< jets->size(); i++){
+  //   pat::Jet iJet = jets->at(i);
+
+  //   // jetID
+  //   bool isLoose;
+  //   bool isTight;
+  //   std::tie(isLoose,isTight) = jetID(iJet);
+
+  // }
 
   // get the trig info
 
   //trig results
   Handle<TriggerResults> hltResultsHandle;
-  iEvent.getByLabel(fHltInputTag,hltResultsHandle);
+  iEvent.getByToken(trigToken_,hltResultsHandle);
    
   if(!hltResultsHandle.isValid()) {
     cout << "HLT results not valid!" <<endl;
@@ -1160,6 +1248,27 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //   for(std::vector<reco::Photon>::iterator myPhotonIter = selectedPhotons.begin();myPhotonIter<selectedPhotons.end();myPhotonIter++) {
   //     cout << "Photon et, eta, phi = " << myPhotonIter->et() <<", "<<myPhotonIter->eta()<< ", "<< myPhotonIter->phi()<<endl;
   //   }
+
+
+  ////////////////////////////////////////////////////////////////////////////////
+  //
+  // Add conversion information for all tight photons (if there are 2)
+  //
+  ///////////////////////////////////////////////////////////////////////////////
+  if (selectedPhotons.size() >= 2){
+    for (unsigned int i=0; i<selectedPhotons.size(); i++){
+      reco::Photon iPho = selectedPhotons.at(i);
+      reco::ConversionRefVector convsRefVec = iPho.conversions(); //vector of edm::Refs to reco::ConversionCollections
+      reco::ConversionRefVector convsRefVecOneLeg = iPho.conversionsOneLeg();
+      if (convsRefVec.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo,convsRefVec,iPho.pt());
+      if (convsRefVecOneLeg.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo_OneLeg,convsRefVecOneLeg,iPho.pt());
+
+      // cout << "ref vector size " << convsRefVec.size() << endl;
+      // if (convsRefVec.size() == 0) continue; //or fill 0 conversions, do this instead
+      // reco::ConversionRefVector convsOneLeg = iPho.conversionsOneLeg();
+      // reco::Conversion convs = *(convsRefVec[0]);
+    }
+  }
 
   // now count many candidate photons we have in this event
   //   cout << "N candidate photons = " << selectedPhotons.size() <<endl;

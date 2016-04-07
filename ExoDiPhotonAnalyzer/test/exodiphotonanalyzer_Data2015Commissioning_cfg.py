@@ -3,7 +3,7 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
 options.register('globalTag',
-                'MCRUN2_74_V9::All',
+                '76X_dataRun2_16Dec2015_v0',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "global tag to use when running")
@@ -33,6 +33,9 @@ process = cms.Process("ExoDiPhotonAnalysis")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 
+process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
+process.options.allowUnscheduled = cms.untracked.bool(True)
+
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( options.maxEvents ) )
 
 inputFilesAOD = cms.untracked.vstring(
@@ -49,8 +52,9 @@ inputFilesAOD = cms.untracked.vstring(
 inputFilesMiniAOD = cms.untracked.vstring(
     # MiniAOD test files from a GJet PT40 dataset
 # 'root://eoscms.cern.ch//eos/cms/store/mc/Phys14DR/RSGravToGG_kMpl01_M-5000_Tune4C_13TeV-pythia8/MINIAODSIM/PU30bx50_PHYS14_25_V1-v1/00000/0EE85055-8967-E411-9D2E-002481E14D72.root'
-"root://cmsxrootd.fnal.gov//store/data/Run2015D/DoubleEG/MINIAOD/PromptReco-v3/000/257/969/00000/F24329DE-706A-E511-998A-02163E012B1A.root"
-# "file:pickevents.root"
+# "root://cmsxrootd.fnal.gov//store/data/Run2015D/DoubleEG/MINIAOD/PromptReco-v3/000/257/969/00000/F24329DE-706A-E511-998A-02163E012B1A.root"
+"file:pickevents.root"
+# 'root://cmsxrootd.fnal.gov//store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/000FAE50-82A6-E511-BC87-00261894397F.root'
     )
 
 # Set up input/output depending on the format
@@ -74,10 +78,12 @@ process.source = cms.Source ("PoolSource",
 
 # need to introduce the global tag now
 # because the L1GtUtils method needs to fetch records...
-if options.globalTag == 'MCRUN2_74_V9::All':
-  process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
-else:
-  process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
+# if options.globalTag == 'MCRUN2_74_V9::All':
+#   process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
+# else:
+#   process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
+process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
+
 
 #use the right global tag!
 ##process.GlobalTag.globaltag = 'GR_P_V54::All'
@@ -159,7 +165,16 @@ for idmod in my_id_modules:
     setupAllVIDIdsInModule(process,idmod,setupVIDPhotonSelection)
 ##-----------------taken from Ilya-----------------
 
+## update AK4PFchs jet collection in MiniAOD JECs
 
+from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
+
+updateJetCollection(
+   process,
+   jetSource = cms.InputTag('slimmedJets'),
+   labelName = 'UpdatedJEC',
+   jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']), 'None')  # Do not forget 'L2L3Residual' on data!
+)
 
 #load diphoton analyzer
 process.load("DiPhotonAnalysis.ExoDiPhotonAnalyzer.exodiphotonanalyzer_withrho_cfi")
