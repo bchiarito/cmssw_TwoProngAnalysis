@@ -86,13 +86,13 @@
 //for trigger
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "FWCore/Common/interface/TriggerNames.h"
-#include "CondFormats/L1TObjects/interface/L1GtTriggerMenuFwd.h"
-#include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutRecord.h" 
-#include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerRecord.h" 
-#include "CondFormats/L1TObjects/interface/L1GtTriggerMenu.h"
-#include "CondFormats/DataRecord/interface/L1GtTriggerMenuRcd.h"
-#include "L1Trigger/GlobalTrigger/plugins/L1GlobalTrigger.h"
-#include "L1Trigger/GlobalTriggerAnalyzer/interface/L1GtUtils.h"
+// #include "CondFormats/L1TObjects/interface/L1GtTriggerMenuFwd.h"
+// #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutRecord.h" 
+// #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerRecord.h" 
+// #include "CondFormats/L1TObjects/interface/L1GtTriggerMenu.h"
+// #include "CondFormats/DataRecord/interface/L1GtTriggerMenuRcd.h"
+// #include "L1Trigger/GlobalTrigger/plugins/L1GlobalTrigger.h"
+// #include "L1Trigger/GlobalTriggerAnalyzer/interface/L1GtUtils.h"
 
 // new CommonClasses approach
 // these objects are all in the namespace 'ExoDiPhotons'
@@ -161,7 +161,7 @@ private:
   edm::InputTag      fPhotonTag;       //select photon collection 
   double             fMin_pt;          // min pt cut (photons)
   edm::InputTag      fHltInputTag;     // hltResults
-  edm::InputTag      fL1InputTag;      // L1 results
+  // edm::InputTag      fL1InputTag;      // L1 results
   edm::InputTag      fRho25Tag;  
   edm::InputTag      fpileupCollectionTag;         
   edm::LumiReWeighting    LumiWeights;      
@@ -191,7 +191,7 @@ private:
 
   // to get L1 info, the L1 guide recommends to make this a member
   // this allows the event setup parts to be cached, rather than refetched every event
-  L1GtUtils m_l1GtUtils;
+  // L1GtUtils m_l1GtUtils;
 
   // my Tree
   TTree *fTree;
@@ -308,7 +308,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   : fPhotonTag(iConfig.getUntrackedParameter<edm::InputTag>("photonCollection")),
     fMin_pt(iConfig.getUntrackedParameter<double>("ptMin")),
     fHltInputTag(iConfig.getUntrackedParameter<edm::InputTag>("hltResults")),
-    fL1InputTag(iConfig.getUntrackedParameter<edm::InputTag>("L1Results")),
+    // fL1InputTag(iConfig.getUntrackedParameter<edm::InputTag>("L1Results")),
     fRho25Tag(iConfig.getParameter<edm::InputTag>("rho25Correction")),
     fpileupCollectionTag(iConfig.getUntrackedParameter<edm::InputTag>("pileupCorrection")),
     fkRemoveSpikes(iConfig.getUntrackedParameter<bool>("removeSpikes")),
@@ -793,27 +793,27 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
 
   // L1 results
-  fL1TrigInfo.L1_Tech0 = false;
-  fL1TrigInfo.L1_Tech36 = false;
-  fL1TrigInfo.L1_Tech37 = false;
-  fL1TrigInfo.L1_Tech38 = false;
-  fL1TrigInfo.L1_Tech39 = false;
-  fL1TrigInfo.L1_Tech40 = false;
-  fL1TrigInfo.L1_Tech41 = false;
-  fL1TrigInfo.L1_Tech42 = false;
-  fL1TrigInfo.L1_Tech43 = false;
-  fL1TrigInfo.L1_EG2 = false;   
+  // fL1TrigInfo.L1_Tech0 = false;
+  // fL1TrigInfo.L1_Tech36 = false;
+  // fL1TrigInfo.L1_Tech37 = false;
+  // fL1TrigInfo.L1_Tech38 = false;
+  // fL1TrigInfo.L1_Tech39 = false;
+  // fL1TrigInfo.L1_Tech40 = false;
+  // fL1TrigInfo.L1_Tech41 = false;
+  // fL1TrigInfo.L1_Tech42 = false;
+  // fL1TrigInfo.L1_Tech43 = false;
+  // fL1TrigInfo.L1_EG2 = false;   
    
   // use the L1GtUtils class, following instructions in 
   // https://twiki.cern.ch/twiki/bin/view/CMS/SWGuideL1TriggerL1GtUtils
    
   // before accessing any result from L1GtUtils, one must retrieve and cache
   // the L1 trigger event setup
-  m_l1GtUtils.retrieveL1EventSetup(iSetup);
+  // m_l1GtUtils.retrieveL1EventSetup(iSetup);
 
   // access L1 trigger results using public methods from L1GtUtils
   // always check on error code returned by that method
-  int iErrorCode = -1;
+  // int iErrorCode = -1;
   // error 0 is okay; 1 means trig not found; else some other error
   // although I am probably just going to ignore it anyway...
    
@@ -833,15 +833,15 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   
 
    
-  fL1TrigInfo.L1_Tech0 =    m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BPTX_plus_AND_minus.v0",iErrorCode);
-  fL1TrigInfo.L1_Tech36 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_halo_beam2_inner.v0",iErrorCode);
-  fL1TrigInfo.L1_Tech37 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_halo_beam2_outer.v0",iErrorCode);
-  fL1TrigInfo.L1_Tech38 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_halo_beam1_inner.v0",iErrorCode);
-  fL1TrigInfo.L1_Tech39 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_halo_beam1_outer.v0",iErrorCode);
-  fL1TrigInfo.L1_Tech40 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_minBias_threshold1.v0",iErrorCode);
-  fL1TrigInfo.L1_Tech41 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_minBias_threshold2.v0",iErrorCode);
-  fL1TrigInfo.L1_Tech42 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_splash_beam1.v0",iErrorCode);
-  fL1TrigInfo.L1_Tech43 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_splash_beam2.v0",iErrorCode);
+  // fL1TrigInfo.L1_Tech0 =    m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BPTX_plus_AND_minus.v0",iErrorCode);
+  // fL1TrigInfo.L1_Tech36 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_halo_beam2_inner.v0",iErrorCode);
+  // fL1TrigInfo.L1_Tech37 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_halo_beam2_outer.v0",iErrorCode);
+  // fL1TrigInfo.L1_Tech38 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_halo_beam1_inner.v0",iErrorCode);
+  // fL1TrigInfo.L1_Tech39 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_halo_beam1_outer.v0",iErrorCode);
+  // fL1TrigInfo.L1_Tech40 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_minBias_threshold1.v0",iErrorCode);
+  // fL1TrigInfo.L1_Tech41 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_minBias_threshold2.v0",iErrorCode);
+  // fL1TrigInfo.L1_Tech42 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_splash_beam1.v0",iErrorCode);
+  // fL1TrigInfo.L1_Tech43 =   m_l1GtUtils.decisionBeforeMask(iEvent,"L1Tech_BSC_splash_beam2.v0",iErrorCode);
 
 
   //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
