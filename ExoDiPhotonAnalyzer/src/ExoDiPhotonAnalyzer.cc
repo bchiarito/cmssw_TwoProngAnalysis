@@ -1255,20 +1255,30 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // Add conversion information for all tight photons (if there are 2)
   //
   ///////////////////////////////////////////////////////////////////////////////
+  cout << "got to conversions" << endl;
   if (selectedPhotons.size() >= 2){
     for (unsigned int i=0; i<selectedPhotons.size(); i++){
       reco::Photon iPho = selectedPhotons.at(i);
+      if (!iPho.hasConversionTracks()) continue;
       reco::ConversionRefVector convsRefVec = iPho.conversions(); //vector of edm::Refs to reco::ConversionCollections
+      cout << "got 2 leg conversions with size " << convsRefVec.size() << endl;
+      cout << "pho pt" << iPho.pt() << endl;
+      cout << "conv 0 vert x" << convsRefVec[i]->conversionVertex().position().X() << endl;
+      reco::Conversion iConv = *(convsRefVec.at(i));
+      cout << "conv 0 vert x" << iConv.conversionVertex().position().X() << endl;
       reco::ConversionRefVector convsRefVecOneLeg = iPho.conversionsOneLeg();
-      if (convsRefVec.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo,convsRefVec,iPho.pt());
-      if (convsRefVecOneLeg.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo_OneLeg,convsRefVecOneLeg,iPho.pt());
+      cout << "got 1 leg conversions with size " << convsRefVecOneLeg.size() << endl;
+      if (convsRefVec.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo,convsRefVec,iPho.pt(), beamSpot);
+      cout << "wrote 2 leg conversions to tree" << endl;
+      if (convsRefVecOneLeg.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo_OneLeg,convsRefVecOneLeg,iPho.pt(), beamSpot);
+      cout << "wrote 1 leg conversions to tree" << endl;
 
       // cout << "ref vector size " << convsRefVec.size() << endl;
       // if (convsRefVec.size() == 0) continue; //or fill 0 conversions, do this instead
       // reco::ConversionRefVector convsOneLeg = iPho.conversionsOneLeg();
       // reco::Conversion convs = *(convsRefVec[0]);
     }
-  }
+  } // end conversion info block
 
   // now count many candidate photons we have in this event
   //   cout << "N candidate photons = " << selectedPhotons.size() <<endl;

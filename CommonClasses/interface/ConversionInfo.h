@@ -56,44 +56,38 @@ namespace ExoDiPhotons{
   // std::string jetInfoBranchDefString("nJets/I:pt[nJets]/D");
   
 
-  void FillConversionInfo(conversionInfo_t &convInfo, const reco::ConversionRefVector convColl, double phoPt) {
-
+  void FillConversionInfo(conversionInfo_t &convInfo, const reco::ConversionRefVector& convColl, double phoPt, const reco::BeamSpot& bs) {
+    using namespace std;
+    cout << "in FillConversionInfo" << endl;
     convInfo.nConversions = (Int_t)convColl.size();
-    for (int i=0; i<convColl.nConversions; i++){
-      reco::Conversion iConv = *(convsRefVec.at(i));
-      x[i] = iConv.conversionVertex().position().X();
-      y[i] = iConv.conversionVertex().position().Y();
-      z[i] = iConv.conversionVertex().position().Z();
-      dPhiTracksAtVtx[i] = iConv.dPhiTracksAtVtx();
-      dPhiTracksAtEcal[i] = iConv.dPhiTracksAtEcal();
-      dEtaTracksAtEcal[i] = iConv.dEtaTracksAtEcal();
-      nTracks[i] = 1.*iConv.nTracks();
-      isConverted[i] = iConv.isConverted();
-      // std::cout << "jet pt " << jets->at(i).pt() << std::endl;
-      pat::Jet jet = jets->at(i);
-      convInfo.pt[i] = jet.pt();
-      convInfo.eta[i] = jet.eta();
-      convInfo.phi[i] = jet.phi();
-      convInfo.mass[i] = jet.mass();
-      convInfo.energy[i] = jet.energy();
-      
-      Bool_t loose;
-      Bool_t tight;
-      std::tie(loose,tight) = ExoDiPhotons::jetID(jet);
-      convInfo.passLooseID[i] = loose;
-      convInfo.passTightID[i] = tight;
-    }
+    for (int i=0; i<convInfo.nConversions; i++){
+      cout << "in conversion collection loop 0" << endl;
+      reco::Conversion iConv = *(convColl.at(i));
+      cout << "in conversion collection loop 1" << endl;
+      convInfo.x[i] = iConv.conversionVertex().position().X();
+      convInfo.y[i] = iConv.conversionVertex().position().Y();
+      convInfo.z[i] = iConv.conversionVertex().position().Z();
+      cout << "in conversion collection loop 2" << endl;
+      convInfo.r[i] = TMath::Sqrt((convInfo.x[i]*convInfo.x[i]) + (convInfo.y[i]*convInfo.y[i]));
+      convInfo.phi[i] = TMath::ATan2( convInfo.y[i] , convInfo.x[i] );
+      cout << "in conversion collection loop 3" << endl;
+      convInfo.dPhiTracksAtVtx[i] = iConv.dPhiTracksAtVtx();
+      convInfo.dPhiTracksAtEcal[i] = iConv.dPhiTracksAtEcal();
+      convInfo.dEtaTracksAtEcal[i] = iConv.dEtaTracksAtEcal();
+      cout << "in conversion collection loop 4" << endl;
+      convInfo.nTracks[i] = 1.*iConv.nTracks();
+      convInfo.dxy[i] = iConv.dxy(bs.position());
+      convInfo.dz[i] = iConv.dz(bs.position());
+      cout << "in conversion collection loop 5" << endl;
+      convInfo.pairCotThetaSeparation[i] = iConv.pairCotThetaSeparation();
+      cout << "in conversion collection loop 6" << endl;
+      convInfo.photonPt[i] = phoPt;
+      convInfo.isConverted[i] = iConv.isConverted();
+      cout << "finish conversion collection loop" << endl;
+    } // end loop over conversion collection
 
 
   }
-  // void InitJetInfo(jetInfo_t &convInfo, const edm::View<pat::Jet>* jets) {
-
-  //   convInfo.nJets = (Int_t)jets->size();
-  //   // convInfo.pt = *(new Double_t [convInfo.nJets]);
-    
-  // }
-
-  
 
 } //end of namespace
 
