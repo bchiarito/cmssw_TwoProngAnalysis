@@ -437,37 +437,37 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("JetInfo.passLooseID",fJetInfo.passLooseID,"passLooseID[nJets]/O");
   fTree->Branch("JetInfo.passTightID",fJetInfo.passTightID,"passTightID[nJets]/O");
 
-  fTree->Branch("ConvInfo.nConversions",&fConvInfo.nConversions,"nConversions/I");
-  fTree->Branch("ConvInfo.x",fConvInfo.x,"x[nConversions]/D");
-  fTree->Branch("ConvInfo.y",fConvInfo.y,"y[nConversions]/D");
-  fTree->Branch("ConvInfo.z",fConvInfo.z,"z[nConversions]/D");
-  fTree->Branch("ConvInfo.r",fConvInfo.r,"r[nConversions]/D");
-  fTree->Branch("ConvInfo.phi",fConvInfo.phi,"phi[nConversions]/D");
-  fTree->Branch("ConvInfo.dPhiTracksAtVtx",fConvInfo.dPhiTracksAtVtx,"dPhiTracksAtVtx[nConversions]/D");
-  fTree->Branch("ConvInfo.dPhiTracksAtEcal",fConvInfo.dPhiTracksAtEcal,"dPhiTracksAtEcal[nConversions]/D");
-  fTree->Branch("ConvInfo.dEtaTracksAtEcal",fConvInfo.dEtaTracksAtEcal,"dEtaTracksAtEcal[nConversions]/D");
-  fTree->Branch("ConvInfo.nTracks",fConvInfo.nTracks,"nTracks[nConversions]/D");
-  fTree->Branch("ConvInfo.dxy",fConvInfo.dxy,"dxy[nConversions]/D");
-  fTree->Branch("ConvInfo.dz",fConvInfo.dz,"dz[nConversions]/D");
-  fTree->Branch("ConvInfo.pairCotThetaSeparation",fConvInfo.pairCotThetaSeparation,"pairCotThetaSeparation[nConversions]/D");
-  fTree->Branch("ConvInfo.photonPt",fConvInfo.photonPt,"photonPt[nConversions]/D");
-  fTree->Branch("ConvInfo.isConverted",fConvInfo.isConverted,"isConverted[nConversions]/O");
+  // fTree->Branch("ConvInfo.nConversions",&fConvInfo.nConversions,"nConversions/I");
+  // fTree->Branch("ConvInfo.x",fConvInfo.x,"x[nConversions]/D");
+  // fTree->Branch("ConvInfo.y",fConvInfo.y,"y[nConversions]/D");
+  // fTree->Branch("ConvInfo.z",fConvInfo.z,"z[nConversions]/D");
+  // fTree->Branch("ConvInfo.r",fConvInfo.r,"r[nConversions]/D");
+  // fTree->Branch("ConvInfo.phi",fConvInfo.phi,"phi[nConversions]/D");
+  // fTree->Branch("ConvInfo.dPhiTracksAtVtx",fConvInfo.dPhiTracksAtVtx,"dPhiTracksAtVtx[nConversions]/D");
+  // fTree->Branch("ConvInfo.dPhiTracksAtEcal",fConvInfo.dPhiTracksAtEcal,"dPhiTracksAtEcal[nConversions]/D");
+  // fTree->Branch("ConvInfo.dEtaTracksAtEcal",fConvInfo.dEtaTracksAtEcal,"dEtaTracksAtEcal[nConversions]/D");
+  // fTree->Branch("ConvInfo.nTracks",fConvInfo.nTracks,"nTracks[nConversions]/D");
+  // fTree->Branch("ConvInfo.dxy",fConvInfo.dxy,"dxy[nConversions]/D");
+  // fTree->Branch("ConvInfo.dz",fConvInfo.dz,"dz[nConversions]/D");
+  // fTree->Branch("ConvInfo.pairCotThetaSeparation",fConvInfo.pairCotThetaSeparation,"pairCotThetaSeparation[nConversions]/D");
+  // fTree->Branch("ConvInfo.photonPt",fConvInfo.photonPt,"photonPt[nConversions]/D");
+  // fTree->Branch("ConvInfo.isConverted",fConvInfo.isConverted,"isConverted[nConversions]/O");
 
-  fTree->Branch("ConvInfo_OneLeg.nConversions",&fConvInfo_OneLeg.nConversions,"nConversions/I");
-  fTree->Branch("ConvInfo_OneLeg.x",fConvInfo_OneLeg.x,"x[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.y",fConvInfo_OneLeg.y,"y[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.z",fConvInfo_OneLeg.z,"z[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.r",fConvInfo_OneLeg.r,"r[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.phi",fConvInfo_OneLeg.phi,"phi[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.dPhiTracksAtVtx",fConvInfo_OneLeg.dPhiTracksAtVtx,"dPhiTracksAtVtx[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.dPhiTracksAtEcal",fConvInfo_OneLeg.dPhiTracksAtEcal,"dPhiTracksAtEcal[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.dEtaTracksAtEcal",fConvInfo_OneLeg.dEtaTracksAtEcal,"dEtaTracksAtEcal[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.nTracks",fConvInfo_OneLeg.nTracks,"nTracks[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.dxy",fConvInfo_OneLeg.dxy,"dxy[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.dz",fConvInfo_OneLeg.dz,"dz[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.pairCotThetaSeparation",fConvInfo_OneLeg.pairCotThetaSeparation,"pairCotThetaSeparation[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.photonPt",fConvInfo_OneLeg.photonPt,"photonPt[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.isConverted",fConvInfo_OneLeg.isConverted,"isConverted[nConversions]/O");
+  // fTree->Branch("ConvInfo_OneLeg.nConversions",&fConvInfo_OneLeg.nConversions,"nConversions/I");
+  // fTree->Branch("ConvInfo_OneLeg.x",fConvInfo_OneLeg.x,"x[nConversions]/D");
+  // fTree->Branch("ConvInfo_OneLeg.y",fConvInfo_OneLeg.y,"y[nConversions]/D");
+  // fTree->Branch("ConvInfo_OneLeg.z",fConvInfo_OneLeg.z,"z[nConversions]/D");
+  // fTree->Branch("ConvInfo_OneLeg.r",fConvInfo_OneLeg.r,"r[nConversions]/D");
+  // fTree->Branch("ConvInfo_OneLeg.phi",fConvInfo_OneLeg.phi,"phi[nConversions]/D");
+  // fTree->Branch("ConvInfo_OneLeg.dPhiTracksAtVtx",fConvInfo_OneLeg.dPhiTracksAtVtx,"dPhiTracksAtVtx[nConversions]/D");
+  // fTree->Branch("ConvInfo_OneLeg.dPhiTracksAtEcal",fConvInfo_OneLeg.dPhiTracksAtEcal,"dPhiTracksAtEcal[nConversions]/D");
+  // fTree->Branch("ConvInfo_OneLeg.dEtaTracksAtEcal",fConvInfo_OneLeg.dEtaTracksAtEcal,"dEtaTracksAtEcal[nConversions]/D");
+  // fTree->Branch("ConvInfo_OneLeg.nTracks",fConvInfo_OneLeg.nTracks,"nTracks[nConversions]/D");
+  // fTree->Branch("ConvInfo_OneLeg.dxy",fConvInfo_OneLeg.dxy,"dxy[nConversions]/D");
+  // fTree->Branch("ConvInfo_OneLeg.dz",fConvInfo_OneLeg.dz,"dz[nConversions]/D");
+  // fTree->Branch("ConvInfo_OneLeg.pairCotThetaSeparation",fConvInfo_OneLeg.pairCotThetaSeparation,"pairCotThetaSeparation[nConversions]/D");
+  // fTree->Branch("ConvInfo_OneLeg.photonPt",fConvInfo_OneLeg.photonPt,"photonPt[nConversions]/D");
+  // fTree->Branch("ConvInfo_OneLeg.isConverted",fConvInfo_OneLeg.isConverted,"isConverted[nConversions]/O");
 
   fTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
   // diphoton info for second or thrid best vertex
@@ -1255,37 +1255,37 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // Add conversion information for all tight photons (if there are 2)
   //
   ///////////////////////////////////////////////////////////////////////////////
-  cout << "got to conversions" << endl;
-  if (selectedPhotons.size() >= 2){
-    for (unsigned int i=0; i<selectedPhotons.size(); i++){
-      reco::Photon iPho = selectedPhotons.at(i);
-      if (!iPho.hasConversionTracks()) continue;
-      reco::ConversionRefVector convsRefVec = iPho.conversions(); //vector of edm::Refs to reco::ConversionCollections
-      cout << "got 2 leg conversions with size " << convsRefVec.size() << endl;
-      cout << "pho pt" << iPho.pt() << endl;
-      reco::ConversionRef iConv = convsRefVec.at(0);
-      cout << "JPC" << endl;
-      cout << iConv->dEtaTracksAtEcal() << endl;
-      cout << "defined edm::Ref" << endl;
-      const reco::Conversion iConv2 = *(convsRefVec.at(0));
-      cout << "defined deref  " << endl;
-      cout << "iConv->dEtaTracksAtEcal() = " << iConv->dEtaTracksAtEcal() << endl;
-      // std::vector<reco::Conversion> convColl = *iConv;
-      // cout << "convColl.size(): " << convColl.size() << endl;
-      // if (convsRefVec.size()>0) cout << "conv 0 vert x" << convsRefVec.at(0)->conversionVertex().position().X() << endl;
-      // reco::ConversionRefVector convsRefVecOneLeg = iPho.conversionsOneLeg();
-      // cout << "got 1 leg conversions with size " << convsRefVecOneLeg.size() << endl;
-      // if (convsRefVec.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo,convsRefVec,iPho.pt(), beamSpot);
-      // cout << "wrote 2 leg conversions to tree" << endl;
-      // if (convsRefVecOneLeg.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo_OneLeg,convsRefVecOneLeg,iPho.pt(), beamSpot);
-      // cout << "wrote 1 leg conversions to tree" << endl;
+  // cout << "got to conversions" << endl;
+  // if (selectedPhotons.size() >= 2){
+  //   for (unsigned int i=0; i<selectedPhotons.size(); i++){
+  //     reco::Photon iPho = selectedPhotons.at(i);
+  //     if (!iPho.hasConversionTracks()) continue;
+  //     reco::ConversionRefVector convsRefVec = iPho.conversions(); //vector of edm::Refs to reco::ConversionCollections
+  //     cout << "got 2 leg conversions with size " << convsRefVec.size() << endl;
+  //     cout << "pho pt" << iPho.pt() << endl;
+  //     reco::ConversionRef iConv = convsRefVec.at(0);
+  //     cout << "JPC" << endl;
+  //     cout << iConv->dEtaTracksAtEcal() << endl;
+  //     cout << "defined edm::Ref" << endl;
+  //     const reco::Conversion iConv2 = *(convsRefVec.at(0));
+  //     cout << "defined deref  " << endl;
+  //     cout << "iConv->dEtaTracksAtEcal() = " << iConv->dEtaTracksAtEcal() << endl;
+  //     // std::vector<reco::Conversion> convColl = *iConv;
+  //     // cout << "convColl.size(): " << convColl.size() << endl;
+  //     // if (convsRefVec.size()>0) cout << "conv 0 vert x" << convsRefVec.at(0)->conversionVertex().position().X() << endl;
+  //     // reco::ConversionRefVector convsRefVecOneLeg = iPho.conversionsOneLeg();
+  //     // cout << "got 1 leg conversions with size " << convsRefVecOneLeg.size() << endl;
+  //     // if (convsRefVec.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo,convsRefVec,iPho.pt(), beamSpot);
+  //     // cout << "wrote 2 leg conversions to tree" << endl;
+  //     // if (convsRefVecOneLeg.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo_OneLeg,convsRefVecOneLeg,iPho.pt(), beamSpot);
+  //     // cout << "wrote 1 leg conversions to tree" << endl;
 
-      // cout << "ref vector size " << convsRefVec.size() << endl;
-      // if (convsRefVec.size() == 0) continue; //or fill 0 conversions, do this instead
-      // reco::ConversionRefVector convsOneLeg = iPho.conversionsOneLeg();
-      // reco::Conversion convs = *(convsRefVec[0]);
-    }
-  } // end conversion info block
+  //     // cout << "ref vector size " << convsRefVec.size() << endl;
+  //     // if (convsRefVec.size() == 0) continue; //or fill 0 conversions, do this instead
+  //     // reco::ConversionRefVector convsOneLeg = iPho.conversionsOneLeg();
+  //     // reco::Conversion convs = *(convsRefVec[0]);
+  //   }
+  // } // end conversion info block
 
   // now count many candidate photons we have in this event
   //   cout << "N candidate photons = " << selectedPhotons.size() <<endl;
