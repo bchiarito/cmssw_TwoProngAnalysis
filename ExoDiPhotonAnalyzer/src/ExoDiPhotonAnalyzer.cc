@@ -1263,15 +1263,22 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       reco::ConversionRefVector convsRefVec = iPho.conversions(); //vector of edm::Refs to reco::ConversionCollections
       cout << "got 2 leg conversions with size " << convsRefVec.size() << endl;
       cout << "pho pt" << iPho.pt() << endl;
-      cout << "conv 0 vert x" << convsRefVec[i]->conversionVertex().position().X() << endl;
-      reco::Conversion iConv = *(convsRefVec.at(i));
-      cout << "conv 0 vert x" << iConv.conversionVertex().position().X() << endl;
-      reco::ConversionRefVector convsRefVecOneLeg = iPho.conversionsOneLeg();
-      cout << "got 1 leg conversions with size " << convsRefVecOneLeg.size() << endl;
-      if (convsRefVec.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo,convsRefVec,iPho.pt(), beamSpot);
-      cout << "wrote 2 leg conversions to tree" << endl;
-      if (convsRefVecOneLeg.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo_OneLeg,convsRefVecOneLeg,iPho.pt(), beamSpot);
-      cout << "wrote 1 leg conversions to tree" << endl;
+      reco::ConversionRef iConv = convsRefVec.at(0);
+      cout << "JPC" << endl;
+      cout << iConv->dEtaTracksAtEcal() << endl;
+      cout << "defined edm::Ref" << endl;
+      const reco::Conversion iConv2 = *(convsRefVec.at(0));
+      cout << "defined deref  " << endl;
+      cout << "iConv->dEtaTracksAtEcal() = " << iConv->dEtaTracksAtEcal() << endl;
+      // std::vector<reco::Conversion> convColl = *iConv;
+      // cout << "convColl.size(): " << convColl.size() << endl;
+      // if (convsRefVec.size()>0) cout << "conv 0 vert x" << convsRefVec.at(0)->conversionVertex().position().X() << endl;
+      // reco::ConversionRefVector convsRefVecOneLeg = iPho.conversionsOneLeg();
+      // cout << "got 1 leg conversions with size " << convsRefVecOneLeg.size() << endl;
+      // if (convsRefVec.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo,convsRefVec,iPho.pt(), beamSpot);
+      // cout << "wrote 2 leg conversions to tree" << endl;
+      // if (convsRefVecOneLeg.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo_OneLeg,convsRefVecOneLeg,iPho.pt(), beamSpot);
+      // cout << "wrote 1 leg conversions to tree" << endl;
 
       // cout << "ref vector size " << convsRefVec.size() << endl;
       // if (convsRefVec.size() == 0) continue; //or fill 0 conversions, do this instead
