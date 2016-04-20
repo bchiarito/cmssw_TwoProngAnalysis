@@ -300,6 +300,10 @@ private:
   // jets
   edm::EDGetToken jetsToken_;
 
+  // conversions
+  edm::EDGetToken twoLegToken_;
+  edm::EDGetToken oneLegToken_;
+
   Float_t rho_;      // the rho variable
 
   // Effective area constants for all isolation types
@@ -399,6 +403,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   bsToken_ = consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
   trigToken_ = consumes<edm::TriggerResults>(fHltInputTag);
   if (!isAOD) jetsToken_ = consumes< edm::View<pat::Jet> >(edm::InputTag("selectedUpdatedPatJetsUpdatedJEC"));
+
+  twoLegToken_ = consumes<reco::ConversionCollection>(edm::InputTag("reducedEgamma","reducedConversions"));
+  oneLegToken_ = consumes<reco::ConversionCollection>(edm::InputTag("reducedEgamma","reducedSingleLegConversions"));
   //-----------------taken from Ilya-----------------
  
   edm::Service<TFileService> fs;
@@ -451,6 +458,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo.dz",fConvInfo.dz,"dz[nConversions]/D");
   fTree->Branch("ConvInfo.pairCotThetaSeparation",fConvInfo.pairCotThetaSeparation,"pairCotThetaSeparation[nConversions]/D");
   fTree->Branch("ConvInfo.photonPt",fConvInfo.photonPt,"photonPt[nConversions]/D");
+  fTree->Branch("ConvInfo.dRToSc",fConvInfo.dRToSc,"dRToSc[nConversions]/D");
   fTree->Branch("ConvInfo.isConverted",fConvInfo.isConverted,"isConverted[nConversions]/O");
 
   fTree->Branch("ConvInfo_OneLeg.nConversions",&fConvInfo_OneLeg.nConversions,"nConversions/I");
@@ -467,6 +475,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo_OneLeg.dz",fConvInfo_OneLeg.dz,"dz[nConversions]/D");
   fTree->Branch("ConvInfo_OneLeg.pairCotThetaSeparation",fConvInfo_OneLeg.pairCotThetaSeparation,"pairCotThetaSeparation[nConversions]/D");
   fTree->Branch("ConvInfo_OneLeg.photonPt",fConvInfo_OneLeg.photonPt,"photonPt[nConversions]/D");
+  fTree->Branch("ConvInfo_OneLeg.dRToSc",fConvInfo_OneLeg.dRToSc,"dRToSc[nConversions]/D");
   fTree->Branch("ConvInfo_OneLeg.isConverted",fConvInfo_OneLeg.isConverted,"isConverted[nConversions]/O");
 
   fTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
@@ -1263,45 +1272,14 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     iEvent.getByToken(twoLegToken_,twoLegHandle);
     iEvent.getByToken(oneLegToken_,oneLegHandle);
 
-    reco::ConversionCollection* twoLegConversions = twoLegHandle->product();
-    reco::ConversionCollection* oneLegConversions = oneLegHandle->product();
-    for (unsigned int i=0; i<selectedPhotons.size(); i++){
-      reco::Photon iPho = selectedPhotons.at(i);
+    reco::ConversionCollection twoLegConversions = *(twoLegHandle.product());
+    reco::ConversionCollection oneLegConversions = *(oneLegHandle.product());
 
-      for(unsigned int j=0; j < twoLegConversions->size(); j++){
-        reco::ConversionRef conv = twoLegConversions->at(j);
-        bool matches = ConversionTools::matchesConversion(iPho.superCluster(),*conv,0.2,999.,999.);
-      }
+    reco::Photon iPho = selectedPhotons.at(0);
+    reco::SuperCluster sc = *(iPho.superCluster());
+    ExoDiPhotons::FillConversionInfo(fConvInfo,sc,twoLegConversions,iPho.pt(), beamSpot);
+    ExoDiPhotons::FillConversionInfo(fConvInfo_OneLeg,sc,oneLegConversions,iPho.pt(), beamSpot);
 
-      for(unsigned int j=0; j < oneLegConversions->size(); j++){
-        
-      }
-      // if (!iPho.hasConversionTracks()) continue;
-      // reco::ConversionRefVector convsRefVec = iPho.conversions(); //vector of edm::Refs to reco::ConversionCollections
-      // cout << "got 2 leg conversions with size " << convsRefVec.size() << endl;
-      // cout << "pho pt" << iPho.pt() << endl;
-      // reco::ConversionRef iConv = convsRefVec.at(0);
-      // cout << "JPC" << endl;
-      // cout << iConv->dEtaTracksAtEcal() << endl;
-      // cout << "defined edm::Ref" << endl;
-      // const reco::Conversion iConv2 = *(convsRefVec.at(0));
-      // cout << "defined deref  " << endl;
-      // cout << "iConv->dEtaTracksAtEcal() = " << iConv->dEtaTracksAtEcal() << endl;
-      // std::vector<reco::Conversion> convColl = *iConv;
-      // cout << "convColl.size(): " << convColl.size() << endl;
-      // if (convsRefVec.size()>0) cout << "conv 0 vert x" << convsRefVec.at(0)->conversionVertex().position().X() << endl;
-      // reco::ConversionRefVector convsRefVecOneLeg = iPho.conversionsOneLeg();
-      // cout << "got 1 leg conversions with size " << convsRefVecOneLeg.size() << endl;
-      // if (convsRefVec.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo,convsRefVec,iPho.pt(), beamSpot);
-      // cout << "wrote 2 leg conversions to tree" << endl;
-      // if (convsRefVecOneLeg.size()>0) ExoDiPhotons::FillConversionInfo(fConvInfo_OneLeg,convsRefVecOneLeg,iPho.pt(), beamSpot);
-      // cout << "wrote 1 leg conversions to tree" << endl;
-
-      // cout << "ref vector size " << convsRefVec.size() << endl;
-      // if (convsRefVec.size() == 0) continue; //or fill 0 conversions, do this instead
-      // reco::ConversionRefVector convsOneLeg = iPho.conversionsOneLeg();
-      // reco::Conversion convs = *(convsRefVec[0]);
-    }
   } // end conversion info block
 
   // now count many candidate photons we have in this event
