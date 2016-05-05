@@ -248,8 +248,10 @@ private:
   ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo2; // second photon
 
   ExoDiPhotons::jetInfo_t fJetInfo;
-  ExoDiPhotons::conversionInfo_t fConvInfo;
-  ExoDiPhotons::conversionInfo_t fConvInfo_OneLeg;
+  ExoDiPhotons::conversionInfo_t fConvInfo1;
+  ExoDiPhotons::conversionInfo_t fConvInfo2;
+  ExoDiPhotons::conversionInfo_t fConvInfo_OneLeg1;
+  ExoDiPhotons::conversionInfo_t fConvInfo_OneLeg2;
    
   ExoDiPhotons::diphotonInfo_t fDiphotonInfo;
 
@@ -444,39 +446,77 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("JetInfo.passLooseID",fJetInfo.passLooseID,"passLooseID[nJets]/O");
   fTree->Branch("JetInfo.passTightID",fJetInfo.passTightID,"passTightID[nJets]/O");
 
-  fTree->Branch("ConvInfo.nConversions",&fConvInfo.nConversions,"nConversions/I");
-  fTree->Branch("ConvInfo.x",fConvInfo.x,"x[nConversions]/D");
-  fTree->Branch("ConvInfo.y",fConvInfo.y,"y[nConversions]/D");
-  fTree->Branch("ConvInfo.z",fConvInfo.z,"z[nConversions]/D");
-  fTree->Branch("ConvInfo.r",fConvInfo.r,"r[nConversions]/D");
-  fTree->Branch("ConvInfo.phi",fConvInfo.phi,"phi[nConversions]/D");
-  fTree->Branch("ConvInfo.dPhiTracksAtVtx",fConvInfo.dPhiTracksAtVtx,"dPhiTracksAtVtx[nConversions]/D");
-  fTree->Branch("ConvInfo.dPhiTracksAtEcal",fConvInfo.dPhiTracksAtEcal,"dPhiTracksAtEcal[nConversions]/D");
-  fTree->Branch("ConvInfo.dEtaTracksAtEcal",fConvInfo.dEtaTracksAtEcal,"dEtaTracksAtEcal[nConversions]/D");
-  fTree->Branch("ConvInfo.nTracks",fConvInfo.nTracks,"nTracks[nConversions]/D");
-  fTree->Branch("ConvInfo.dxy",fConvInfo.dxy,"dxy[nConversions]/D");
-  fTree->Branch("ConvInfo.dz",fConvInfo.dz,"dz[nConversions]/D");
-  fTree->Branch("ConvInfo.pairCotThetaSeparation",fConvInfo.pairCotThetaSeparation,"pairCotThetaSeparation[nConversions]/D");
-  fTree->Branch("ConvInfo.photonPt",fConvInfo.photonPt,"photonPt[nConversions]/D");
-  fTree->Branch("ConvInfo.dRToSc",fConvInfo.dRToSc,"dRToSc[nConversions]/D");
-  fTree->Branch("ConvInfo.isConverted",fConvInfo.isConverted,"isConverted[nConversions]/O");
-
-  fTree->Branch("ConvInfo_OneLeg.nConversions",&fConvInfo_OneLeg.nConversions,"nConversions/I");
-  fTree->Branch("ConvInfo_OneLeg.x",fConvInfo_OneLeg.x,"x[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.y",fConvInfo_OneLeg.y,"y[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.z",fConvInfo_OneLeg.z,"z[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.r",fConvInfo_OneLeg.r,"r[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.phi",fConvInfo_OneLeg.phi,"phi[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.dPhiTracksAtVtx",fConvInfo_OneLeg.dPhiTracksAtVtx,"dPhiTracksAtVtx[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.dPhiTracksAtEcal",fConvInfo_OneLeg.dPhiTracksAtEcal,"dPhiTracksAtEcal[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.dEtaTracksAtEcal",fConvInfo_OneLeg.dEtaTracksAtEcal,"dEtaTracksAtEcal[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.nTracks",fConvInfo_OneLeg.nTracks,"nTracks[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.dxy",fConvInfo_OneLeg.dxy,"dxy[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.dz",fConvInfo_OneLeg.dz,"dz[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.pairCotThetaSeparation",fConvInfo_OneLeg.pairCotThetaSeparation,"pairCotThetaSeparation[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.photonPt",fConvInfo_OneLeg.photonPt,"photonPt[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.dRToSc",fConvInfo_OneLeg.dRToSc,"dRToSc[nConversions]/D");
-  fTree->Branch("ConvInfo_OneLeg.isConverted",fConvInfo_OneLeg.isConverted,"isConverted[nConversions]/O");
+  fTree->Branch("ConvInfo1.x","std::vector<double>",&fConvInfo1.x);
+  fTree->Branch("ConvInfo1.y","std::vector<double>",&fConvInfo1.y);
+  fTree->Branch("ConvInfo1.z","std::vector<double>",&fConvInfo1.z);
+  fTree->Branch("ConvInfo1.r","std::vector<double>",&fConvInfo1.r);
+  fTree->Branch("ConvInfo1.phi","std::vector<double>",&fConvInfo1.phi);
+  fTree->Branch("ConvInfo1.dPhiTracksAtVtx","std::vector<double>",&fConvInfo1.dPhiTracksAtVtx);
+  fTree->Branch("ConvInfo1.nTracks","std::vector<double>",&fConvInfo1.nTracks);
+  fTree->Branch("ConvInfo1.dxy","std::vector<double>",&fConvInfo1.dxy);
+  fTree->Branch("ConvInfo1.dz","std::vector<double>",&fConvInfo1.dz);
+  fTree->Branch("ConvInfo1.pairCotThetaSeparation","std::vector<double>",&fConvInfo1.pairCotThetaSeparation);
+  fTree->Branch("ConvInfo1.photonPt","std::vector<double>",&fConvInfo1.photonPt);
+  fTree->Branch("ConvInfo1.dRToSc","std::vector<double>",&fConvInfo1.dRToSc);
+  fTree->Branch("ConvInfo1.nSharedHits","std::vector<uint8_t>",&fConvInfo1.nSharedHits);
+  fTree->Branch("ConvInfo1.MVAout","std::vector<double>",&fConvInfo1.MVAout);
+  fTree->Branch("ConvInfo1.oneLegMVA","std::vector<std::vector<float>>",&fConvInfo1.oneLegMVA);
+  fTree->Branch("ConvInfo1.nHitsBeforeVtx","std::vector<std::vector<uint8_t>>",&fConvInfo1.nHitsBeforeVtx);
+  fTree->Branch("ConvInfo1.quality","std::vector<std::vector<int>>",&fConvInfo1.quality);
+   
+  fTree->Branch("ConvInfo2.x","std::vector<double>",&fConvInfo2.x);
+  fTree->Branch("ConvInfo2.y","std::vector<double>",&fConvInfo2.y);
+  fTree->Branch("ConvInfo2.z","std::vector<double>",&fConvInfo2.z);
+  fTree->Branch("ConvInfo2.r","std::vector<double>",&fConvInfo2.r);
+  fTree->Branch("ConvInfo2.phi","std::vector<double>",&fConvInfo2.phi);
+  fTree->Branch("ConvInfo2.dPhiTracksAtVtx","std::vector<double>",&fConvInfo2.dPhiTracksAtVtx);
+  fTree->Branch("ConvInfo2.nTracks","std::vector<double>",&fConvInfo2.nTracks);
+  fTree->Branch("ConvInfo2.dxy","std::vector<double>",&fConvInfo2.dxy);
+  fTree->Branch("ConvInfo2.dz","std::vector<double>",&fConvInfo2.dz);
+  fTree->Branch("ConvInfo2.pairCotThetaSeparation","std::vector<double>",&fConvInfo2.pairCotThetaSeparation);
+  fTree->Branch("ConvInfo2.photonPt","std::vector<double>",&fConvInfo2.photonPt);
+  fTree->Branch("ConvInfo2.dRToSc","std::vector<double>",&fConvInfo2.dRToSc);
+  fTree->Branch("ConvInfo2.nSharedHits","std::vector<uint8_t>",&fConvInfo2.nSharedHits);
+  fTree->Branch("ConvInfo2.MVAout","std::vector<double>",&fConvInfo2.MVAout);
+  fTree->Branch("ConvInfo2.oneLegMVA","std::vector<std::vector<float>>",&fConvInfo2.oneLegMVA);
+  fTree->Branch("ConvInfo2.nHitsBeforeVtx","std::vector<std::vector<uint8_t>>",&fConvInfo2.nHitsBeforeVtx);
+  fTree->Branch("ConvInfo2.quality","std::vector<std::vector<int>>",&fConvInfo2.quality);
+   
+  fTree->Branch("ConvInfo_OneLeg1.x","std::vector<double>",&fConvInfo_OneLeg1.x);
+  fTree->Branch("ConvInfo_OneLeg1.y","std::vector<double>",&fConvInfo_OneLeg1.y);
+  fTree->Branch("ConvInfo_OneLeg1.z","std::vector<double>",&fConvInfo_OneLeg1.z);
+  fTree->Branch("ConvInfo_OneLeg1.r","std::vector<double>",&fConvInfo_OneLeg1.r);
+  fTree->Branch("ConvInfo_OneLeg1.phi","std::vector<double>",&fConvInfo_OneLeg1.phi);
+  fTree->Branch("ConvInfo_OneLeg1.dPhiTracksAtVtx","std::vector<double>",&fConvInfo_OneLeg1.dPhiTracksAtVtx);
+  fTree->Branch("ConvInfo_OneLeg1.nTracks","std::vector<double>",&fConvInfo_OneLeg1.nTracks);
+  fTree->Branch("ConvInfo_OneLeg1.dxy","std::vector<double>",&fConvInfo_OneLeg1.dxy);
+  fTree->Branch("ConvInfo_OneLeg1.dz","std::vector<double>",&fConvInfo_OneLeg1.dz);
+  fTree->Branch("ConvInfo_OneLeg1.pairCotThetaSeparation","std::vector<double>",&fConvInfo_OneLeg1.pairCotThetaSeparation);
+  fTree->Branch("ConvInfo_OneLeg1.photonPt","std::vector<double>",&fConvInfo_OneLeg1.photonPt);
+  fTree->Branch("ConvInfo_OneLeg1.dRToSc","std::vector<double>",&fConvInfo_OneLeg1.dRToSc);
+  fTree->Branch("ConvInfo_OneLeg1.nSharedHits","std::vector<uint8_t>",&fConvInfo_OneLeg1.nSharedHits);
+  fTree->Branch("ConvInfo_OneLeg1.MVAout","std::vector<double>",&fConvInfo_OneLeg1.MVAout);
+  fTree->Branch("ConvInfo_OneLeg1.oneLegMVA","std::vector<std::vector<float>>",&fConvInfo_OneLeg1.oneLegMVA);
+  fTree->Branch("ConvInfo_OneLeg1.nHitsBeforeVtx","std::vector<std::vector<uint8_t>>",&fConvInfo_OneLeg1.nHitsBeforeVtx);
+  fTree->Branch("ConvInfo_OneLeg1.quality","std::vector<std::vector<int>>",&fConvInfo_OneLeg1.quality);
+   
+  fTree->Branch("ConvInfo_OneLeg2.x","std::vector<double>",&fConvInfo_OneLeg2.x);
+  fTree->Branch("ConvInfo_OneLeg2.y","std::vector<double>",&fConvInfo_OneLeg2.y);
+  fTree->Branch("ConvInfo_OneLeg2.z","std::vector<double>",&fConvInfo_OneLeg2.z);
+  fTree->Branch("ConvInfo_OneLeg2.r","std::vector<double>",&fConvInfo_OneLeg2.r);
+  fTree->Branch("ConvInfo_OneLeg2.phi","std::vector<double>",&fConvInfo_OneLeg2.phi);
+  fTree->Branch("ConvInfo_OneLeg2.dPhiTracksAtVtx","std::vector<double>",&fConvInfo_OneLeg2.dPhiTracksAtVtx);
+  fTree->Branch("ConvInfo_OneLeg2.nTracks","std::vector<double>",&fConvInfo_OneLeg2.nTracks);
+  fTree->Branch("ConvInfo_OneLeg2.dxy","std::vector<double>",&fConvInfo_OneLeg2.dxy);
+  fTree->Branch("ConvInfo_OneLeg2.dz","std::vector<double>",&fConvInfo_OneLeg2.dz);
+  fTree->Branch("ConvInfo_OneLeg2.pairCotThetaSeparation","std::vector<double>",&fConvInfo_OneLeg2.pairCotThetaSeparation);
+  fTree->Branch("ConvInfo_OneLeg2.photonPt","std::vector<double>",&fConvInfo_OneLeg2.photonPt);
+  fTree->Branch("ConvInfo_OneLeg2.dRToSc","std::vector<double>",&fConvInfo_OneLeg2.dRToSc);
+  fTree->Branch("ConvInfo_OneLeg2.nSharedHits","std::vector<uint8_t>",&fConvInfo_OneLeg2.nSharedHits);
+  fTree->Branch("ConvInfo_OneLeg2.MVAout","std::vector<double>",&fConvInfo_OneLeg2.MVAout);
+  fTree->Branch("ConvInfo_OneLeg2.oneLegMVA","std::vector<std::vector<float>>",&fConvInfo_OneLeg2.oneLegMVA);
+  fTree->Branch("ConvInfo_OneLeg2.nHitsBeforeVtx","std::vector<std::vector<uint8_t>>",&fConvInfo_OneLeg2.nHitsBeforeVtx);
+  fTree->Branch("ConvInfo_OneLeg2.quality","std::vector<std::vector<int>>",&fConvInfo_OneLeg2.quality);
 
   fTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
   // diphoton info for second or thrid best vertex
@@ -1275,10 +1315,14 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     reco::ConversionCollection twoLegConversions = *(twoLegHandle.product());
     reco::ConversionCollection oneLegConversions = *(oneLegHandle.product());
 
-    reco::Photon iPho = selectedPhotons.at(0);
-    reco::SuperCluster sc = *(iPho.superCluster());
-    ExoDiPhotons::FillConversionInfo(fConvInfo,sc,twoLegConversions,iPho.pt(), beamSpot);
-    ExoDiPhotons::FillConversionInfo(fConvInfo_OneLeg,sc,oneLegConversions,iPho.pt(), beamSpot);
+    reco::Photon iPho1 = selectedPhotons.at(0);
+    reco::Photon iPho2 = selectedPhotons.at(1);
+    reco::SuperCluster sc1 = *(iPho1.superCluster());
+    reco::SuperCluster sc2 = *(iPho2.superCluster());
+    ExoDiPhotons::FillConversionInfo(fConvInfo1,sc1,twoLegConversions,iPho1.pt(), beamSpot);
+    ExoDiPhotons::FillConversionInfo(fConvInfo2,sc2,twoLegConversions,iPho2.pt(), beamSpot);
+    ExoDiPhotons::FillConversionInfo(fConvInfo_OneLeg1,sc1,oneLegConversions,iPho1.pt(), beamSpot);
+    ExoDiPhotons::FillConversionInfo(fConvInfo_OneLeg2,sc2,oneLegConversions,iPho2.pt(), beamSpot);
 
   } // end conversion info block
 
