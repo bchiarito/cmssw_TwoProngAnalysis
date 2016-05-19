@@ -181,7 +181,8 @@ private:
   string             fPUDataHistName;
   string             fPUMCHistName;   
   string             fPFIDCategory;   
-  string             fIDMethod;   
+  string             fIDMethod;
+  string             fJetCollName;   
 
  
   // tools for clusters
@@ -404,7 +405,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 
   bsToken_ = consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
   trigToken_ = consumes<edm::TriggerResults>(fHltInputTag);
-  if (!isAOD) jetsToken_ = consumes< edm::View<pat::Jet> >(edm::InputTag("selectedUpdatedPatJetsUpdatedJEC"));
+  fJetCollName = iConfig.getParameter<std::string>("jetCollection");
+  if (!isAOD) jetsToken_ = consumes< edm::View<pat::Jet> >(edm::InputTag(fJetCollName));
 
   twoLegToken_ = consumes<reco::ConversionCollection>(edm::InputTag("reducedEgamma","reducedConversions"));
   oneLegToken_ = consumes<reco::ConversionCollection>(edm::InputTag("reducedEgamma","reducedSingleLegConversions"));

@@ -3,7 +3,7 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
 options.register('globalTag',
-                '76X_dataRun2_16Dec2015_v0',
+                '74X_mcRun2_asymptotic_realisticBS_v1',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "global tag to use when running")
@@ -229,7 +229,7 @@ process.source = cms.Source ("PoolSource",
 #   process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
 # else:
 #   process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_condDBv2_cff')
-process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
+# process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
 
 
 #use the right global tag!
@@ -237,7 +237,7 @@ process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
 ##process.GlobalTag.globaltag = 'GR_E_V48::All'
 ##process.GlobalTag.globaltag = 'PHYS14_25_V1::All'
 # process.GlobalTag.globaltag = 'MCRUN2_74_V9::All'
-process.GlobalTag.globaltag = options.globalTag
+# process.GlobalTag.globaltag = options.globalTag
 
 # geometry for ecal 
 #When in 5_3_X Need to use diff GeometryDB
@@ -314,14 +314,29 @@ for idmod in my_id_modules:
 
 ## update AK4PFchs jet collection in MiniAOD JECs
 
-from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
+# from PhysicsTools.PatAlgos.producersLayer1.jetUpdater_cff import patJetCorrFactorsUpdated
+# process.load("PhysicsTools.PatAlgos.producersLayer1.jetUpdater_cff")
+# process.patJetCorrFactorsReapplyJEC = process.patJetCorrFactorsUpdated.clone(
+#   src = cms.InputTag("slimmedJets"),
+#   levels = ['L1FastJet', 
+#         'L2Relative', 
+#         'L3Absolute'],
+#   payload = 'AK4PFchs' ) # Make sure to choose the appropriate levels and payload here!
 
-updateJetCollection(
-   process,
-   jetSource = cms.InputTag('slimmedJets'),
-   labelName = 'UpdatedJEC',
-   jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']), 'None')  # Do not forget 'L2L3Residual' on data!
-)
+# from PhysicsTools.PatAlgos.producersLayer1.jetUpdater_cff import patJetsUpdated
+# process.patJetsReapplyJEC = process.patJetsUpdated.clone(
+#   jetSource = cms.InputTag("slimmedJets"),
+#   jetCorrFactorsSource = cms.VInputTag(cms.InputTag("patJetCorrFactorsReapplyJEC"))
+#   )
+
+# from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
+
+# updateJetCollection(
+#    process,
+#    jetSource = cms.InputTag('slimmedJets'),
+#    labelName = 'UpdatedJEC',
+#    jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']), 'None')  # Do not forget 'L2L3Residual' on data!
+# )
 
 #load diphoton analyzer
 process.load("DiPhotonAnalysis.ExoDiPhotonAnalyzer.exodiphotonanalyzer_withrho_cfi")
@@ -338,6 +353,7 @@ process.diphotonAnalyzer.isMC = cms.untracked.bool(options.isMC) # False by defa
 process.diphotonAnalyzer.IDMethod = cms.untracked.string("highpt")
 process.diphotonAnalyzer.PFIDCategory = cms.untracked.string("Loose")
 process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")
+process.diphotonAnalyzer.jetCollection    = cms.string("slimmedJets")
 
 # If running on data the following four entries should not be changed. They are loaded into the analyzer as strings but in the case isMC = False then all the both old_pu_n and pu_n will both be filled with -9999.99
 
