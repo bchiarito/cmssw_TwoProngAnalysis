@@ -31,15 +31,13 @@ namespace ExoDiPhotons{
   const Int_t maxJets = 500;
   struct jetInfo_t{
 
-    Int_t nJets;
-    Double_t pt[maxJets];
-    Double_t eta[maxJets];
-    Double_t phi[maxJets];
-    Double_t mass[maxJets];
-    Double_t energy[maxJets];
-    Bool_t passLooseID[maxJets];
-    Bool_t passTightID[maxJets];
-
+    std::vector<double> pt;
+    std::vector<double> eta;
+    std::vector<double> phi;
+    std::vector<double> mass;
+    std::vector<double> energy;
+    std::vector<int>    passLooseID;
+    std::vector<int>    passTightID;
 
   };
 
@@ -79,21 +77,31 @@ namespace ExoDiPhotons{
 
   void FillJetInfo(jetInfo_t &fJetInfo, const edm::View<pat::Jet>* jets) {
 
-    fJetInfo.nJets = (Int_t)jets->size();
-    for (int i=0; i<fJetInfo.nJets; i++){
-      // std::cout << "jet pt " << jets->at(i).pt() << std::endl;
+    // first need to clear vectors from the previous event!
+    fJetInfo.pt.clear();
+    fJetInfo.eta.clear();
+    fJetInfo.phi.clear();
+    fJetInfo.mass.clear();
+    fJetInfo.energy.clear();
+    fJetInfo.passLooseID.clear();
+    fJetInfo.passTightID.clear();
+    
+    for (unsigned int i = 0; i < jets->size(); i++){
+
       pat::Jet jet = jets->at(i);
-      fJetInfo.pt[i] = jet.pt();
-      fJetInfo.eta[i] = jet.eta();
-      fJetInfo.phi[i] = jet.phi();
-      fJetInfo.mass[i] = jet.mass();
-      fJetInfo.energy[i] = jet.energy();
+      fJetInfo.pt.push_back( jet.pt() );
+      fJetInfo.eta.push_back( jet.eta() );
+      fJetInfo.phi.push_back( jet.phi() );
+      fJetInfo.mass.push_back( jet.mass() );
+      fJetInfo.energy.push_back( jet.energy() );
       
+      // jetID
       Bool_t loose;
       Bool_t tight;
       std::tie(loose,tight) = ExoDiPhotons::jetID(jet);
-      fJetInfo.passLooseID[i] = loose;
-      fJetInfo.passTightID[i] = tight;
+      fJetInfo.passLooseID.push_back( loose );
+      fJetInfo.passTightID.push_back( tight );
+      
     }
 
 

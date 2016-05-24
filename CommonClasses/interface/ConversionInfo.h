@@ -37,6 +37,8 @@ namespace ExoDiPhotons{
     std::vector<double> nTracks;
     std::vector<double> dxy;
     std::vector<double> dz;
+    std::vector<double> vtxChi2;
+    std::vector<double> vtxNdof;
     std::vector<double> pairCotThetaSeparation;
     std::vector<double> photonPt;
     std::vector<double> dRToSc;
@@ -50,10 +52,7 @@ namespace ExoDiPhotons{
 
   };
 
-  // std::string jetInfoBranchDefString("Minv/D:qt:deltaPhi:deltaEta:deltaR:deltaROld:cosThetaStar:cosThetaStarOld");
-  // std::string jetInfoBranchDefString("nJets/I");
-  // std::string jetInfoBranchDefString("nJets/I:pt[nJets]/D");
-  std::string conversionInfoBranchDefString("nConversions/I:x[nConversions]/F:y[nConversions]:z[nConversions]:r[nConversions]:phi[nConversions]:dPhiTracksAtVtx[nConversions]:nTracks[nConversions]:dxy[nConversions]:dz[nConversions]:pairCotThetaSeparation[nConversions]:photonPt[nConversions]:dRToSc[nConversions]");
+  // std::string conversionInfoBranchDefString("nConversions/I:x[nConversions]/F:y[nConversions]:z[nConversions]:r[nConversions]:phi[nConversions]:dPhiTracksAtVtx[nConversions]:nTracks[nConversions]:dxy[nConversions]:dz[nConversions]:pairCotThetaSeparation[nConversions]:photonPt[nConversions]:dRToSc[nConversions]");
   
   // return dR between supercluster and conversion
   double scConvDr(const reco::SuperCluster &sc, const reco::Conversion &conv){
@@ -81,32 +80,45 @@ namespace ExoDiPhotons{
   }
   void FillConversionInfo(conversionInfo_t &convInfo, const reco::SuperCluster& sc, const reco::ConversionCollection& convColl, double phoPt, const reco::BeamSpot& bs) {
     using namespace std;
-    cout << "in FillConversionInfo" << endl;
-    // convInfo.nConversions = (Int_t)convColl.size();
+    
+    // first need to clear vectors from the previous event!
+    convInfo.x.clear();
+    convInfo.y.clear();
+    convInfo.z.clear();
+    convInfo.r.clear();
+    convInfo.phi.clear();
+    convInfo.dPhiTracksAtVtx.clear();
+    convInfo.nTracks.clear();
+    convInfo.dxy.clear();
+    convInfo.dz.clear();
+    convInfo.vtxChi2.clear();
+    convInfo.vtxNdof.clear();
+    convInfo.pairCotThetaSeparation.clear();
+    convInfo.photonPt.clear();
+    convInfo.dRToSc.clear();
+    convInfo.nSharedHits.clear();
+    convInfo.MVAout.clear();
+    convInfo.oneLegMVA.clear();
+    convInfo.nHitsBeforeVtx.clear();
+    convInfo.quality.clear();
+
     int numMatched = 0;
     for (unsigned int i=0; i<convColl.size(); i++){
-      cout << "in conversion collection loop 0" << endl;
       reco::Conversion iConv = convColl.at(i);
       bool matched = ConversionTools::matchesConversion(sc,iConv,0.2,999.,999.); // matched within dR of 0.2
       if (matched){
-        cout << "in conversion collection loop 1" << endl;
-        // convInfo.x[numMatched] = iConv.conversionVertex().position().X(); //numMatched is incremented at the end, so using it as the index is OK
-        // convInfo.y[numMatched] = iConv.conversionVertex().position().Y();
         convInfo.x.push_back(iConv.conversionVertex().position().X());
         convInfo.y.push_back(iConv.conversionVertex().position().Y());
         convInfo.z.push_back(iConv.conversionVertex().position().Z());
-        cout << "in conversion collection loop 2" << endl;
-        convInfo.r.push_back(TMath::Sqrt((convInfo.x[numMatched]*convInfo.x[numMatched]) + (convInfo.y[numMatched]*convInfo.y[numMatched])));
+        convInfo.r.push_back(TMath::Sqrt((convInfo.x[numMatched]*convInfo.x[numMatched]) + (convInfo.y[numMatched]*convInfo.y[numMatched]))); //numMatched is incremented at the end, so using it as the index is OK
         convInfo.phi.push_back(TMath::ATan2( convInfo.y[numMatched] , convInfo.x[numMatched] ));
-        cout << "in conversion collection loop 3" << endl;
         convInfo.dPhiTracksAtVtx.push_back(iConv.dPhiTracksAtVtx());
-        cout << "in conversion collection loop 3.1" << endl;
         convInfo.nTracks.push_back(iConv.nTracks());
         convInfo.dxy.push_back(iConv.dxy(bs.position()));
         convInfo.dz.push_back(iConv.dz(bs.position()));
-        cout << "in conversion collection loop 5" << endl;
+        convInfo.vtxChi2.push_back(iConv.conversionVertex().chi2());
+        convInfo.vtxNdof.push_back(iConv.conversionVertex().ndof());
         convInfo.pairCotThetaSeparation.push_back(iConv.pairCotThetaSeparation());
-        cout << "in conversion collection loop 6" << endl;
         convInfo.photonPt.push_back(phoPt);
         convInfo.dRToSc.push_back(scConvDr(sc,iConv));
         convInfo.nSharedHits.push_back(iConv.nSharedHits());
@@ -129,8 +141,6 @@ namespace ExoDiPhotons{
         numMatched++;
 
       }
-      // convInfo.nConversions = numMatched;
-      cout << "finish conversion collection loop" << endl;
     } // end loop over conversion collection
 
 

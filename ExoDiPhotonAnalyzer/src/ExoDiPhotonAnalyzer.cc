@@ -168,7 +168,8 @@ private:
   edm::InputTag      fHltInputTag;     // hltResults
   // edm::InputTag      fL1InputTag;      // L1 results
   edm::InputTag      fRho25Tag;  
-  edm::InputTag      fpileupCollectionTag;         
+  edm::InputTag      fpileupCollectionTag;
+  edm::InputTag      fJetCollTag;         
   edm::LumiReWeighting    LumiWeights;      
   
   bool               fkRemoveSpikes;   // option to remove spikes before filling tree
@@ -181,8 +182,7 @@ private:
   string             fPUDataHistName;
   string             fPUMCHistName;   
   string             fPFIDCategory;   
-  string             fIDMethod;
-  string             fJetCollName;   
+  string             fIDMethod;   
 
  
   // tools for clusters
@@ -405,8 +405,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 
   bsToken_ = consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
   trigToken_ = consumes<edm::TriggerResults>(fHltInputTag);
-  fJetCollName = iConfig.getParameter<std::string>("jetCollection");
-  if (!isAOD) jetsToken_ = consumes< edm::View<pat::Jet> >(edm::InputTag(fJetCollName));
+  fJetCollTag = iConfig.getParameter<edm::InputTag>("jetCollection");
+  if (!isAOD) jetsToken_ = consumes< edm::View<pat::Jet> >(fJetCollTag);
 
   twoLegToken_ = consumes<reco::ConversionCollection>(edm::InputTag("reducedEgamma","reducedConversions"));
   oneLegToken_ = consumes<reco::ConversionCollection>(edm::InputTag("reducedEgamma","reducedSingleLegConversions"));
@@ -439,14 +439,13 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   // now with CommonClasses, use the string defined in the header
   fTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
-  fTree->Branch("JetInfo.nJets",&fJetInfo.nJets,"nJets/I");
-  fTree->Branch("JetInfo.pt",fJetInfo.pt,"pt[nJets]/D");
-  fTree->Branch("JetInfo.eta",fJetInfo.eta,"eta[nJets]/D");
-  fTree->Branch("JetInfo.phi",fJetInfo.phi,"phi[nJets]/D");
-  fTree->Branch("JetInfo.mass",fJetInfo.mass,"mass[nJets]/D");
-  fTree->Branch("JetInfo.energy",fJetInfo.energy,"energy[nJets]/D");
-  fTree->Branch("JetInfo.passLooseID",fJetInfo.passLooseID,"passLooseID[nJets]/O");
-  fTree->Branch("JetInfo.passTightID",fJetInfo.passTightID,"passTightID[nJets]/O");
+  fTree->Branch("JetInfo.pt","std::vector<double>",&fJetInfo.pt);
+  fTree->Branch("JetInfo.eta","std::vector<double>",&fJetInfo.eta);
+  fTree->Branch("JetInfo.phi","std::vector<double>",&fJetInfo.phi);
+  fTree->Branch("JetInfo.mass","std::vector<double>",&fJetInfo.mass);
+  fTree->Branch("JetInfo.energy","std::vector<double>",&fJetInfo.energy);
+  fTree->Branch("JetInfo.passLooseID","std::vector<int>",&fJetInfo.passLooseID);
+  fTree->Branch("JetInfo.passTightID","std::vector<int>",&fJetInfo.passTightID);
 
   fTree->Branch("ConvInfo1.x","std::vector<double>",&fConvInfo1.x);
   fTree->Branch("ConvInfo1.y","std::vector<double>",&fConvInfo1.y);
@@ -457,6 +456,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo1.nTracks","std::vector<double>",&fConvInfo1.nTracks);
   fTree->Branch("ConvInfo1.dxy","std::vector<double>",&fConvInfo1.dxy);
   fTree->Branch("ConvInfo1.dz","std::vector<double>",&fConvInfo1.dz);
+  fTree->Branch("ConvInfo1.vtxChi2","std::vector<double>",&fConvInfo1.vtxChi2);
+  fTree->Branch("ConvInfo1.vtxNdof","std::vector<double>",&fConvInfo1.vtxNdof);
   fTree->Branch("ConvInfo1.pairCotThetaSeparation","std::vector<double>",&fConvInfo1.pairCotThetaSeparation);
   fTree->Branch("ConvInfo1.photonPt","std::vector<double>",&fConvInfo1.photonPt);
   fTree->Branch("ConvInfo1.dRToSc","std::vector<double>",&fConvInfo1.dRToSc);
@@ -475,6 +476,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo2.nTracks","std::vector<double>",&fConvInfo2.nTracks);
   fTree->Branch("ConvInfo2.dxy","std::vector<double>",&fConvInfo2.dxy);
   fTree->Branch("ConvInfo2.dz","std::vector<double>",&fConvInfo2.dz);
+  fTree->Branch("ConvInfo2.vtxChi2","std::vector<double>",&fConvInfo2.vtxChi2);
+  fTree->Branch("ConvInfo2.vtxNdof","std::vector<double>",&fConvInfo2.vtxNdof);
   fTree->Branch("ConvInfo2.pairCotThetaSeparation","std::vector<double>",&fConvInfo2.pairCotThetaSeparation);
   fTree->Branch("ConvInfo2.photonPt","std::vector<double>",&fConvInfo2.photonPt);
   fTree->Branch("ConvInfo2.dRToSc","std::vector<double>",&fConvInfo2.dRToSc);
@@ -493,6 +496,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo_OneLeg1.nTracks","std::vector<double>",&fConvInfo_OneLeg1.nTracks);
   fTree->Branch("ConvInfo_OneLeg1.dxy","std::vector<double>",&fConvInfo_OneLeg1.dxy);
   fTree->Branch("ConvInfo_OneLeg1.dz","std::vector<double>",&fConvInfo_OneLeg1.dz);
+  fTree->Branch("ConvInfo_OneLeg1.vtxChi2","std::vector<double>",&fConvInfo_OneLeg1.vtxChi2);
+  fTree->Branch("ConvInfo_OneLeg1.vtxNdof","std::vector<double>",&fConvInfo_OneLeg1.vtxNdof);
   fTree->Branch("ConvInfo_OneLeg1.pairCotThetaSeparation","std::vector<double>",&fConvInfo_OneLeg1.pairCotThetaSeparation);
   fTree->Branch("ConvInfo_OneLeg1.photonPt","std::vector<double>",&fConvInfo_OneLeg1.photonPt);
   fTree->Branch("ConvInfo_OneLeg1.dRToSc","std::vector<double>",&fConvInfo_OneLeg1.dRToSc);
@@ -511,6 +516,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo_OneLeg2.nTracks","std::vector<double>",&fConvInfo_OneLeg2.nTracks);
   fTree->Branch("ConvInfo_OneLeg2.dxy","std::vector<double>",&fConvInfo_OneLeg2.dxy);
   fTree->Branch("ConvInfo_OneLeg2.dz","std::vector<double>",&fConvInfo_OneLeg2.dz);
+  fTree->Branch("ConvInfo_OneLeg2.vtxChi2","std::vector<double>",&fConvInfo_OneLeg2.vtxChi2);
+  fTree->Branch("ConvInfo_OneLeg2.vtxNdof","std::vector<double>",&fConvInfo_OneLeg2.vtxNdof);
   fTree->Branch("ConvInfo_OneLeg2.pairCotThetaSeparation","std::vector<double>",&fConvInfo_OneLeg2.pairCotThetaSeparation);
   fTree->Branch("ConvInfo_OneLeg2.photonPt","std::vector<double>",&fConvInfo_OneLeg2.photonPt);
   fTree->Branch("ConvInfo_OneLeg2.dRToSc","std::vector<double>",&fConvInfo_OneLeg2.dRToSc);

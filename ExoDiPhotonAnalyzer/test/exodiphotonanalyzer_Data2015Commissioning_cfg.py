@@ -169,11 +169,16 @@ for idmod in my_id_modules:
 
 from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
 
+jetCorrs = ['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']
+if options.isMC:
+  jetCorrs = ['L1FastJet', 'L2Relative', 'L3Absolute']
+
+
 updateJetCollection(
    process,
    jetSource = cms.InputTag('slimmedJets'),
    labelName = 'UpdatedJEC',
-   jetCorrections = ('AK4PFchs', cms.vstring(['L1FastJet', 'L2Relative', 'L3Absolute', 'L2L3Residual']), 'None')  # Do not forget 'L2L3Residual' on data!
+   jetCorrections = ('AK4PFchs', cms.vstring(jetCorrs), 'None')  # Do not forget 'L2L3Residual' on data!
 )
 
 #load diphoton analyzer
@@ -187,10 +192,11 @@ process.diphotonAnalyzer.requireTightPhotons = False # ie only tight photons wil
 process.diphotonAnalyzer.requireGenEventInfo = False #write MC info when running on MC
 
 process.diphotonAnalyzer.isAOD = cms.bool(options.useAOD) # True=AOD, False=MiniAOD
-process.diphotonAnalyzer.isMC = cms.untracked.bool(options.isMC) # False by default, run with isMC=True for MC
+process.diphotonAnalyzer.isMC = cms.untracked.bool(False)
 process.diphotonAnalyzer.IDMethod = cms.untracked.string("highpt")
 process.diphotonAnalyzer.PFIDCategory = cms.untracked.string("Loose")
 process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")
+process.diphotonAnalyzer.jetCollection = cms.InputTag("updatedPatJetsUpdatedJEC")
 
 # If running on data the following four entries should not be changed. They are loaded into the analyzer as strings but in the case isMC = False then all the both old_pu_n and pu_n will both be filled with -9999.99
 
