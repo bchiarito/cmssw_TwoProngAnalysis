@@ -3,7 +3,7 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
 options.register('globalTag',
-                '74X_mcRun2_asymptotic_realisticBS_v1',
+                '76X_dataRun2_16Dec2015_v0',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "global tag to use when running")
@@ -71,12 +71,8 @@ process.source = cms.Source ("PoolSource",
                 # debugFlag      = cms.untracked.bool(True)
  ) 
 
-#use the right global tag!
-##process.GlobalTag.globaltag = 'GR_P_V54::All'
-##process.GlobalTag.globaltag = 'GR_E_V48::All'
-##process.GlobalTag.globaltag = 'PHYS14_25_V1::All'
-# process.GlobalTag.globaltag = 'MCRUN2_74_V9::All'
-# process.GlobalTag.globaltag = options.globalTag
+process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
+process.GlobalTag.globaltag = options.globalTag
 
 # geometry for ecal 
 #When in 5_3_X Need to use diff GeometryDB

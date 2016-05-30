@@ -318,6 +318,9 @@ private:
   std::vector<Int_t> passMediumId_;
   std::vector<Int_t> passTightId_;
   //-----------------taken from Ilya-----------------
+  
+  // Branch Variables for charged decay analysis
+  int fNumPVs;
 
 };
 
@@ -532,6 +535,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   // only bothering to add this for tight-tight tree for now
   fTree->Branch("DiphotonVtx2",&fDiphotonInfoVtx2,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
   fTree->Branch("DiphotonVtx3",&fDiphotonInfoVtx3,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
+
+  // Adding branches for charged decay analysis
+  fTree->Branch("numPVs",&fNumPVs,"numPVs/I");
   
 
   // repeating all this for each of tight-fake and fake-fake trees

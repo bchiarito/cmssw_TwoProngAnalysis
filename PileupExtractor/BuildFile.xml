@@ -1,7 +1,0 @@
-<use   name="FWCore/Framework"/>
-<use   name="FWCore/PluginManager"/>
-<use   name="FWCore/ParameterSet"/>
-<use   name="CommonTools/UtilAlgos"/>
-<use   name="SimDataFormats/PileupSummaryInfo"/>
-<use   name="PhysicsTools/Utilities"/>
-<flags EDM_PLUGIN="1"/>
