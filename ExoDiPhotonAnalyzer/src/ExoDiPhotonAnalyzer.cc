@@ -26,6 +26,7 @@
 #include <utility>  // for std::pair
 #include "TClonesArray.h"
 #include "TVector3.h"
+#include "TLorentzVector.h"
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -97,6 +98,7 @@
 // new CommonClasses approach
 // these objects are all in the namespace 'ExoDiPhotons'
 #include "DiPhotonAnalysis/CommonClasses/interface/RecoPhotonInfo.h"
+#include "DiPhotonAnalysis/CommonClasses/interface/RecoTwoProngInfo.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/TriggerInfo.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/PhotonID.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/EventAndVertexInfo.h"
@@ -266,6 +268,19 @@ private:
   TH1F *fNumTotalEvents;
   TH1F *fNumTotalWeightedEvents;
 
+  edm::EDGetTokenT<pat::PackedCandidateCollection> pfcandsToken_;
+  edm::EDGetTokenT<vector<reco::GenParticle>> genToken_;
+  edm::EDGetTokenT<vector<reco::Vertex>> pvToken_;
+  double fCandidatePairDR;
+  double fCandidatePairMinPt;
+  double fCandidatePairIsolationDR;
+  double fCandidatePairPhiBox;
+  double fCandidatePairEtaBox;
+  double fCandidatePairPhotonPtCut;
+  double fCandidatePairChargedIsoCut;
+  double fCandidatePairNeutralIsoCut;
+  double fCandidatePairEGammaIsoCut;
+  double fCandidatePairGenMatchDR;
 
   //-----------------taken from Ilya-----------------
   // Format-independent data members
@@ -319,9 +334,23 @@ private:
   std::vector<Int_t> passTightId_;
   //-----------------taken from Ilya-----------------
   
-  // Branch Variables for charged decay analysis
+  // ** charged decay analysis **
+  // Branch variables
   int fNumPVs;
-
+  int fNumCHpairs;
+  int fNumCHpairsPass;
+  int fNumCHpairsMatch;
+  int fNumCHpairsPassMatch;
+  ExoDiPhotons::recoTwoProngInfo_t fRecoTwoProngInfo1;
+  ExoDiPhotons::recoTwoProngInfo_t fRecoTwoProngInfo2;
+  double fGenEta1_pt;
+  double fGenEta1_eta;
+  double fGenEta1_phi;
+  double fGenEta1_m;
+  double fGenEta2_pt;
+  double fGenEta2_eta;
+  double fGenEta2_phi;
+  double fGenEta2_m;
 };
 
 //
@@ -354,6 +383,16 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fPUMCHistName(iConfig.getUntrackedParameter<string>("PUMCHistName")),
     fPFIDCategory(iConfig.getUntrackedParameter<string>("PFIDCategory")),
     fIDMethod(iConfig.getUntrackedParameter<string>("IDMethod")),
+    fCandidatePairDR(iConfig.getUntrackedParameter<double>("chargedHadronPairMinDeltaR")),
+    fCandidatePairMinPt(iConfig.getUntrackedParameter<double>("chargedHadronMinPt")),
+    fCandidatePairIsolationDR(iConfig.getUntrackedParameter<double>("isolationDeltaR")),
+    fCandidatePairPhiBox(iConfig.getUntrackedParameter<double>("photonPhiBoxSize")),
+    fCandidatePairEtaBox(iConfig.getUntrackedParameter<double>("photonEtaBoxSize")),
+    fCandidatePairPhotonPtCut(iConfig.getUntrackedParameter<double>("photonPtCut")),
+    fCandidatePairChargedIsoCut(iConfig.getUntrackedParameter<double>("chargedIsoCut")),
+    fCandidatePairNeutralIsoCut(iConfig.getUntrackedParameter<double>("neutralIsoCut")),
+    fCandidatePairEGammaIsoCut(iConfig.getUntrackedParameter<double>("egammaIsoCut")),
+    fCandidatePairGenMatchDR(iConfig.getUntrackedParameter<double>("generatorEtaMatchDR")),
     //-----------------taken from Ilya-----------------
     rhoToken_(consumes<double> (iConfig.getParameter<edm::InputTag>("rho"))),
     // Cluster shapes
@@ -405,6 +444,10 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 
   if (isAOD) vtxToken_ = consumes<reco::VertexCollection>(edm::InputTag("offlinePrimaryVertices"));
   else vtxToken_ = consumes<reco::VertexCollection>(edm::InputTag("offlineSlimmedPrimaryVertices"));
+
+  if (!isAOD) pfcandsToken_ = consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates"));
+  if (!isAOD) genToken_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
+  if (!isAOD) pvToken_ = consumes<vector<reco::Vertex>>(edm::InputTag("offlineSlimmedPrimaryVertices"));
 
   bsToken_ = consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
   trigToken_ = consumes<edm::TriggerResults>(fHltInputTag);
@@ -537,8 +580,25 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("DiphotonVtx3",&fDiphotonInfoVtx3,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
 
   // Adding branches for charged decay analysis
+  // Event wide
   fTree->Branch("numPVs",&fNumPVs,"numPVs/I");
-  
+  // Cutflow
+  fTree->Branch("numCHpairs",&fNumCHpairs,"numCHpairs/I");
+  fTree->Branch("numCHpairsPass",&fNumCHpairsPass,"numCHpairsPass/I");
+  fTree->Branch("numCHpairsMatch",&fNumCHpairsMatch,"numCHpairsMatch/I");
+  fTree->Branch("numCHpairsPassMatch",&fNumCHpairsPassMatch,"numCHpairsPassMatch/I");
+  // Leading two candidates
+  fTree->Branch("candEta1",&fRecoTwoProngInfo1,ExoDiPhotons::recoTwoProngBranchDefString.c_str());
+  fTree->Branch("candEta2",&fRecoTwoProngInfo2,ExoDiPhotons::recoTwoProngBranchDefString.c_str());
+  // Generator level info
+  fTree->Branch("genEta1_pt",&fGenEta1_pt,"genEta1_pt/D");
+  fTree->Branch("genEta1_eta",&fGenEta1_pt,"genEta1_eta/D");
+  fTree->Branch("genEta1_phi",&fGenEta1_pt,"genEta1_phi/D");
+  fTree->Branch("genEta1_m",&fGenEta1_pt,"genEta1_m/D");
+  fTree->Branch("genEta2_pt",&fGenEta2_pt,"genEta2_pt/D");
+  fTree->Branch("genEta2_eta",&fGenEta2_pt,"genEta2_eta/D");
+  fTree->Branch("genEta2_phi",&fGenEta2_pt,"genEta2_phi/D");
+  fTree->Branch("genEta2_m",&fGenEta2_pt,"genEta2_m/D");
 
   // repeating all this for each of tight-fake and fake-fake trees
   // basically they'll all point to the same structs, but the structs will contain
@@ -1780,23 +1840,220 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   } // end require two objects
 
+  // Fill branches for charged decay analysis
+  cout << "start charged decay code" << endl;
+  edm::Handle<pat::PackedCandidateCollection> pfcands;
+  iEvent.getByToken(pfcandsToken_, pfcands);
 
-  
+  edm::Handle<vector<reco::GenParticle>> genparticles;
+  iEvent.getByToken(genToken_, genparticles);
 
+  edm::Handle<vector<reco::Vertex>> primaryvertecies;
+  iEvent.getByToken(pvToken_, primaryvertecies);
 
+  fNumPVs = primaryvertecies->size();
 
+  // Prepare hard generator Eta collection
+  vector<TLorentzVector> generatorEtas;
+  for (unsigned int i = 0; i < genparticles->size(); ++i) {
+    const reco::GenParticle &gen = (*genparticles)[i];
+    TLorentzVector genparticle;
+    genparticle.SetPtEtaPhiE(gen.pt(), gen.eta(), gen.phi(), gen.energy());
+    if (gen.status() == 2 && abs(gen.pdgId()) == 221)
+      generatorEtas.push_back(genparticle);
+  }
+  if (generatorEtas.size() != 2)  
+    cout << "*** Incorrect number of generator Eta particles (not exactly two status=2)!!! ***" << endl;
+  fGenEta1_pt = generatorEtas[0].Pt();
+  fGenEta1_phi = generatorEtas[0].Phi();
+  fGenEta1_eta = generatorEtas[0].Eta();
+  fGenEta1_m = generatorEtas[0].M();
+  fGenEta2_pt = generatorEtas[1].Pt();
+  fGenEta2_phi = generatorEtas[1].Phi();
+  fGenEta2_eta = generatorEtas[1].Eta();
+  fGenEta2_m = generatorEtas[1].M();
 
-#ifdef THIS_IS_AN_EVENT_EXAMPLE
-  Handle<ExampleData> pIn;
-  iEvent.getByLabel("example",pIn);
-#endif
-   
-#ifdef THIS_IS_AN_EVENTSETUP_EXAMPLE
-  ESHandle<SetupData> pSetup;
-  iSetup.get<SetupRecord>().get(pSetup);
-#endif
+  // Find all pairs of CH pos CH neg
+  vector<TLorentzVector> candidates_center;
+  vector<TLorentzVector> candidates_CHpos;
+  vector<TLorentzVector> candidates_CHneg;
+  for (unsigned int i = 0; i < pfcands->size(); ++i) {   
+    for (unsigned int j = i+1; j < pfcands->size(); ++j) {   
+      const pat::PackedCandidate &pf1 = (*pfcands)[i];
+      const pat::PackedCandidate &pf2 = (*pfcands)[j];
+      if ( pf1.pt() < fCandidatePairMinPt || pf2.pt() < fCandidatePairMinPt)
+        continue;      
+      if ( ((pf1.pdgId() == 211) && (pf2.pdgId() == -211)) ||
+           ((pf1.pdgId() == -211) && (pf2.pdgId() == 211)) ) {
+        TLorentzVector pfcand1;
+        pfcand1.SetPtEtaPhiE(pf1.pt(), pf1.eta(), pf1.phi(), pf1.energy());
+        TLorentzVector pfcand2;
+        pfcand2.SetPtEtaPhiE(pf2.pt(), pf2.eta(), pf2.phi(), pf2.energy());
+        TLorentzVector center;
+        // found CH pos and CH minus, now check DR
+        double dr = pfcand1.DeltaR(pfcand2);
+        if (dr < fCandidatePairDR) {
+          center = pfcand1 + pfcand2;
+          candidates_center.push_back(center);
+          if (pf1.pdgId() > 0) {
+            candidates_CHpos.push_back(pfcand1);
+            candidates_CHneg.push_back(pfcand2);
+          } else {
+            candidates_CHpos.push_back(pfcand2);
+            candidates_CHneg.push_back(pfcand1);
+          }
+        }
+      }
+    }
+  } // end double loop over pf
+  fNumCHpairs = candidates_center.size();
+  cout << ". finish pairs finding" << endl;
+
+  // Associate data to candidate pairs
+  vector<TLorentzVector> candidates_photon;
+  vector<TLorentzVector> candidates_Eta;
+  vector<bool> candidates_passed;
+  vector<bool> candidates_matched;
+  vector<double> candidates_nearestGenDR;
+  vector<int> candidates_nearestGenIndex;
+  vector<double> candidates_relchargediso;
+  vector<double> candidates_relneutraliso;
+  vector<double> candidates_relegammaiso;
+  vector<int> candidates_numgamma;
+  vector<int> candidates_nume;
+  int num_passed = 0;
+  int num_matched = 0;
+  int num_passed_matched = 0;
+  for (unsigned int i = 0; i < candidates_center.size(); ++i) {
+    TLorentzVector centerfourvec;
+    centerfourvec.SetPtEtaPhiM(candidates_center[i].Pt(), candidates_center[i].Eta(),
+                               candidates_center[i].Phi(), candidates_center[i].M());
+    // Define Photon
+    TLorentzVector photon;
+    int numgamma = 0;
+    int nume = 0;
+    for (unsigned int j = 0; j < pfcands->size(); ++j) {
+      const pat::PackedCandidate &pf = (*pfcands)[j];
+      TLorentzVector pfcand;
+      pfcand.SetPtEtaPhiE(pf.pt(), pf.eta(), pf.phi(), pf.energy());
+      // include electrons or photons inside 'photon box'
+      if ( (pf.pdgId() == 22 || abs(pf.pdgId()) == 11) &&
+           abs(pf.phi() - candidates_center[i].Phi()) < fCandidatePairPhiBox/2.0 &&
+           abs(pf.eta() - candidates_center[i].Eta()) < fCandidatePairEtaBox/2.0) {
+        if (pf.pdgId() == 22) numgamma += 1;
+        else nume += 1;
+        photon = photon + pfcand;
+      }
+    } // end pf cand loop
+    cout << ". finished photon" << endl;
+
+    // Definite isolations
+    double chargedIso = 0;
+    double neutralIso = 0;
+    double egammaIso = 0;
+    for (unsigned int j = 0; j < pfcands->size(); ++j) {
+      const pat::PackedCandidate &pf = (*pfcands)[j];
+      TLorentzVector pfcand;
+      pfcand.SetPtEtaPhiE(pf.pt(), pf.eta(), pf.phi(), pf.energy());
+      if (abs(pf.pdgId()) == 211 || abs(pf.pdgId()) == 13)  { // charged hadron isolation, include muons
+        if (candidates_center[i].DeltaR(pfcand) < fCandidatePairIsolationDR)
+          chargedIso += pfcand.Pt();
+      } else if (pf.pdgId() == 130) { // neutral chadron isolation
+        if (candidates_center[i].DeltaR(pfcand) < fCandidatePairIsolationDR)
+          neutralIso += pfcand.Pt();
+      } else if (abs(pf.pdgId()) == 11 || pf.pdgId() == 22) { // e gamma isolation
+        if ( (candidates_center[i].DeltaR(pfcand) < fCandidatePairIsolationDR) &&
+             abs(pf.phi() - candidates_center[i].Phi()) > fCandidatePairPhiBox/2.0 &&
+             abs(pf.eta() - candidates_center[i].Eta()) > fCandidatePairEtaBox/2.0)
+          egammaIso += pfcand.Pt();
+      }
+    } // end pf cand loop
+    cout << ". finished isolation" << endl;
+
+    // Selection on Eta Candidate
+    TLorentzVector EtaCandidate;
+    EtaCandidate = candidates_center[i] + photon;
+    double relchargedIso = chargedIso / EtaCandidate.Pt();
+    double relneutralIso = neutralIso / EtaCandidate.Pt();
+    double relegammaIso = egammaIso / EtaCandidate.Pt();
+    bool passed = relchargedIso < fCandidatePairChargedIsoCut &&
+                relneutralIso < fCandidatePairNeutralIsoCut &&
+                relegammaIso < fCandidatePairEGammaIsoCut &&
+                photon.Pt() > fCandidatePairPhotonPtCut;
+    cout << ". finished selection" << endl;
+
+    // Generator Matching
+    double mingenDR = 999999;
+    int index = 999;
+    for (unsigned int j = 0; j < 2; ++j) {
+      TLorentzVector *genEta = &generatorEtas[j];
+      if (EtaCandidate.DeltaR(*genEta) < mingenDR) {
+        mingenDR = EtaCandidate.DeltaR(*genEta);
+        index = j;
+      }
+    } // end gen particle loop
+    bool matched = false;
+    if (mingenDR < fCandidatePairGenMatchDR) matched = true;
+    if (passed) num_passed += 1;
+    if (matched) num_matched += 1;
+    if (passed && matched) num_passed_matched += 1;
+    cout << ". finished matching" << endl;
+    // Fill all vectors for each candidate all at once
+    candidates_numgamma.push_back(numgamma);
+    candidates_nume.push_back(nume);
+    candidates_photon.push_back(photon);
+    candidates_relchargediso.push_back(relchargedIso);
+    candidates_relneutraliso.push_back(relneutralIso);
+    candidates_relegammaiso.push_back(relegammaIso);
+    candidates_passed.push_back(passed);
+    candidates_Eta.push_back(EtaCandidate);
+    candidates_nearestGenDR.push_back(mingenDR);
+    candidates_nearestGenIndex.push_back(index+1); // denotes '1' (first) or '2' (second), instead of '0' or '1'
+    candidates_matched.push_back(matched);
+  } // end candidate loop
+  fNumCHpairsPass = num_passed;
+  fNumCHpairsMatch = num_matched;
+  fNumCHpairsPassMatch = num_passed_matched;
+
+  // For leading two passing charged hadron pairs, save info into ttree
+  int leading_index = -1;
+  double leading_pt = -1;
+  int subleading_index = -1;
+  double subleading_pt = -1;
+  for (unsigned int i = 0; i < candidates_passed.size(); i++) {
+    if (candidates_passed[i] && 
+        candidates_Eta[i].Pt() > leading_pt) {
+      subleading_index = leading_index;
+      subleading_pt = leading_pt;
+      leading_index = i;
+      leading_pt = candidates_Eta[i].Pt();
+    } else if (candidates_passed[i] && 
+               candidates_Eta[i].Pt() > subleading_pt) {
+      subleading_index = i;
+      subleading_pt = candidates_Eta[i].Pt();
+    }
+  } // end candidate loop
+  if (num_passed == 0) {
+    ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo1);
+    ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo2);
+  } else if (num_passed == 1) {
+    ExoDiPhotons::FillRecoTwoProngInfo(fRecoTwoProngInfo1, candidates_CHpos[leading_index], candidates_CHneg[leading_index],
+                                       candidates_center[leading_index], candidates_photon[leading_index], candidates_Eta[leading_index],
+                                       candidates_passed[leading_index], candidates_matched[leading_index], candidates_nearestGenDR[leading_index],
+                                       candidates_nearestGenIndex[leading_index]);
+    ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo2);
+  } else if (num_passed >= 2) {
+    ExoDiPhotons::FillRecoTwoProngInfo(fRecoTwoProngInfo1, candidates_CHpos[leading_index], candidates_CHneg[leading_index],
+                                       candidates_center[leading_index], candidates_photon[leading_index], candidates_Eta[leading_index],
+                                       candidates_passed[leading_index], candidates_matched[leading_index], candidates_nearestGenDR[leading_index],
+                                       candidates_nearestGenIndex[leading_index]);
+    ExoDiPhotons::FillRecoTwoProngInfo(fRecoTwoProngInfo2, candidates_CHpos[subleading_index], candidates_CHneg[subleading_index],
+                                       candidates_center[subleading_index], candidates_photon[subleading_index], candidates_Eta[subleading_index],
+                                       candidates_passed[subleading_index], candidates_matched[subleading_index], candidates_nearestGenDR[subleading_index],
+                                       candidates_nearestGenIndex[subleading_index]);
+  }
+  cout << "finished charged decay code" << endl;
 }
-
 
 // ------------ method called once each job just before starting event loop  ------------
 void 

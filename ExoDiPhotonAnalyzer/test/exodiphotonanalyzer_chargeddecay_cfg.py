@@ -28,7 +28,7 @@ options.register("decayType",
                 VarParsing.varType.string,
                 "which sample we want to run over"
 )
-options.setDefault('maxEvents', -1)
+options.setDefault('maxEvents', 100)
 options.parseArguments()
 
 import FWCore.ParameterSet.Config as cms

@@ -11,6 +11,18 @@ diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   requireTightPhotons = cms.untracked.bool(True),
                                   requireGenEventInfo = cms.untracked.bool(False),
                                   isMC = cms.untracked.bool(True),
+                                  # charged decay configuration
+                                  chargedHadronPairMinDeltaR = cms.untracked.double(0.5),
+                                  chargedHadronMinPt = cms.untracked.double(10.0),
+                                  isolationDeltaR = cms.untracked.double(0.3),
+                                  photonPhiBoxSize = cms.untracked.double(0.8),
+                                  photonEtaBoxSize = cms.untracked.double(0.08),
+                                  photonPtCut = cms.untracked.double(10),
+                                  chargedIsoCut = cms.untracked.double(0.05),
+                                  neutralIsoCut = cms.untracked.double(0.05),
+                                  egammaIsoCut = cms.untracked.double(0.05),
+                                  generatorEtaMatchDR = cms.untracked.double(0.1),
+                                  # charged decay configuration end
                                   #If running on Data do not change. Only loaded as strings into the Analyzer and will have no effect. If on MC then change to the specific files you need lodaed for the MC   
                                   PUMCFileName = cms.untracked.string("PileUpMC.root"),
                                   PUDataFileName = cms.untracked.string("PileupDataAug10thHistogram.root"),
