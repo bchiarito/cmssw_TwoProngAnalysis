@@ -178,7 +178,7 @@ private:
   bool               fkRequireTightPhotons;  // option to require tight photon id in tree
   bool               fkRequireGenEventInfo;  // generated information for RS graviton files
   bool               fisMC;  //option to decide if MC or Data     
-  bool               isAOD;
+  bool               fisAOD;
   string             fPUMCFileName;
   string             fPUDataFileName;
   string             fPUDataHistName;
@@ -379,7 +379,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fkRequireTightPhotons(iConfig.getUntrackedParameter<bool>("requireTightPhotons")),
     fkRequireGenEventInfo(iConfig.getUntrackedParameter<bool>("requireGenEventInfo")),
     fisMC(iConfig.getUntrackedParameter<bool>("isMC")),
-    isAOD(iConfig.getParameter<bool>("isAOD")),
+    fisAOD(iConfig.getParameter<bool>("isAOD")),
     fPUMCFileName(iConfig.getUntrackedParameter<string>("PUMCFileName")),
     fPUDataFileName(iConfig.getUntrackedParameter<string>("PUDataFileName")), 
     fPUDataHistName(iConfig.getUntrackedParameter<string>("PUDataHistName")),
@@ -445,17 +445,17 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     (iConfig.getParameter<edm::InputTag>
      ("genParticlesMiniAOD"));
 
-  if (isAOD) vtxToken_ = consumes<reco::VertexCollection>(edm::InputTag("offlinePrimaryVertices"));
+  if (fisAOD) vtxToken_ = consumes<reco::VertexCollection>(edm::InputTag("offlinePrimaryVertices"));
   else vtxToken_ = consumes<reco::VertexCollection>(edm::InputTag("offlineSlimmedPrimaryVertices"));
 
-  if (!isAOD) pfcandsToken_ = consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates"));
-  if (!isAOD) genToken_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
-  if (!isAOD) pvToken_ = consumes<vector<reco::Vertex>>(edm::InputTag("offlineSlimmedPrimaryVertices"));
+  if (!fisAOD) pfcandsToken_ = consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates"));
+  if (!fisAOD && fisMC) genToken_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
+  if (!fisAOD) pvToken_ = consumes<vector<reco::Vertex>>(edm::InputTag("offlineSlimmedPrimaryVertices"));
 
   bsToken_ = consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
   trigToken_ = consumes<edm::TriggerResults>(fHltInputTag);
   fJetCollTag = iConfig.getParameter<edm::InputTag>("jetCollection");
-  if (!isAOD) jetsToken_ = consumes< edm::View<pat::Jet> >(fJetCollTag);
+  if (!fisAOD) jetsToken_ = consumes< edm::View<pat::Jet> >(fJetCollTag);
 
   twoLegToken_ = consumes<reco::ConversionCollection>(edm::InputTag("reducedEgamma","reducedConversions"));
   oneLegToken_ = consumes<reco::ConversionCollection>(edm::InputTag("reducedEgamma","reducedSingleLegConversions"));
@@ -668,7 +668,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   // isolator02.initializePhotonIsolation(kTRUE);
   // isolator02.setConeSize(0.2);
 
-  if (isAOD){
+  if (fisAOD){
     recHitsEBTag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEBTag",edm::InputTag("reducedEcalRecHitsEB"));
     recHitsEETag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEETag",edm::InputTag("reducedEcalRecHitsEE"));
     recHitsEBToken = consumes <edm::SortedCollection<EcalRecHit> > (recHitsEBTag_);
@@ -681,7 +681,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     recHitsEEToken = consumes < EcalRecHitCollection > (recHitsEETag_);
   }
 
-  // if (isAOD){
+  // if (fisAOD){
   //   recHitsEBTag_ = iConfig.getParameter<edm::InputTag>("recHitsEB");
   //   recHitsEETag_ = iConfig.getParameter<edm::InputTag>("recHitsEE");
   //   recHitsEBToken = consumes< edm::SortedCollection<EcalRecHit> >(recHitsEBTag_);
@@ -732,12 +732,12 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //   We use exactly the same handle for AOD and miniAOD formats
   // since pat::Photon objects can be recast as reco::Photon objects.
   edm::Handle<edm::View<reco::Photon> > photons;
-  // bool isAOD = true;
-  if (isAOD) iEvent.getByToken(photonsToken_, photons);
+  // bool fisAOD = true;
+  if (fisAOD) iEvent.getByToken(photonsToken_, photons);
   else iEvent.getByToken(photonsMiniAODToken_,photons);
   cout << "Found photon collection with size = " << (*photons).size() << endl;
   // if( !photons.isValid() ){
-  //   // isAOD = false;
+  //   // fisAOD = false;
   //   iEvent.getByToken(photonsMiniAODToken_,photons);
   //   cout << "Found MiniAOD photon collection with size = " << (*photons).size() << endl;
   // }
@@ -745,7 +745,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //-----------------taken from Ilya-----------------
   // Get generator level info
   edm::Handle<edm::View<reco::GenParticle> > genParticles;
-  if( isAOD )
+  if( fisAOD )
     iEvent.getByToken(genParticlesToken_,genParticles);
   else
     iEvent.getByToken(genParticlesMiniAODToken_,genParticles);
@@ -808,7 +808,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // get the vertex collection
   Handle<reco::VertexCollection> vertexColl;
   iEvent.getByToken(vtxToken_,vertexColl);
-  // if (isAOD) iEvent.getByLabel("offlinePrimaryVertices",vertexColl);
+  // if (fisAOD) iEvent.getByLabel("offlinePrimaryVertices",vertexColl);
   // else iEvent.getByLabel("offlineSlimmedPrimaryVertices",vertexColl);
   //TO DISENTANGLE BETWEEN MINIAOD AND AOD
    
@@ -918,17 +918,17 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   //for conversion safe electron veto, only needed in AOD
   edm::Handle<reco::ConversionCollection> hConversions;
-  if (isAOD) iEvent.getByLabel("allConversions", hConversions);
+  if (fisAOD) iEvent.getByLabel("allConversions", hConversions);
   
   //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
   edm::Handle<reco::GsfElectronCollection> hElectrons;
-  if (isAOD) iEvent.getByLabel("gedGsfElectrons", hElectrons); // don't need these for MiniAOD
+  if (fisAOD) iEvent.getByLabel("gedGsfElectrons", hElectrons); // don't need these for MiniAOD
   //edm::Handle<pat::ElectronCollection> hElectrons;
   //iEvent.getByLabel(edm::InputTag("slimmedElectrons"), hElectrons);
   //patElectrons_slimmedElectrons__PAT.obj.embeddedSuperCluster_
   //TO DISENTANGLE BETWEEN MINIAOD AND AOD
-  if(!hElectrons.isValid() && isAOD) {
+  if(!hElectrons.isValid() && fisAOD) {
     cout<<"no ged gsf electrons "<<endl;
     cout << "RETURN OR CONTINUE!!" << endl;
     return;
@@ -1148,7 +1148,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   // if using MiniAOD, build the vetoMap using pat::Photons (ConversionTools::hasMatchedPromptElectron was not working for pat::Photons even though they inherit from reco::Photons)
 
-  if (!isAOD){
+  if (!fisAOD){
     edm::Handle<edm::View<pat::Photon> > patPhotons;
     iEvent.getByToken(patPhotonToken_, patPhotons);
     for (auto &p : *patPhotons){
@@ -1172,7 +1172,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.getByToken(pfcandsToken_, pfcands);
 
   edm::Handle<vector<reco::GenParticle>> genparticles;
-  iEvent.getByToken(genToken_, genparticles);
+  if (fisMC) {
+    iEvent.getByToken(genToken_, genparticles);
+  }
 
   edm::Handle<vector<reco::Vertex>> primaryvertecies;
   iEvent.getByToken(pvToken_, primaryvertecies);
@@ -1182,23 +1184,35 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   // Prepare generator Eta collection
   vector<TLorentzVector> generatorEtas;
-  for (unsigned int i = 0; i < genparticles->size(); ++i) {
-    const reco::GenParticle &gen = (*genparticles)[i];
-    TLorentzVector genparticle;
-    genparticle.SetPtEtaPhiE(gen.pt(), gen.eta(), gen.phi(), gen.energy());
-    if (gen.status() == 2 && abs(gen.pdgId()) == 221)
-      generatorEtas.push_back(genparticle);
+  if (fisMC) {
+    for (unsigned int i = 0; i < genparticles->size(); ++i) {
+      const reco::GenParticle &gen = (*genparticles)[i];
+      TLorentzVector genparticle;
+      genparticle.SetPtEtaPhiE(gen.pt(), gen.eta(), gen.phi(), gen.energy());
+      if (gen.status() == 2 && abs(gen.pdgId()) == 221)
+        generatorEtas.push_back(genparticle);
+    }
+    if (generatorEtas.size() != 2)  
+      cout << "*** Incorrect number of generator Eta particles (not exactly two status=2)!!! ***" << endl;
+    fGenEta1_pt = generatorEtas[0].Pt();
+    fGenEta1_phi = generatorEtas[0].Phi();
+    fGenEta1_eta = generatorEtas[0].Eta();
+    fGenEta1_m = generatorEtas[0].M();
+    fGenEta2_pt = generatorEtas[1].Pt();
+    fGenEta2_phi = generatorEtas[1].Phi();
+    fGenEta2_eta = generatorEtas[1].Eta();
+    fGenEta2_m = generatorEtas[1].M();
+  } else {
+    fGenEta1_pt = 0;
+    fGenEta1_phi = 0;
+    fGenEta1_eta = 0;
+    fGenEta1_m = 0;
+    fGenEta2_pt = 0;
+    fGenEta2_phi = 0;
+    fGenEta2_eta = 0;
+    fGenEta2_m = 0;
   }
-  if (generatorEtas.size() != 2)  
-    cout << "*** Incorrect number of generator Eta particles (not exactly two status=2)!!! ***" << endl;
-  fGenEta1_pt = generatorEtas[0].Pt();
-  fGenEta1_phi = generatorEtas[0].Phi();
-  fGenEta1_eta = generatorEtas[0].Eta();
-  fGenEta1_m = generatorEtas[0].M();
-  fGenEta2_pt = generatorEtas[1].Pt();
-  fGenEta2_phi = generatorEtas[1].Phi();
-  fGenEta2_eta = generatorEtas[1].Eta();
-  fGenEta2_m = generatorEtas[1].M();
+  
 
   // Find all pairs of one CH pos and one CH neg within specified DR of each other
   // Not exclusive (same pf cand can belong to multiple pairs)
@@ -1317,17 +1331,19 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     cout << ". finished selection" << endl;
 
     // Generator Matching
+    bool matched = false;
     double mingenDR = 999999;
     int index = 999;
-    for (unsigned int j = 0; j < 2; ++j) {
-      TLorentzVector *genEta = &generatorEtas[j];
-      if (EtaCandidate.DeltaR(*genEta) < mingenDR) {
-        mingenDR = EtaCandidate.DeltaR(*genEta);
-        index = j;
+    if (fisMC) {
+      for (unsigned int j = 0; j < 2; ++j) {
+        TLorentzVector *genEta = &generatorEtas[j];
+        if (EtaCandidate.DeltaR(*genEta) < mingenDR) {
+          mingenDR = EtaCandidate.DeltaR(*genEta);
+          index = j;
+        }
       }
-    } // end gen particle loop
-    bool matched = false;
-    if (mingenDR < fCandidatePairGenMatchDR) matched = true;
+      if (mingenDR < fCandidatePairGenMatchDR) matched = true;
+    }
     if (passed) cand_pairs_passed += 1;
     if (matched) cand_pairs_matched += 1;
     if (passed && matched) cand_pairs_passed_matched += 1;

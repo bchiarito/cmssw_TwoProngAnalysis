@@ -22,7 +22,7 @@ options.register('pumcfilename',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "MC Pileup Filename")
-options.register("decayType",
+options.register("sample",
                 "eta",
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
@@ -56,10 +56,17 @@ etaFileList = cms.untracked.vstring(
     'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_15.root',
     'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_19.root',
 )
-sample = options.decayType
+jetHTFileList = cms.untracked.vstring(
+    '/store/data/Run2015C_25ns/JetHT/MINIAOD/16Dec2015-v1/20000/0A98D31C-49B5-E511-A886-0CC47A4C8EEA.root',
+    '/store/data/Run2015C_25ns/JetHT/MINIAOD/16Dec2015-v1/20000/1079AE90-45B5-E511-9827-0002C94CDAE2.root'
+)
+
+sample = options.sample
 fList = None
 if sample == "eta":
   fList = etaFileList
+elif sample == "jetHT":
+  fList = jetHTFileList
 process.source = cms.Source ("PoolSource", 
                 fileNames      = fList,
                 # debugVerbosity = cms.untracked.uint32(200),
