@@ -178,6 +178,7 @@ private:
   bool               fkRequireTightPhotons;  // option to require tight photon id in tree
   bool               fkRequireGenEventInfo;  // generated information for RS graviton files
   bool               fisMC;  //option to decide if MC or Data     
+  bool               fisSignal;  //option to decide if Signal or Backround MC
   bool               fisAOD;
   string             fPUMCFileName;
   string             fPUDataFileName;
@@ -379,6 +380,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fkRequireTightPhotons(iConfig.getUntrackedParameter<bool>("requireTightPhotons")),
     fkRequireGenEventInfo(iConfig.getUntrackedParameter<bool>("requireGenEventInfo")),
     fisMC(iConfig.getUntrackedParameter<bool>("isMC")),
+    fisSignal(iConfig.getUntrackedParameter<bool>("isSignal")),
     fisAOD(iConfig.getParameter<bool>("isAOD")),
     fPUMCFileName(iConfig.getUntrackedParameter<string>("PUMCFileName")),
     fPUDataFileName(iConfig.getUntrackedParameter<string>("PUDataFileName")), 
@@ -1184,7 +1186,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   // Prepare generator Eta collection
   vector<TLorentzVector> generatorEtas;
-  if (fisMC) {
+  if (fisMC && fisSignal) {
     for (unsigned int i = 0; i < genparticles->size(); ++i) {
       const reco::GenParticle &gen = (*genparticles)[i];
       TLorentzVector genparticle;
@@ -1334,7 +1336,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     bool matched = false;
     double mingenDR = 999999;
     int index = 999;
-    if (fisMC) {
+    if (fisMC && fisSignal) {
       for (unsigned int j = 0; j < 2; ++j) {
         TLorentzVector *genEta = &generatorEtas[j];
         if (EtaCandidate.DeltaR(*genEta) < mingenDR) {

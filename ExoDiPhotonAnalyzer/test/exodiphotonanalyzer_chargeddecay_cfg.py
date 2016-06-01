@@ -17,6 +17,11 @@ options.register('isMC',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "whether to run over data or MC")
+options.register('isSignal',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "whether MC is a signal or background (used for storing gen informaton)")
 options.register('pumcfilename',
                 'PileUpMC_DiPhotonJetsBox_M60_8TeV-sherpa_Summer12_DR53X-PU_S10_START53_V7C-v1_rebinned.root',
                 VarParsing.multiplicity.singleton,
@@ -58,7 +63,14 @@ etaFileList = cms.untracked.vstring(
 )
 jetHTFileList = cms.untracked.vstring(
     '/store/data/Run2015C_25ns/JetHT/MINIAOD/16Dec2015-v1/20000/0A98D31C-49B5-E511-A886-0CC47A4C8EEA.root',
-    '/store/data/Run2015C_25ns/JetHT/MINIAOD/16Dec2015-v1/20000/1079AE90-45B5-E511-9827-0002C94CDAE2.root'
+    '/store/data/Run2015C_25ns/JetHT/MINIAOD/16Dec2015-v1/20000/1079AE90-45B5-E511-9827-0002C94CDAE2.root',
+)
+singlePhotonFileList = cms.untracked.vstring(
+    '/store/data/Run2015C_25ns/SinglePhoton/MINIAOD/16Dec2015-v1/50000/02E07C2B-90B2-E511-96BB-0CC47A78A3F4.root',
+    '/store/data/Run2015C_25ns/SinglePhoton/MINIAOD/16Dec2015-v1/50000/12FEA727-90B2-E511-8AC8-0CC47A4D75F4.root',
+)
+qcdFileList = cms.untracked.vstring(
+    '/store/mc/RunIIFall15MiniAODv2/QCD_Pt_5to10_TuneCUETP8M1_13TeV_pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/60000/00AB0982-0AB9-E511-9CAD-441EA158FECC.root'
 )
 
 sample = options.sample
@@ -67,6 +79,10 @@ if sample == "eta":
   fList = etaFileList
 elif sample == "jetHT":
   fList = jetHTFileList
+elif sample == "singlePhoton":
+  fList = singlePhotonFileList
+elif sample == "qcd":
+  fList = qcdFileList
 process.source = cms.Source ("PoolSource", 
                 fileNames      = fList,
                 # debugVerbosity = cms.untracked.uint32(200),
@@ -124,7 +140,8 @@ process.diphotonAnalyzer.removeSpikes = False # ie spikes will be exlcuded from 
 process.diphotonAnalyzer.requireTightPhotons = False # ie only tight photons will be written 
 process.diphotonAnalyzer.requireGenEventInfo = False #write MC info when running on MC
 process.diphotonAnalyzer.isAOD = cms.bool(options.useAOD) # True=AOD, False=MiniAOD
-process.diphotonAnalyzer.isMC = cms.untracked.bool(options.isMC) # False by default, run with isMC=True for MC
+process.diphotonAnalyzer.isMC = cms.untracked.bool(options.isMC)
+process.diphotonAnalyzer.isSignal = cms.untracked.bool(options.isSignal)
 process.diphotonAnalyzer.IDMethod = cms.untracked.string("highpt")
 process.diphotonAnalyzer.PFIDCategory = cms.untracked.string("Loose")
 process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")
