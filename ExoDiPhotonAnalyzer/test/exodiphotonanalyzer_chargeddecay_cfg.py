@@ -47,19 +47,21 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( options.max
 
 import sys
 etaFileList = cms.untracked.vstring(
-    'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_3.root',
-    'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_1.root',
-    'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_7.root',
-    'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_4.root',
-    'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_8.root',
-    'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_9.root',
-    'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_12.root',
-    'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_11.root',
-    'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_16.root',
-    'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_17.root',
-    'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_14.root',
-    'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_15.root',
-    'file:/cms/data26/feigelis/SeesawProject/PostHadronizer/output/Scott/eta/step3_output_19.root',
+    'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_1.root',
+    'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_3.root',
+    'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_4.root',
+    'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_7.root',
+    'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_8.root',
+    'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_9.root',
+    'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_11.root',
+    'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_12.root',
+    'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_14.root',
+    'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_15.root',
+    'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_16.root',
+    'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_17.root',
+    'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_19.root',
+
+
 )
 jetHTFileList = cms.untracked.vstring(
     '/store/data/Run2015C_25ns/JetHT/MINIAOD/16Dec2015-v1/20000/0A98D31C-49B5-E511-A886-0CC47A4C8EEA.root',
