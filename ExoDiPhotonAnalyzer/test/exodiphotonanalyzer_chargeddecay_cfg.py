@@ -46,7 +46,7 @@ process.options.allowUnscheduled = cms.untracked.bool(True)
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( options.maxEvents ) )
 
 import sys
-etaFileList = cms.untracked.vstring(
+etaCMSFileList = cms.untracked.vstring(
     'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_1.root',
     'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_3.root',
     'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_4.root',
@@ -60,8 +60,21 @@ etaFileList = cms.untracked.vstring(
     'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_16.root',
     'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_17.root',
     'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/lhe/step3_output_19.root',
-
-
+)
+etaLocalFileList = cms.untracked.vstring(
+    'file:/afs/cern.ch/user/b/bchiari1/samples/lhe/diphoton750gev/eta/step3_output_1.root',
+    'file:/afs/cern.ch/user/b/bchiari1/samples/lhe/diphoton750gev/eta/step3_output_11.root',
+    'file:/afs/cern.ch/user/b/bchiari1/samples/lhe/diphoton750gev/eta/step3_output_12.root',
+    'file:/afs/cern.ch/user/b/bchiari1/samples/lhe/diphoton750gev/eta/step3_output_14.root',
+    'file:/afs/cern.ch/user/b/bchiari1/samples/lhe/diphoton750gev/eta/step3_output_15.root',
+    'file:/afs/cern.ch/user/b/bchiari1/samples/lhe/diphoton750gev/eta/step3_output_16.root',
+    'file:/afs/cern.ch/user/b/bchiari1/samples/lhe/diphoton750gev/eta/step3_output_17.root',
+    'file:/afs/cern.ch/user/b/bchiari1/samples/lhe/diphoton750gev/eta/step3_output_19.root',
+    'file:/afs/cern.ch/user/b/bchiari1/samples/lhe/diphoton750gev/eta/step3_output_3.root',
+    'file:/afs/cern.ch/user/b/bchiari1/samples/lhe/diphoton750gev/eta/step3_output_4.root',
+    'file:/afs/cern.ch/user/b/bchiari1/samples/lhe/diphoton750gev/eta/step3_output_7.root',
+    'file:/afs/cern.ch/user/b/bchiari1/samples/lhe/diphoton750gev/eta/step3_output_8.root',
+    'file:/afs/cern.ch/user/b/bchiari1/samples/lhe/diphoton750gev/eta/step3_output_9.root',
 )
 jetHTFileList = cms.untracked.vstring(
     '/store/data/Run2015C_25ns/JetHT/MINIAOD/16Dec2015-v1/20000/0A98D31C-49B5-E511-A886-0CC47A4C8EEA.root',
@@ -78,7 +91,9 @@ qcdFileList = cms.untracked.vstring(
 sample = options.sample
 fList = None
 if sample == "eta":
-  fList = etaFileList
+  fList = etaCMSFileList
+elif sample == "etaLocal":
+  fList = etaLocalFileList
 elif sample == "jetHT":
   fList = jetHTFileList
 elif sample == "singlePhoton":

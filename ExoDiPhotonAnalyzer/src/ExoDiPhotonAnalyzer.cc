@@ -284,6 +284,7 @@ private:
   double fCandidatePairChargedIsoCut;
   double fCandidatePairNeutralIsoCut;
   double fCandidatePairEGammaIsoCut;
+  double fCandidatePairMuonIsoCut;
   double fCandidatePairGenMatchDR;
   TH1F *fTwoProngFakeRate_pt;
   TH1F *fTwoProngFakeRate_eta;
@@ -360,6 +361,7 @@ private:
   int fNumCHpairsFake;
   int fNumCHpairsMatch;
   int fNumCHpairsPassMatch;
+  int fNumGenEta;
   ExoDiPhotons::recoTwoProngInfo_t fRecoTwoProngInfo1;
   ExoDiPhotons::recoTwoProngInfo_t fRecoTwoProngInfo2;
   ExoDiPhotons::genParticleInfo_t fGenEtaParticleInfo1;
@@ -368,6 +370,18 @@ private:
   double fMass2_EtaEta;
   TLorentzVector fEtaEtaCand;
   TLorentzVector fEtaEtaCand2;
+  vector<Double_t> fCands_pt;
+  vector<Double_t> fCands_eta;
+  vector<Double_t> fCands_phi;
+  vector<Double_t> fCands_mass;
+  vector<Double_t> fCands_px;
+  vector<Double_t> fCands_py;
+  vector<Double_t> fCands_pz;
+  vector<Double_t> fCands_energy;
+  vector<Double_t> fCands_chargedIso;
+  vector<Double_t> fCands_neutralIso;
+  vector<Double_t> fCands_egammaIso;
+  vector<Double_t> fCands_muonIso;
   vector<Double_t> fPasses_pt;
   vector<Double_t> fPasses_eta;
   vector<Double_t> fPasses_phi;
@@ -426,6 +440,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fCandidatePairChargedIsoCut(iConfig.getUntrackedParameter<double>("chargedIsoCut")),
     fCandidatePairNeutralIsoCut(iConfig.getUntrackedParameter<double>("neutralIsoCut")),
     fCandidatePairEGammaIsoCut(iConfig.getUntrackedParameter<double>("egammaIsoCut")),
+    fCandidatePairMuonIsoCut(iConfig.getUntrackedParameter<double>("muonIsoCut")),
     fCandidatePairGenMatchDR(iConfig.getUntrackedParameter<double>("generatorEtaMatchDR")),
     //-----------------taken from Ilya-----------------
     rhoToken_(consumes<double> (iConfig.getParameter<edm::InputTag>("rho"))),
@@ -619,15 +634,16 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("eventNum",&fEventNum,"eventNum/I");
   fTree2->Branch("runNum",&fRunNum,"runNum/I");
   fTree2->Branch("lumiNum",&fLumiNum,"lumiNum/I");
-  fTree2->Branch("nPVs",&fNumPVs,"numPVs/I");
-  fTree2->Branch("nPF",&fNumPF,"numPF/I");
+  fTree2->Branch("nPV",&fNumPVs,"nPV/I");
+  fTree2->Branch("nPF",&fNumPF,"nPF/I");
   fTree2->Branch("nPrunedPF",&fNumPrunedPF,"numPrunedPF/I");
   // Cutflow
-  fTree2->Branch("nCands",&fNumCHpairs,"numCHpairs/I");
-  fTree2->Branch("nPass",&fNumCHpairsPass,"numCHpairsPass/I");
-  fTree2->Branch("nFake",&fNumCHpairsFake,"numCHpairsFake/I");
-  fTree2->Branch("nMatch",&fNumCHpairsMatch,"numCHpairsMatch/I");
-  fTree2->Branch("nPassMatch",&fNumCHpairsPassMatch,"numCHpairsPassMatch/I");
+  fTree2->Branch("nCands",&fNumCHpairs,"nCands/I");
+  fTree2->Branch("nPass",&fNumCHpairsPass,"nPass/I");
+  fTree2->Branch("nFake",&fNumCHpairsFake,"nFake/I");
+  fTree2->Branch("nMatch",&fNumCHpairsMatch,"nMatch/I");
+  fTree2->Branch("nPassMatch",&fNumCHpairsPassMatch,"nPassMatch/I");
+  fTree2->Branch("nGenEta",&fNumGenEta,"nGenEta/I");
   // Kinematics and Particle Info
   fTree2->Branch("Eta1",&fRecoTwoProngInfo1,ExoDiPhotons::recoTwoProngBranchDefString.c_str());
   fTree2->Branch("Eta2",&fRecoTwoProngInfo2,ExoDiPhotons::recoTwoProngBranchDefString.c_str());
@@ -635,6 +651,18 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("mGrommedEtaEta",&fMass2_EtaEta,"mGrommedEtaEta/D");
   fTree2->Branch("vecEtaEta",&fEtaEtaCand);
   fTree2->Branch("vecGrommedEtaEta",&fEtaEtaCand2);
+  fTree2->Branch("cand_pt",&fCands_pt);
+  fTree2->Branch("cand_eta",&fCands_eta);
+  fTree2->Branch("cand_phi",&fCands_phi);
+  fTree2->Branch("cand_mass",&fCands_mass);
+  fTree2->Branch("cand_px",&fCands_px);
+  fTree2->Branch("cand_py",&fCands_py);
+  fTree2->Branch("cand_pz",&fCands_pz);
+  fTree2->Branch("cand_energy",&fCands_energy);
+  fTree2->Branch("cand_chargedIso",&fCands_chargedIso);
+  fTree2->Branch("cand_neutralIso",&fCands_neutralIso);
+  fTree2->Branch("cand_egammaIso",&fCands_egammaIso);
+  fTree2->Branch("cand_muonIso",&fCands_muonIso);
   fTree2->Branch("pass_pt",&fPasses_pt);
   fTree2->Branch("pass_eta",&fPasses_eta);
   fTree2->Branch("pass_phi",&fPasses_phi);
@@ -1234,6 +1262,26 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   edm::Handle<vector<reco::Vertex>> primaryvertecies;
   iEvent.getByToken(pvToken_, primaryvertecies);
 
+  fCands_pt.clear();
+  fCands_eta.clear();
+  fCands_phi.clear();
+  fCands_mass.clear();
+  fCands_px.clear();
+  fCands_py.clear();
+  fCands_pz.clear();
+  fCands_energy.clear();
+  fCands_chargedIso.clear();
+  fCands_neutralIso.clear();
+  fCands_egammaIso.clear();
+  fCands_muonIso.clear();
+  fPasses_pt.clear();
+  fPasses_eta.clear();
+  fPasses_phi.clear();
+  fPasses_mass.clear();
+  fPasses_px.clear();
+  fPasses_py.clear();
+  fPasses_pz.clear();
+  fPasses_energy.clear();
   fFakes_pt.clear();
   fFakes_eta.clear();
   fFakes_phi.clear();
@@ -1248,6 +1296,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   // Prepare generator Eta collection
   if (fisMC && fisSignal) {
+    ExoDiPhotons::InitGenParticleInfo(fGenEtaParticleInfo1);
+    ExoDiPhotons::InitGenParticleInfo(fGenEtaParticleInfo2);
     int genEtaCount = 0;
     for (unsigned int i = 0; i < genparticles->size(); ++i) {
       const reco::GenParticle &gen = (*genparticles)[i];
@@ -1260,15 +1310,19 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     } // end gen particle loop
     if (genEtaCount != 2)  
       cout << ". *** Incorrect number of generator Eta particles (not exactly two status=2)!! Instead found " << genEtaCount << endl;
+    fNumGenEta = genEtaCount;
   } else {
     ExoDiPhotons::InitGenParticleInfo(fGenEtaParticleInfo1);
     ExoDiPhotons::InitGenParticleInfo(fGenEtaParticleInfo2);
+    fNumGenEta = -1;
   }
 
   // Find all pairs of one CH pos and one CH neg within specified DR of each other
   // Not exclusive (same pf cand can belong to multiple pairs)
   vector<TLorentzVector> candidates_CHpos;
+  vector<unsigned int> candidates_CHposIndex;
   vector<TLorentzVector> candidates_CHneg;
+  vector<unsigned int> candidates_CHnegIndex;
   vector<TLorentzVector> candidates_center;
   vector<TLorentzVector> candidates_photon;
   vector<int> candidates_numgamma;
@@ -1276,11 +1330,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   vector<TLorentzVector> candidates_Eta;
   vector<TLorentzVector> candidates_EtaGrommed;
   int pruned_count = 0;
-  for (unsigned int i = 0; i < pfcands->size(); ++i) {   
+  for (unsigned int i = 0; i < pfcands->size(); ++i) {
     const pat::PackedCandidate &pf1 = (*pfcands)[i];
     if (pf1.pt() < fCandidatePairMinPt) continue;
     pruned_count += 1;
-    for (unsigned int j = i+1; j < pfcands->size(); ++j) {   
+    for (unsigned int j = i+1; j < pfcands->size(); ++j) { // loop starting with j=i+1, considers each pair exactly once
       const pat::PackedCandidate &pf2 = (*pfcands)[j];
       if (pf2.pt() < fCandidatePairMinPt) continue;
       if (!( ((pf1.pdgId() == 211) && (pf2.pdgId() == -211)) || ((pf1.pdgId() == -211) && (pf2.pdgId() == 211)) )) continue;
@@ -1330,10 +1384,14 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           EtaGrommedCandidate = center + leading_pf_photon;
           if (pf1.pdgId() > 0) {
             candidates_CHpos.push_back(pfcand1);
+            candidates_CHposIndex.push_back(i);
             candidates_CHneg.push_back(pfcand2);
+            candidates_CHnegIndex.push_back(j);
           } else {
             candidates_CHpos.push_back(pfcand2);
+            candidates_CHposIndex.push_back(j);
             candidates_CHneg.push_back(pfcand1);
+            candidates_CHnegIndex.push_back(i);
           }
           candidates_center.push_back(center);
           candidates_photon.push_back(center);
@@ -1341,6 +1399,14 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           candidates_nume.push_back(nume);
           candidates_Eta.push_back(EtaCandidate);
           candidates_EtaGrommed.push_back(EtaGrommedCandidate);
+          fCands_pt.push_back(EtaCandidate.Pt());
+          fCands_eta.push_back(EtaCandidate.Eta());
+          fCands_phi.push_back(EtaCandidate.Phi());
+          fCands_mass.push_back(EtaCandidate.M());
+          fCands_px.push_back(EtaCandidate.Px());
+          fCands_py.push_back(EtaCandidate.Py());
+          fCands_pz.push_back(EtaCandidate.Pz());
+          fCands_energy.push_back(EtaCandidate.E());
         }
       } // end conditionals on CH pair
     }
@@ -1357,6 +1423,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   vector<double> candidates_relchargediso;
   vector<double> candidates_relneutraliso;
   vector<double> candidates_relegammaiso;
+  vector<double> candidates_relmuoniso;
   int cand_pairs_passed = 0;
   int cand_pairs_faked = 0;
   int cand_pairs_matched = 0;
@@ -1368,23 +1435,28 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     EtaCandidate.SetPtEtaPhiM(candidates_Eta[i].Pt(), candidates_Eta[i].Eta(), candidates_Eta[i].Phi(), candidates_Eta[i].M());
     TLorentzVector photon;
     photon.SetPtEtaPhiM(candidates_photon[i].Pt(), candidates_photon[i].Eta(), candidates_photon[i].Phi(), candidates_photon[i].M());
+    cout << ". remade Tvectors" << endl;
 
     // Define isolations
     double chargedIso = 0;
     double neutralIso = 0;
     double egammaIso = 0;
+    double muonIso = 0;
     for (unsigned int j = 0; j < pfcands->size(); ++j) {
       const pat::PackedCandidate &pf = (*pfcands)[j];
       TLorentzVector pfcand;
       pfcand.SetPtEtaPhiE(pf.pt(), pf.eta(), pf.phiAtVtx(), pf.energy());
-      if (abs(pf.pdgId()) == 211)  { // charged hadron/muon isolation
+      if (abs(pf.pdgId()) == 13) { // muon
+        if (center.DeltaR(pfcand) < fCandidatePairIsolationDR)
+          muonIso += pfcand.Pt();
+      } else if (abs(pf.pdgId()) == 211) { // charged hadron
         if ( center.DeltaR(pfcand) < fCandidatePairIsolationDR &&
-             !(pfcand == candidates_CHpos[i] || pfcand == candidates_CHneg[i]))
+             !(j == candidates_CHposIndex[i] || j == candidates_CHnegIndex[i]) )
           chargedIso += pfcand.Pt();
-      } else if (pf.pdgId() == 130) { // neutral chadron isolation
+      } else if (pf.pdgId() == 130) { // neutral hadron
         if (center.DeltaR(pfcand) < fCandidatePairIsolationDR)
           neutralIso += pfcand.Pt();
-      } else if (abs(pf.pdgId()) == 11 || pf.pdgId() == 22) { // e gamma isolation
+      } else if (abs(pf.pdgId()) == 11 || pf.pdgId() == 22) { // e gamma
         if ( (center.DeltaR(pfcand) < fCandidatePairIsolationDR) &&
              !(abs(pf.phiAtVtx() - center.Phi()) < fCandidatePairPhiBox/2.0 &&
              abs(pf.eta() - center.Eta()) < fCandidatePairEtaBox/2.0))
@@ -1397,13 +1469,16 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     double relchargedIso = chargedIso / EtaCandidate.Pt();
     double relneutralIso = neutralIso / EtaCandidate.Pt();
     double relegammaIso = egammaIso / EtaCandidate.Pt();
+    double relmuonIso = muonIso / EtaCandidate.Pt();
     bool passed = relchargedIso < fCandidatePairChargedIsoCut &&
                   relneutralIso < fCandidatePairNeutralIsoCut &&
                   relegammaIso < fCandidatePairEGammaIsoCut &&
+                  relmuonIso < fCandidatePairMuonIsoCut &&
                   photon.Pt() > fCandidatePairPhotonPtCut;
     bool passed_fake = relchargedIso > fCandidatePairChargedIsoCut &&
                        relneutralIso < fCandidatePairNeutralIsoCut &&
                        relegammaIso < fCandidatePairEGammaIsoCut &&
+                       relmuonIso < fCandidatePairMuonIsoCut &&
                        photon.Pt() > fCandidatePairPhotonPtCut;
     if (passed) {
       fTwoProngFakeNumer_pt->Fill(EtaCandidate.Pt());
@@ -1439,7 +1514,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     bool matched = false;
     double mingenDR = 99.9;
     int index = 99;
-    if (fisMC && fisSignal) {
+    if (fisMC && fisSignal && fNumGenEta>=2) {
       TLorentzVector genEta1;
       genEta1.SetPtEtaPhiE(fGenEtaParticleInfo1.pt, fGenEtaParticleInfo1.eta, fGenEtaParticleInfo1.phi, fGenEtaParticleInfo1.energy);
       TLorentzVector genEta2;
@@ -1460,6 +1535,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     candidates_relchargediso.push_back(relchargedIso);
     candidates_relneutraliso.push_back(relneutralIso);
     candidates_relegammaiso.push_back(relegammaIso);
+    candidates_relmuoniso.push_back(relmuonIso);
     candidates_passed.push_back(passed);
     candidates_nearestGenDR.push_back(mingenDR);
     candidates_nearestGenIndex.push_back(index);
@@ -1468,18 +1544,23 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     if (passed_fake) cand_pairs_faked += 1;
     if (matched) cand_pairs_matched += 1;
     if (passed && matched) cand_pairs_passed_matched += 1;
+    fCands_chargedIso.push_back(relchargedIso);
+    fCands_neutralIso.push_back(relneutralIso);
+    fCands_egammaIso.push_back(relegammaIso);
+    fCands_muonIso.push_back(relmuonIso);
   } // end candidate loop
   fNumCHpairsPass = cand_pairs_passed;
   fNumCHpairsFake = cand_pairs_faked;
   fNumCHpairsMatch = cand_pairs_matched;
   fNumCHpairsPassMatch = cand_pairs_passed_matched;
+  cout << ". finished all cand data" << endl;
   fTwoProngFakeRate_pt->Add(fTwoProngFakeNumer_pt);
   fTwoProngFakeRate_pt->Divide(fTwoProngFakeDenom_pt);
   fTwoProngFakeRate_eta->Add(fTwoProngFakeNumer_eta);
   fTwoProngFakeRate_eta->Divide(fTwoProngFakeDenom_eta);
   fTwoProngFakeRate_phi->Add(fTwoProngFakeNumer_phi);
   fTwoProngFakeRate_phi->Divide(fTwoProngFakeDenom_phi);
-  cout << ". finished all cand data" << endl;
+  cout << ". finished fake rate histos" << endl;
 
   // For leading two passing charged hadron pairs, save info into ttree
   int leading_index = -1;
@@ -1501,6 +1582,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   cout << ". finished sorting leading two" << endl;
   int l = leading_index;
   int s = subleading_index;
+  ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo1);
+  ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo2);
   if (cand_pairs_passed == 0) {
     ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo1);
     ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo2);
@@ -1508,17 +1591,17 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     ExoDiPhotons::FillRecoTwoProngInfo(fRecoTwoProngInfo1, candidates_CHpos[l], candidates_CHneg[l], candidates_center[l],
                                        candidates_photon[l], candidates_Eta[l], candidates_EtaGrommed[l].M(), candidates_passed[l], candidates_matched[l], 
                                        candidates_nearestGenDR[l], candidates_nearestGenIndex[l], candidates_relchargediso[l],
-                                       candidates_relneutraliso[l], candidates_relegammaiso[l], candidates_numgamma[l], candidates_nume[l]);
+                                       candidates_relneutraliso[l], candidates_relegammaiso[l], candidates_relmuoniso[l], candidates_numgamma[l], candidates_nume[l]);
     ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo2);
   } else if (cand_pairs_passed >= 2) {
     ExoDiPhotons::FillRecoTwoProngInfo(fRecoTwoProngInfo1, candidates_CHpos[l], candidates_CHneg[l], candidates_center[l],
                                        candidates_photon[l], candidates_Eta[l], candidates_EtaGrommed[l].M(), candidates_passed[l], candidates_matched[l], 
                                        candidates_nearestGenDR[l], candidates_nearestGenIndex[l], candidates_relchargediso[l],
-                                       candidates_relneutraliso[l], candidates_relegammaiso[l], candidates_numgamma[l], candidates_nume[l]);
+                                       candidates_relneutraliso[l], candidates_relegammaiso[l], candidates_relmuoniso[l], candidates_numgamma[l], candidates_nume[l]);
     ExoDiPhotons::FillRecoTwoProngInfo(fRecoTwoProngInfo2, candidates_CHpos[s], candidates_CHneg[s], candidates_center[s],
                                        candidates_photon[s], candidates_Eta[s], candidates_EtaGrommed[s].M(), candidates_passed[s], candidates_matched[s], 
                                        candidates_nearestGenDR[s], candidates_nearestGenIndex[s], candidates_relchargediso[s],
-                                       candidates_relneutraliso[s], candidates_relegammaiso[s], candidates_numgamma[s], candidates_nume[s]);
+                                       candidates_relneutraliso[s], candidates_relegammaiso[s], candidates_relmuoniso[s], candidates_numgamma[s], candidates_nume[s]);
     TLorentzVector phiCandidate = candidates_Eta[l] + candidates_Eta[s];
     fMass_EtaEta = phiCandidate.M();
     TLorentzVector phiCandidate2 = candidates_EtaGrommed[l] + candidates_EtaGrommed[s];

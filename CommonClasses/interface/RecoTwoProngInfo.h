@@ -89,6 +89,7 @@ namespace ExoDiPhotons
     Double_t chargedIso;
     Double_t neutralIso;
     Double_t egammaIso;
+    Double_t muonIso;
 
     Int_t photon_nPhotons;
     Int_t photon_nElectrons;
@@ -99,13 +100,13 @@ namespace ExoDiPhotons
   // obviously this needs to be kept up-to-date with the struct definition
   // but now at least this only needs to be done here in this file, 
   // rather than in each individual analyser 
-  std::string recoTwoProngBranchDefString("CHpos_pt/D:CHpos_phi/D:CHpos_eta/D:CHpos_mass/D:CHpos_px/D:CHpos_py/D:CHpos_pz/D:CHpos_energy/D:CHneg_pt/D:CHneg_phi/D:CHneg_eta/D:CHneg_mass/D:CHneg_px/D:CHneg_py/D:CHneg_pz/D:CHneg_energy/D:center_pt/D:center_phi/D:center_eta/D:center_mass/D:center_px/D:center_py/D:center_pz/D:center_energy/D:photon_pt/D:photon_phi/D:photon_eta/D:photon_mass/D:photon_px/D:photon_py/D:photon_pz/D:photon_energy/D:pt/D:phi/D:eta/D:mass/D:px/D:py/D:pz/D:energy/D:grommedMass/D:genDR/D:chargedIso/D:neutralIso/D:egammaIso/D:photon_nPhotons/I:photon_nElectrons/I:genEtaIndex/I");
+  std::string recoTwoProngBranchDefString("CHpos_pt/D:CHpos_phi/D:CHpos_eta/D:CHpos_mass/D:CHpos_px/D:CHpos_py/D:CHpos_pz/D:CHpos_energy/D:CHneg_pt/D:CHneg_phi/D:CHneg_eta/D:CHneg_mass/D:CHneg_px/D:CHneg_py/D:CHneg_pz/D:CHneg_energy/D:center_pt/D:center_phi/D:center_eta/D:center_mass/D:center_px/D:center_py/D:center_pz/D:center_energy/D:photon_pt/D:photon_phi/D:photon_eta/D:photon_mass/D:photon_px/D:photon_py/D:photon_pz/D:photon_energy/D:pt/D:phi/D:eta/D:mass/D:px/D:py/D:pz/D:energy/D:grommedMass/D:genDR/D:chargedIso/D:neutralIso/D:egammaIso/D:muonIso/D:photon_nPhotons/I:photon_nElectrons/I:genEtaIndex/I");
 
   // also want a Fill function, that can fill the struct values from the appropriate objects
   // again, so that all editing only needs to be done here in this file
   void FillRecoTwoProngInfo(recoTwoProngInfo_t &recotwopronginfo, TLorentzVector &CHpos, TLorentzVector &CHneg, TLorentzVector &center,
                             TLorentzVector &photon, TLorentzVector &Eta, double grommedmass, bool passed, bool matched, double genDR, int genIndex, 
-                            double relchargediso, double relneutraliso, double relegammaiso, int numgamma, int nume) {
+                            double relchargediso, double relneutraliso, double relegammaiso, double relmuoniso, int numgamma, int nume) {
 
     recotwopronginfo.CHpos_pt = CHpos.Pt();
     recotwopronginfo.CHpos_phi = CHpos.Phi();
@@ -158,6 +159,7 @@ namespace ExoDiPhotons
     recotwopronginfo.chargedIso = relchargediso;
     recotwopronginfo.neutralIso = relneutraliso;
     recotwopronginfo.egammaIso = relegammaiso;
+    recotwopronginfo.muonIso = relmuoniso;
 
     recotwopronginfo.photon_nPhotons = numgamma;
     recotwopronginfo.photon_nElectrons = nume;
@@ -216,6 +218,7 @@ namespace ExoDiPhotons
     recotwopronginfo.chargedIso = -99.9;
     recotwopronginfo.neutralIso = -99.9;
     recotwopronginfo.egammaIso = -99.9;
+    recotwopronginfo.muonIso = -99.9;
 
     recotwopronginfo.photon_nPhotons = -99.9;
     recotwopronginfo.photon_nElectrons = -99.9;
