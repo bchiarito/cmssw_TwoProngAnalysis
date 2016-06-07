@@ -33,7 +33,7 @@ options.register("sample",
                 VarParsing.varType.string,
                 "which sample we want to run over"
 )
-options.setDefault('maxEvents', 100)
+options.setDefault('maxEvents', 10)
 options.parseArguments()
 
 import FWCore.ParameterSet.Config as cms
