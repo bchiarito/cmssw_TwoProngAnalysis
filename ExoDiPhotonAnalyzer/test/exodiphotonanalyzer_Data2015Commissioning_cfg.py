@@ -194,6 +194,7 @@ process.diphotonAnalyzer.requireGenEventInfo = False #write MC info when running
 
 process.diphotonAnalyzer.isAOD = cms.bool(options.useAOD) # True=AOD, False=MiniAOD
 process.diphotonAnalyzer.isMC = cms.untracked.bool(False)
+process.diphotonAnalyzer.isSignal = cms.untracked.bool(False)
 process.diphotonAnalyzer.IDMethod = cms.untracked.string("highpt")
 process.diphotonAnalyzer.PFIDCategory = cms.untracked.string("Loose")
 process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")
