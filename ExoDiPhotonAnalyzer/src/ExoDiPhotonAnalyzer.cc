@@ -578,6 +578,11 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo1.MVAout","std::vector<double>",&fConvInfo1.MVAout);
   fTree->Branch("ConvInfo1.oneLegMVA","std::vector<std::vector<float>>",&fConvInfo1.oneLegMVA);
   fTree->Branch("ConvInfo1.nHitsBeforeVtx","std::vector<std::vector<uint8_t>>",&fConvInfo1.nHitsBeforeVtx);
+  fTree->Branch("ConvInfo1.isUndefinedAlgo","std::vector<int>",&fConvInfo1.isUndefinedAlgo);
+  fTree->Branch("ConvInfo1.isEcalSeededAlgo","std::vector<int>",&fConvInfo1.isEcalSeededAlgo);
+  fTree->Branch("ConvInfo1.isTrackerOnlyAlgo","std::vector<int>",&fConvInfo1.isTrackerOnlyAlgo);
+  fTree->Branch("ConvInfo1.isMixedAlgo","std::vector<int>",&fConvInfo1.isMixedAlgo);
+  fTree->Branch("ConvInfo1.isPflowAlgo","std::vector<int>",&fConvInfo1.isPflowAlgo);
   fTree->Branch("ConvInfo1.isGeneralTracksOnly","std::vector<int>",&fConvInfo1.isGeneralTracksOnly);
   fTree->Branch("ConvInfo1.isArbitratedEcalSeeded","std::vector<int>",&fConvInfo1.isArbitratedEcalSeeded);
   fTree->Branch("ConvInfo1.isArbitratedMerged","std::vector<int>",&fConvInfo1.isArbitratedMerged);
@@ -614,6 +619,11 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo2.MVAout","std::vector<double>",&fConvInfo2.MVAout);
   fTree->Branch("ConvInfo2.oneLegMVA","std::vector<std::vector<float>>",&fConvInfo2.oneLegMVA);
   fTree->Branch("ConvInfo2.nHitsBeforeVtx","std::vector<std::vector<uint8_t>>",&fConvInfo2.nHitsBeforeVtx);
+  fTree->Branch("ConvInfo2.isUndefinedAlgo","std::vector<int>",&fConvInfo2.isUndefinedAlgo);
+  fTree->Branch("ConvInfo2.isEcalSeededAlgo","std::vector<int>",&fConvInfo2.isEcalSeededAlgo);
+  fTree->Branch("ConvInfo2.isTrackerOnlyAlgo","std::vector<int>",&fConvInfo2.isTrackerOnlyAlgo);
+  fTree->Branch("ConvInfo2.isMixedAlgo","std::vector<int>",&fConvInfo2.isMixedAlgo);
+  fTree->Branch("ConvInfo2.isPflowAlgo","std::vector<int>",&fConvInfo2.isPflowAlgo);
   fTree->Branch("ConvInfo2.isGeneralTracksOnly","std::vector<int>",&fConvInfo2.isGeneralTracksOnly);
   fTree->Branch("ConvInfo2.isArbitratedEcalSeeded","std::vector<int>",&fConvInfo2.isArbitratedEcalSeeded);
   fTree->Branch("ConvInfo2.isArbitratedMerged","std::vector<int>",&fConvInfo2.isArbitratedMerged);
@@ -650,6 +660,11 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo_OneLeg1.MVAout","std::vector<double>",&fConvInfo_OneLeg1.MVAout);
   fTree->Branch("ConvInfo_OneLeg1.oneLegMVA","std::vector<std::vector<float>>",&fConvInfo_OneLeg1.oneLegMVA);
   fTree->Branch("ConvInfo_OneLeg1.nHitsBeforeVtx","std::vector<std::vector<uint8_t>>",&fConvInfo_OneLeg1.nHitsBeforeVtx);
+  fTree->Branch("ConvInfo_OneLeg1.isUndefinedAlgo","std::vector<int>",&fConvInfo_OneLeg1.isUndefinedAlgo);
+  fTree->Branch("ConvInfo_OneLeg1.isEcalSeededAlgo","std::vector<int>",&fConvInfo_OneLeg1.isEcalSeededAlgo);
+  fTree->Branch("ConvInfo_OneLeg1.isTrackerOnlyAlgo","std::vector<int>",&fConvInfo_OneLeg1.isTrackerOnlyAlgo);
+  fTree->Branch("ConvInfo_OneLeg1.isMixedAlgo","std::vector<int>",&fConvInfo_OneLeg1.isMixedAlgo);
+  fTree->Branch("ConvInfo_OneLeg1.isPflowAlgo","std::vector<int>",&fConvInfo_OneLeg1.isPflowAlgo);
   fTree->Branch("ConvInfo_OneLeg1.isGeneralTracksOnly","std::vector<int>",&fConvInfo_OneLeg1.isGeneralTracksOnly);
   fTree->Branch("ConvInfo_OneLeg1.isArbitratedEcalSeeded","std::vector<int>",&fConvInfo_OneLeg1.isArbitratedEcalSeeded);
   fTree->Branch("ConvInfo_OneLeg1.isArbitratedMerged","std::vector<int>",&fConvInfo_OneLeg1.isArbitratedMerged);
@@ -686,6 +701,11 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo_OneLeg2.MVAout","std::vector<double>",&fConvInfo_OneLeg2.MVAout);
   fTree->Branch("ConvInfo_OneLeg2.oneLegMVA","std::vector<std::vector<float>>",&fConvInfo_OneLeg2.oneLegMVA);
   fTree->Branch("ConvInfo_OneLeg2.nHitsBeforeVtx","std::vector<std::vector<uint8_t>>",&fConvInfo_OneLeg2.nHitsBeforeVtx);
+  fTree->Branch("ConvInfo_OneLeg2.isUndefinedAlgo","std::vector<int>",&fConvInfo_OneLeg2.isUndefinedAlgo);
+  fTree->Branch("ConvInfo_OneLeg2.isEcalSeededAlgo","std::vector<int>",&fConvInfo_OneLeg2.isEcalSeededAlgo);
+  fTree->Branch("ConvInfo_OneLeg2.isTrackerOnlyAlgo","std::vector<int>",&fConvInfo_OneLeg2.isTrackerOnlyAlgo);
+  fTree->Branch("ConvInfo_OneLeg2.isMixedAlgo","std::vector<int>",&fConvInfo_OneLeg2.isMixedAlgo);
+  fTree->Branch("ConvInfo_OneLeg2.isPflowAlgo","std::vector<int>",&fConvInfo_OneLeg2.isPflowAlgo);
   fTree->Branch("ConvInfo_OneLeg2.isGeneralTracksOnly","std::vector<int>",&fConvInfo_OneLeg2.isGeneralTracksOnly);
   fTree->Branch("ConvInfo_OneLeg2.isArbitratedEcalSeeded","std::vector<int>",&fConvInfo_OneLeg2.isArbitratedEcalSeeded);
   fTree->Branch("ConvInfo_OneLeg2.isArbitratedMerged","std::vector<int>",&fConvInfo_OneLeg2.isArbitratedMerged);

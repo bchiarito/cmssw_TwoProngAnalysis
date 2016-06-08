@@ -54,6 +54,13 @@ namespace ExoDiPhotons{
     std::vector<double> MVAout;
     std::vector<std::vector<float>> oneLegMVA;
     std::vector<std::vector<uint8_t>> nHitsBeforeVtx;
+    // conversion algos
+    std::vector<int> isUndefinedAlgo;
+    std::vector<int> isEcalSeededAlgo;
+    std::vector<int> isTrackerOnlyAlgo;
+    std::vector<int> isMixedAlgo;
+    std::vector<int> isPflowAlgo;
+    // conversion quality flags
     std::vector<int> isGeneralTracksOnly;
     std::vector<int> isArbitratedEcalSeeded;
     std::vector<int> isArbitratedMerged;
@@ -121,6 +128,11 @@ namespace ExoDiPhotons{
     convInfo.MVAout.clear();
     convInfo.oneLegMVA.clear();
     convInfo.nHitsBeforeVtx.clear();
+    convInfo.isUndefinedAlgo.clear();
+    convInfo.isEcalSeededAlgo.clear();
+    convInfo.isTrackerOnlyAlgo.clear();
+    convInfo.isMixedAlgo.clear();
+    convInfo.isPflowAlgo.clear();
     convInfo.isGeneralTracksOnly.clear();
     convInfo.isArbitratedEcalSeeded.clear();
     convInfo.isArbitratedMerged.clear();
@@ -153,6 +165,13 @@ namespace ExoDiPhotons{
         convInfo.MVAout.push_back(iConv.MVAout());
         convInfo.oneLegMVA.push_back(iConv.oneLegMVA());
         convInfo.nHitsBeforeVtx.push_back(iConv.nHitsBeforeVtx());
+
+        // algorithm flags
+        convInfo.isUndefinedAlgo.push_back(iConv.algo() == reco::Conversion::ConversionAlgorithm::undefined);
+        convInfo.isEcalSeededAlgo.push_back(iConv.algo() == reco::Conversion::ConversionAlgorithm::ecalSeeded);
+        convInfo.isTrackerOnlyAlgo.push_back(iConv.algo() == reco::Conversion::ConversionAlgorithm::trackerOnly);
+        convInfo.isMixedAlgo.push_back(iConv.algo() == reco::Conversion::ConversionAlgorithm::mixed);
+        convInfo.isPflowAlgo.push_back(iConv.algo() == reco::Conversion::ConversionAlgorithm::pflow);
 
         // quality flags
         convInfo.isGeneralTracksOnly.push_back(iConv.quality(reco::Conversion::ConversionQuality::generalTracksOnly));
