@@ -11,6 +11,9 @@ diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   requireTightPhotons = cms.untracked.bool(True),
                                   requireGenEventInfo = cms.untracked.bool(False),
                                   isMC = cms.untracked.bool(True),
+                                  # jet cuts
+                                  jetPtCut = cms.untracked.double(30.),
+                                  jetEtaCut = cms.untracked.double(2.5),
                                   # charged decay configuration
                                   chargedHadronPairMinDeltaR = cms.untracked.double(0.05),
                                   chargedHadronMinPt = cms.untracked.double(10.0),

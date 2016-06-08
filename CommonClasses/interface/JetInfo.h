@@ -38,6 +38,8 @@ namespace ExoDiPhotons{
     std::vector<double> energy;
     std::vector<int>    passLooseID;
     std::vector<int>    passTightID;
+    Double_t            HT;
+    Double_t            missingHT;
 
   };
 
@@ -75,7 +77,7 @@ namespace ExoDiPhotons{
 
   }
 
-  void FillJetInfo(jetInfo_t &fJetInfo, const edm::View<pat::Jet>* jets) {
+  void FillJetInfo(jetInfo_t &fJetInfo, const edm::View<pat::Jet>* jets, double jetPtCut, double jetEtaCut) {
 
     // first need to clear vectors from the previous event!
     fJetInfo.pt.clear();
@@ -85,10 +87,18 @@ namespace ExoDiPhotons{
     fJetInfo.energy.clear();
     fJetInfo.passLooseID.clear();
     fJetInfo.passTightID.clear();
+    fJetInfo.HT = -9999.;
+    fJetInfo.missingHT = -9999.;
+
+    double ht = 0.;
+    TLorentzVector pSum;
     
     for (unsigned int i = 0; i < jets->size(); i++){
 
       pat::Jet jet = jets->at(i);
+
+      if ( jet.pt() < jetPtCut || fabs(jet.eta()) > jetEtaCut ) continue; // minimal cut on jet pT and eta as defined in exodiphotonanalyzer_withrho_cfi.py
+
       fJetInfo.pt.push_back( jet.pt() );
       fJetInfo.eta.push_back( jet.eta() );
       fJetInfo.phi.push_back( jet.phi() );
@@ -101,17 +111,19 @@ namespace ExoDiPhotons{
       std::tie(loose,tight) = ExoDiPhotons::jetID(jet);
       fJetInfo.passLooseID.push_back( loose );
       fJetInfo.passTightID.push_back( tight );
+
+      ht += jet.pt();
+      TLorentzVector jetVec;
+      jetVec.SetPtEtaPhiM(jet.pt(),jet.eta(),jet.phi(),jet.mass());
+      pSum += jetVec;
       
     }
+    fJetInfo.HT = ht;
+    TLorentzVector mhtVec = -1.*pSum;
+    fJetInfo.missingHT = mhtVec.Pt();
 
 
   }
-  // void InitJetInfo(jetInfo_t &fJetInfo, const edm::View<pat::Jet>* jets) {
-
-  //   fJetInfo.nJets = (Int_t)jets->size();
-  //   // fJetInfo.pt = *(new Double_t [fJetInfo.nJets]);
-    
-  // }
 
   
 

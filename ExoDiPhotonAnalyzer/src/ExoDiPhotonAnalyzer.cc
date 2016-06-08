@@ -275,6 +275,8 @@ private:
   edm::EDGetTokenT<pat::PackedCandidateCollection> pfcandsToken_;
   edm::EDGetTokenT<vector<reco::GenParticle>> genToken_;
   edm::EDGetTokenT<vector<reco::Vertex>> pvToken_;
+  double fJetPtCut;
+  double fJetEtaCut;
   double fCandidatePairDR;
   double fCandidatePairMinPt;
   double fCandidatePairIsolationDR;
@@ -434,6 +436,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fPUMCHistName(iConfig.getUntrackedParameter<string>("PUMCHistName")),
     fPFIDCategory(iConfig.getUntrackedParameter<string>("PFIDCategory")),
     fIDMethod(iConfig.getUntrackedParameter<string>("IDMethod")),
+    fJetPtCut(iConfig.getUntrackedParameter<double>("jetPtCut")),
+    fJetEtaCut(iConfig.getUntrackedParameter<double>("jetEtaCut")),
     fCandidatePairDR(iConfig.getUntrackedParameter<double>("chargedHadronPairMinDeltaR")),
     fCandidatePairMinPt(iConfig.getUntrackedParameter<double>("chargedHadronMinPt")),
     fCandidatePairIsolationDR(iConfig.getUntrackedParameter<double>("isolationConeR")),
@@ -544,6 +548,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("JetInfo.energy","std::vector<double>",&fJetInfo.energy);
   fTree->Branch("JetInfo.passLooseID","std::vector<int>",&fJetInfo.passLooseID);
   fTree->Branch("JetInfo.passTightID","std::vector<int>",&fJetInfo.passTightID);
+  fTree->Branch("JetInfo.HT",&fJetInfo.HT,"JetInfo.HT/D");
+  fTree->Branch("JetInfo.missingHT",&fJetInfo.missingHT,"JetInfo.missingHT/D");
 
   fTree->Branch("ConvInfo1.x","std::vector<double>",&fConvInfo1.x);
   fTree->Branch("ConvInfo1.y","std::vector<double>",&fConvInfo1.y);
@@ -1131,7 +1137,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   const edm::View<pat::Jet>* jets = jetsHandle.product();
 
   // ExoDiPhotons::InitJetInfo(fJetInfo,jets);
-  ExoDiPhotons::FillJetInfo(fJetInfo,jets);
+  ExoDiPhotons::FillJetInfo(fJetInfo,jets,fJetPtCut,fJetEtaCut);
 
   // for (unsigned int i=0; i< jets->size(); i++){
   //   pat::Jet iJet = jets->at(i);
