@@ -41,14 +41,27 @@ namespace ExoDiPhotons{
     std::vector<double> vtxNdof;
     std::vector<double> pairCotThetaSeparation;
     std::vector<double> photonPt;
+    std::vector<double> track1InnerPx;
+    std::vector<double> track1InnerPy;
+    std::vector<double> track1InnerPz;
+    std::vector<double> track2InnerPx;
+    std::vector<double> track2InnerPy;
+    std::vector<double> track2InnerPz;
     std::vector<double> dRToSc;
+    // std::vector<int> nHitsTrack1;
+    // std::vector<int> nHitsTrack2;
     std::vector<uint8_t> nSharedHits;
     std::vector<double> MVAout;
     std::vector<std::vector<float>> oneLegMVA;
     std::vector<std::vector<uint8_t>> nHitsBeforeVtx;
-    std::vector<std::vector<int>> quality;
-
-    // add dxy, dz, pairCotThetaSeparation , r = sqrt(x**2+y**2), phi also, link back to original photon
+    std::vector<int> isGeneralTracksOnly;
+    std::vector<int> isArbitratedEcalSeeded;
+    std::vector<int> isArbitratedMerged;
+    std::vector<int> isArbitratedMergedEcalGeneral;
+    std::vector<int> isHighPurity;
+    std::vector<int> isHighEfficiency;
+    std::vector<int> isEcalMatched1Track;
+    std::vector<int> isEcalMatched2Track;
 
   };
 
@@ -95,12 +108,27 @@ namespace ExoDiPhotons{
     convInfo.vtxNdof.clear();
     convInfo.pairCotThetaSeparation.clear();
     convInfo.photonPt.clear();
+    convInfo.track1InnerPx.clear();
+    convInfo.track1InnerPy.clear();
+    convInfo.track1InnerPz.clear();
+    convInfo.track2InnerPx.clear();
+    convInfo.track2InnerPy.clear();
+    convInfo.track2InnerPz.clear();
     convInfo.dRToSc.clear();
+    // convInfo.nHitsTrack1.clear();
+    // convInfo.nHitsTrack2.clear();
     convInfo.nSharedHits.clear();
     convInfo.MVAout.clear();
     convInfo.oneLegMVA.clear();
     convInfo.nHitsBeforeVtx.clear();
-    convInfo.quality.clear();
+    convInfo.isGeneralTracksOnly.clear();
+    convInfo.isArbitratedEcalSeeded.clear();
+    convInfo.isArbitratedMerged.clear();
+    convInfo.isArbitratedMergedEcalGeneral.clear();
+    convInfo.isHighPurity.clear();
+    convInfo.isHighEfficiency.clear();
+    convInfo.isEcalMatched1Track.clear();
+    convInfo.isEcalMatched2Track.clear();
 
     int numMatched = 0;
     for (unsigned int i=0; i<convColl.size(); i++){
@@ -126,18 +154,50 @@ namespace ExoDiPhotons{
         convInfo.oneLegMVA.push_back(iConv.oneLegMVA());
         convInfo.nHitsBeforeVtx.push_back(iConv.nHitsBeforeVtx());
 
-        // build quality vector
-        std::vector<int> qualityVec;
-        qualityVec.push_back(iConv.quality(reco::Conversion::ConversionQuality::generalTracksOnly));
-        qualityVec.push_back(iConv.quality(reco::Conversion::ConversionQuality::arbitratedEcalSeeded));
-        qualityVec.push_back(iConv.quality(reco::Conversion::ConversionQuality::arbitratedMerged));
-        qualityVec.push_back(iConv.quality(reco::Conversion::ConversionQuality::arbitratedMergedEcalGeneral));
-        qualityVec.push_back(iConv.quality(reco::Conversion::ConversionQuality::highPurity));
-        qualityVec.push_back(iConv.quality(reco::Conversion::ConversionQuality::highEfficiency));
-        qualityVec.push_back(iConv.quality(reco::Conversion::ConversionQuality::ecalMatched1Track));
-        qualityVec.push_back(iConv.quality(reco::Conversion::ConversionQuality::ecalMatched2Track));
+        // quality flags
+        convInfo.isGeneralTracksOnly.push_back(iConv.quality(reco::Conversion::ConversionQuality::generalTracksOnly));
+        convInfo.isArbitratedEcalSeeded.push_back(iConv.quality(reco::Conversion::ConversionQuality::arbitratedEcalSeeded));
+        convInfo.isArbitratedMerged.push_back(iConv.quality(reco::Conversion::ConversionQuality::arbitratedMerged));
+        convInfo.isArbitratedMergedEcalGeneral.push_back(iConv.quality(reco::Conversion::ConversionQuality::arbitratedMergedEcalGeneral));
+        convInfo.isHighPurity.push_back(iConv.quality(reco::Conversion::ConversionQuality::highPurity));
+        convInfo.isHighEfficiency.push_back(iConv.quality(reco::Conversion::ConversionQuality::highEfficiency));
+        convInfo.isEcalMatched1Track.push_back(iConv.quality(reco::Conversion::ConversionQuality::ecalMatched1Track));
+        convInfo.isEcalMatched2Track.push_back(iConv.quality(reco::Conversion::ConversionQuality::ecalMatched2Track));
 
-        convInfo.quality.push_back(qualityVec);
+        //conversion momentum from innermost track
+        const std::vector<math::XYZVectorF> momvecs = iConv.tracksPin();
+
+        math::XYZVectorF track1mom = momvecs.at(0);
+        convInfo.track1InnerPx.push_back( track1mom.X() );
+        convInfo.track1InnerPy.push_back( track1mom.Y() );
+        convInfo.track1InnerPz.push_back( track1mom.Z() );
+
+        if (iConv.nTracks() == 2){ // track2 momentum vectors will be empty for one leg conversions
+            math::XYZVectorF track2mom = momvecs.at(1);
+            convInfo.track2InnerPx.push_back( track2mom.X() );
+            convInfo.track2InnerPy.push_back( track2mom.Y() );
+            convInfo.track2InnerPz.push_back( track2mom.Z() );
+        }
+
+        // fill track nHits
+        // const reco::Track* track1 = iConv.tracks().at(0).get();
+        // int nHits1 = 0;
+        // int nHits2 = -99;
+        // for (size_t i=0; i<track1->recHitsSize(); i++){
+        //     TrackingRecHitRef iHit = track1->recHit(i);
+        //     if ( iHit->isValid() ) nHits1++;
+        // }
+        // if (iConv.nTracks() == 2){ // i.e. only do this for two pronged conversions, nHits2=-99 for one pronged
+        //     const reco::Track* track2 = iConv.tracks().at(1).get();
+        //     nHits2 = 0;
+        //     for (size_t i=0; i<track2->recHitsSize(); i++){
+        //         TrackingRecHitRef iHit = track2->recHit(i);
+        //         if ( iHit->isValid() ) nHits2++;
+        //     }
+        // }
+        // convInfo.nHitsTrack1.push_back(nHits1);
+        // convInfo.nHitsTrack2.push_back(nHits2);
+
         numMatched++;
 
       }

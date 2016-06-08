@@ -558,13 +558,29 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo1.vtxNdof","std::vector<double>",&fConvInfo1.vtxNdof);
   fTree->Branch("ConvInfo1.pairCotThetaSeparation","std::vector<double>",&fConvInfo1.pairCotThetaSeparation);
   fTree->Branch("ConvInfo1.photonPt","std::vector<double>",&fConvInfo1.photonPt);
+  fTree->Branch("ConvInfo1.track1InnerPx","std::vector<double>",&fConvInfo1.track1InnerPx);
+  fTree->Branch("ConvInfo1.track1InnerPy","std::vector<double>",&fConvInfo1.track1InnerPy);
+  fTree->Branch("ConvInfo1.track1InnerPz","std::vector<double>",&fConvInfo1.track1InnerPz);
+  fTree->Branch("ConvInfo1.track2InnerPx","std::vector<double>",&fConvInfo1.track2InnerPx);
+  fTree->Branch("ConvInfo1.track2InnerPy","std::vector<double>",&fConvInfo1.track2InnerPy);
+  fTree->Branch("ConvInfo1.track2InnerPz","std::vector<double>",&fConvInfo1.track2InnerPz);
+
   fTree->Branch("ConvInfo1.dRToSc","std::vector<double>",&fConvInfo1.dRToSc);
+  // fTree->Branch("ConvInfo1.nHitsTrack1","std::vector<int>",&fConvInfo1.nHitsTrack1);
+  // fTree->Branch("ConvInfo1.nHitsTrack2","std::vector<int>",&fConvInfo1.nHitsTrack2);
   fTree->Branch("ConvInfo1.nSharedHits","std::vector<uint8_t>",&fConvInfo1.nSharedHits);
   fTree->Branch("ConvInfo1.MVAout","std::vector<double>",&fConvInfo1.MVAout);
   fTree->Branch("ConvInfo1.oneLegMVA","std::vector<std::vector<float>>",&fConvInfo1.oneLegMVA);
   fTree->Branch("ConvInfo1.nHitsBeforeVtx","std::vector<std::vector<uint8_t>>",&fConvInfo1.nHitsBeforeVtx);
-  fTree->Branch("ConvInfo1.quality","std::vector<std::vector<int>>",&fConvInfo1.quality);
-   
+  fTree->Branch("ConvInfo1.isGeneralTracksOnly","std::vector<int>",&fConvInfo1.isGeneralTracksOnly);
+  fTree->Branch("ConvInfo1.isArbitratedEcalSeeded","std::vector<int>",&fConvInfo1.isArbitratedEcalSeeded);
+  fTree->Branch("ConvInfo1.isArbitratedMerged","std::vector<int>",&fConvInfo1.isArbitratedMerged);
+  fTree->Branch("ConvInfo1.isArbitratedMergedEcalGeneral","std::vector<int>",&fConvInfo1.isArbitratedMergedEcalGeneral);
+  fTree->Branch("ConvInfo1.isHighPurity","std::vector<int>",&fConvInfo1.isHighPurity);
+  fTree->Branch("ConvInfo1.isHighEfficiency","std::vector<int>",&fConvInfo1.isHighEfficiency);
+  fTree->Branch("ConvInfo1.isEcalMatched1Track","std::vector<int>",&fConvInfo1.isEcalMatched1Track);
+  fTree->Branch("ConvInfo1.isEcalMatched2Track","std::vector<int>",&fConvInfo1.isEcalMatched2Track);
+
   fTree->Branch("ConvInfo2.x","std::vector<double>",&fConvInfo2.x);
   fTree->Branch("ConvInfo2.y","std::vector<double>",&fConvInfo2.y);
   fTree->Branch("ConvInfo2.z","std::vector<double>",&fConvInfo2.z);
@@ -578,12 +594,28 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo2.vtxNdof","std::vector<double>",&fConvInfo2.vtxNdof);
   fTree->Branch("ConvInfo2.pairCotThetaSeparation","std::vector<double>",&fConvInfo2.pairCotThetaSeparation);
   fTree->Branch("ConvInfo2.photonPt","std::vector<double>",&fConvInfo2.photonPt);
+  fTree->Branch("ConvInfo2.track1InnerPx","std::vector<double>",&fConvInfo2.track1InnerPx);
+  fTree->Branch("ConvInfo2.track1InnerPy","std::vector<double>",&fConvInfo2.track1InnerPy);
+  fTree->Branch("ConvInfo2.track1InnerPz","std::vector<double>",&fConvInfo2.track1InnerPz);
+  fTree->Branch("ConvInfo2.track2InnerPx","std::vector<double>",&fConvInfo2.track2InnerPx);
+  fTree->Branch("ConvInfo2.track2InnerPy","std::vector<double>",&fConvInfo2.track2InnerPy);
+  fTree->Branch("ConvInfo2.track2InnerPz","std::vector<double>",&fConvInfo2.track2InnerPz);
+
   fTree->Branch("ConvInfo2.dRToSc","std::vector<double>",&fConvInfo2.dRToSc);
+  // fTree->Branch("ConvInfo2.nHitsTrack1","std::vector<int>",&fConvInfo2.nHitsTrack1);
+  // fTree->Branch("ConvInfo2.nHitsTrack2","std::vector<int>",&fConvInfo2.nHitsTrack2);
   fTree->Branch("ConvInfo2.nSharedHits","std::vector<uint8_t>",&fConvInfo2.nSharedHits);
   fTree->Branch("ConvInfo2.MVAout","std::vector<double>",&fConvInfo2.MVAout);
   fTree->Branch("ConvInfo2.oneLegMVA","std::vector<std::vector<float>>",&fConvInfo2.oneLegMVA);
   fTree->Branch("ConvInfo2.nHitsBeforeVtx","std::vector<std::vector<uint8_t>>",&fConvInfo2.nHitsBeforeVtx);
-  fTree->Branch("ConvInfo2.quality","std::vector<std::vector<int>>",&fConvInfo2.quality);
+  fTree->Branch("ConvInfo2.isGeneralTracksOnly","std::vector<int>",&fConvInfo2.isGeneralTracksOnly);
+  fTree->Branch("ConvInfo2.isArbitratedEcalSeeded","std::vector<int>",&fConvInfo2.isArbitratedEcalSeeded);
+  fTree->Branch("ConvInfo2.isArbitratedMerged","std::vector<int>",&fConvInfo2.isArbitratedMerged);
+  fTree->Branch("ConvInfo2.isArbitratedMergedEcalGeneral","std::vector<int>",&fConvInfo2.isArbitratedMergedEcalGeneral);
+  fTree->Branch("ConvInfo2.isHighPurity","std::vector<int>",&fConvInfo2.isHighPurity);
+  fTree->Branch("ConvInfo2.isHighEfficiency","std::vector<int>",&fConvInfo2.isHighEfficiency);
+  fTree->Branch("ConvInfo2.isEcalMatched1Track","std::vector<int>",&fConvInfo2.isEcalMatched1Track);
+  fTree->Branch("ConvInfo2.isEcalMatched2Track","std::vector<int>",&fConvInfo2.isEcalMatched2Track);
    
   fTree->Branch("ConvInfo_OneLeg1.x","std::vector<double>",&fConvInfo_OneLeg1.x);
   fTree->Branch("ConvInfo_OneLeg1.y","std::vector<double>",&fConvInfo_OneLeg1.y);
@@ -598,12 +630,28 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo_OneLeg1.vtxNdof","std::vector<double>",&fConvInfo_OneLeg1.vtxNdof);
   fTree->Branch("ConvInfo_OneLeg1.pairCotThetaSeparation","std::vector<double>",&fConvInfo_OneLeg1.pairCotThetaSeparation);
   fTree->Branch("ConvInfo_OneLeg1.photonPt","std::vector<double>",&fConvInfo_OneLeg1.photonPt);
+  fTree->Branch("ConvInfo_OneLeg1.track1InnerPx","std::vector<double>",&fConvInfo_OneLeg1.track1InnerPx);
+  fTree->Branch("ConvInfo_OneLeg1.track1InnerPy","std::vector<double>",&fConvInfo_OneLeg1.track1InnerPy);
+  fTree->Branch("ConvInfo_OneLeg1.track1InnerPz","std::vector<double>",&fConvInfo_OneLeg1.track1InnerPz);
+  fTree->Branch("ConvInfo_OneLeg1.track2InnerPx","std::vector<double>",&fConvInfo_OneLeg1.track2InnerPx);
+  fTree->Branch("ConvInfo_OneLeg1.track2InnerPy","std::vector<double>",&fConvInfo_OneLeg1.track2InnerPy);
+  fTree->Branch("ConvInfo_OneLeg1.track2InnerPz","std::vector<double>",&fConvInfo_OneLeg1.track2InnerPz);
+
   fTree->Branch("ConvInfo_OneLeg1.dRToSc","std::vector<double>",&fConvInfo_OneLeg1.dRToSc);
+  // fTree->Branch("ConvInfo_OneLeg1.nHitsTrack1","std::vector<int>",&fConvInfo_OneLeg1.nHitsTrack1);
+  // fTree->Branch("ConvInfo_OneLeg1.nHitsTrack2","std::vector<int>",&fConvInfo_OneLeg1.nHitsTrack2);
   fTree->Branch("ConvInfo_OneLeg1.nSharedHits","std::vector<uint8_t>",&fConvInfo_OneLeg1.nSharedHits);
   fTree->Branch("ConvInfo_OneLeg1.MVAout","std::vector<double>",&fConvInfo_OneLeg1.MVAout);
   fTree->Branch("ConvInfo_OneLeg1.oneLegMVA","std::vector<std::vector<float>>",&fConvInfo_OneLeg1.oneLegMVA);
   fTree->Branch("ConvInfo_OneLeg1.nHitsBeforeVtx","std::vector<std::vector<uint8_t>>",&fConvInfo_OneLeg1.nHitsBeforeVtx);
-  fTree->Branch("ConvInfo_OneLeg1.quality","std::vector<std::vector<int>>",&fConvInfo_OneLeg1.quality);
+  fTree->Branch("ConvInfo_OneLeg1.isGeneralTracksOnly","std::vector<int>",&fConvInfo_OneLeg1.isGeneralTracksOnly);
+  fTree->Branch("ConvInfo_OneLeg1.isArbitratedEcalSeeded","std::vector<int>",&fConvInfo_OneLeg1.isArbitratedEcalSeeded);
+  fTree->Branch("ConvInfo_OneLeg1.isArbitratedMerged","std::vector<int>",&fConvInfo_OneLeg1.isArbitratedMerged);
+  fTree->Branch("ConvInfo_OneLeg1.isArbitratedMergedEcalGeneral","std::vector<int>",&fConvInfo_OneLeg1.isArbitratedMergedEcalGeneral);
+  fTree->Branch("ConvInfo_OneLeg1.isHighPurity","std::vector<int>",&fConvInfo_OneLeg1.isHighPurity);
+  fTree->Branch("ConvInfo_OneLeg1.isHighEfficiency","std::vector<int>",&fConvInfo_OneLeg1.isHighEfficiency);
+  fTree->Branch("ConvInfo_OneLeg1.isEcalMatched1Track","std::vector<int>",&fConvInfo_OneLeg1.isEcalMatched1Track);
+  fTree->Branch("ConvInfo_OneLeg1.isEcalMatched2Track","std::vector<int>",&fConvInfo_OneLeg1.isEcalMatched2Track);
    
   fTree->Branch("ConvInfo_OneLeg2.x","std::vector<double>",&fConvInfo_OneLeg2.x);
   fTree->Branch("ConvInfo_OneLeg2.y","std::vector<double>",&fConvInfo_OneLeg2.y);
@@ -618,12 +666,29 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("ConvInfo_OneLeg2.vtxNdof","std::vector<double>",&fConvInfo_OneLeg2.vtxNdof);
   fTree->Branch("ConvInfo_OneLeg2.pairCotThetaSeparation","std::vector<double>",&fConvInfo_OneLeg2.pairCotThetaSeparation);
   fTree->Branch("ConvInfo_OneLeg2.photonPt","std::vector<double>",&fConvInfo_OneLeg2.photonPt);
+  fTree->Branch("ConvInfo_OneLeg2.track1InnerPx","std::vector<double>",&fConvInfo_OneLeg2.track1InnerPx);
+  fTree->Branch("ConvInfo_OneLeg2.track1InnerPy","std::vector<double>",&fConvInfo_OneLeg2.track1InnerPy);
+  fTree->Branch("ConvInfo_OneLeg2.track1InnerPz","std::vector<double>",&fConvInfo_OneLeg2.track1InnerPz);
+  fTree->Branch("ConvInfo_OneLeg2.track2InnerPx","std::vector<double>",&fConvInfo_OneLeg2.track2InnerPx);
+  fTree->Branch("ConvInfo_OneLeg2.track2InnerPy","std::vector<double>",&fConvInfo_OneLeg2.track2InnerPy);
+  fTree->Branch("ConvInfo_OneLeg2.track2InnerPz","std::vector<double>",&fConvInfo_OneLeg2.track2InnerPz);
+
   fTree->Branch("ConvInfo_OneLeg2.dRToSc","std::vector<double>",&fConvInfo_OneLeg2.dRToSc);
+  // fTree->Branch("ConvInfo_OneLeg2.nHitsTrack1","std::vector<int>",&fConvInfo_OneLeg2.nHitsTrack1);
+  // fTree->Branch("ConvInfo_OneLeg2.nHitsTrack2","std::vector<int>",&fConvInfo_OneLeg2.nHitsTrack2);
   fTree->Branch("ConvInfo_OneLeg2.nSharedHits","std::vector<uint8_t>",&fConvInfo_OneLeg2.nSharedHits);
   fTree->Branch("ConvInfo_OneLeg2.MVAout","std::vector<double>",&fConvInfo_OneLeg2.MVAout);
   fTree->Branch("ConvInfo_OneLeg2.oneLegMVA","std::vector<std::vector<float>>",&fConvInfo_OneLeg2.oneLegMVA);
   fTree->Branch("ConvInfo_OneLeg2.nHitsBeforeVtx","std::vector<std::vector<uint8_t>>",&fConvInfo_OneLeg2.nHitsBeforeVtx);
-  fTree->Branch("ConvInfo_OneLeg2.quality","std::vector<std::vector<int>>",&fConvInfo_OneLeg2.quality);
+  fTree->Branch("ConvInfo_OneLeg2.isGeneralTracksOnly","std::vector<int>",&fConvInfo_OneLeg2.isGeneralTracksOnly);
+  fTree->Branch("ConvInfo_OneLeg2.isArbitratedEcalSeeded","std::vector<int>",&fConvInfo_OneLeg2.isArbitratedEcalSeeded);
+  fTree->Branch("ConvInfo_OneLeg2.isArbitratedMerged","std::vector<int>",&fConvInfo_OneLeg2.isArbitratedMerged);
+  fTree->Branch("ConvInfo_OneLeg2.isArbitratedMergedEcalGeneral","std::vector<int>",&fConvInfo_OneLeg2.isArbitratedMergedEcalGeneral);
+  fTree->Branch("ConvInfo_OneLeg2.isHighPurity","std::vector<int>",&fConvInfo_OneLeg2.isHighPurity);
+  fTree->Branch("ConvInfo_OneLeg2.isHighEfficiency","std::vector<int>",&fConvInfo_OneLeg2.isHighEfficiency);
+  fTree->Branch("ConvInfo_OneLeg2.isEcalMatched1Track","std::vector<int>",&fConvInfo_OneLeg2.isEcalMatched1Track);
+  fTree->Branch("ConvInfo_OneLeg2.isEcalMatched2Track","std::vector<int>",&fConvInfo_OneLeg2.isEcalMatched2Track);
+
 
   fTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
   // diphoton info for second or thrid best vertex
