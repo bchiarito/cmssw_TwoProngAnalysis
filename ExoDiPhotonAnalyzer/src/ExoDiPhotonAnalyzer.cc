@@ -178,8 +178,10 @@ private:
   bool               fkRemoveSpikes;   // option to remove spikes before filling tree
   bool               fkRequireTightPhotons;  // option to require tight photon id in tree
   bool               fkRequireGenEventInfo;  // generated information for RS graviton files
-  bool               fisMC;  //option to decide if MC or Data     
-  bool               fisSignal;  //option to decide if Signal or Backround MC
+  bool               fisMC;  // option to decide if MC or Data     
+  bool               fisSignal;  // option to decide if Signal MC or Backround MC
+  bool               fDebug;  // if set to False, mean to limit per event stdout output
+  bool               fchargedDecayCutflow;  // option to print cutflow of the charged selection to stdout at the end of the job
   bool               fisAOD;
   string             fPUMCFileName;
   string             fPUDataFileName;
@@ -188,6 +190,15 @@ private:
   string             fPFIDCategory;   
   string             fIDMethod;   
 
+  float fCutflow_total;
+  float fCutflow_oneCand;
+  float fCutflow_twoCand;
+  float fCutflow_onePass;
+  float fCutflow_twoPass;
+  float fCutflow_oneMatch;
+  float fCutflow_twoMatch;
+  float fCutflow_onePassMatch;
+  float fCutflow_twoPassMatch;
  
   // tools for clusters
   std::auto_ptr<noZS::EcalClusterLazyTools> lazyTools_;
@@ -373,18 +384,6 @@ private:
   double fDEta_EtaEta;
   TLorentzVector fEtaEtaCand;
   TLorentzVector fEtaEtaCand2;
-  vector<Double_t> fCands_pt;
-  vector<Double_t> fCands_eta;
-  vector<Double_t> fCands_phi;
-  vector<Double_t> fCands_mass;
-  vector<Double_t> fCands_px;
-  vector<Double_t> fCands_py;
-  vector<Double_t> fCands_pz;
-  vector<Double_t> fCands_energy;
-  vector<Double_t> fCands_chargedIso;
-  vector<Double_t> fCands_neutralIso;
-  vector<Double_t> fCands_egammaIso;
-  vector<Double_t> fCands_muonIso;
   vector<Double_t> fPasses_pt;
   vector<Double_t> fPasses_eta;
   vector<Double_t> fPasses_phi;
@@ -427,6 +426,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fkRequireGenEventInfo(iConfig.getUntrackedParameter<bool>("requireGenEventInfo")),
     fisMC(iConfig.getUntrackedParameter<bool>("isMC")),
     fisSignal(iConfig.getUntrackedParameter<bool>("isSignal")),
+    fDebug(iConfig.getUntrackedParameter<bool>("debug")),
+    fchargedDecayCutflow(iConfig.getUntrackedParameter<bool>("chargedDecayCutflow")),
     fisAOD(iConfig.getParameter<bool>("isAOD")),
     fPUMCFileName(iConfig.getUntrackedParameter<string>("PUMCFileName")),
     fPUDataFileName(iConfig.getUntrackedParameter<string>("PUDataFileName")), 
@@ -657,18 +658,6 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("mGrommedEtaEta",&fMass2_EtaEta,"mGrommedEtaEta/D");
   fTree2->Branch("vecEtaEta",&fEtaEtaCand);
   fTree2->Branch("vecGrommedEtaEta",&fEtaEtaCand2);
-  fTree2->Branch("cands_pt",&fCands_pt);
-  fTree2->Branch("cands_eta",&fCands_eta);
-  fTree2->Branch("cands_phi",&fCands_phi);
-  fTree2->Branch("cands_mass",&fCands_mass);
-  fTree2->Branch("cands_px",&fCands_px);
-  fTree2->Branch("cands_py",&fCands_py);
-  fTree2->Branch("cands_pz",&fCands_pz);
-  fTree2->Branch("cands_energy",&fCands_energy);
-  fTree2->Branch("cands_chargedIso",&fCands_chargedIso);
-  fTree2->Branch("cands_neutralIso",&fCands_neutralIso);
-  fTree2->Branch("cands_egammaIso",&fCands_egammaIso);
-  fTree2->Branch("cands_muonIso",&fCands_muonIso);
   fTree2->Branch("passse_pt",&fPasses_pt);
   fTree2->Branch("passes_eta",&fPasses_eta);
   fTree2->Branch("passes_phi",&fPasses_phi);
@@ -1268,18 +1257,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   edm::Handle<vector<reco::Vertex>> primaryvertecies;
   iEvent.getByToken(pvToken_, primaryvertecies);
 
-  fCands_pt.clear();
-  fCands_eta.clear();
-  fCands_phi.clear();
-  fCands_mass.clear();
-  fCands_px.clear();
-  fCands_py.clear();
-  fCands_pz.clear();
-  fCands_energy.clear();
-  fCands_chargedIso.clear();
-  fCands_neutralIso.clear();
-  fCands_egammaIso.clear();
-  fCands_muonIso.clear();
   fPasses_pt.clear();
   fPasses_eta.clear();
   fPasses_phi.clear();
@@ -1323,8 +1300,16 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     fNumGenEta = -1;
   }
 
+  // Make pruned collection of pf from which to find the CH +/- pair
+  vector<pat::PackedCandidate> pfcands_pruned;
+  for (unsigned int i = 0; i < pfcands->size(); ++i) {
+    const pat::PackedCandidate &pf = (*pfcands)[i];
+    if (pf.pt() > fCandidatePairMinPt) {
+      pfcands_pruned.push_back(pf);
+    }
+  }
+
   // Find all pairs of one CH pos and one CH neg within specified DR of each other
-  // Not exclusive (same pf cand can belong to multiple pairs)
   vector<TLorentzVector> candidates_CHpos;
   vector<unsigned int> candidates_CHposIndex;
   vector<TLorentzVector> candidates_CHneg;
@@ -1336,12 +1321,12 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   vector<TLorentzVector> candidates_Eta;
   vector<TLorentzVector> candidates_EtaGrommed;
   int pruned_count = 0;
-  for (unsigned int i = 0; i < pfcands->size(); ++i) {
-    const pat::PackedCandidate &pf1 = (*pfcands)[i];
+  for (unsigned int i = 0; i < pfcands_pruned.size(); i++) {
+    const pat::PackedCandidate pf1 = pfcands_pruned[i];
     if (pf1.pt() < fCandidatePairMinPt) continue;
     pruned_count += 1;
-    for (unsigned int j = i+1; j < pfcands->size(); ++j) { // loop starting with j=i+1, considers each pair exactly once
-      const pat::PackedCandidate &pf2 = (*pfcands)[j];
+    for (unsigned int j = i+1; j < pfcands_pruned.size(); j++) { // note loop starting with j=i+1, considers each pair exactly once
+      const pat::PackedCandidate pf2 = pfcands_pruned[j];
       if (pf2.pt() < fCandidatePairMinPt) continue;
       if (!( ((pf1.pdgId() == 211) && (pf2.pdgId() == -211)) || ((pf1.pdgId() == -211) && (pf2.pdgId() == 211)) )) continue;
       TLorentzVector pfcand1;
@@ -1405,20 +1390,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           candidates_nume.push_back(nume);
           candidates_Eta.push_back(EtaCandidate);
           candidates_EtaGrommed.push_back(EtaGrommedCandidate);
-          fCands_pt.push_back(EtaCandidate.Pt());
-          fCands_eta.push_back(EtaCandidate.Eta());
-          fCands_phi.push_back(EtaCandidate.Phi());
-          fCands_mass.push_back(EtaCandidate.M());
-          fCands_px.push_back(EtaCandidate.Px());
-          fCands_py.push_back(EtaCandidate.Py());
-          fCands_pz.push_back(EtaCandidate.Pz());
-          fCands_energy.push_back(EtaCandidate.E());
         }
       } // end conditionals on CH pair
     }
   } // end double loop over pf
-  fNumPrunedPF = pruned_count;
-  fNumCHpairs = candidates_center.size();
   cout << ". finish pairs finding" << endl;
 
   // Associate data to candidate pairs
@@ -1441,7 +1416,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     EtaCandidate.SetPtEtaPhiM(candidates_Eta[i].Pt(), candidates_Eta[i].Eta(), candidates_Eta[i].Phi(), candidates_Eta[i].M());
     TLorentzVector photon;
     photon.SetPtEtaPhiM(candidates_photon[i].Pt(), candidates_photon[i].Eta(), candidates_photon[i].Phi(), candidates_photon[i].M());
-    cout << ". remade Tvectors" << endl;
+    cout << ". made Tvectors" << endl;
 
     // Define isolations
     double chargedIso = 0;
@@ -1452,20 +1427,19 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       const pat::PackedCandidate &pf = (*pfcands)[j];
       TLorentzVector pfcand;
       pfcand.SetPtEtaPhiE(pf.pt(), pf.eta(), pf.phiAtVtx(), pf.energy());
-      if (abs(pf.pdgId()) == 13) { // muon
-        if (center.DeltaR(pfcand) < fCandidatePairIsolationDR)
-          muonIso += pfcand.Pt();
-      } else if (abs(pf.pdgId()) == 211) { // charged hadron
-        if ( center.DeltaR(pfcand) < fCandidatePairIsolationDR &&
-             !(j == candidates_CHposIndex[i] || j == candidates_CHnegIndex[i]) )
-          chargedIso += pfcand.Pt();
-      } else if (pf.pdgId() == 130) { // neutral hadron
+      if (!fisSignal && pf.fromPV() <= 1) continue; // for signal, fromPV() is broken
+      // charged (incl. muons)
+      if (abs(pf.pdgId()) == 13 || abs(pf.pdgId()) == 211) {
+        if ( center.DeltaR(pfcand) < fCandidatePairIsolationDR && !(j == candidates_CHposIndex[i] || j == candidates_CHnegIndex[i]) )
+            chargedIso += pfcand.Pt();
+      // neutral hadron
+      } else if (pf.pdgId() == 130) {
         if (center.DeltaR(pfcand) < fCandidatePairIsolationDR)
           neutralIso += pfcand.Pt();
-      } else if (abs(pf.pdgId()) == 11 || pf.pdgId() == 22) { // e gamma
+      // e gamma
+      } else if (abs(pf.pdgId()) == 11 || pf.pdgId() == 22) {
         if ( (center.DeltaR(pfcand) < fCandidatePairIsolationDR) &&
-             !(abs(pf.phiAtVtx() - center.Phi()) < fCandidatePairPhiBox/2.0 &&
-             abs(pf.eta() - center.Eta()) < fCandidatePairEtaBox/2.0))
+             !(abs(pf.phiAtVtx() - center.Phi()) < fCandidatePairPhiBox/2.0 && abs(pf.eta() - center.Eta()) < fCandidatePairEtaBox/2.0))
           egammaIso += pfcand.Pt();
       }
     } // end pf cand loop
@@ -1550,11 +1524,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     if (passed_fake) cand_pairs_faked += 1;
     if (matched) cand_pairs_matched += 1;
     if (passed && matched) cand_pairs_passed_matched += 1;
-    fCands_chargedIso.push_back(relchargedIso);
-    fCands_neutralIso.push_back(relneutralIso);
-    fCands_egammaIso.push_back(relegammaIso);
-    fCands_muonIso.push_back(relmuonIso);
   } // end candidate loop
+  fNumPrunedPF = pruned_count;
+  fNumCHpairs = candidates_center.size();
   fNumCHpairsPass = cand_pairs_passed;
   fNumCHpairsFake = cand_pairs_faked;
   fNumCHpairsMatch = cand_pairs_matched;
@@ -1574,7 +1546,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   int subleading_index = -1;
   double subleading_pt = -1;
   for (unsigned int i = 0; i < candidates_passed.size(); i++) {
-    //if (!candidates_passed[i]) continue;
+    if (!candidates_passed[i]) continue;
     if (candidates_Eta[i].Pt() > leading_pt) {
       subleading_index = leading_index;
       subleading_pt = leading_pt;
@@ -1586,14 +1558,16 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     }
   } // end candidate loop
   cout << ". finished sorting leading two" << endl;
-  int l = leading_index;
-  int s = subleading_index;
   ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo1);
   ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo2);
-  if (cand_pairs_passed == 0) {
-    ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo1);
-    ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo2);
-  } else if (cand_pairs_passed == 1) {
+  fMass_EtaEta = -99.9;
+  fMass2_EtaEta = -99.9;
+  fDR_EtaEta = -99.9;
+  fDPhi_EtaEta = -99.9;
+  fDEta_EtaEta = -99.9;
+  int l = leading_index;
+  int s = subleading_index;
+  if (cand_pairs_passed == 1) {
     ExoDiPhotons::FillRecoTwoProngInfo(fRecoTwoProngInfo1, candidates_CHpos[l], candidates_CHneg[l], candidates_center[l],
                                        candidates_photon[l], candidates_Eta[l], candidates_EtaGrommed[l].M(), candidates_passed[l], candidates_matched[l], 
                                        candidates_nearestGenDR[l], candidates_nearestGenIndex[l], candidates_relchargediso[l],
@@ -1614,10 +1588,21 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     fMass2_EtaEta = phiCandidate2.M();
     fEtaEtaCand2 = phiCandidate;
     fDR_EtaEta = candidates_Eta[l].DeltaR(candidates_Eta[s]);
-    fDPhi_EtaEta = candidates_Eta[l].DeltaPhi(candidates_Eta[s]);
+    fDPhi_EtaEta = abs(candidates_Eta[l].DeltaPhi(candidates_Eta[s]));
     fDEta_EtaEta = abs(candidates_Eta[l].Eta() - candidates_Eta[s].Eta());
   } // end if block
+  // Fill TTree
   fTree2->Fill();
+  // Increment cutflow variables
+  fCutflow_total += 1;
+  if (fNumCHpairs>=1) fCutflow_oneCand += 1;
+  if (fNumCHpairs>=2) fCutflow_twoCand += 1;
+  if (fNumCHpairsPass>=1) fCutflow_onePass += 1;
+  if (fNumCHpairsPass>=2) fCutflow_twoPass += 1;
+  if (fNumCHpairsMatch>=1) fCutflow_oneMatch += 1;
+  if (fNumCHpairsMatch>=2) fCutflow_twoMatch += 1;
+  if (fNumCHpairsPassMatch>=1) fCutflow_onePassMatch += 1;
+  if (fNumCHpairsPassMatch>=2) fCutflow_twoPassMatch += 1;
   cout << "finished charged decay code" << endl;
 
   // photon loop
@@ -2316,7 +2301,21 @@ ExoDiPhotonAnalyzer::beginJob()
 
 // ------------ method called once each job just after ending the event loop  ------------
 void 
-ExoDiPhotonAnalyzer::endJob() {
+ExoDiPhotonAnalyzer::endJob()
+{
+  if (fchargedDecayCutflow) {
+    cout << "Cutflow informaton for charged decay mode selection" << endl;
+    cout << "Total number of events processed                        :  " << fCutflow_total << " " << (fCutflow_total/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least one candidate Eta                  :  " << fCutflow_oneCand << " " << (fCutflow_oneCand/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least one passing Eta                    :  " << fCutflow_onePass << " " << (fCutflow_onePass/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least two candidate Etas                 :  " << fCutflow_twoCand << " " << (fCutflow_twoCand/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least two passing Etas                   :  " << fCutflow_twoPass << " " << (fCutflow_twoPass/fCutflow_total)*100 << "%" << endl;
+    cout << endl;
+    cout << "Events with at least one matched candidate              :  " << fCutflow_oneMatch << " " << (fCutflow_oneMatch/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least one passing and matched candidate  :  " << fCutflow_onePassMatch << " " << (fCutflow_onePassMatch/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least two matched candidate              :  " << fCutflow_twoMatch << " " << (fCutflow_twoMatch/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least two passing and matched candidates :  " << fCutflow_twoPassMatch << " " << (fCutflow_twoPassMatch/fCutflow_total)*100 << "%" << endl;
+  }
 }
 
 
