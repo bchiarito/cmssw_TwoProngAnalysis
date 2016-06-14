@@ -3,7 +3,7 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 
 options.register('globalTag',
-                '76X_dataRun2_16Dec2015_v0',
+                '80X_dataRun2_v6',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "global tag to use when running")
@@ -51,7 +51,8 @@ inputFilesAOD = cms.untracked.vstring(
 
 inputFilesMiniAOD = cms.untracked.vstring(
     # 'root://eoscms.cern.ch//store/mc/RunIIFall15MiniAODv2/GGJets_M-60To200_Pt-50_13TeV-sherpa/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/62734630-08D8-E511-BA00-003048947BBB.root'
-    'root://eoscms.cern.ch//store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/266C3D12-77A6-E511-9260-002618943957.root'
+    "root://cmsxrootd.fnal.gov//store/data/Run2016B/DoubleEG/MINIAOD/PromptReco-v2/000/273/493/00000/AE09920C-771D-E611-A5F5-02163E011DE7.root"
+    # 'root://eoscms.cern.ch//store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/266C3D12-77A6-E511-9260-002618943957.root'
 # 'root://eoscms.cern.ch//store/mc/RunIIFall15MiniAODv2/GGJets_M-1000To2000_Pt-50_13TeV-sherpa/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/10000/04B53B17-24D9-E511-B1ED-00259075D72E.root'
 # "root://cmsxrootd.fnal.gov//store/data/Run2015D/DoubleEG/MINIAOD/PromptReco-v3/000/257/969/00000/F24329DE-706A-E511-998A-02163E012B1A.root"
 # "file:pickevents.root"
