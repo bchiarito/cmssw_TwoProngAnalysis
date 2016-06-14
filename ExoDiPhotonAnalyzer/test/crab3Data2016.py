@@ -17,7 +17,7 @@ config.Data.publication = False
 config.Data.unitsPerJob = 100
 config.Data.totalUnits = -1
 config.Data.splitting = 'LumiBased'
-config.Data.lumiMask = 'Cert_246908-260627_13TeV_PromptReco_Collisions15_25ns_JSON_Silver.txt'
+config.Data.lumiMask = 'Cert_271036-274421_13TeV_PromptReco_Collisions16_JSON.txt'
 config.section_('User')
 config.section_('Site')
 config.Site.storageSite = 'T3_US_FNALLPC'
@@ -31,7 +31,7 @@ if __name__ == '__main__':
 
     # We want to put all the CRAB project directories from the tasks we submit here into one common directory.
     # That's why we need to set this parameter (here or above in the configuration file, it does not matter, we will not overwrite it).
-    config.General.workArea = 'crab3datajobs'
+    config.General.workArea = 'crab3data2016jobs'
 
     def submit(config):
         try:
