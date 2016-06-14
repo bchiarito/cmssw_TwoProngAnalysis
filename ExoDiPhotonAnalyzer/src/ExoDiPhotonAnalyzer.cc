@@ -297,7 +297,6 @@ private:
   double fCandidatePairChargedIsoCut;
   double fCandidatePairNeutralIsoCut;
   double fCandidatePairEGammaIsoCut;
-  double fCandidatePairMuonIsoCut;
   double fCandidatePairGenMatchDR;
   TH1F *fTwoProngFakeRate_pt;
   TH1F *fTwoProngFakeRate_eta;
@@ -448,7 +447,6 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fCandidatePairChargedIsoCut(iConfig.getUntrackedParameter<double>("chargedIsoCut")),
     fCandidatePairNeutralIsoCut(iConfig.getUntrackedParameter<double>("neutralIsoCut")),
     fCandidatePairEGammaIsoCut(iConfig.getUntrackedParameter<double>("egammaIsoCut")),
-    fCandidatePairMuonIsoCut(iConfig.getUntrackedParameter<double>("muonIsoCut")),
     fCandidatePairGenMatchDR(iConfig.getUntrackedParameter<double>("generatorEtaMatchDR")),
     //-----------------taken from Ilya-----------------
     rhoToken_(consumes<double> (iConfig.getParameter<edm::InputTag>("rho"))),
@@ -471,8 +469,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   // LumiReweighting Tool
 
   std::cout<<"ExoDiPhotonAnalyzer: ID Method used "<<fIDMethod.c_str()
-	   <<"PF ID Category "<<fPFIDCategory.c_str()
-	   <<std::endl;
+     <<"PF ID Category "<<fPFIDCategory.c_str()
+     <<std::endl;
 
   //-----------------taken from Ilya-----------------
   //
@@ -891,7 +889,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   using namespace std;
   using namespace reco;
 
-  cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
+  if (fDebug) cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
   fEventNum = iEvent.id().event();
   fRunNum = iEvent.id().run();
   fLumiNum = iEvent.id().luminosityBlock();
@@ -910,7 +908,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // bool fisAOD = true;
   if (fisAOD) iEvent.getByToken(photonsToken_, photons);
   else iEvent.getByToken(photonsMiniAODToken_,photons);
-  cout << "Found photon collection with size = " << (*photons).size() << endl;
+  if (fDebug) cout << "Found photon collection with size = " << (*photons).size() << endl;
   // if( !photons.isValid() ){
   //   // fisAOD = false;
   //   iEvent.getByToken(photonsMiniAODToken_,photons);
@@ -1336,7 +1334,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   }
 
   // Fill branches for charged decay analysis
-  cout << "start charged decay code" << endl;
+  if (fDebug) cout << "start charged decay code" << endl;
   edm::Handle<pat::PackedCandidateCollection> pfcands;
   iEvent.getByToken(pfcandsToken_, pfcands);
 
@@ -1382,22 +1380,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
         if (genEtaCount == 2)
           ExoDiPhotons::FillGenParticleInfo(fGenEtaParticleInfo2, gen);
     } // end gen particle loop
-    if (genEtaCount != 2)  
-      cout << ". *** Incorrect number of generator Eta particles (not exactly two status=2)!! Instead found " << genEtaCount << endl;
     fNumGenEta = genEtaCount;
   } else {
     ExoDiPhotons::InitGenParticleInfo(fGenEtaParticleInfo1);
     ExoDiPhotons::InitGenParticleInfo(fGenEtaParticleInfo2);
     fNumGenEta = -1;
-  }
-
-  // Make pruned collection of pf from which to find the CH +/- pair
-  vector<pat::PackedCandidate> pfcands_pruned;
-  for (unsigned int i = 0; i < pfcands->size(); ++i) {
-    const pat::PackedCandidate &pf = (*pfcands)[i];
-    if (pf.pt() > fCandidatePairMinPt) {
-      pfcands_pruned.push_back(pf);
-    }
   }
 
   // Find all pairs of one CH pos and one CH neg within specified DR of each other
@@ -1412,12 +1399,12 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   vector<TLorentzVector> candidates_Eta;
   vector<TLorentzVector> candidates_EtaGrommed;
   int pruned_count = 0;
-  for (unsigned int i = 0; i < pfcands_pruned.size(); i++) {
-    const pat::PackedCandidate pf1 = pfcands_pruned[i];
+  for (unsigned int i = 0; i < pfcands->size(); i++) {
+    const pat::PackedCandidate &pf1 = (*pfcands)[i];
     if (pf1.pt() < fCandidatePairMinPt) continue;
     pruned_count += 1;
-    for (unsigned int j = i+1; j < pfcands_pruned.size(); j++) { // note loop starting with j=i+1, considers each pair exactly once
-      const pat::PackedCandidate pf2 = pfcands_pruned[j];
+    for (unsigned int j = i+1; j < pfcands->size(); j++) { // note loop starting with j=i+1, considers each pair exactly once
+      const pat::PackedCandidate &pf2 = (*pfcands)[j];
       if (pf2.pt() < fCandidatePairMinPt) continue;
       if (!( ((pf1.pdgId() == 211) && (pf2.pdgId() == -211)) || ((pf1.pdgId() == -211) && (pf2.pdgId() == 211)) )) continue;
       TLorentzVector pfcand1;
@@ -1455,7 +1442,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
             photon = photon + pfcand3;
           }
         } // end pf cand loop
-        cout << ". finished photon" << endl;
+        if (fDebug) cout << ". finished photon" << endl;
         int n = index_of_leading_pf_photon;
         if (n != -1) {
           // CH pair is close and has at least one pf photon, definition of candidate, fill vectors
@@ -1485,7 +1472,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       } // end conditionals on CH pair
     }
   } // end double loop over pf
-  cout << ". finish pairs finding" << endl;
+  if (fDebug) cout << ". finish pairs finding" << endl;
 
   // Associate data to candidate pairs
   vector<bool> candidates_passed;
@@ -1495,7 +1482,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   vector<double> candidates_relchargediso;
   vector<double> candidates_relneutraliso;
   vector<double> candidates_relegammaiso;
-  vector<double> candidates_relmuoniso;
   int cand_pairs_passed = 0;
   int cand_pairs_faked = 0;
   int cand_pairs_matched = 0;
@@ -1507,13 +1493,12 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     EtaCandidate.SetPtEtaPhiM(candidates_Eta[i].Pt(), candidates_Eta[i].Eta(), candidates_Eta[i].Phi(), candidates_Eta[i].M());
     TLorentzVector photon;
     photon.SetPtEtaPhiM(candidates_photon[i].Pt(), candidates_photon[i].Eta(), candidates_photon[i].Phi(), candidates_photon[i].M());
-    cout << ". made Tvectors" << endl;
+    if (fDebug) cout << ". made Tvectors" << endl;
 
     // Define isolations
     double chargedIso = 0;
     double neutralIso = 0;
     double egammaIso = 0;
-    double muonIso = 0;
     for (unsigned int j = 0; j < pfcands->size(); ++j) {
       const pat::PackedCandidate &pf = (*pfcands)[j];
       TLorentzVector pfcand;
@@ -1534,22 +1519,19 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           egammaIso += pfcand.Pt();
       }
     } // end pf cand loop
-    cout << ". finished isolation" << endl;
+    if (fDebug) cout << ". finished isolation" << endl;
 
     // Selection on Eta Candidate
     double relchargedIso = chargedIso / EtaCandidate.Pt();
     double relneutralIso = neutralIso / EtaCandidate.Pt();
     double relegammaIso = egammaIso / EtaCandidate.Pt();
-    double relmuonIso = muonIso / EtaCandidate.Pt();
     bool passed = relchargedIso < fCandidatePairChargedIsoCut &&
                   relneutralIso < fCandidatePairNeutralIsoCut &&
                   relegammaIso < fCandidatePairEGammaIsoCut &&
-                  relmuonIso < fCandidatePairMuonIsoCut &&
                   photon.Pt() > fCandidatePairPhotonPtCut;
     bool passed_fake = relchargedIso > fCandidatePairChargedIsoCut &&
                        relneutralIso < fCandidatePairNeutralIsoCut &&
                        relegammaIso < fCandidatePairEGammaIsoCut &&
-                       relmuonIso < fCandidatePairMuonIsoCut &&
                        photon.Pt() > fCandidatePairPhotonPtCut;
     if (passed) {
       fTwoProngFakeNumer_pt->Fill(EtaCandidate.Pt());
@@ -1579,7 +1561,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       fFakes_pz.push_back(EtaCandidate.Pz());
       fFakes_energy.push_back(EtaCandidate.E());
     }
-    cout << ". finished selection" << endl;
+    if (fDebug) cout << ". finished selection" << endl;
 
     // Generator Matching
     bool matched = false;
@@ -1601,12 +1583,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       }
       if (mingenDR < fCandidatePairGenMatchDR) matched = true;
     }
-    cout << ". finished matching" << endl;
+    if (fDebug) cout << ". finished matching" << endl;
     // Fill all vectors for each candidate all at once
     candidates_relchargediso.push_back(relchargedIso);
     candidates_relneutraliso.push_back(relneutralIso);
     candidates_relegammaiso.push_back(relegammaIso);
-    candidates_relmuoniso.push_back(relmuonIso);
     candidates_passed.push_back(passed);
     candidates_nearestGenDR.push_back(mingenDR);
     candidates_nearestGenIndex.push_back(index);
@@ -1622,14 +1603,14 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fNumCHpairsFake = cand_pairs_faked;
   fNumCHpairsMatch = cand_pairs_matched;
   fNumCHpairsPassMatch = cand_pairs_passed_matched;
-  cout << ". finished all cand data" << endl;
+  if (fDebug) cout << ". finished all cand data" << endl;
   fTwoProngFakeRate_pt->Add(fTwoProngFakeNumer_pt);
   fTwoProngFakeRate_pt->Divide(fTwoProngFakeDenom_pt);
   fTwoProngFakeRate_eta->Add(fTwoProngFakeNumer_eta);
   fTwoProngFakeRate_eta->Divide(fTwoProngFakeDenom_eta);
   fTwoProngFakeRate_phi->Add(fTwoProngFakeNumer_phi);
   fTwoProngFakeRate_phi->Divide(fTwoProngFakeDenom_phi);
-  cout << ". finished fake rate histos" << endl;
+  if (fDebug) cout << ". finished fake rate histos" << endl;
 
   // For leading two passing charged hadron pairs, save info into ttree
   int leading_index = -1;
@@ -1648,7 +1629,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       subleading_pt = candidates_Eta[i].Pt();
     }
   } // end candidate loop
-  cout << ". finished sorting leading two" << endl;
+  if (fDebug) cout << ". finished sorting leading two" << endl;
   ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo1);
   ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo2);
   fMass_EtaEta = -99.9;
@@ -1662,17 +1643,17 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     ExoDiPhotons::FillRecoTwoProngInfo(fRecoTwoProngInfo1, candidates_CHpos[l], candidates_CHneg[l], candidates_center[l],
                                        candidates_photon[l], candidates_Eta[l], candidates_EtaGrommed[l].M(), candidates_passed[l], candidates_matched[l], 
                                        candidates_nearestGenDR[l], candidates_nearestGenIndex[l], candidates_relchargediso[l],
-                                       candidates_relneutraliso[l], candidates_relegammaiso[l], candidates_relmuoniso[l], candidates_numgamma[l], candidates_nume[l]);
+                                       candidates_relneutraliso[l], candidates_relegammaiso[l], candidates_numgamma[l], candidates_nume[l]);
     ExoDiPhotons::InitRecoTwoProngInfo(fRecoTwoProngInfo2);
   } else if (cand_pairs_passed >= 2) {
     ExoDiPhotons::FillRecoTwoProngInfo(fRecoTwoProngInfo1, candidates_CHpos[l], candidates_CHneg[l], candidates_center[l],
                                        candidates_photon[l], candidates_Eta[l], candidates_EtaGrommed[l].M(), candidates_passed[l], candidates_matched[l], 
                                        candidates_nearestGenDR[l], candidates_nearestGenIndex[l], candidates_relchargediso[l],
-                                       candidates_relneutraliso[l], candidates_relegammaiso[l], candidates_relmuoniso[l], candidates_numgamma[l], candidates_nume[l]);
+                                       candidates_relneutraliso[l], candidates_relegammaiso[l], candidates_numgamma[l], candidates_nume[l]);
     ExoDiPhotons::FillRecoTwoProngInfo(fRecoTwoProngInfo2, candidates_CHpos[s], candidates_CHneg[s], candidates_center[s],
                                        candidates_photon[s], candidates_Eta[s], candidates_EtaGrommed[s].M(), candidates_passed[s], candidates_matched[s], 
                                        candidates_nearestGenDR[s], candidates_nearestGenIndex[s], candidates_relchargediso[s],
-                                       candidates_relneutraliso[s], candidates_relegammaiso[s], candidates_relmuoniso[s], candidates_numgamma[s], candidates_nume[s]);
+                                       candidates_relneutraliso[s], candidates_relegammaiso[s], candidates_numgamma[s], candidates_nume[s]);
     TLorentzVector phiCandidate = candidates_Eta[l] + candidates_Eta[s];
     fMass_EtaEta = phiCandidate.M();
     TLorentzVector phiCandidate2 = candidates_EtaGrommed[l] + candidates_EtaGrommed[s];
@@ -1694,7 +1675,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (fNumCHpairsMatch>=2) fCutflow_twoMatch += 1;
   if (fNumCHpairsPassMatch>=1) fCutflow_onePassMatch += 1;
   if (fNumCHpairsPassMatch>=2) fCutflow_twoPassMatch += 1;
-  cout << "finished charged decay code" << endl;
+  if (fDebug) cout << "finished charged decay code" << endl;
 
   // photon loop
   for(edm::View<reco::Photon>::const_iterator recoPhoton = photons->begin(); recoPhoton!=photons->end(); recoPhoton++) {
@@ -1717,7 +1698,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     // for MiniAOD, introduce chIso cut to avoid the case where a supercluster doesn't have rechit/cluster information that is counted on later
     // cout << "SK" << recoPhoton->r9() << " " << chIso << " " << recoPhoton->chargedHadronIso() << " " << 0.3*recoPhoton->pt() << endl;
     if (recoPhoton->chargedHadronIso() > 10.){
-      cout << "Photon with chargedHadronIso="<<recoPhoton->chargedHadronIso() << " pt=" << recoPhoton->pt() << "skipped!" << endl;
+      if (fDebug) cout << "Photon with chargedHadronIso="<<recoPhoton->chargedHadronIso() << " pt=" << recoPhoton->pt() << "skipped!" << endl;
       continue;
     }
     
@@ -1759,17 +1740,19 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     bool isPassMedium = (*medium_id_decisions)[testPhoPtr];
     bool isPassTight  = (*tight_id_decisions)[testPhoPtr];
     
-    cout<<full5x5sigmaIetaIeta<<" "
-    	<<chIso<<" "
-    	<<nhIso<<" "
-    	<<phIso<<" "
-    	<<isPassLoose<<" "
-    	<<isPassMedium<<" "
-    	<<isPassTight<<" "
-    	<<isoChargedHadronsWithEA<<" "
-    	<<isoNeutralHadronsWithEA<<" "
-    	<<isoPhotonsWithEA<<" "
-    	<<endl;
+    if (fDebug) {
+      cout<<full5x5sigmaIetaIeta<<" "
+        <<chIso<<" "
+        <<nhIso<<" "
+        <<phIso<<" "
+        <<isPassLoose<<" "
+        <<isPassMedium<<" "
+        <<isPassTight<<" "
+        <<isoChargedHadronsWithEA<<" "
+        <<isoNeutralHadronsWithEA<<" "
+        <<isoPhotonsWithEA<<" "
+        <<endl;
+    }
 
     //-----------------taken from Ilya-----------------
 
@@ -1840,24 +1823,28 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     ExoDiPhotons::FillRecoPhotonInfo(tempInfo,&(*recoPhoton),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
     Bool_t isSaturated = tempInfo.isSaturated;
 
-    if(recoPhoton->pt() < fMin_pt) cout << "photon pt = " << recoPhoton->pt() << " which is less than " << fMin_pt << "!" << endl;
-    if(ExoDiPhotons::isGapPhoton(&(*recoPhoton))) cout << "this is a photon in the gap!" << endl;
-    if(ExoDiPhotons::isASpike(&(*recoPhoton))) cout << "this photon is a spike!" << endl;
+    if (fDebug) {
+      if(recoPhoton->pt() < fMin_pt) cout << "photon pt = " << recoPhoton->pt() << " which is less than " << fMin_pt << "!" << endl;
+      if(ExoDiPhotons::isGapPhoton(&(*recoPhoton))) cout << "this is a photon in the gap!" << endl;
+      if(ExoDiPhotons::isASpike(&(*recoPhoton))) cout << "this photon is a spike!" << endl;
+    }
 
     if(recoPhoton->pt() < fMin_pt) continue;
     if(ExoDiPhotons::isGapPhoton(&(*recoPhoton))) continue;
     if(ExoDiPhotons::isASpike(&(*recoPhoton))) continue;
 
-    cout << "pt, gap, and spike cuts passed!" << endl;
+    if (fDebug) cout << "pt, gap, and spike cuts passed!" << endl;
     
     //Now we choose which ID to use (PF or Det)
     if(MethodID.Contains("highpt")){
       // if(ExoDiPhotons::isPFTightPhoton(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID,isSaturated)){
       if(ExoDiPhotons::passHighPtID(&(*recoPhoton),MethodID,CategoryPFID,rhocorPFIsoCH,phIso,full5x5sigmaIetaIeta,rho_,passelecveto,isSaturated)){
         selectedPhotons.push_back(*recoPhoton);
-        cout << "photon passed the high pt id!" << endl;
+        if (fDebug) cout << "photon passed the high pt id!" << endl;
       }
-      else cout << "photon failed the high pt id!" << endl;
+      else {
+        if (fDebug) cout << "photon failed the high pt id!" << endl;
+      }
     }
     else if(MethodID.Contains("egamma")){
       if(isPassLoose) selectedPhotons.push_back(*recoPhoton);
@@ -1881,7 +1868,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	 
 	 
 	fakeablePhotons.push_back(*recoPhoton);
-  cout << "photon pased fakeable object cut" << endl;
+  if (fDebug) cout << "photon pased fakeable object cut" << endl;
       }
     }
     else if(MethodID.Contains("egamma")){
@@ -1921,7 +1908,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // Add conversion information for all tight photons (if there are 2)
   //
   ///////////////////////////////////////////////////////////////////////////////
-  cout << "got to conversions" << endl;
+  if (fDebug) cout << "got to conversions" << endl;
   if (selectedPhotons.size() >= 2){
     edm::Handle<reco::ConversionCollection> twoLegHandle;
     edm::Handle<reco::ConversionCollection> oneLegHandle;
@@ -1946,9 +1933,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // now count many candidate photons we have in this event
   //   cout << "N candidate photons = " << selectedPhotons.size() <<endl;
   fNTightPhotons = selectedPhotons.size();
-  if(fNTightPhotons >= 2) cout<<"great we have two tight photons"<<endl;
-  else cout << "only " << fNTightPhotons << "photons passed the cuts!" << endl;
-
+  if (fDebug) {
+    if(fNTightPhotons >= 2) cout<<"great we have two tight photons"<<endl;
+    else cout << "only " << fNTightPhotons << "photons passed the cuts!" << endl;
+  }
   // now consider possible Fakeable objects
 
   // first sort by pt
@@ -1990,7 +1978,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
    
   // now sort according to photon pt
   sort(allTightOrFakeableObjects.begin(),allTightOrFakeableObjects.end(),ExoDiPhotons::comparePhotonPairsByPt);
-  cout << "allTightOrFakeableObjects.size(): " << allTightOrFakeableObjects.size() << endl;
+  if (fDebug) cout << "allTightOrFakeableObjects.size(): " << allTightOrFakeableObjects.size() << endl;
   if(allTightOrFakeableObjects.size()>=2) {
 
     // now, we are always going to consider the top two objects
@@ -2009,19 +1997,21 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     //but we lost track of it when sorting our vectors
     //so lets find it back
 
-    cout<<"here testing whether i get the correct pointer to my photon TorF"<<endl;
+    if (fDebug) cout<<"here testing whether i get the correct pointer to my photon TorF"<<endl;
     reco::Photon* TorFObject1 = &(allTightOrFakeableObjects[0].first);
     reco::Photon* TorFObject2 = &(allTightOrFakeableObjects[1].first);
-    cout<<TorFObject1->energy()<<" "
-	<<TorFObject1->eta()<<" "
-	<<TorFObject1->et()<<" "
-	<<TorFObject1->phi()<<" "
-	<<endl;
-    cout<<TorFObject2->energy()<<" "
-	<<TorFObject2->eta()<<" "
-	<<TorFObject2->et()<<" "
-	<<TorFObject2->phi()<<" "
-	<<endl;
+    if (fDebug) {
+      cout<<TorFObject1->energy()<<" "
+    <<TorFObject1->eta()<<" "
+    <<TorFObject1->et()<<" "
+    <<TorFObject1->phi()<<" "
+    <<endl;
+      cout<<TorFObject2->energy()<<" "
+    <<TorFObject2->eta()<<" "
+    <<TorFObject2->et()<<" "
+    <<TorFObject2->phi()<<" "
+    <<endl;
+    }
 
     int indexTorFObject1 = -1;
     int indexTorFObject2 = -1;
@@ -2032,12 +2022,12 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       //const reco::Photon* myPhoton = &(*recoPhoton);
       //if(myPhoton == TorFObject1) {
       if(recoPhoton->pt() == TorFObject1->pt()) {
-	cout<<"Great, I've found torf object 1 "<<endl;
+  if (fDebug)	cout<<"Great, I've found torf object 1 "<<endl;
 	indexTorFObject1 = myIndex;
       }
       //if(myPhoton == TorFObject2) {
       if(recoPhoton->pt() == TorFObject2->pt()) {
-	cout<<"Great, I've found torf object 2 "<<endl;
+  if (fDebug)	cout<<"Great, I've found torf object 2 "<<endl;
 	indexTorFObject2 = myIndex;
       }
     }
@@ -2048,19 +2038,23 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
 
     edm::Ptr<reco::Photon> TorFObject1Ptr(photons,indexTorFObject1);
-    cout<<TorFObject1Ptr->energy()<<" "
-	<<TorFObject1Ptr->eta()<<" "
-	<<TorFObject1Ptr->et()<<" "
-	<<TorFObject1Ptr->phi()<<" "
-	<<endl;
+    if (fDebug) {
+      cout<<TorFObject1Ptr->energy()<<" "
+    <<TorFObject1Ptr->eta()<<" "
+    <<TorFObject1Ptr->et()<<" "
+    <<TorFObject1Ptr->phi()<<" "
+    <<endl;
+    }
 
     edm::Ptr<reco::Photon> TorFObject2Ptr(photons,indexTorFObject2);
-    cout<<TorFObject2Ptr->energy()<<" "
-	<<TorFObject2Ptr->eta()<<" "
-	<<TorFObject2Ptr->et()<<" "
-	<<TorFObject2Ptr->phi()<<" "
-	<<endl;
+    if (fDebug) {
+      cout<<TorFObject2Ptr->energy()<<" "
+    <<TorFObject2Ptr->eta()<<" "
+    <<TorFObject2Ptr->et()<<" "
+    <<TorFObject2Ptr->phi()<<" "
+    <<endl;
     cout<<"here testing whether i get the correct pointer to my photon TorF"<<endl;
+    }
 
     ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&allTightOrFakeableObjects[0].first,lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
     fRecoPhotonInfo1.isFakeable = allTightOrFakeableObjects[0].second;
@@ -2163,19 +2157,21 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       //but we lost track of it when sorting our vectors
       //so lets find it back
 
-      cout<<"here testing whether i get the correct pointer to my photon T"<<endl;
+      if (fDebug) cout<<"here testing whether i get the correct pointer to my photon T"<<endl;
       reco::Photon* TObject1 = &(selectedPhotons[0]);
       reco::Photon* TObject2 = &(selectedPhotons[1]);
-      cout<<TObject1->energy()<<" "
-	  <<TObject1->eta()<<" "
-	  <<TObject1->et()<<" "
-	  <<TObject1->phi()<<" "
-	  <<endl;
-      cout<<TObject2->energy()<<" "
-	  <<TObject2->eta()<<" "
-	  <<TObject2->et()<<" "
-	  <<TObject2->phi()<<" "
-	  <<endl;
+      if (fDebug) {
+        cout<<TObject1->energy()<<" "
+      <<TObject1->eta()<<" "
+      <<TObject1->et()<<" "
+      <<TObject1->phi()<<" "
+      <<endl;
+        cout<<TObject2->energy()<<" "
+      <<TObject2->eta()<<" "
+      <<TObject2->et()<<" "
+      <<TObject2->phi()<<" "
+      <<endl;
+      }
 
       int indexTObject1 = -1;
       int indexTObject2 = -1;
@@ -2186,12 +2182,12 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	//const reco::Photon* myPhoton = &(*recoPhoton);
 	if(recoPhoton->pt() == TObject1->pt()) {
 	  //if(myPhoton == TObject1) {
-	  cout<<"Great, I've found t object 1 "<<endl;
+    if (fDebug) cout<<"Great, I've found t object 1 "<<endl;
 	  indexTObject1 = myIndex;
 	}
 	if(recoPhoton->pt() == TObject2->pt()) {
 	  //if(myPhoton == TObject2) {
-	  cout<<"Great, I've found t object 2 "<<endl;
+    if (fDebug) cout<<"Great, I've found t object 2 "<<endl;
 	  indexTObject2 = myIndex;
 	}
       }
@@ -2202,19 +2198,23 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
 
       edm::Ptr<reco::Photon> TObject1Ptr(photons,indexTObject1);
-      cout<<TObject1Ptr->energy()<<" "
-	  <<TObject1Ptr->eta()<<" "
-	  <<TObject1Ptr->et()<<" "
-	  <<TObject1Ptr->phi()<<" "
-	  <<endl;
+      if (fDebug) {
+        cout<<TObject1Ptr->energy()<<" "
+      <<TObject1Ptr->eta()<<" "
+      <<TObject1Ptr->et()<<" "
+      <<TObject1Ptr->phi()<<" "
+      <<endl;
+      }
 
       edm::Ptr<reco::Photon> TObject2Ptr(photons,indexTObject2);
-      cout<<TObject2Ptr->energy()<<" "
-	  <<TObject2Ptr->eta()<<" "
-	  <<TObject2Ptr->et()<<" "
-	  <<TObject2Ptr->phi()<<" "
-	  <<endl;
-      cout<<"here testing whether i get the correct pointer to my photon T"<<endl;
+      if (fDebug) {
+        cout<<TObject2Ptr->energy()<<" "
+      <<TObject2Ptr->eta()<<" "
+      <<TObject2Ptr->et()<<" "
+      <<TObject2Ptr->phi()<<" "
+      <<endl;
+        cout<<"here testing whether i get the correct pointer to my photon T"<<endl;
+      }
 
       // must specifically declare isFakeable status (should be Tight = not True = false                       
       ExoDiPhotons::FillRecoPhotonInfo(fRecoPhotonInfo1,&selectedPhotons[0],lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent, iSetup);
@@ -2398,13 +2398,12 @@ ExoDiPhotonAnalyzer::endJob()
     cout << "Cutflow informaton for charged decay mode selection" << endl;
     cout << "Total number of events processed                        :  " << fCutflow_total << " " << (fCutflow_total/fCutflow_total)*100 << "%" << endl;
     cout << "Events with at least one candidate Eta                  :  " << fCutflow_oneCand << " " << (fCutflow_oneCand/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least one passing Eta                    :  " << fCutflow_onePass << " " << (fCutflow_onePass/fCutflow_total)*100 << "%" << endl;
     cout << "Events with at least two candidate Etas                 :  " << fCutflow_twoCand << " " << (fCutflow_twoCand/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least one passing Eta                    :  " << fCutflow_onePass << " " << (fCutflow_onePass/fCutflow_total)*100 << "%" << endl;
     cout << "Events with at least two passing Etas                   :  " << fCutflow_twoPass << " " << (fCutflow_twoPass/fCutflow_total)*100 << "%" << endl;
-    cout << endl;
     cout << "Events with at least one matched candidate              :  " << fCutflow_oneMatch << " " << (fCutflow_oneMatch/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least one passing and matched candidate  :  " << fCutflow_onePassMatch << " " << (fCutflow_onePassMatch/fCutflow_total)*100 << "%" << endl;
     cout << "Events with at least two matched candidate              :  " << fCutflow_twoMatch << " " << (fCutflow_twoMatch/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least one passing and matched candidate  :  " << fCutflow_onePassMatch << " " << (fCutflow_onePassMatch/fCutflow_total)*100 << "%" << endl;
     cout << "Events with at least two passing and matched candidates :  " << fCutflow_twoPassMatch << " " << (fCutflow_twoPassMatch/fCutflow_total)*100 << "%" << endl;
   }
 }

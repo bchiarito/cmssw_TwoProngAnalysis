@@ -419,7 +419,7 @@ namespace ExoDiPhotons{
       NHIsoExclusion = NHIsoSwingValue;
     }
 
-    std::cout << sigmaIetaIetaCut << std::endl;
+    // std::cout << sigmaIetaIetaCut << std::endl;
 
     if( photon->hadTowOverEm() < hadTowerOverEmCut &&
     	thisCHIso < CHIsoLooseLimit &&
