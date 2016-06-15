@@ -389,6 +389,17 @@ private:
   double fDEta_EtaEta;
   TLorentzVector fEtaEtaCand;
   TLorentzVector fEtaEtaCand2;
+  vector<Double_t> fCands_pt;
+  vector<Double_t> fCands_eta;
+  vector<Double_t> fCands_phi;
+  vector<Double_t> fCands_mass;
+  vector<Double_t> fCands_px;
+  vector<Double_t> fCands_py;
+  vector<Double_t> fCands_pz;
+  vector<Double_t> fCands_energy;
+  vector<Double_t> fCands_chargediso;
+  vector<Double_t> fCands_neutraliso;
+  vector<Double_t> fCands_egammaiso;
   vector<Double_t> fPasses_pt;
   vector<Double_t> fPasses_eta;
   vector<Double_t> fPasses_phi;
@@ -751,7 +762,18 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("mGrommedEtaEta",&fMass2_EtaEta,"mGrommedEtaEta/D");
   fTree2->Branch("vecEtaEta",&fEtaEtaCand);
   fTree2->Branch("vecGrommedEtaEta",&fEtaEtaCand2);
-  fTree2->Branch("passse_pt",&fPasses_pt);
+  fTree2->Branch("cands_pt",&fCands_pt);
+  fTree2->Branch("cands_eta",&fCands_eta);
+  fTree2->Branch("cands_phi",&fCands_phi);
+  fTree2->Branch("cands_mass",&fCands_mass);
+  fTree2->Branch("cands_px",&fCands_px);
+  fTree2->Branch("cands_py",&fCands_py);
+  fTree2->Branch("cands_pz",&fCands_pz);
+  fTree2->Branch("cands_energy",&fCands_energy);
+  fTree2->Branch("cands_chargediso",&fCands_chargediso);
+  fTree2->Branch("cands_neutraliso",&fCands_neutraliso);
+  fTree2->Branch("cands_egammaiso",&fCands_egammaiso);
+  fTree2->Branch("passes_pt",&fPasses_pt);
   fTree2->Branch("passes_eta",&fPasses_eta);
   fTree2->Branch("passes_phi",&fPasses_phi);
   fTree2->Branch("passes_mass",&fPasses_mass);
@@ -1350,6 +1372,17 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   edm::Handle<vector<reco::Vertex>> primaryvertecies;
   iEvent.getByToken(pvToken_, primaryvertecies);
 
+  fCands_pt.clear();
+  fCands_eta.clear();
+  fCands_phi.clear();
+  fCands_mass.clear();
+  fCands_px.clear();
+  fCands_py.clear();
+  fCands_pz.clear();
+  fCands_energy.clear();
+  fCands_chargediso.clear();
+  fCands_neutraliso.clear();
+  fCands_egammaiso.clear();
   fPasses_pt.clear();
   fPasses_eta.clear();
   fPasses_phi.clear();
@@ -1473,6 +1506,15 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           candidates_nume.push_back(nume);
           candidates_Eta.push_back(EtaCandidate);
           candidates_EtaGrommed.push_back(EtaGrommedCandidate);
+          // and fill branches
+          fCands_pt.push_back(EtaCandidate.Pt());
+          fCands_eta.push_back(EtaCandidate.Eta());
+          fCands_phi.push_back(EtaCandidate.Phi());
+          fCands_mass.push_back(EtaCandidate.M());
+          fCands_px.push_back(EtaCandidate.Px());
+          fCands_py.push_back(EtaCandidate.Py());
+          fCands_pz.push_back(EtaCandidate.Pz());
+          fCands_energy.push_back(EtaCandidate.E());
         }
       } // end conditionals on CH pair
     }
@@ -1534,6 +1576,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     double relchargedIso = chargedIso / EtaCandidate.Pt();
     double relneutralIso = neutralIso / EtaCandidate.Pt();
     double relegammaIso = egammaIso / EtaCandidate.Pt();
+    fCands_chargediso.push_back(relchargedIso);
+    fCands_neutraliso.push_back(relneutralIso);
+    fCands_egammaiso.push_back(relegammaIso);
     bool passed = relchargedIso < fCandidatePairChargedIsoCut &&
                   relneutralIso < fCandidatePairNeutralIsoCut &&
                   relegammaIso < fCandidatePairEGammaIsoCut &&
@@ -2427,10 +2472,10 @@ ExoDiPhotonAnalyzer::endJob()
     cout << "Events with at least one passing and matched candidate  : " << fCutflow_onePassMatch << " " << (fCutflow_onePassMatch/fCutflow_total)*100 << "%" << endl;
     cout << "Events with at least two passing and matched candidates : " << fCutflow_twoPassMatch << " " << (fCutflow_twoPassMatch/fCutflow_total)*100 << "%" << endl;
     cout << "Cutflow for two prong selection" << endl;
-    cout << "Pass relative charged isolation        : " << fCutflow_passCharged << endl;
-    cout << "Pass relative neutral isolation        : " << fCutflow_passNeutral << endl;
-    cout << "Pass relative egamma isolation         : " << fCutflow_passEGamma << endl;
-    cout << "Pass pt of combined photon requirement : " << fCutflow_passPhotonPt << endl;
+    cout << "Pass relative charged isolation        : " << fCutflow_passCharged << " " << (fCutflow_passCharged/fCutflow_oneCand)*100 << "%" << endl;
+    cout << "Pass relative neutral isolation        : " << fCutflow_passNeutral << " " << (fCutflow_passNeutral/fCutflow_oneCand)*100 << "%" << endl;
+    cout << "Pass relative egamma isolation         : " << fCutflow_passEGamma << " " << (fCutflow_passEGamma/fCutflow_oneCand)*100 << "%" << endl;
+    cout << "Pass pt of combined photon requirement : " << fCutflow_passPhotonPt << " " << (fCutflow_passPhotonPt/fCutflow_oneCand)*100 << "%" << endl;
   }
 }
 
