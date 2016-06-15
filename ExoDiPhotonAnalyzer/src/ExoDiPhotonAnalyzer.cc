@@ -199,6 +199,10 @@ private:
   float fCutflow_twoMatch;
   float fCutflow_onePassMatch;
   float fCutflow_twoPassMatch;
+  float fCutflow_passCharged;
+  float fCutflow_passNeutral;
+  float fCutflow_passEGamma;
+  float fCutflow_passPhotonPt;
  
   // tools for clusters
   std::auto_ptr<noZS::EcalClusterLazyTools> lazyTools_;
@@ -1373,12 +1377,13 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     int genEtaCount = 0;
     for (unsigned int i = 0; i < genparticles->size(); ++i) {
       const reco::GenParticle &gen = (*genparticles)[i];
-      if (gen.status() == 2 && abs(gen.pdgId()) == 221)
+      if (gen.status() == 2 && abs(gen.pdgId()) == 221) {
         genEtaCount += 1;
         if (genEtaCount == 1)
           ExoDiPhotons::FillGenParticleInfo(fGenEtaParticleInfo1, gen);
         if (genEtaCount == 2)
           ExoDiPhotons::FillGenParticleInfo(fGenEtaParticleInfo2, gen);
+      }
     } // end gen particle loop
     fNumGenEta = genEtaCount;
   } else {
@@ -1423,7 +1428,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
         int nume = 0;
         int index_of_leading_pf_photon = -1;
         double pt_of_leading_pf_photon = -1;
-        for (unsigned int k = 0; k < pfcands->size(); ++k) {
+        for (unsigned int k = 0; k < pfcands->size(); k++) {
           const pat::PackedCandidate &pf3 = (*pfcands)[k];
           if ((pf3.pdgId() != 22) && (pf3.pdgId() != 11)) continue; // electron or photon pf
           TLorentzVector pfcand3;
@@ -1435,7 +1440,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
               // find leading photon pf
               if (pf3.pt() > pt_of_leading_pf_photon) {
                 pt_of_leading_pf_photon = pf3.pt();
-                index_of_leading_pf_photon = j;
+                index_of_leading_pf_photon = k;
               }
             }
             else nume += 1;
@@ -1463,7 +1468,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
             candidates_CHnegIndex.push_back(i);
           }
           candidates_center.push_back(center);
-          candidates_photon.push_back(center);
+          candidates_photon.push_back(photon);
           candidates_numgamma.push_back(numgamma);
           candidates_nume.push_back(nume);
           candidates_Eta.push_back(EtaCandidate);
@@ -1486,6 +1491,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   int cand_pairs_faked = 0;
   int cand_pairs_matched = 0;
   int cand_pairs_passed_matched = 0;
+  int cand_pairs_passed_charged = 0;
+  int cand_pairs_passed_neutral = 0;
+  int cand_pairs_passed_egamma = 0;
+  int cand_pairs_passed_photonpt = 0;
   for (unsigned int i = 0; i < candidates_center.size(); i++) {
     TLorentzVector center;
     center.SetPtEtaPhiM(candidates_center[i].Pt(), candidates_center[i].Eta(), candidates_center[i].Phi(), candidates_center[i].M());
@@ -1533,6 +1542,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
                        relneutralIso < fCandidatePairNeutralIsoCut &&
                        relegammaIso < fCandidatePairEGammaIsoCut &&
                        photon.Pt() > fCandidatePairPhotonPtCut;
+    bool passedCharged = relchargedIso < fCandidatePairChargedIsoCut;
+    bool passedNeutral = relneutralIso < fCandidatePairNeutralIsoCut;
+    bool passedEGamma = relegammaIso < fCandidatePairEGammaIsoCut;
+    bool passedPhotonPt = photon.Pt() > fCandidatePairPhotonPtCut;
     if (passed) {
       fTwoProngFakeNumer_pt->Fill(EtaCandidate.Pt());
       fTwoProngFakeNumer_eta->Fill(EtaCandidate.Eta());
@@ -1596,6 +1609,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     if (passed_fake) cand_pairs_faked += 1;
     if (matched) cand_pairs_matched += 1;
     if (passed && matched) cand_pairs_passed_matched += 1;
+    if (passedCharged) cand_pairs_passed_charged += 1;
+    if (passedNeutral) cand_pairs_passed_neutral += 1;
+    if (passedEGamma) cand_pairs_passed_egamma += 1;
+    if (passedPhotonPt) cand_pairs_passed_photonpt += 1;
   } // end candidate loop
   fNumPrunedPF = pruned_count;
   fNumCHpairs = candidates_center.size();
@@ -1675,6 +1692,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (fNumCHpairsMatch>=2) fCutflow_twoMatch += 1;
   if (fNumCHpairsPassMatch>=1) fCutflow_onePassMatch += 1;
   if (fNumCHpairsPassMatch>=2) fCutflow_twoPassMatch += 1;
+  if (cand_pairs_passed_charged>=1) fCutflow_passCharged +=1;
+  if (cand_pairs_passed_neutral>=1) fCutflow_passNeutral +=1;
+  if (cand_pairs_passed_egamma>=1) fCutflow_passEGamma +=1;
+  if (cand_pairs_passed_photonpt>=1) fCutflow_passPhotonPt +=1;
   if (fDebug) cout << "finished charged decay code" << endl;
 
   // photon loop
@@ -2395,16 +2416,21 @@ void
 ExoDiPhotonAnalyzer::endJob()
 {
   if (fchargedDecayCutflow) {
-    cout << "Cutflow informaton for charged decay mode selection" << endl;
-    cout << "Total number of events processed                        :  " << fCutflow_total << " " << (fCutflow_total/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least one candidate Eta                  :  " << fCutflow_oneCand << " " << (fCutflow_oneCand/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least two candidate Etas                 :  " << fCutflow_twoCand << " " << (fCutflow_twoCand/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least one passing Eta                    :  " << fCutflow_onePass << " " << (fCutflow_onePass/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least two passing Etas                   :  " << fCutflow_twoPass << " " << (fCutflow_twoPass/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least one matched candidate              :  " << fCutflow_oneMatch << " " << (fCutflow_oneMatch/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least two matched candidate              :  " << fCutflow_twoMatch << " " << (fCutflow_twoMatch/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least one passing and matched candidate  :  " << fCutflow_onePassMatch << " " << (fCutflow_onePassMatch/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least two passing and matched candidates :  " << fCutflow_twoPassMatch << " " << (fCutflow_twoPassMatch/fCutflow_total)*100 << "%" << endl;
+    cout << "Efficiencies for charged decay mode" << endl;
+    cout << "Total number of events processed                        : " << fCutflow_total << " " << (fCutflow_total/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least one candidate Eta                  : " << fCutflow_oneCand << " " << (fCutflow_oneCand/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least two candidate Etas                 : " << fCutflow_twoCand << " " << (fCutflow_twoCand/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least one passing Eta                    : " << fCutflow_onePass << " " << (fCutflow_onePass/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least two passing Etas                   : " << fCutflow_twoPass << " " << (fCutflow_twoPass/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least one matched candidate              : " << fCutflow_oneMatch << " " << (fCutflow_oneMatch/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least two matched candidate              : " << fCutflow_twoMatch << " " << (fCutflow_twoMatch/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least one passing and matched candidate  : " << fCutflow_onePassMatch << " " << (fCutflow_onePassMatch/fCutflow_total)*100 << "%" << endl;
+    cout << "Events with at least two passing and matched candidates : " << fCutflow_twoPassMatch << " " << (fCutflow_twoPassMatch/fCutflow_total)*100 << "%" << endl;
+    cout << "Cutflow for two prong selection" << endl;
+    cout << "Pass relative charged isolation        : " << fCutflow_passCharged << endl;
+    cout << "Pass relative neutral isolation        : " << fCutflow_passNeutral << endl;
+    cout << "Pass relative egamma isolation         : " << fCutflow_passEGamma << endl;
+    cout << "Pass pt of combined photon requirement : " << fCutflow_passPhotonPt << endl;
   }
 }
 
