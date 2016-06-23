@@ -217,9 +217,9 @@ namespace ExoDiPhotons
     recotwopronginfo.neutralIso = -99.9;
     recotwopronginfo.egammaIso = -99.9;
 
-    recotwopronginfo.photon_nPhotons = -99.9;
-    recotwopronginfo.photon_nElectrons = -99.9;
-    recotwopronginfo.genEtaIndex = -99.9;
+    recotwopronginfo.photon_nPhotons = -99;
+    recotwopronginfo.photon_nElectrons = -99;
+    recotwopronginfo.genEtaIndex = -99;
   }
 
 } //end of namespace
