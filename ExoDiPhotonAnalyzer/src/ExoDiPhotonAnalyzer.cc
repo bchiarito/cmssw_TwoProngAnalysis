@@ -444,6 +444,7 @@ private:
   ExoDiPhotons::recoDiObjectInfo_t fGammaEtaInfo; 
   ExoDiPhotons::recoDiObjectInfo_t fEtaFakeInfo; 
   ExoDiPhotons::recoDiObjectInfo_t fGammaFakeInfo; 
+  ExoDiPhotons::recoDiObjectInfo_t fGammaGammaInfo; 
 };
 
 //
@@ -869,6 +870,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("EtaFake",&fEtaFakeInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("GammaEta",&fGammaEtaInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("GammaFake",&fGammaFakeInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("GammaGamma",&fGammaGammaInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   // Fake rate histograms
   fTwoProngFakeNumer_pt = fs->make<TH1F>("twoprongfakenumer_pt","Fake Numerator count for CH pairs, inverted charged iso cut, pt binned",26,0.0,1300.0);
   fTwoProngFakeDenom_pt = fs->make<TH1F>("twoprongfakedenom_pt","Fake Denominator count for CH pairs, inverted charged iso cut, pt binned",26,0.0,1300.0);
@@ -2615,21 +2617,34 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   } // end loop over tight or fakable collection 
   if (fDebug) cout << ". done making tight photons" << endl;
   fNumTightPhotons = tightPhotonsCount;
-  // Construct Di Objects
+  // Construct Di-Objects
   InitRecoDiObjectInfo(fEtaEtaInfo);
   InitRecoDiObjectInfo(fGammaEtaInfo);
   InitRecoDiObjectInfo(fEtaFakeInfo);
   InitRecoDiObjectInfo(fGammaFakeInfo);
+  InitRecoDiObjectInfo(fGammaGammaInfo);
   // Passed Eta and Passed Eta
   if (fNumCHpairsPass >= 2)
   {
+    cout << "Making EtaEta" << endl;
     TLorentzVector Eta1;
     Eta1.SetPtEtaPhiM(fEta_pt[0], fEta_eta[0], fEta_phi[0], fEta_mass[0]);
     TLorentzVector Eta2;
-    Eta1.SetPtEtaPhiM(fEta_pt[1], fEta_eta[1], fEta_phi[1], fEta_mass[1]);
+    Eta2.SetPtEtaPhiM(fEta_pt[1], fEta_eta[1], fEta_phi[1], fEta_mass[1]);
     FillRecoDiObjectInfo(fEtaEtaInfo, Eta1, Eta2);
     fEtaEtaInfo.dMass = abs(fEta_Mass[0] - fEta_Mass[1]);
+    //fEtaEtaInfo.dMass = 20.0;
+    if (fEtaEtaInfo.dMass == -99.9) {
+      cout << "** default value remains! " << fEtaEtaInfo.dMass << endl;
+    }
+    else if (fEtaEtaInfo.dMass == abs(fEta_Mass[0] - fEta_Mass[1])) {
+      cout << "successfully changed the value to " << fEtaEtaInfo.dMass << endl;
+    }
+    else { 
+      cout << "other value: " << fEtaEtaInfo.dMass << endl;
+    }
   }
+
   if (fDebug) cout << ". done making Eta Eta" << endl;
   // Passed Eta and Fake Eta
   if (fNumCHpairsPass >= 1 && fNumCHpairsFake >= 1)
@@ -2658,6 +2673,15 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     Photon.SetPtEtaPhiM(fRecoTightPhotonInfo1.pt, fRecoTightPhotonInfo1.eta, fRecoTightPhotonInfo1.phi, 0);
     FillRecoDiObjectInfo(fGammaFakeInfo, Photon, LeadingFake);
     fGammaFakeInfo.dMass = abs(LeadingFake.M() - 0);
+  }
+  // Tight Photon and Tight Photon
+  if (fNumTightPhotons >= 2)
+  {
+    TLorentzVector Photon1;
+    Photon1.SetPtEtaPhiM(fRecoTightPhotonInfo1.pt, fRecoTightPhotonInfo1.eta, fRecoTightPhotonInfo1.phi, 0);
+    TLorentzVector Photon2;
+    Photon2.SetPtEtaPhiM(fRecoTightPhotonInfo2.pt, fRecoTightPhotonInfo2.eta, fRecoTightPhotonInfo2.phi, 0);
+    FillRecoDiObjectInfo(fGammaGammaInfo, Photon1, Photon2);
   }
   if (fDebug) cout << ". done making Gamma Fake" << endl;
   if (fDebug) cout << ". finished charged decay part two" << endl;
