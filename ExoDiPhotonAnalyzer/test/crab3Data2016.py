@@ -52,3 +52,32 @@ if __name__ == '__main__':
     config.General.requestName = 'DoubleEG_Run2016B_V2'
     config.Data.inputDataset = '/DoubleEG/Run2016B-PromptReco-v2/MINIAOD'
     submit(config)
+
+    config.General.requestName = 'DoubleEG_Run2016C_V2'
+    config.Data.inputDataset = '/DoubleEG/Run2016C-PromptReco-v2/MINIAOD'
+    submit(config)
+
+    config.General.requestName = 'JetHT_Run2016B_V1'
+    config.Data.inputDataset = '/JetHT/Run2016B-PromptReco-v1/MINIAOD'
+    submit(config)
+
+    config.General.requestName = 'JetHT_Run2016B_V2'
+    config.Data.inputDataset = '/JetHT/Run2016B-PromptReco-v2/MINIAOD'
+    submit(config)
+
+    config.General.requestName = 'JetHT_Run2016C_V2'
+    config.Data.inputDataset = '/JetHT/Run2016C-PromptReco-v2/MINIAOD'
+    submit(config)
+
+    config.General.requestName = 'SinglePhoton_Run2016B_V1'
+    config.Data.inputDataset = '/SinglePhoton/Run2016B-PromptReco-v1/MINIAOD'
+    submit(config)
+
+    config.General.requestName = 'SinglePhoton_Run2016B_V2'
+    config.Data.inputDataset = '/SinglePhoton/Run2016B-PromptReco-v2/MINIAOD'
+    submit(config)
+
+    config.General.requestName = 'SinglePhoton_Run2016C_V2'
+    config.Data.inputDataset = '/SinglePhoton/Run2016C-PromptReco-v2/MINIAOD'
+    submit(config)
+

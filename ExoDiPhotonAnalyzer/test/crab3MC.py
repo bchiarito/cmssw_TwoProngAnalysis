@@ -45,6 +45,26 @@ if __name__ == '__main__':
     ## From now on that's what users should modify: this is the a-la-CRAB2 configuration part. ##
     #############################################################################################
 
+    config.General.requestName = "GJets_HT-40To100"
+    config.Data.inputDataset = "/GJets_HT-40To100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v3/MINIAODSIM"
+    submit(config)
+
+    config.General.requestName = "GJets_HT-100To200"
+    config.Data.inputDataset = "/GJets_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM"
+    submit(config)
+
+    config.General.requestName = "GJets_HT-200To400"
+    config.Data.inputDataset = "/GJets_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM"
+    submit(config)
+
+    config.General.requestName = "GJets_HT-400To600"
+    config.Data.inputDataset = "/GJets_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM"
+    submit(config)
+
+    config.General.requestName = "GJets_HT-600ToInf"
+    config.Data.inputDataset = "/GJets_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM"
+    submit(config)
+
     config.General.requestName = "GGJets_M-60To200_Pt-50"
     config.Data.inputDataset = "/GGJets_M-60To200_Pt-50_13TeV-sherpa/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM"
     submit(config)

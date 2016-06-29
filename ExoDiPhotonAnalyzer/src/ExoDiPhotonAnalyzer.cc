@@ -289,6 +289,7 @@ private:
   edm::EDGetTokenT<vector<reco::GenParticle>> genToken_;
   edm::EDGetTokenT<vector<reco::Vertex>> pvToken_;
   edm::EDGetTokenT<reco::BeamSpot> beamToken_;
+  edm::EDGetTokenT<std::vector<pat::Jet>> ak4Token_;
   double fJetPtCut;
   double fJetEtaCut;
   double fCandidatePairDR;
@@ -564,6 +565,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   if (!fisAOD && fisMC) genToken_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
   if (!fisAOD) pvToken_ = consumes<vector<reco::Vertex>>(edm::InputTag("offlineSlimmedPrimaryVertices"));
   if (!fisAOD) beamToken_ = consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
+  if (!fisAOD) ak4Token_ = consumes<std::vector<pat::Jet>>(edm::InputTag("slimmedJets"));
 
   bsToken_ = consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
   trigToken_ = consumes<edm::TriggerResults>(fHltInputTag);
@@ -1443,14 +1445,20 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (fDebug) cout << ". start charged decay code" << endl;
   edm::Handle<pat::PackedCandidateCollection> pfcands;
   iEvent.getByToken(pfcandsToken_, pfcands);
+
   edm::Handle<vector<reco::GenParticle>> genparticles;
   if (fisMC) {
     iEvent.getByToken(genToken_, genparticles);
   }
+
   edm::Handle<vector<reco::Vertex>> primaryvertecies;
   iEvent.getByToken(pvToken_, primaryvertecies);
+
   edm::Handle<reco::BeamSpot> beamspot;
   iEvent.getByToken(beamToken_, beamspot);
+
+  edm::Handle<std::vector<pat::Jet>> ak4jets;
+  iEvent.getByToken(ak4Token_, ak4jets);
 
   if (fDebug) cout << ". initializing branches" << endl;
   fCand_pt.clear();
@@ -1553,11 +1561,12 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
         double pt_of_leading_pf_photon = -1;
         for (unsigned int k = 0; k < pfcands->size(); k++) {
           const pat::PackedCandidate &pf3 = (*pfcands)[k];
-          if ((pf3.pdgId() != 22) && (pf3.pdgId() != 11)) continue; // only pf electron or pf photon contribute to definition of photon
+          if ((pf3.pdgId() != 22) && (abs(pf3.pdgId()) != 11)) continue; // only pf electron or pf photon contribute to definition of photon
           TLorentzVector pfcand3;
           pfcand3.SetPtEtaPhiE(pf3.pt(), pf3.eta(), pf3.phiAtVtx(), pf3.energy());
           if (abs(pf3.phiAtVtx() - center.Phi()) < fCandidatePairPhiBox/2.0 &&
               abs(pf3.eta() - center.Eta()) < fCandidatePairEtaBox/2.0) {
+            photon = photon + pfcand3;
             if (pf3.pdgId() == 22) {
               numgamma += 1;
               // find leading photon pf
@@ -1566,8 +1575,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
                 index_of_leading_pf_photon = k;
               }
             }
-            else nume += 1;
-            photon = photon + pfcand3;
+            else if (abs(pf3.pdgId()) == 11) {
+              nume += 1;
+            }
           }
         } // end pf cand loop
         if (fDebug) cout << ". finished photon" << endl;
@@ -1754,8 +1764,14 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // Fill other event wide information
   fNumCHpairs = fCand_pt.size();
   fNumCHpairsPass = fEta_pt.size();
-  fHT = 0 ; //FIXME
-
+  fHT = 0;
+  for (unsigned int i = 0; i < ak4jets->size(); i++) {
+    const pat::Jet &jet = (*ak4jets)[i];
+    if (jet.pt() < 30) continue;
+    if (abs(jet.eta()) > 2.5) continue;
+    fHT += jet.pt();
+  }
+  
   // Cutflow
   fCutflow_total++;
   if (fCand_pt.size() > 0) fCutflow_oneCand++;
@@ -2633,18 +2649,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     Eta2.SetPtEtaPhiM(fEta_pt[1], fEta_eta[1], fEta_phi[1], fEta_mass[1]);
     FillRecoDiObjectInfo(fEtaEtaInfo, Eta1, Eta2);
     fEtaEtaInfo.dMass = abs(fEta_Mass[0] - fEta_Mass[1]);
-    //fEtaEtaInfo.dMass = 20.0;
-    if (fEtaEtaInfo.dMass == -99.9) {
-      cout << "** default value remains! " << fEtaEtaInfo.dMass << endl;
-    }
-    else if (fEtaEtaInfo.dMass == abs(fEta_Mass[0] - fEta_Mass[1])) {
-      cout << "successfully changed the value to " << fEtaEtaInfo.dMass << endl;
-    }
-    else { 
-      cout << "other value: " << fEtaEtaInfo.dMass << endl;
-    }
   }
-
   if (fDebug) cout << ". done making Eta Eta" << endl;
   // Passed Eta and Fake Eta
   if (fNumCHpairsPass >= 1 && fNumCHpairsFake >= 1)
