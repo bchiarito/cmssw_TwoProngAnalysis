@@ -2642,7 +2642,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // Passed Eta and Passed Eta
   if (fNumCHpairsPass >= 2)
   {
-    cout << "Making EtaEta" << endl;
     TLorentzVector Eta1;
     Eta1.SetPtEtaPhiM(fEta_pt[0], fEta_eta[0], fEta_phi[0], fEta_mass[0]);
     TLorentzVector Eta2;
