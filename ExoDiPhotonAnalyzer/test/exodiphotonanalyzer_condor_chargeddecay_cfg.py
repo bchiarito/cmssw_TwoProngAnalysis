@@ -6657,7 +6657,7 @@ if sample == "QCD_5to10":
        '/store/mc/RunIIFall15MiniAODv2/QCD_Pt_5to10_TuneCUETP8M1_13TeV_pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/60000/FCCAEEC4-6BB9-E511-990B-0CC47A7452D0.root',
        '/store/mc/RunIIFall15MiniAODv2/QCD_Pt_5to10_TuneCUETP8M1_13TeV_pythia8/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/60000/FE88E128-0AB9-E511-BF3A-F45214C7493C.root' ] )
 
-if sample == "QCD_5to10":
+if sample == "QCD_3200toInf":
     isMC = True
     isSignal = False
     readFiles.extend( [
@@ -6674,7 +6674,9 @@ if sample == "QCD_5to10":
 # Do splitting
 if readFiles == []:
     raise ValueError('No dataset given to run over, please supply a valid value for the "sample=" command line option. Possible values follow.',\
-    'Eta', 'EtaOld', 'JetHT_runC', 'JetHT_runD', 'SinglePhoton_runC', 'SinglePhoton_runD','SinglePhoton_2016runC_v2', 'SinglePhoton_2016runB_v1', 'SinglePhoton_2016runB_v2', 'JetHT_2016runC_v2', 'JetHT_2016runB_v1', 'JetHT_2016runB_v1', 'DoubleEG_2016runC_v2', 'DoubleEG_2016runB_v1', 'DoubleEG_2016runB_v1', 'QCD_5to10', 'GGJets_8000to13000', 'GJets_600toInf')
+    'Eta', 'EtaOld', 'JetHT_runC', 'JetHT_runD', 'SinglePhoton_runC', 'SinglePhoton_runD','SinglePhoton_2016runC_v2', 'SinglePhoton_2016runB_v1', \
+    'SinglePhoton_2016runB_v2', 'JetHT_2016runC_v2', 'JetHT_2016runB_v1', 'JetHT_2016runB_v1', 'DoubleEG_2016runC_v2', 'DoubleEG_2016runB_v1', \
+    'DoubleEG_2016runB_v1', 'QCD_5to10', 'QCD_3200toInf', 'GGJets_8000to13000', 'GJets_600toInf')
 Files = len(readFiles)
 Jobs = options.numJobs
 my_i = options.process
