@@ -36,7 +36,6 @@
 
 namespace ExoDiPhotons
 {
-
   struct recoDiObjectInfo_t {
     Double_t pt;
     Double_t phi;
@@ -46,7 +45,6 @@ namespace ExoDiPhotons
     Double_t py;
     Double_t pz;
     Double_t energy;
-
     Double_t dR;
     Double_t dPt;
     Double_t dPhi;
@@ -58,7 +56,7 @@ namespace ExoDiPhotons
   // obviously this needs to be kept up-to-date with the struct definition
   // but now at least this only needs to be done here in this file, 
   // rather than in each individual analyser 
-  std::string recoDiObjectBranchDefString("pt/D:phi/D:eta/D:mass/D:px/D:py/D:pz/D:energy/D:dR/D:dR/D:dPt/D:dPhi/D:dEta/D:dMass/D");
+  std::string recoDiObjectBranchDefString("pt/D:phi/D:eta/D:mass/D:px/D:py/D:pz/D:energy/D:dR/D:dPt/D:dPhi/D:dEta/D:dMass/D");
 
   // also want a Fill function, that can fill the struct values from the appropriate objects
   // again, so that all editing only needs to be done here in this file
@@ -75,10 +73,10 @@ namespace ExoDiPhotons
     recodiobjectinfo.energy = comb.E();
 
     recodiobjectinfo.dR = vec1.DeltaR(vec2);
-    recodiobjectinfo.dPt = abs(vec1.Pt() - vec2.Pt());
+    recodiobjectinfo.dPt = fabs(vec1.Pt() - vec2.Pt());
     recodiobjectinfo.dPhi = vec1.DeltaPhi(vec2);
-    recodiobjectinfo.dEta = abs(vec1.Eta() - vec2.Eta());
-    recodiobjectinfo.dMass = abs(vec1.M() - vec2.M());
+    recodiobjectinfo.dEta = fabs(vec1.Eta() - vec2.Eta());
+    recodiobjectinfo.dMass = fabs(vec1.M() - vec2.M());
   }
 
   void InitRecoDiObjectInfo(recoDiObjectInfo_t &recodiobjectinfo)

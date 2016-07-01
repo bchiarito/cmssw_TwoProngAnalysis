@@ -1564,8 +1564,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           if ((pf3.pdgId() != 22) && (abs(pf3.pdgId()) != 11)) continue; // only pf electron or pf photon contribute to definition of photon
           TLorentzVector pfcand3;
           pfcand3.SetPtEtaPhiE(pf3.pt(), pf3.eta(), pf3.phiAtVtx(), pf3.energy());
-          if (abs(pf3.phiAtVtx() - center.Phi()) < fCandidatePairPhiBox/2.0 &&
-              abs(pf3.eta() - center.Eta()) < fCandidatePairEtaBox/2.0) {
+          if (fabs(pf3.phiAtVtx() - center.Phi()) < fCandidatePairPhiBox/2.0 &&
+              fabs(pf3.eta() - center.Eta()) < fCandidatePairEtaBox/2.0) {
             photon = photon + pfcand3;
             if (pf3.pdgId() == 22) {
               numgamma += 1;
@@ -1653,7 +1653,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
             // e gamma
             } else if (abs(pf4.pdgId()) == 11 || pf4.pdgId() == 22) {
               if ( (center.DeltaR(pfcand4) < fCandidatePairIsolationDR) &&
-                   !(abs(pf4.phiAtVtx() - center.Phi()) < fCandidatePairPhiBox/2.0 && abs(pf4.eta() - center.Eta()) < fCandidatePairEtaBox/2.0))
+                   !(fabs(pf4.phiAtVtx() - center.Phi()) < fCandidatePairPhiBox/2.0 && fabs(pf4.eta() - center.Eta()) < fCandidatePairEtaBox/2.0))
                 egammaIso += pfcand4.Pt();
             }
           } // end pf cand loop
@@ -1768,7 +1768,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   for (unsigned int i = 0; i < ak4jets->size(); i++) {
     const pat::Jet &jet = (*ak4jets)[i];
     if (jet.pt() < 30) continue;
-    if (abs(jet.eta()) > 2.5) continue;
+    if (fabs(jet.eta()) > 2.5) continue;
     fHT += jet.pt();
   }
   
@@ -2647,7 +2647,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     TLorentzVector Eta2;
     Eta2.SetPtEtaPhiM(fEta_pt[1], fEta_eta[1], fEta_phi[1], fEta_mass[1]);
     FillRecoDiObjectInfo(fEtaEtaInfo, Eta1, Eta2);
-    fEtaEtaInfo.dMass = abs(fEta_Mass[0] - fEta_Mass[1]);
+    fEtaEtaInfo.dMass = fabs(fEta_Mass[0] - fEta_Mass[1]);
   }
   if (fDebug) cout << ". done making Eta Eta" << endl;
   // Passed Eta and Fake Eta
@@ -2656,7 +2656,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     TLorentzVector Eta;
     Eta.SetPtEtaPhiM(fEta_pt[0], fEta_eta[0], fEta_phi[0], fEta_mass[0]);
     FillRecoDiObjectInfo(fEtaFakeInfo, Eta, LeadingFake);
-    fEtaFakeInfo.dMass = abs(fEta_Mass[0] - LeadingFake.M());
+    fEtaFakeInfo.dMass = fabs(fEta_Mass[0] - LeadingFake.M());
   }
   if (fDebug) cout << ". done making Eta Fake" << endl;
   // Tight Photon and Passed Eta
@@ -2667,7 +2667,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     TLorentzVector Photon;
     Photon.SetPtEtaPhiM(fRecoTightPhotonInfo1.pt, fRecoTightPhotonInfo1.eta, fRecoTightPhotonInfo1.phi, 0);
     FillRecoDiObjectInfo(fGammaEtaInfo, Photon, Eta);
-    fGammaEtaInfo.dMass = abs(fEta_Mass[0] - 0);
+    fGammaEtaInfo.dMass = fabs(fEta_Mass[0] - 0);
   }
   if (fDebug) cout << ". done making Gamma Eta" << endl;
   // Tight Photon and Fake Eta
@@ -2676,8 +2676,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     TLorentzVector Photon;
     Photon.SetPtEtaPhiM(fRecoTightPhotonInfo1.pt, fRecoTightPhotonInfo1.eta, fRecoTightPhotonInfo1.phi, 0);
     FillRecoDiObjectInfo(fGammaFakeInfo, Photon, LeadingFake);
-    fGammaFakeInfo.dMass = abs(LeadingFake.M() - 0);
+    fGammaFakeInfo.dMass = fabs(LeadingFake.M() - 0);
   }
+  if (fDebug) cout << ". done making Gamma Fake" << endl;
   // Tight Photon and Tight Photon
   if (fNumTightPhotons >= 2)
   {
@@ -2687,7 +2688,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     Photon2.SetPtEtaPhiM(fRecoTightPhotonInfo2.pt, fRecoTightPhotonInfo2.eta, fRecoTightPhotonInfo2.phi, 0);
     FillRecoDiObjectInfo(fGammaGammaInfo, Photon1, Photon2);
   }
-  if (fDebug) cout << ". done making Gamma Fake" << endl;
+  if (fDebug) cout << ". done making Gamma Gamma" << endl;
   if (fDebug) cout << ". finished charged decay part two" << endl;
   // Now fill fTree2, it's filled for every event
   fTree2->Fill();
