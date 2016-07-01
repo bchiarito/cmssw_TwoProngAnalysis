@@ -373,6 +373,10 @@ private:
   int fNumPrunedPF;
   int fNumCHpairs;
   int fNumCHpairsPass;
+  int fNumCHpairsPassChargedIso;
+  int fNumCHpairsPassNeutralIso;
+  int fNumCHpairsPassEGammaIso;
+  int fNumCHpairsPassPhotonPtIso;
   int fNumCHpairsFake;
   int fNumTightPhotons;
   double fHT;
@@ -406,44 +410,44 @@ private:
   vector<Double_t> fCand_CHneg_dxy_associated;
   vector<Bool_t> fCand_pass;
   vector<Bool_t> fCand_fake;
-  vector<Double_t> fEta_pt;
-  vector<Double_t> fEta_eta;
-  vector<Double_t> fEta_phi;
-  vector<Double_t> fEta_mass;
-  vector<Double_t> fEta_Mass;
-  vector<Double_t> fEta_px;
-  vector<Double_t> fEta_py;
-  vector<Double_t> fEta_pz;
-  vector<Double_t> fEta_energy;
-  vector<Double_t> fEta_CHpos_pt;
-  vector<Double_t> fEta_CHpos_eta;
-  vector<Double_t> fEta_CHpos_phi;
-  vector<Double_t> fEta_CHpos_mass;
-  vector<Double_t> fEta_CHneg_pt;
-  vector<Double_t> fEta_CHneg_eta;
-  vector<Double_t> fEta_CHneg_phi;
-  vector<Double_t> fEta_CHneg_mass;
-  vector<Double_t> fEta_photon_pt;
-  vector<Double_t> fEta_photon_eta;
-  vector<Double_t> fEta_photon_phi;
-  vector<Double_t> fEta_photon_mass;
-  vector<Double_t> fEta_photon_nGamma;
-  vector<Double_t> fEta_photon_nElectron;
-  vector<Double_t> fEta_chargedIso;
-  vector<Double_t> fEta_neutralIso;
-  vector<Double_t> fEta_egammaIso;
-  vector<Double_t> fEta_CHpos_dxy;
-  vector<Double_t> fEta_CHpos_dxy_beamspot;
-  vector<Double_t> fEta_CHpos_dxy_associated;
-  vector<Double_t> fEta_CHneg_dxy;
-  vector<Double_t> fEta_CHneg_dxy_beamspot;
-  vector<Double_t> fEta_CHneg_dxy_associated;
+  vector<Double_t> fTwoProng_pt;
+  vector<Double_t> fTwoProng_eta;
+  vector<Double_t> fTwoProng_phi;
+  vector<Double_t> fTwoProng_mass;
+  vector<Double_t> fTwoProng_Mass;
+  vector<Double_t> fTwoProng_px;
+  vector<Double_t> fTwoProng_py;
+  vector<Double_t> fTwoProng_pz;
+  vector<Double_t> fTwoProng_energy;
+  vector<Double_t> fTwoProng_CHpos_pt;
+  vector<Double_t> fTwoProng_CHpos_eta;
+  vector<Double_t> fTwoProng_CHpos_phi;
+  vector<Double_t> fTwoProng_CHpos_mass;
+  vector<Double_t> fTwoProng_CHneg_pt;
+  vector<Double_t> fTwoProng_CHneg_eta;
+  vector<Double_t> fTwoProng_CHneg_phi;
+  vector<Double_t> fTwoProng_CHneg_mass;
+  vector<Double_t> fTwoProng_photon_pt;
+  vector<Double_t> fTwoProng_photon_eta;
+  vector<Double_t> fTwoProng_photon_phi;
+  vector<Double_t> fTwoProng_photon_mass;
+  vector<Double_t> fTwoProng_photon_nGamma;
+  vector<Double_t> fTwoProng_photon_nElectron;
+  vector<Double_t> fTwoProng_chargedIso;
+  vector<Double_t> fTwoProng_neutralIso;
+  vector<Double_t> fTwoProng_egammaIso;
+  vector<Double_t> fTwoProng_CHpos_dxy;
+  vector<Double_t> fTwoProng_CHpos_dxy_beamspot;
+  vector<Double_t> fTwoProng_CHpos_dxy_associated;
+  vector<Double_t> fTwoProng_CHneg_dxy;
+  vector<Double_t> fTwoProng_CHneg_dxy_beamspot;
+  vector<Double_t> fTwoProng_CHneg_dxy_associated;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo1;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo2;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo3; 
-  ExoDiPhotons::recoDiObjectInfo_t fEtaEtaInfo; 
-  ExoDiPhotons::recoDiObjectInfo_t fGammaEtaInfo; 
-  ExoDiPhotons::recoDiObjectInfo_t fEtaFakeInfo; 
+  ExoDiPhotons::recoDiObjectInfo_t fTwoProngTwoProngInfo; 
+  ExoDiPhotons::recoDiObjectInfo_t fGammaTwoProngInfo; 
+  ExoDiPhotons::recoDiObjectInfo_t fTwoProngFakeInfo; 
   ExoDiPhotons::recoDiObjectInfo_t fGammaFakeInfo; 
   ExoDiPhotons::recoDiObjectInfo_t fGammaGammaInfo; 
 };
@@ -797,10 +801,14 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   // Cutflow
   fTree2->Branch("nCand",&fNumCHpairs,"nCand/I");
   fTree2->Branch("nPass",&fNumCHpairsPass,"nPass/I");
+  fTree2->Branch("nPassChargedIso",&fNumCHpairsPassChargedIso,"nPassChargedIso/I");
+  fTree2->Branch("nPassNeutralIso",&fNumCHpairsPassNeutralIso,"nPassNeutralIso/I");
+  fTree2->Branch("nPassEGammaIso",&fNumCHpairsPassEGammaIso,"nPassEGammaIso/I");
+  fTree2->Branch("nPassPhotonPtIso",&fNumCHpairsPassChargedIso,"nPassPhotonIso/I");
   fTree2->Branch("nFake",&fNumCHpairsFake,"nFake/I");
   fTree2->Branch("nTightPhoton",&fNumTightPhotons,"nTightPhoton/I");
-  // Candidate information to recompute fake rate histograms offline, not sorted
-  fTree2->Branch("Cand_pt",&fCand_pt);
+  // Candidate information
+  /*fTree2->Branch("Cand_pt",&fCand_pt);
   fTree2->Branch("Cand_eta",&fCand_eta);
   fTree2->Branch("Cand_phi",&fCand_phi);
   fTree2->Branch("Cand_mass",&fCand_mass);
@@ -829,48 +837,48 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Cand_CHneg_dxy_beamspot",&fCand_CHneg_dxy_beamspot);
   fTree2->Branch("Cand_CHneg_dxy_associated",&fCand_CHneg_dxy_associated);
   fTree2->Branch("Cand_pass",&fCand_pass);
-  fTree2->Branch("Cand_fake",&fCand_fake);
+  fTree2->Branch("Cand_fake",&fCand_fake);*/
   // Passing Candidate information, sorted by pt
-  fTree2->Branch("Eta_pt",&fEta_pt);
-  fTree2->Branch("Eta_eta",&fEta_eta);
-  fTree2->Branch("Eta_phi",&fEta_phi);
-  fTree2->Branch("Eta_mass",&fEta_mass);
-  fTree2->Branch("Eta_Mass",&fEta_Mass);
-  fTree2->Branch("Eta_px",&fEta_px);
-  fTree2->Branch("Eta_py",&fEta_py);
-  fTree2->Branch("Eta_pz",&fEta_pz);
-  fTree2->Branch("Eta_energy",&fEta_energy);
-  fTree2->Branch("Eta_CHpos_pt",&fEta_CHpos_pt);
-  fTree2->Branch("Eta_CHpos_eta",&fEta_CHpos_eta);
-  fTree2->Branch("Eta_CHpos_phi",&fEta_CHpos_phi);
-  fTree2->Branch("Eta_CHpos_mass",&fEta_CHpos_mass);
-  fTree2->Branch("Eta_CHneg_pt",&fEta_CHneg_pt);
-  fTree2->Branch("Eta_CHneg_eta",&fEta_CHneg_eta);
-  fTree2->Branch("Eta_CHneg_phi",&fEta_CHneg_phi);
-  fTree2->Branch("Eta_CHneg_mass",&fEta_CHneg_mass);
-  fTree2->Branch("Eta_photon_pt",&fEta_photon_pt);
-  fTree2->Branch("Eta_photon_eta",&fEta_photon_eta);
-  fTree2->Branch("Eta_photon_phi",&fEta_photon_phi);
-  fTree2->Branch("Eta_photon_mass",&fEta_photon_mass);
-  fTree2->Branch("Eta_photon_nGamma",&fEta_photon_nGamma);
-  fTree2->Branch("Eta_photon_nElectron",&fEta_photon_nElectron);
-  fTree2->Branch("Eta_chargedIso",&fEta_chargedIso);
-  fTree2->Branch("Eta_neutralIso",&fEta_neutralIso);
-  fTree2->Branch("Eta_egammaIso",&fEta_egammaIso);
-  fTree2->Branch("Eta_CHpos_dxy",&fEta_CHpos_dxy);
-  fTree2->Branch("Eta_CHpos_dxy_beamspot",&fEta_CHpos_dxy_beamspot);
-  fTree2->Branch("Eta_CHpos_dxy_associated",&fEta_CHpos_dxy_associated);
-  fTree2->Branch("Eta_CHneg_dxy",&fEta_CHneg_dxy);
-  fTree2->Branch("Eta_CHneg_dxy_beamspot",&fEta_CHneg_dxy_beamspot);
-  fTree2->Branch("Eta_CHneg_dxy_associated",&fEta_CHneg_dxy_associated);
+  fTree2->Branch("TwoProng_pt",&fTwoProng_pt);
+  fTree2->Branch("TwoProng_eta",&fTwoProng_eta);
+  fTree2->Branch("TwoProng_phi",&fTwoProng_phi);
+  fTree2->Branch("TwoProng_mass",&fTwoProng_mass);
+  fTree2->Branch("TwoProng_Mass",&fTwoProng_Mass);
+  fTree2->Branch("TwoProng_px",&fTwoProng_px);
+  fTree2->Branch("TwoProng_py",&fTwoProng_py);
+  fTree2->Branch("TwoProng_pz",&fTwoProng_pz);
+  fTree2->Branch("TwoProng_energy",&fTwoProng_energy);
+  fTree2->Branch("TwoProng_CHpos_pt",&fTwoProng_CHpos_pt);
+  fTree2->Branch("TwoProng_CHpos_eta",&fTwoProng_CHpos_eta);
+  fTree2->Branch("TwoProng_CHpos_phi",&fTwoProng_CHpos_phi);
+  fTree2->Branch("TwoProng_CHpos_mass",&fTwoProng_CHpos_mass);
+  fTree2->Branch("TwoProng_CHneg_pt",&fTwoProng_CHneg_pt);
+  fTree2->Branch("TwoProng_CHneg_eta",&fTwoProng_CHneg_eta);
+  fTree2->Branch("TwoProng_CHneg_phi",&fTwoProng_CHneg_phi);
+  fTree2->Branch("TwoProng_CHneg_mass",&fTwoProng_CHneg_mass);
+  fTree2->Branch("TwoProng_photon_pt",&fTwoProng_photon_pt);
+  fTree2->Branch("TwoProng_photon_eta",&fTwoProng_photon_eta);
+  fTree2->Branch("TwoProng_photon_phi",&fTwoProng_photon_phi);
+  fTree2->Branch("TwoProng_photon_mass",&fTwoProng_photon_mass);
+  fTree2->Branch("TwoProng_photon_nGamma",&fTwoProng_photon_nGamma);
+  fTree2->Branch("TwoProng_photon_nElectron",&fTwoProng_photon_nElectron);
+  fTree2->Branch("TwoProng_chargedIso",&fTwoProng_chargedIso);
+  fTree2->Branch("TwoProng_neutralIso",&fTwoProng_neutralIso);
+  fTree2->Branch("TwoProng_egammaIso",&fTwoProng_egammaIso);
+  fTree2->Branch("TwoProng_CHpos_dxy",&fTwoProng_CHpos_dxy);
+  fTree2->Branch("TwoProng_CHpos_dxy_beamspot",&fTwoProng_CHpos_dxy_beamspot);
+  fTree2->Branch("TwoProng_CHpos_dxy_associated",&fTwoProng_CHpos_dxy_associated);
+  fTree2->Branch("TwoProng_CHneg_dxy",&fTwoProng_CHneg_dxy);
+  fTree2->Branch("TwoProng_CHneg_dxy_beamspot",&fTwoProng_CHneg_dxy_beamspot);
+  fTree2->Branch("TwoProng_CHneg_dxy_associated",&fTwoProng_CHneg_dxy_associated);
   // Tight Photons, sorted by pt
   fTree2->Branch("Photon1",&fRecoTightPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree2->Branch("Photon2",&fRecoTightPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree2->Branch("Photon3",&fRecoTightPhotonInfo3,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   // Combined Objects
-  fTree2->Branch("EtaEta",&fEtaEtaInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
-  fTree2->Branch("EtaFake",&fEtaFakeInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
-  fTree2->Branch("GammaEta",&fGammaEtaInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("TwoProngTwoProng",&fTwoProngTwoProngInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("TwoProngFake",&fTwoProngFakeInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("GammaTwoProng",&fGammaTwoProngInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("GammaFake",&fGammaFakeInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("GammaGamma",&fGammaGammaInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   // Fake rate histograms
@@ -1491,37 +1499,37 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fCand_CHneg_dxy_associated.clear();
   fCand_pass.clear();
   fCand_fake.clear();
-  fEta_pt.clear();
-  fEta_eta.clear();
-  fEta_phi.clear();
-  fEta_px.clear();
-  fEta_py.clear();
-  fEta_pz.clear();
-  fEta_mass.clear();
-  fEta_energy.clear();
-  fEta_Mass.clear();
-  fEta_CHpos_pt.clear();
-  fEta_CHpos_eta.clear();
-  fEta_CHpos_phi.clear();
-  fEta_CHpos_mass.clear();
-  fEta_CHneg_pt.clear();
-  fEta_CHneg_eta.clear();
-  fEta_CHneg_phi.clear();
-  fEta_CHneg_mass.clear();
-  fEta_photon_pt.clear();
-  fEta_photon_eta.clear();
-  fEta_photon_phi.clear();
-  fEta_photon_mass.clear();
-  fEta_photon_nGamma.clear();
-  fEta_photon_nElectron.clear();
-  fEta_chargedIso.clear();
-  fEta_neutralIso.clear();
-  fEta_egammaIso.clear();
-  fEta_CHpos_dxy_beamspot.clear();
-  fEta_CHpos_dxy_associated.clear();
-  fEta_CHneg_dxy.clear();
-  fEta_CHneg_dxy_beamspot.clear();
-  fEta_CHneg_dxy_associated.clear();
+  fTwoProng_pt.clear();
+  fTwoProng_eta.clear();
+  fTwoProng_phi.clear();
+  fTwoProng_px.clear();
+  fTwoProng_py.clear();
+  fTwoProng_pz.clear();
+  fTwoProng_mass.clear();
+  fTwoProng_energy.clear();
+  fTwoProng_Mass.clear();
+  fTwoProng_CHpos_pt.clear();
+  fTwoProng_CHpos_eta.clear();
+  fTwoProng_CHpos_phi.clear();
+  fTwoProng_CHpos_mass.clear();
+  fTwoProng_CHneg_pt.clear();
+  fTwoProng_CHneg_eta.clear();
+  fTwoProng_CHneg_phi.clear();
+  fTwoProng_CHneg_mass.clear();
+  fTwoProng_photon_pt.clear();
+  fTwoProng_photon_eta.clear();
+  fTwoProng_photon_phi.clear();
+  fTwoProng_photon_mass.clear();
+  fTwoProng_photon_nGamma.clear();
+  fTwoProng_photon_nElectron.clear();
+  fTwoProng_chargedIso.clear();
+  fTwoProng_neutralIso.clear();
+  fTwoProng_egammaIso.clear();
+  fTwoProng_CHpos_dxy_beamspot.clear();
+  fTwoProng_CHpos_dxy_associated.clear();
+  fTwoProng_CHneg_dxy.clear();
+  fTwoProng_CHneg_dxy_beamspot.clear();
+  fTwoProng_CHneg_dxy_associated.clear();
 
   fNumPVs = primaryvertecies->size();
   fNumPF = pfcands->size();
@@ -1723,47 +1731,51 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     if (fCand_pass[index])
     {
       // Candidate passes and is next leading, fill all passed candidate collections
-      fEta_pt.push_back(fCand_pt[index]);
-      fEta_eta.push_back(fCand_eta[index]);
-      fEta_phi.push_back(fCand_phi[index]);
+      fTwoProng_pt.push_back(fCand_pt[index]);
+      fTwoProng_eta.push_back(fCand_eta[index]);
+      fTwoProng_phi.push_back(fCand_phi[index]);
       TLorentzVector p;
       p.SetPtEtaPhiM(fCand_pt[index], fCand_eta[index], fCand_phi[index], fCand_mass[index]);
-      fEta_px.push_back(p.Px());
-      fEta_py.push_back(p.Py());
-      fEta_pz.push_back(p.Pz());
-      fEta_energy.push_back(p.E());
-      fEta_mass.push_back(fCand_mass[index]);
-      fEta_Mass.push_back(fCand_Mass[index]);
-      fEta_CHpos_pt.push_back(fCand_CHpos_pt[index]);
-      fEta_CHpos_eta.push_back(fCand_CHpos_eta[index]);
-      fEta_CHpos_phi.push_back(fCand_CHpos_phi[index]);
-      fEta_CHpos_mass.push_back(fCand_CHpos_mass[index]);
-      fEta_CHneg_pt.push_back(fCand_CHneg_pt[index]);
-      fEta_CHneg_eta.push_back(fCand_CHneg_eta[index]);
-      fEta_CHneg_phi.push_back(fCand_CHneg_phi[index]);
-      fEta_CHneg_mass.push_back(fCand_CHneg_mass[index]);
-      fEta_photon_pt.push_back(fCand_photon_pt[index]);
-      fEta_photon_eta.push_back(fCand_photon_eta[index]);
-      fEta_photon_phi.push_back(fCand_photon_phi[index]);
-      fEta_photon_mass.push_back(fCand_photon_mass[index]);
-      fEta_photon_nGamma.push_back(fCand_photon_nGamma[index]);
-      fEta_photon_nElectron.push_back(fCand_photon_nElectron[index]);
-      fEta_chargedIso.push_back(fCand_chargedIso[index]);
-      fEta_neutralIso.push_back(fCand_neutralIso[index]);
-      fEta_egammaIso.push_back(fCand_egammaIso[index]);
-      fEta_CHpos_dxy_beamspot.push_back(fCand_CHpos_dxy_beamspot[index]);
-      fEta_CHpos_dxy_associated.push_back(fCand_CHpos_dxy_associated[index]);
-      fEta_CHpos_dxy.push_back(fCand_CHpos_dxy[index]);
-      fEta_CHneg_dxy_beamspot.push_back(fCand_CHneg_dxy_beamspot[index]);
-      fEta_CHneg_dxy_associated.push_back(fCand_CHneg_dxy_associated[index]);
-      fEta_CHneg_dxy.push_back(fCand_CHneg_dxy[index]);
+      fTwoProng_px.push_back(p.Px());
+      fTwoProng_py.push_back(p.Py());
+      fTwoProng_pz.push_back(p.Pz());
+      fTwoProng_energy.push_back(p.E());
+      fTwoProng_mass.push_back(fCand_mass[index]);
+      fTwoProng_Mass.push_back(fCand_Mass[index]);
+      fTwoProng_CHpos_pt.push_back(fCand_CHpos_pt[index]);
+      fTwoProng_CHpos_eta.push_back(fCand_CHpos_eta[index]);
+      fTwoProng_CHpos_phi.push_back(fCand_CHpos_phi[index]);
+      fTwoProng_CHpos_mass.push_back(fCand_CHpos_mass[index]);
+      fTwoProng_CHneg_pt.push_back(fCand_CHneg_pt[index]);
+      fTwoProng_CHneg_eta.push_back(fCand_CHneg_eta[index]);
+      fTwoProng_CHneg_phi.push_back(fCand_CHneg_phi[index]);
+      fTwoProng_CHneg_mass.push_back(fCand_CHneg_mass[index]);
+      fTwoProng_photon_pt.push_back(fCand_photon_pt[index]);
+      fTwoProng_photon_eta.push_back(fCand_photon_eta[index]);
+      fTwoProng_photon_phi.push_back(fCand_photon_phi[index]);
+      fTwoProng_photon_mass.push_back(fCand_photon_mass[index]);
+      fTwoProng_photon_nGamma.push_back(fCand_photon_nGamma[index]);
+      fTwoProng_photon_nElectron.push_back(fCand_photon_nElectron[index]);
+      fTwoProng_chargedIso.push_back(fCand_chargedIso[index]);
+      fTwoProng_neutralIso.push_back(fCand_neutralIso[index]);
+      fTwoProng_egammaIso.push_back(fCand_egammaIso[index]);
+      fTwoProng_CHpos_dxy_beamspot.push_back(fCand_CHpos_dxy_beamspot[index]);
+      fTwoProng_CHpos_dxy_associated.push_back(fCand_CHpos_dxy_associated[index]);
+      fTwoProng_CHpos_dxy.push_back(fCand_CHpos_dxy[index]);
+      fTwoProng_CHneg_dxy_beamspot.push_back(fCand_CHneg_dxy_beamspot[index]);
+      fTwoProng_CHneg_dxy_associated.push_back(fCand_CHneg_dxy_associated[index]);
+      fTwoProng_CHneg_dxy.push_back(fCand_CHneg_dxy[index]);
     }
   }
   if (fDebug) cout << ". finished passed collections" << endl;
 
   // Fill other event wide information
   fNumCHpairs = fCand_pt.size();
-  fNumCHpairsPass = fEta_pt.size();
+  fNumCHpairsPass = fTwoProng_pt.size();
+  fNumCHpairsPassChargedIso = nPassCharged;
+  fNumCHpairsPassNeutralIso = nPassNeutral;
+  fNumCHpairsPassEGammaIso = nPassEGamma;
+  fNumCHpairsPassChargedIso = nPassPhotonPt;
   fHT = 0;
   for (unsigned int i = 0; i < ak4jets->size(); i++) {
     const pat::Jet &jet = (*ak4jets)[i];
@@ -1776,8 +1788,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fCutflow_total++;
   if (fCand_pt.size() > 0) fCutflow_oneCand++;
   if (fCand_pt.size() > 1) fCutflow_twoCand++;
-  if (fEta_pt.size() > 0)  fCutflow_onePass++;
-  if (fEta_pt.size() > 1)  fCutflow_twoPass++;
+  if (fTwoProng_pt.size() > 0)  fCutflow_onePass++;
+  if (fTwoProng_pt.size() > 1)  fCutflow_twoPass++;
   if (nPassCharged > 0) fCutflow_passCharged++;
   if (nPassNeutral > 0) fCutflow_passNeutral++;
   if (nPassEGamma > 0) fCutflow_passEGamma++;
@@ -2634,42 +2646,42 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (fDebug) cout << ". done making tight photons" << endl;
   fNumTightPhotons = tightPhotonsCount;
   // Construct Di-Objects
-  InitRecoDiObjectInfo(fEtaEtaInfo);
-  InitRecoDiObjectInfo(fGammaEtaInfo);
-  InitRecoDiObjectInfo(fEtaFakeInfo);
+  InitRecoDiObjectInfo(fTwoProngTwoProngInfo);
+  InitRecoDiObjectInfo(fGammaTwoProngInfo);
+  InitRecoDiObjectInfo(fTwoProngFakeInfo);
   InitRecoDiObjectInfo(fGammaFakeInfo);
   InitRecoDiObjectInfo(fGammaGammaInfo);
   // Passed Eta and Passed Eta
   if (fNumCHpairsPass >= 2)
   {
     TLorentzVector Eta1;
-    Eta1.SetPtEtaPhiM(fEta_pt[0], fEta_eta[0], fEta_phi[0], fEta_mass[0]);
+    Eta1.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
     TLorentzVector Eta2;
-    Eta2.SetPtEtaPhiM(fEta_pt[1], fEta_eta[1], fEta_phi[1], fEta_mass[1]);
-    FillRecoDiObjectInfo(fEtaEtaInfo, Eta1, Eta2);
-    fEtaEtaInfo.dMass = fabs(fEta_Mass[0] - fEta_Mass[1]);
+    Eta2.SetPtEtaPhiM(fTwoProng_pt[1], fTwoProng_eta[1], fTwoProng_phi[1], fTwoProng_mass[1]);
+    FillRecoDiObjectInfo(fTwoProngTwoProngInfo, Eta1, Eta2);
+    fTwoProngTwoProngInfo.dMass = fabs(fTwoProng_Mass[0] - fTwoProng_Mass[1]);
   }
-  if (fDebug) cout << ". done making Eta Eta" << endl;
+  if (fDebug) cout << ". done making TwoProng TwoProng" << endl;
   // Passed Eta and Fake Eta
   if (fNumCHpairsPass >= 1 && fNumCHpairsFake >= 1)
   {
     TLorentzVector Eta;
-    Eta.SetPtEtaPhiM(fEta_pt[0], fEta_eta[0], fEta_phi[0], fEta_mass[0]);
-    FillRecoDiObjectInfo(fEtaFakeInfo, Eta, LeadingFake);
-    fEtaFakeInfo.dMass = fabs(fEta_Mass[0] - LeadingFake.M());
+    Eta.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+    FillRecoDiObjectInfo(fTwoProngFakeInfo, Eta, LeadingFake);
+    fTwoProngFakeInfo.dMass = fabs(fTwoProng_Mass[0] - LeadingFake.M());
   }
-  if (fDebug) cout << ". done making Eta Fake" << endl;
+  if (fDebug) cout << ". done making TwoProng Fake" << endl;
   // Tight Photon and Passed Eta
   if (fNumCHpairsPass >= 1 && fNumTightPhotons >= 1)
   {
     TLorentzVector Eta;
-    Eta.SetPtEtaPhiM(fEta_pt[0], fEta_eta[0], fEta_phi[0], fEta_mass[0]);
+    Eta.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
     TLorentzVector Photon;
     Photon.SetPtEtaPhiM(fRecoTightPhotonInfo1.pt, fRecoTightPhotonInfo1.eta, fRecoTightPhotonInfo1.phi, 0);
-    FillRecoDiObjectInfo(fGammaEtaInfo, Photon, Eta);
-    fGammaEtaInfo.dMass = fabs(fEta_Mass[0] - 0);
+    FillRecoDiObjectInfo(fGammaTwoProngInfo, Photon, Eta);
+    fGammaTwoProngInfo.dMass = fabs(fTwoProng_Mass[0] - 0);
   }
-  if (fDebug) cout << ". done making Gamma Eta" << endl;
+  if (fDebug) cout << ". done making Gamma TwoProng" << endl;
   // Tight Photon and Fake Eta
   if (fNumCHpairsFake >= 1 && fNumTightPhotons >= 1)
   {
