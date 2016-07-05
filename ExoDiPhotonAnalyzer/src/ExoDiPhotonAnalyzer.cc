@@ -1525,6 +1525,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fTwoProng_chargedIso.clear();
   fTwoProng_neutralIso.clear();
   fTwoProng_egammaIso.clear();
+  fTwoProng_CHpos_dxy.clear();
   fTwoProng_CHpos_dxy_beamspot.clear();
   fTwoProng_CHpos_dxy_associated.clear();
   fTwoProng_CHneg_dxy.clear();
