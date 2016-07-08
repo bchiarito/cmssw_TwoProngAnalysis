@@ -17,7 +17,7 @@ config.Data.publication = False
 config.Data.unitsPerJob = 100
 config.Data.totalUnits = -1
 config.Data.splitting = 'LumiBased'
-config.Data.lumiMask = 'Cert_271036-274421_13TeV_PromptReco_Collisions16_JSON.txt'
+config.Data.lumiMask = 'Cert_271036-275783_13TeV_PromptReco_Collisions16_JSON.txt'
 config.section_('User')
 config.section_('Site')
 config.Site.storageSite = 'T3_US_FNALLPC'
