@@ -410,6 +410,7 @@ private:
   vector<Double_t> fCand_CHneg_dxy_associated;
   vector<Bool_t> fCand_pass;
   vector<Bool_t> fCand_fake;
+  vector<Bool_t> fCand_match;
   vector<Double_t> fTwoProng_pt;
   vector<Double_t> fTwoProng_eta;
   vector<Double_t> fTwoProng_phi;
@@ -442,6 +443,23 @@ private:
   vector<Double_t> fTwoProng_CHneg_dxy;
   vector<Double_t> fTwoProng_CHneg_dxy_beamspot;
   vector<Double_t> fTwoProng_CHneg_dxy_associated;
+  vector<Bool_t> fTwoProng_match;
+  vector<Double_t> fGenPhi_pt;
+  vector<Double_t> fGenPhi_eta;
+  vector<Double_t> fGenPhi_phi;
+  vector<Double_t> fGenPhi_mass;
+  vector<Double_t> fGenPhi_px;
+  vector<Double_t> fGenPhi_py;
+  vector<Double_t> fGenPhi_pz;
+  vector<Double_t> fGenPhi_energy;
+  vector<Double_t> fGenEta_pt;
+  vector<Double_t> fGenEta_eta;
+  vector<Double_t> fGenEta_phi;
+  vector<Double_t> fGenEta_mass;
+  vector<Double_t> fGenEta_px;
+  vector<Double_t> fGenEta_py;
+  vector<Double_t> fGenEta_pz;
+  vector<Double_t> fGenEta_energy;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo1;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo2;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo3; 
@@ -875,6 +893,23 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Photon1",&fRecoTightPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree2->Branch("Photon2",&fRecoTightPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree2->Branch("Photon3",&fRecoTightPhotonInfo3,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  // Generator Objects
+  fTree2->Branch("GenPhi_pt",&fGenPhi_pt);
+  fTree2->Branch("GenPhi_eta",&fGenPhi_eta);
+  fTree2->Branch("GenPhi_phi",&fGenPhi_phi);
+  fTree2->Branch("GenPhi_mass",&fGenPhi_mass);
+  fTree2->Branch("GenPhi_px",&fGenPhi_px);
+  fTree2->Branch("GenPhi_py",&fGenPhi_py);
+  fTree2->Branch("GenPhi_pz",&fGenPhi_pz);
+  fTree2->Branch("GenPhi_energy",&fGenPhi_energy);
+  fTree2->Branch("GenEta_pt",&fGenEta_pt);
+  fTree2->Branch("GenEta_eta",&fGenEta_eta);
+  fTree2->Branch("GenEta_phi",&fGenEta_phi);
+  fTree2->Branch("GenEta_mass",&fGenEta_mass);
+  fTree2->Branch("GenEta_px",&fGenEta_px);
+  fTree2->Branch("GenEta_py",&fGenEta_py);
+  fTree2->Branch("GenEta_pz",&fGenEta_pz);
+  fTree2->Branch("GenEta_energy",&fGenEta_energy); 
   // Combined Objects
   fTree2->Branch("TwoProngTwoProng",&fTwoProngTwoProngInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("TwoProngFake",&fTwoProngFakeInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
@@ -1499,6 +1534,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fCand_CHneg_dxy_associated.clear();
   fCand_pass.clear();
   fCand_fake.clear();
+  fCand_match.clear();
   fTwoProng_pt.clear();
   fTwoProng_eta.clear();
   fTwoProng_phi.clear();
@@ -1531,9 +1567,54 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fTwoProng_CHneg_dxy.clear();
   fTwoProng_CHneg_dxy_beamspot.clear();
   fTwoProng_CHneg_dxy_associated.clear();
+  fTwoProng_match.clear();
+
+  fGenPhi_pt.clear();
+  fGenPhi_eta.clear();
+  fGenPhi_phi.clear();
+  fGenPhi_energy.clear();
+  fGenPhi_px.clear();
+  fGenPhi_py.clear();
+  fGenPhi_pz.clear();
+  fGenPhi_energy.clear();
+  fGenEta_pt.clear();
+  fGenEta_eta.clear();
+  fGenEta_phi.clear();
+  fGenEta_energy.clear();
+  fGenEta_px.clear();
+  fGenEta_py.clear();
+  fGenEta_pz.clear();
+  fGenEta_energy.clear();
 
   fNumPVs = primaryvertecies->size();
   fNumPF = pfcands->size();
+
+  // Generator information if Signal
+  if (fisSignal && fisMC) {
+    for (unsigned int i = 0; i < genparticles->size(); i++) {
+      const reco::GenParticle &genparticle = (*genparticles)[i];
+      if (genparticle.pdgId() == 9000006 && genparticle.status() == 62) {
+        fGenPhi_pt.push_back(genparticle.pt());
+        fGenPhi_eta.push_back(genparticle.eta());
+        fGenPhi_phi.push_back(genparticle.phi());
+        fGenPhi_mass.push_back(genparticle.mass());
+        fGenPhi_px.push_back(genparticle.px());
+        fGenPhi_py.push_back(genparticle.py());
+        fGenPhi_pz.push_back(genparticle.pz());
+        fGenPhi_energy.push_back(genparticle.energy());
+      }
+      if ((genparticle.pdgId() == 221 || genparticle.pdgId() == 331) && genparticle.status() == 2) {
+        fGenEta_pt.push_back(genparticle.pt());
+        fGenEta_eta.push_back(genparticle.eta());
+        fGenEta_phi.push_back(genparticle.phi());
+        fGenEta_mass.push_back(genparticle.mass());
+        fGenEta_px.push_back(genparticle.px());
+        fGenEta_py.push_back(genparticle.py());
+        fGenEta_pz.push_back(genparticle.pz());
+        fGenEta_energy.push_back(genparticle.energy());
+      }
+    }
+  }
 
   // Find all pairs of one CH pos and one CH neg within specified DR of each other
   int nPassCharged = 0;
@@ -1542,6 +1623,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   int nPassPhotonPt = 0;
   int nFake = 0;
   int pruned_count = 0;
+  int nMatch = 0;
+  int nPassMatch = 0;
   TLorentzVector LeadingFake; 
   if (fDebug) cout << ". starting candidate loop" << endl;
   for (unsigned int i = 0; i < pfcands->size(); i++) {
@@ -1673,6 +1756,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           fCand_chargedIso.push_back(relchargedIso);
           fCand_neutralIso.push_back(relneutralIso);
           fCand_egammaIso.push_back(relegammaIso);
+          
           // Selection on Candidates
           bool passCharged = relchargedIso < fCandidatePairChargedIsoCut;
           bool passNeutral = relneutralIso < fCandidatePairNeutralIsoCut;
@@ -1682,11 +1766,28 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           bool fake = !passCharged && passNeutral && passEGamma && passPhotonPt;
           fCand_pass.push_back(pass);
           fCand_fake.push_back(fake);
+          // Generator Matching
+          bool match = false;
+	  if (fisSignal && fisMC) {
+	    for (unsigned int i = 0; i < genparticles->size(); i++) {
+	      const reco::GenParticle &genparticle = (*genparticles)[i];
+	      if ((genparticle.pdgId() == 221 || genparticle.pdgId() == 331) && genparticle.status() == 2) {
+                TLorentzVector genEta;
+                genEta.SetPtEtaPhiM(genparticle.pt(), genparticle.eta(), genparticle.phi(), genparticle.mass());
+                double match_dR = genEta.DeltaR(EtaCandidate);
+                if (match_dR < fCandidatePairGenMatchDR)
+                  match = true;
+              }
+            }
+          }
+          fCand_match.push_back(match);
           // Cutflow variables
           if (passCharged) nPassCharged++;
           if (passNeutral) nPassNeutral++;
           if (passEGamma) nPassEGamma++;
           if (passPhotonPt) nPassPhotonPt++;
+          if (match) nMatch++;
+          if (match && pass) nPassMatch++;
           // Fake rate histograms
           if (pass) {
             fTwoProngFakeNumer_pt->Fill(EtaCandidate.Pt());
@@ -1766,6 +1867,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       fTwoProng_CHneg_dxy_beamspot.push_back(fCand_CHneg_dxy_beamspot[index]);
       fTwoProng_CHneg_dxy_associated.push_back(fCand_CHneg_dxy_associated[index]);
       fTwoProng_CHneg_dxy.push_back(fCand_CHneg_dxy[index]);
+      fTwoProng_match.push_back(fCand_match[index]);
     }
   }
   if (fDebug) cout << ". finished passed collections" << endl;
@@ -1795,6 +1897,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (nPassNeutral > 0) fCutflow_passNeutral++;
   if (nPassEGamma > 0) fCutflow_passEGamma++;
   if (nPassPhotonPt > 0) fCutflow_passPhotonPt++;
+  if (nMatch > 0) fCutflow_oneMatch++;
+  if (nMatch > 1) fCutflow_twoMatch++;
+  if (nPassMatch > 0) fCutflow_onePassMatch++;
+  if (nPassMatch > 1) fCutflow_twoPassMatch++;
   if (fDebug) cout << ". finish charged decay code part one" << endl;
 
   // photon loop
