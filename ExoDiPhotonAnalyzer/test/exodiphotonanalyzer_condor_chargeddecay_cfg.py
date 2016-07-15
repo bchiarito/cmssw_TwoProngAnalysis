@@ -69,6 +69,125 @@ readFiles = []
 isMC = options.isMC
 isSignal = options.isSignal
 doLumis = options.doLumis
+if sample == "Eta_generic":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Eta_generic.root',
+    ] )
+    
+if sample == "Eta_gg":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Eta_gg.root',
+    ] )
+    
+if sample == "Eta_3pi0":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Eta_3pi0.root',
+    ] )
+    
+if sample == "Eta_pipig":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Eta_pipig.root',
+    ] )
+    
+if sample == "Eta_pipipi0":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Eta_pipipi0.root',
+    ] )
+    
+if sample == "Etaprime_generic":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Etaprime_generic.root',
+    ] )
+    
+if sample == "Etaprime_gg":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Etaprime_gg.root',
+    ] )
+    
+if sample == "Etaprime_pi0pi0Eta_gg":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Etaprime_pi0pi0Eta_gg.root',
+    ] )
+    
+if sample == "Etaprime_pi0pi0Eta_3pi0":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Etaprime_pi0pi0Eta_3pi0.root',
+    ] )
+    
+if sample == "Etaprime_pi0pi0Eta_pipig":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Etaprime_pi0pi0Eta_pipig.root',
+    ] )
+    
+if sample == "Etaprime_pi0pi0Eta_pipipi0":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Etaprime_pi0pi0Eta_pipipi0.root',
+    ] )
+    
+if sample == "Etaprime_gomega":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Etaprime_gomega.root',
+    ] )
+    
+if sample == "Etaprime_grho":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Etaprime_grho.root',
+    ] )
+    
+if sample == "Etaprime_pipiEta_gg":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Etaprime_pipiEta_gg.root',
+    ] )
+    
+if sample == "Etaprime_pipiEta_3pi0":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Etaprime_pipiEta_3pi0.root',
+    ] )
+    
+if sample == "Etaprime_pipiEta_pipig":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Etaprime_pipiEta_pipig.root',
+    ] )
+    
+if sample == "Etaprime_pipiEta_pipipi0":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/eos/uscms/store/user/bchiari1/noreplica/diphotonProject/miniaod/condor_jobs/MiniAODv2_Etaprime_pipiEta_pipipi0.root',
+    ] )
+    
 if sample == "EtaOld":
     isMc = True
     isSignal = True
