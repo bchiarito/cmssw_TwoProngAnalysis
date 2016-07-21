@@ -163,7 +163,8 @@ private:
   virtual void endJob() ;
 
   // my functions
-
+  bool isNeutral(int one, int two, int three);
+  bool isCharged(int one, int two, int three);
 
   // ----------member data ---------------------------
   edm::InputTag      fPhotonTag;       //select photon collection 
@@ -460,6 +461,7 @@ private:
   vector<Double_t> fGenEta_py;
   vector<Double_t> fGenEta_pz;
   vector<Double_t> fGenEta_energy;
+  int fGen_decayType;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo1;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo2;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo3; 
@@ -826,7 +828,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("nFake",&fNumCHpairsFake,"nFake/I");
   fTree2->Branch("nTightPhoton",&fNumTightPhotons,"nTightPhoton/I");
   // Candidate information
-  /*fTree2->Branch("Cand_pt",&fCand_pt);
+  fTree2->Branch("Cand_pt",&fCand_pt);
   fTree2->Branch("Cand_eta",&fCand_eta);
   fTree2->Branch("Cand_phi",&fCand_phi);
   fTree2->Branch("Cand_mass",&fCand_mass);
@@ -855,7 +857,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Cand_CHneg_dxy_beamspot",&fCand_CHneg_dxy_beamspot);
   fTree2->Branch("Cand_CHneg_dxy_associated",&fCand_CHneg_dxy_associated);
   fTree2->Branch("Cand_pass",&fCand_pass);
-  fTree2->Branch("Cand_fake",&fCand_fake);*/
+  fTree2->Branch("Cand_fake",&fCand_fake);
   // Passing Candidate information, sorted by pt
   fTree2->Branch("TwoProng_pt",&fTwoProng_pt);
   fTree2->Branch("TwoProng_eta",&fTwoProng_eta);
@@ -910,6 +912,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("GenEta_py",&fGenEta_py);
   fTree2->Branch("GenEta_pz",&fGenEta_pz);
   fTree2->Branch("GenEta_energy",&fGenEta_energy); 
+  fTree2->Branch("Gen_decayType",&fGen_decayType);
   // Combined Objects
   fTree2->Branch("TwoProngTwoProng",&fTwoProngTwoProngInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("TwoProngFake",&fTwoProngFakeInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
@@ -1031,6 +1034,38 @@ ExoDiPhotonAnalyzer::~ExoDiPhotonAnalyzer()
 //
 // member functions
 //
+
+// Helper methods
+bool
+ExoDiPhotonAnalyzer::isNeutral(int one, int two, int three)
+{
+  if (one == 22 && two == 22) return true;
+  if (two == 22 && three == 22) return true;
+  if (one == 22 && three == 22) return true;
+  if (one == 111 && two == 111 && three == 111) return true;
+
+  return false;
+}
+
+bool
+ExoDiPhotonAnalyzer::isCharged(int one, int two, int three)
+{
+  if (one==211 && two==-211 && three==111) return true;
+  if (one==-211 && two==211 && three==111) return true;
+  if (one==111 && two==211 && three==-211) return true;
+  if (one==111 && two==-211 && three==211) return true;
+  if (one==211 && two==111 && three==-211) return true;
+  if (one==-211 && two==111 && three==211) return true;
+ 
+  if (one==211 && two==-211 && three==22) return true;
+  if (one==-211 && two==211 && three==22) return true;
+  if (one==22 && two==211 && three==-211) return true;
+  if (one==22 && two==-211 && three==211) return true;
+  if (one==211 && two==22 && three==-211) return true;
+  if (one==-211 && two==22 && three==211) return true;
+ 
+  return false;
+}
 
 // ------------ method called to for each event  ------------
 void
@@ -1768,10 +1803,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           fCand_fake.push_back(fake);
           // Generator Matching
           bool match = false;
-	  if (fisSignal && fisMC) {
-	    for (unsigned int i = 0; i < genparticles->size(); i++) {
-	      const reco::GenParticle &genparticle = (*genparticles)[i];
-	      if ((genparticle.pdgId() == 221 || genparticle.pdgId() == 331) && genparticle.status() == 2) {
+	        if (fisSignal && fisMC) {
+	          for (unsigned int i = 0; i < genparticles->size(); i++) {
+	            const reco::GenParticle &genparticle = (*genparticles)[i];
+	            if ((genparticle.pdgId() == 221 || genparticle.pdgId() == 331) && genparticle.status() == 2) {
                 TLorentzVector genEta;
                 genEta.SetPtEtaPhiM(genparticle.pt(), genparticle.eta(), genparticle.phi(), genparticle.mass());
                 double match_dR = genEta.DeltaR(EtaCandidate);
@@ -2809,6 +2844,35 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   }
   if (fDebug) cout << ". done making Gamma Gamma" << endl;
   if (fDebug) cout << ". finished charged decay part two" << endl;
+
+  // generator decay type
+  if (fisSignal)
+  {
+    int decayType = 0;
+    for (unsigned int i = 0; i < genparticles->size(); i++) {
+      const reco::GenParticle &genparticle = (*genparticles)[i];
+      if (genparticle.pdgId() != 9000006 || genparticle.status() != 62) continue;
+      if (fDebug) cout << genparticle.pdgId() << ", status=" << genparticle.status() << endl; 
+      for (unsigned int j = 0; j < genparticle.numberOfDaughters(); j++) {
+        const reco::Candidate * genparticle2 = genparticle.daughter(j);
+        if (fDebug) cout << "-> " << genparticle2->pdgId() << ", status=" << genparticle2->status() << endl; 
+        int decay1 = 0;
+        int decay2 = 0;
+        int decay3 = 0;
+        for (unsigned int jj = 0; jj < genparticle2->numberOfDaughters(); jj++) {
+          const reco::Candidate * genparticle3 = genparticle2->daughter(jj);
+          if (fDebug) cout << "  -> " << genparticle3->pdgId() << ", status=" << genparticle3->status() << endl;
+          if (jj == 0) decay1 = genparticle3->pdgId();
+          if (jj == 1) decay2 = genparticle3->pdgId();
+          if (jj == 2) decay3 = genparticle3->pdgId();
+        }
+        if (isNeutral(decay1, decay2, decay3)) decayType += 0;
+        if (isCharged(decay1, decay2, decay3)) decayType += 1;
+      }
+    }
+    fGen_decayType = decayType;
+  }
+
   // Now fill fTree2, it's filled for every event
   fTree2->Fill();
 }
