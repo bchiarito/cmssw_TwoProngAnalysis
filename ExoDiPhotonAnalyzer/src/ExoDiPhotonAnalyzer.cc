@@ -303,6 +303,7 @@ private:
   double fCandidatePairNeutralIsoCut;
   double fCandidatePairEGammaIsoCut;
   double fCandidatePairGenMatchDR;
+  // Fake rate histos
   TH1F *fTwoProngFakeRate_pt;
   TH1F *fTwoProngFakeRate_eta;
   TH1F *fTwoProngFakeRate_phi;
@@ -410,6 +411,10 @@ private:
   vector<Double_t> fCand_CHneg_dxy_beamspot;
   vector<Double_t> fCand_CHneg_dxy_associated;
   vector<Bool_t> fCand_pass;
+  vector<Bool_t> fCand_passChargedIso;
+  vector<Bool_t> fCand_passNeutralIso;
+  vector<Bool_t> fCand_passEGammaIso;
+  vector<Bool_t> fCand_passPhotonPt;
   vector<Bool_t> fCand_fake;
   vector<Bool_t> fCand_match;
   vector<Double_t> fTwoProng_pt;
@@ -857,6 +862,10 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Cand_CHneg_dxy_beamspot",&fCand_CHneg_dxy_beamspot);
   fTree2->Branch("Cand_CHneg_dxy_associated",&fCand_CHneg_dxy_associated);
   fTree2->Branch("Cand_pass",&fCand_pass);
+  fTree2->Branch("Cand_passChargedIso",&fCand_passChargedIso);
+  fTree2->Branch("Cand_passNeutralIso",&fCand_passNeutralIso);
+  fTree2->Branch("Cand_passEGammaIso",&fCand_passEGammaIso);
+  fTree2->Branch("Cand_passPhotonPt",&fCand_passPhotonPt);
   fTree2->Branch("Cand_fake",&fCand_fake);
   // Passing Candidate information, sorted by pt
   fTree2->Branch("TwoProng_pt",&fTwoProng_pt);
@@ -1568,6 +1577,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fCand_CHneg_dxy_beamspot.clear();
   fCand_CHneg_dxy_associated.clear();
   fCand_pass.clear();
+  fCand_passChargedIso.clear();
+  fCand_passNeutralIso.clear();
+  fCand_passEGammaIso.clear();
+  fCand_passPhotonPt.clear();
   fCand_fake.clear();
   fCand_match.clear();
   fTwoProng_pt.clear();
@@ -1800,6 +1813,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           bool pass = passCharged && passNeutral && passEGamma && passPhotonPt;
           bool fake = !passCharged && passNeutral && passEGamma && passPhotonPt;
           fCand_pass.push_back(pass);
+          fCand_passChargedIso.push_back(passCharged);
+          fCand_passNeutralIso.push_back(passNeutral);
+          fCand_passEGammaIso.push_back(passEGamma);
+          fCand_passPhotonPt.push_back(passPhotonPt);
           fCand_fake.push_back(fake);
           // Generator Matching
           bool match = false;
@@ -2873,6 +2890,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     fGen_decayType = decayType;
   }
 
+  // Cutflow for two prong selection
+
+
   // Now fill fTree2, it's filled for every event
   fTree2->Fill();
 }
@@ -2903,6 +2923,7 @@ ExoDiPhotonAnalyzer::endJob()
   fTwoProngFakeDenom_phi->Sumw2();
   fTwoProngFakeRate_phi->Add(fTwoProngFakeNumer_phi);
   fTwoProngFakeRate_phi->Divide(fTwoProngFakeDenom_phi);
+
   // Print Cutflow
   if (fchargedDecayCutflow) {
     cout << "Efficiencies for charged decay mode" << endl;
