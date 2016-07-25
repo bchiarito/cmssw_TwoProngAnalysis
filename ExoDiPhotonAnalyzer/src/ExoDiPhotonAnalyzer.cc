@@ -303,6 +303,7 @@ private:
   double fCandidatePairNeutralIsoCut;
   double fCandidatePairEGammaIsoCut;
   double fCandidatePairGenMatchDR;
+  bool fOmitChargedDecayCode;
   // Fake rate histos
   TH1F *fTwoProngFakeRate_pt;
   TH1F *fTwoProngFakeRate_eta;
@@ -558,7 +559,10 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     //-----------------taken from Ilya-----------------
 {
   //now do what ever initialization is needed
-  
+
+  // setting requested by Steve, omit all Brandon's code
+  fOmitChargedDecayCode = ( iConfig.exists("omitChargedDecayCode") ? iConfig.getParameter<bool>("omitChargedDecayCode") : false );  
+
   // Initialize cutflow variables
   fCutflow_total = 0;
   fCutflow_oneCand = 0;
@@ -832,6 +836,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("DiphotonVtx3",&fDiphotonInfoVtx3,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
 
   // Branches for charged decay analysis
+  if (!fOmitChargedDecayCode) {
   fTree2 = fs->make<TTree>("fTree2","ChargedDecayTree");
   // Event wide
   fTree2->Branch("eventNum",&fEventNum,"eventNum/I");
@@ -971,8 +976,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTwoProngFakeRate_eta = fs->make<TH1F>("twoprongfake_eta","Fake Rate for CH pairs, inverted charged iso cut, eta binned",24,-6.0,6.0);
   fTwoProngFakeNumer_phi = fs->make<TH1F>("twoprongfakenumer_phi","Fake Numerator count for CH pairs, inverted charged iso cut, phi binned",24,-6.0,6.0);
   fTwoProngFakeDenom_phi = fs->make<TH1F>("twoprongfakedenom_phi","Fake Denominator count for CH pairs, inverted charged iso cut, phi binned",24,-6.0,6.0);
-  fTwoProngFakeRate_phi = fs->make<TH1F>("twoprongfake_phi","Fake Rate for CH pairs, inverted charged iso cut",24,-6.0,6.0);
-
+  fTwoProngFakeRate_phi = fs->make<TH1F>("twoprongfake_phi","Fake Rate for CH pairs, inverted charged iso cut",24,-6.0,6.0); }
   // repeating all this for each of tight-fake and fake-fake trees
   // basically they'll all point to the same structs, but the structs will contain
   // different values for the event, depending on the event category
@@ -1892,18 +1896,20 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           if (match) nMatch++;
           if (match && pass) nPassMatch++;
           // Fake rate histograms
-          if (pass) {
-            fTwoProngFakeNumer_pt->Fill(EtaCandidate.Pt());
-            fTwoProngFakeNumer_eta->Fill(EtaCandidate.Eta());
-            fTwoProngFakeNumer_phi->Fill(EtaCandidate.Phi());
-          } if (fake) {
-            fTwoProngFakeDenom_pt->Fill(EtaCandidate.Pt());
-            fTwoProngFakeDenom_eta->Fill(EtaCandidate.Eta());
-            fTwoProngFakeDenom_phi->Fill(EtaCandidate.Phi());
-            nFake++;
-            if (EtaCandidate.Pt() > LeadingFake.Pt()) LeadingFake = EtaCandidate;
+          if (!fOmitChargedDecayCode) {
+            if (pass) {
+              fTwoProngFakeNumer_pt->Fill(EtaCandidate.Pt());
+              fTwoProngFakeNumer_eta->Fill(EtaCandidate.Eta());
+              fTwoProngFakeNumer_phi->Fill(EtaCandidate.Phi());
+            } if (fake) {
+              fTwoProngFakeDenom_pt->Fill(EtaCandidate.Pt());
+              fTwoProngFakeDenom_eta->Fill(EtaCandidate.Eta());
+              fTwoProngFakeDenom_phi->Fill(EtaCandidate.Phi());
+              nFake++;
+              if (EtaCandidate.Pt() > LeadingFake.Pt()) LeadingFake = EtaCandidate;
+            }
+            if (fDebug) cout << ". finished fake rate filling" << endl;
           }
-          if (fDebug) cout << ". finished fake rate filling" << endl;
         }
       } // end conditionals on CH pair
     }
@@ -2964,11 +2970,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     fGen_decayType = decayType;
   }
 
-  // Cutflow for two prong selection
 
-
-  // Now fill fTree2, it's filled for every event
-  fTree2->Fill();
+  // Now fill fTree2, it's filled for every event 
+  if (!fOmitChargedDecayCode) fTree2->Fill();
 }
 
 // ------------ method called once each job just before starting event loop  ------------
@@ -2985,6 +2989,7 @@ void
 ExoDiPhotonAnalyzer::endJob()
 {
   // fake rate histograms
+  if (!fOmitChargedDecayCode) {
   fTwoProngFakeNumer_pt->Sumw2();
   fTwoProngFakeDenom_pt->Sumw2();
   fTwoProngFakeRate_pt->Add(fTwoProngFakeNumer_pt);
@@ -2996,10 +3001,10 @@ ExoDiPhotonAnalyzer::endJob()
   fTwoProngFakeNumer_phi->Sumw2();
   fTwoProngFakeDenom_phi->Sumw2();
   fTwoProngFakeRate_phi->Add(fTwoProngFakeNumer_phi);
-  fTwoProngFakeRate_phi->Divide(fTwoProngFakeDenom_phi);
+  fTwoProngFakeRate_phi->Divide(fTwoProngFakeDenom_phi); }
 
   // Print Cutflow
-  if (fchargedDecayCutflow) {
+  if (!fOmitChargedDecayCode && fchargedDecayCutflow) {
     cout << "Efficiencies for charged decay mode" << endl;
     cout << "Total number of events processed                        : " << fCutflow_total << " " << (fCutflow_total/fCutflow_total)*100 << "%" << endl;
     cout << "Events with at least one candidate Eta                  : " << fCutflow_oneCand << " " << (fCutflow_oneCand/fCutflow_total)*100 << "%" << endl;
