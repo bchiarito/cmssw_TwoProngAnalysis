@@ -538,6 +538,38 @@ namespace ExoDiPhotons{
 	    passesPFSigmaIetaIetaCut(photon, sigIeIe, MethodID, CategoryID, isSat) &&
 	    passCSEV);
   }
+  bool passesChargedHadronDenomCut(double thisCHIso, const reco::Photon *photon) {
+    if ( thisCHIso < (double)0.2*photon->pt() ) return true; // updated denominator definition
+    else return false;
+  }
+  bool passesCorPhoIsoDenom(const reco::Photon *photon, TString MethodID, TString CategoryID, double phoIso, double rho) {
+    // double phoEta = fabs(photon->superCluster()->eta());
+    // double corPhoIsoCut = -999.9;
+    double corPhoIso = corPhoIsoHighPtID(photon, MethodID, CategoryID, phoIso, rho);
+
+    // if (phoEta < 1.4442) corPhoIsoCut = 2.75;
+    // if (1.560 < phoEta && phoEta < 2.5) corPhoIsoCut = 2.00;
+    
+    // if ( corPhoIso < std::min((double)5.*corPhoIsoCut, (double)0.2*photon->pt()) ) return true;
+    if ( corPhoIso < (double)0.2*photon->pt() ) return true; // updated denominator definition
+    else return false;
+  }
+  bool passDenominatorCut(const reco::Photon *photon, TString MethodID, TString CategoryID, double chIso, double phoIso, double sigIeIe, double rho, bool passCSEV, bool isSat) {
+    // first check if the photon fails at least one of the high pT ID cuts
+    bool failID = (
+      !passesHadTowerOverEmCut(photon, MethodID, CategoryID) ||
+      !passesChargedHadronCut(photon, chIso, MethodID, CategoryID) ||
+      !passCorPhoIsoHighPtID(photon, MethodID, CategoryID, phoIso, rho) ||
+      !passesPFSigmaIetaIetaCut(photon, sigIeIe, MethodID, CategoryID, isSat)
+    );
+    
+    // now check if it pass the looser ID
+    // NOTE TO SK, NEED TO IMPLEMENT THESE TWO METHODS!!!!!!!!!
+    bool passLooseIso = passesChargedHadronDenomCut(chIso,photon) && passesCorPhoIsoDenom(photon,MethodID,CategoryID,phoIso,rho);
+    
+    if (failID && passLooseIso && passCSEV) return true;
+    else return false;
+  }
   
 }
 

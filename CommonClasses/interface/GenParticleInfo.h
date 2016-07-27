@@ -79,6 +79,11 @@ namespace ExoDiPhotons
     genparticleinfo.pz = -99.9;
     genparticleinfo.energy = -99.9;
   }
+  bool compareGenParticlesByPt(const reco::GenParticle &photon1, const reco::GenParticle &photon2) {
+
+    // sorts such that highest pt photon first
+    return(photon1.pt()>=photon2.pt());
+  }
 
 } //end of namespace
 

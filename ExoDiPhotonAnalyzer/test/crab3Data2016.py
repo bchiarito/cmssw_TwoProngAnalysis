@@ -17,7 +17,7 @@ config.Data.publication = False
 config.Data.unitsPerJob = 100
 config.Data.totalUnits = -1
 config.Data.splitting = 'LumiBased'
-config.Data.lumiMask = 'Cert_271036-276097_13TeV_PromptReco_Collisions16_JSON_NoL1T_v2.txt'
+config.Data.lumiMask = 'Cert_271036-276811_13TeV_PromptReco_Collisions16_JSON.txt' #ICHEP JSON file
 config.section_('User')
 config.section_('Site')
 config.Site.storageSite = 'T3_US_FNALLPC'
@@ -55,6 +55,14 @@ if __name__ == '__main__':
 
     config.General.requestName = 'DoubleEG_Run2016C_V2'
     config.Data.inputDataset = '/DoubleEG/Run2016C-PromptReco-v2/MINIAOD'
+    submit(config)
+
+    config.General.requestName = 'DoubleEG_Run2016D_V2'
+    config.Data.inputDataset = '/DoubleEG/Run2016D-PromptReco-v2/MINIAOD'
+    submit(config)
+
+    config.General.requestName = 'DoubleEG_Run2016E_V2'
+    config.Data.inputDataset = '/DoubleEG/Run2016E-PromptReco-v2/MINIAOD'
     submit(config)
 
     config.General.requestName = 'JetHT_Run2016B_V1'
