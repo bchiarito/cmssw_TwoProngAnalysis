@@ -1144,6 +1144,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // basic event info
   ExoDiPhotons::InitEventInfo(fEventInfo,-5000.);
   ExoDiPhotons::FillEventInfo(fEventInfo,iEvent);
+
+  // initialize GenPhoton structs
+  ExoDiPhotons::InitGenParticleInfo(fGenPhotonInfo1);
+  ExoDiPhotons::InitGenParticleInfo(fGenPhotonInfo2);
    
   //-----------------taken from Ilya-----------------
   // Retrieve the collection of photons from the event.
@@ -1169,7 +1173,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     iEvent.getByToken(genParticlesToken_,genParticles);
   else
     iEvent.getByToken(genParticlesMiniAODToken_,genParticles);
-  
   //Get rho
   edm::Handle< double > rhoH;
   iEvent.getByToken(rhoToken_,rhoH);
@@ -2307,7 +2310,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fNTightPhotons = selectedPhotons.size();
   if (fDebug) {
     if(fNTightPhotons >= 2) cout<<"great we have two tight photons"<<endl;
-    else cout << "only " << fNTightPhotons << "photons passed the cuts!" << endl;
+    else cout << "only " << fNTightPhotons << " photons passed the cuts!" << endl;
   }
   // now consider possible Fakeable objects
 
@@ -2356,39 +2359,40 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     reco::Photon* TorFObject1 = &(allTightOrFakeableObjects[0].first);
     reco::Photon* TorFObject2 = &(allTightOrFakeableObjects[1].first);
 
-    // cout << "Matching to GEN Photons.." << endl;
-    vector<reco::GenParticle> tempPhotons;
-    // first match to two hard process gen photons and fill GEN photon branches
-    for(unsigned int i=0; i<genParticles->size(); i++){
-      const reco::GenParticle iParticle = genParticles->at(i);
-      if ( iParticle.isHardProcess() && iParticle.pdgId()==22) tempPhotons.push_back(iParticle);
-    }
-    // cout << "Found " << tempPhotons.size() << " hard process GEN photons.." << endl;
-    sort(tempPhotons.begin(),tempPhotons.end(),ExoDiPhotons::compareGenParticlesByPt);
+    // match to GEN photons if running over MC
+    if (fisMC){
+      // cout << "Matching to GEN Photons.." << endl;
+      vector<reco::GenParticle> tempPhotons;
+      // first match to two hard process gen photons and fill GEN photon branches
+      for(unsigned int i=0; i<genParticles->size(); i++){
+        const reco::GenParticle iParticle = genParticles->at(i);
+        if ( iParticle.isHardProcess() && iParticle.pdgId()==22) tempPhotons.push_back(iParticle);
+      }
+      // cout << "Found " << tempPhotons.size() << " hard process GEN photons.." << endl;
+      sort(tempPhotons.begin(),tempPhotons.end(),ExoDiPhotons::compareGenParticlesByPt);
 
-    // the leading GEN photon is not necessarily matched to the leading reco photon (though most of the time this is the case)
-    // need to dR match
+      // the leading GEN photon is not necessarily matched to the leading reco photon (though most of the time this is the case)
+      // need to dR match
 
-    TLorentzVector gen1,reco1,reco2;
-    gen1.SetPtEtaPhiE(tempPhotons[0].pt(),tempPhotons[0].eta(),tempPhotons[0].phi(),tempPhotons[0].energy());
-    reco1.SetPtEtaPhiE(TorFObject1->pt(),TorFObject1->eta(),TorFObject1->phi(),TorFObject1->energy());
-    reco2.SetPtEtaPhiE(TorFObject2->pt(),TorFObject2->eta(),TorFObject2->phi(),TorFObject2->energy());
-    
-    double dRGen1Reco1 = gen1.DeltaR(reco1);
-    double dRGen1Reco2 = gen1.DeltaR(reco2);
+      TLorentzVector gen1,reco1,reco2;
+      gen1.SetPtEtaPhiE(tempPhotons[0].pt(),tempPhotons[0].eta(),tempPhotons[0].phi(),tempPhotons[0].energy());
+      reco1.SetPtEtaPhiE(TorFObject1->pt(),TorFObject1->eta(),TorFObject1->phi(),TorFObject1->energy());
+      reco2.SetPtEtaPhiE(TorFObject2->pt(),TorFObject2->eta(),TorFObject2->phi(),TorFObject2->energy());
+      
+      double dRGen1Reco1 = gen1.DeltaR(reco1);
+      double dRGen1Reco2 = gen1.DeltaR(reco2);
 
-    bool oneToOne = dRGen1Reco1 <= dRGen1Reco2;
+      bool oneToOne = dRGen1Reco1 <= dRGen1Reco2;
 
-    ExoDiPhotons::InitGenParticleInfo(fGenPhotonInfo1);
-    ExoDiPhotons::InitGenParticleInfo(fGenPhotonInfo2);
-    if (oneToOne){
-      ExoDiPhotons::FillGenParticleInfo(fGenPhotonInfo1,tempPhotons[0]);
-      ExoDiPhotons::FillGenParticleInfo(fGenPhotonInfo2,tempPhotons[1]);
-    }
-    else{
-      ExoDiPhotons::FillGenParticleInfo(fGenPhotonInfo1,tempPhotons[1]);
-      ExoDiPhotons::FillGenParticleInfo(fGenPhotonInfo2,tempPhotons[0]);  
-    }
+      if (oneToOne){
+        ExoDiPhotons::FillGenParticleInfo(fGenPhotonInfo1,tempPhotons[0]);
+        ExoDiPhotons::FillGenParticleInfo(fGenPhotonInfo2,tempPhotons[1]);
+      }
+      else{
+        ExoDiPhotons::FillGenParticleInfo(fGenPhotonInfo1,tempPhotons[1]);
+        ExoDiPhotons::FillGenParticleInfo(fGenPhotonInfo2,tempPhotons[0]);  
+      }
+    } // end GEN photon matching code
 
     // now, we are always going to consider the top two objects
     // regardless of their 'nature'
