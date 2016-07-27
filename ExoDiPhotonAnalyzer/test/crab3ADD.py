@@ -5,7 +5,7 @@ config.General.transferOutputs = True
 config.General.requestName = 'crab3test'
 config.section_('JobType')
 config.JobType.psetName = 'exodiphotonanalyzer_Data2015Commissioning_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=76X_mcRun2_asymptotic_RunIIFall15DR76_v1','useAOD=False',"isMC=True"]
+config.JobType.pyCfgParams = ['globalTag=76X_mcRun2_asymptotic_RunIIFall15DR76_v1','useAOD=False',"isMC=True","omitChargedDecayCode=True"]
 config.JobType.pluginName = 'Analysis'
 config.JobType.inputFiles = ['PileupDataAug10thHistogram.root', 'PileUpMC.root', 'Cert_13TeV_16Dec2015ReReco_Collisions15_25ns_JSON_Silver_v2.txt']
 # config.JobType.outputFiles = ['ExoDiPhotonAnalyzer.root']
