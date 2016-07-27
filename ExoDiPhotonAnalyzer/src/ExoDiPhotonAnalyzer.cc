@@ -2356,14 +2356,14 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     reco::Photon* TorFObject1 = &(allTightOrFakeableObjects[0].first);
     reco::Photon* TorFObject2 = &(allTightOrFakeableObjects[1].first);
 
-    cout << "Matching to GEN Photons.." << endl;
+    // cout << "Matching to GEN Photons.." << endl;
     vector<reco::GenParticle> tempPhotons;
     // first match to two hard process gen photons and fill GEN photon branches
     for(unsigned int i=0; i<genParticles->size(); i++){
       const reco::GenParticle iParticle = genParticles->at(i);
       if ( iParticle.isHardProcess() && iParticle.pdgId()==22) tempPhotons.push_back(iParticle);
     }
-    cout << "Found " << tempPhotons.size() << " hard process GEN photons.." << endl;
+    // cout << "Found " << tempPhotons.size() << " hard process GEN photons.." << endl;
     sort(tempPhotons.begin(),tempPhotons.end(),ExoDiPhotons::compareGenParticlesByPt);
 
     // the leading GEN photon is not necessarily matched to the leading reco photon (though most of the time this is the case)
