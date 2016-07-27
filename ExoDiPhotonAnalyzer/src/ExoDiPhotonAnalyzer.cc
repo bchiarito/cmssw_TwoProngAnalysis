@@ -1846,10 +1846,12 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   for (unsigned int i = 0; i < pfcands->size(); i++) {
     const pat::PackedCandidate &pf1 = (*pfcands)[i];
     if (pf1.pt() < fCandidatePairMinPt) continue;
+    if (pf1.fromPV()<=1) continue;
     pruned_count += 1;
     for (unsigned int j = i+1; j < pfcands->size(); j++) { // note loop starting with j=i+1, considers each pair exactly once
       const pat::PackedCandidate &pf2 = (*pfcands)[j];
       if (pf2.pt() < fCandidatePairMinPt) continue;
+      if (pf2.fromPV()<=1) continue;
       if (!( ((pf1.pdgId() == 211) && (pf2.pdgId() == -211)) || ((pf1.pdgId() == -211) && (pf2.pdgId() == 211)) )) continue;
       TLorentzVector pfcand1;
       pfcand1.SetPtEtaPhiE(pf1.pt(), pf1.eta(), pf1.phiAtVtx(), pf1.energy());
