@@ -2579,9 +2579,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     reco::Photon* TorFObject1 = &(allTightOrFakeableObjects[0].first);
     reco::Photon* TorFObject2 = &(allTightOrFakeableObjects[1].first);
-
     // match to GEN photons if running over MC
-    if (fisMC){
+    if (fisMC && !fisSignal){
       // cout << "Matching to GEN Photons.." << endl;
       vector<reco::GenParticle> tempPhotons;
       // first match to two hard process gen photons and fill GEN photon branches
