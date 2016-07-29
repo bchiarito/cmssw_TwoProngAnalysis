@@ -17,6 +17,11 @@ options.register('isMC',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "whether to run over data or MC")
+options.register('omitChargedDecayCode',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "whether to omit charged decay code")
 options.register('pumcfilename',
                 'PileUpMC_DiPhotonJetsBox_M60_8TeV-sherpa_Summer12_DR53X-PU_S10_START53_V7C-v1_rebinned.root',
                 VarParsing.multiplicity.singleton,
@@ -50,8 +55,8 @@ inputFilesAOD = cms.untracked.vstring(
     )    
 
 inputFilesMiniAOD = cms.untracked.vstring(
-    # 'root://eoscms.cern.ch//store/mc/RunIIFall15MiniAODv2/GGJets_M-60To200_Pt-50_13TeV-sherpa/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/62734630-08D8-E511-BA00-003048947BBB.root'
-    'root://eoscms.cern.ch//store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/266C3D12-77A6-E511-9260-002618943957.root'
+    'root://eoscms.cern.ch//store/mc/RunIIFall15MiniAODv2/GGJets_M-60To200_Pt-50_13TeV-sherpa/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/00000/62734630-08D8-E511-BA00-003048947BBB.root'
+    # 'root://eoscms.cern.ch//store/data/Run2015D/DoubleEG/MINIAOD/16Dec2015-v2/00000/266C3D12-77A6-E511-9260-002618943957.root'
 # 'root://eoscms.cern.ch//store/mc/RunIIFall15MiniAODv2/GGJets_M-1000To2000_Pt-50_13TeV-sherpa/MINIAODSIM/PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/10000/04B53B17-24D9-E511-B1ED-00259075D72E.root'
 # "root://cmsxrootd.fnal.gov//store/data/Run2015D/DoubleEG/MINIAOD/PromptReco-v3/000/257/969/00000/F24329DE-706A-E511-998A-02163E012B1A.root"
 # "file:pickevents.root"
@@ -190,12 +195,13 @@ process.diphotonAnalyzer.rho25Correction = cms.InputTag("fixedGridRhoFastjetAll"
 process.diphotonAnalyzer.ptMin = 50 # pt cut on all photons
 process.diphotonAnalyzer.removeSpikes = False # ie spikes will be exlcuded from tree
 process.diphotonAnalyzer.requireTightPhotons = False # ie only tight photons will be written 
-process.diphotonAnalyzer.requireGenEventInfo = False #write MC info when running on MC
+process.diphotonAnalyzer.requireGenEventInfo = options.isMC #write MC info when running on MC
 
 process.diphotonAnalyzer.isAOD = cms.bool(options.useAOD) # True=AOD, False=MiniAOD
-process.diphotonAnalyzer.isMC = cms.untracked.bool(False)
+process.diphotonAnalyzer.isMC = cms.untracked.bool(options.isMC)
 process.diphotonAnalyzer.isSignal = cms.untracked.bool(False)
 process.diphotonAnalyzer.debug = cms.untracked.bool(False)
+process.diphotonAnalyzer.omitChargedDecayCode = cms.bool(options.omitChargedDecayCode)
 process.diphotonAnalyzer.IDMethod = cms.untracked.string("highpt")
 process.diphotonAnalyzer.PFIDCategory = cms.untracked.string("Loose")
 process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")

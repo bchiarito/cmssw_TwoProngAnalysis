@@ -17,6 +17,11 @@ options.register('isMC',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "whether to run over data or MC")
+options.register('omitChargedDecayCode',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "whether to omit charged decay code")
 options.register('pumcfilename',
                 'PileUpMC_DiPhotonJetsBox_M60_8TeV-sherpa_Summer12_DR53X-PU_S10_START53_V7C-v1_rebinned.root',
                 VarParsing.multiplicity.singleton,
@@ -197,6 +202,7 @@ process.diphotonAnalyzer.isAOD = cms.bool(options.useAOD) # True=AOD, False=Mini
 process.diphotonAnalyzer.isMC = cms.untracked.bool(False)
 process.diphotonAnalyzer.isSignal = cms.untracked.bool(False)
 process.diphotonAnalyzer.debug = cms.untracked.bool(False)
+process.diphotonAnalyzer.omitChargedDecayCode = cms.bool(options.omitChargedDecayCode)
 process.diphotonAnalyzer.IDMethod = cms.untracked.string("highpt")
 process.diphotonAnalyzer.PFIDCategory = cms.untracked.string("Loose")
 process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")

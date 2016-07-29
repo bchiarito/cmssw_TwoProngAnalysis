@@ -267,6 +267,9 @@ private:
   ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo1; // leading photon 
   ExoDiPhotons::recoPhotonInfo_t fRecoPhotonInfo2; // second photon
 
+  ExoDiPhotons::genParticleInfo_t fGenPhotonInfo1;
+  ExoDiPhotons::genParticleInfo_t fGenPhotonInfo2;
+
   ExoDiPhotons::jetInfo_t fJetInfo;
   ExoDiPhotons::conversionInfo_t fConvInfo1;
   ExoDiPhotons::conversionInfo_t fConvInfo2;
@@ -327,6 +330,7 @@ private:
   edm::EDGetToken photonsMiniAODToken_;
   edm::EDGetToken patPhotonToken_;
   edm::EDGetTokenT<edm::View<reco::GenParticle> > genParticlesMiniAODToken_;
+  edm::EDGetToken genEvtInfoProdToken_;
   
   // Photon variables computed upstream in a special producer
   edm::EDGetTokenT<edm::ValueMap<float> > full5x5SigmaIEtaIEtaMapToken_; 
@@ -654,6 +658,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     (iConfig.getParameter<edm::InputTag>
      ("genParticlesMiniAOD"));
 
+  genEvtInfoProdToken_ = mayConsume<GenEventInfoProduct>(edm::InputTag("generator"));
+
   if (fisAOD) vtxToken_ = consumes<reco::VertexCollection>(edm::InputTag("offlinePrimaryVertices"));
   else vtxToken_ = consumes<reco::VertexCollection>(edm::InputTag("offlineSlimmedPrimaryVertices"));
 
@@ -697,6 +703,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("nTightPhotons",&fNTightPhotons,"nTightPhotons/I");
   fTree->Branch("nFakeablePhotons",&fNFakeablePhotons,"nFakeablePhotons/I");
   // now with CommonClasses, use the string defined in the header
+  fTree->Branch("GenPhoton1",&fGenPhotonInfo1,ExoDiPhotons::genParticleInfoBranchDefString.c_str());
+  fTree->Branch("GenPhoton2",&fGenPhotonInfo2,ExoDiPhotons::genParticleInfoBranchDefString.c_str());
   fTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree->Branch("JetInfo.pt","std::vector<double>",&fJetInfo.pt);
@@ -1079,6 +1087,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTightFakeTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
   fTightFakeTree->Branch("nTightPhotons",&fNTightPhotons,"nTightPhotons/I");
   fTightFakeTree->Branch("nFakeablePhotons",&fNFakeablePhotons,"nFakeablePhotons/I");
+  fTightFakeTree->Branch("GenPhoton1",&fGenPhotonInfo1,ExoDiPhotons::genParticleInfoBranchDefString.c_str());
+  fTightFakeTree->Branch("GenPhoton2",&fGenPhotonInfo2,ExoDiPhotons::genParticleInfoBranchDefString.c_str());
   fTightFakeTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTightFakeTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTightFakeTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
@@ -1097,6 +1107,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fFakeTightTree->Branch("nTightPhotons",&fNTightPhotons,"nTightPhotons/I");
   fFakeTightTree->Branch("nFakeablePhotons",&fNFakeablePhotons,"nFakeablePhotons/I");
   // now with CommonClasses, use the string defined in the header                                                                        
+  fFakeTightTree->Branch("GenPhoton1",&fGenPhotonInfo1,ExoDiPhotons::genParticleInfoBranchDefString.c_str());
+  fFakeTightTree->Branch("GenPhoton2",&fGenPhotonInfo2,ExoDiPhotons::genParticleInfoBranchDefString.c_str());
   fFakeTightTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fFakeTightTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fFakeTightTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());    
@@ -1112,6 +1124,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fFakeFakeTree->Branch("TrigHLT",&fHLTInfo,ExoDiPhotons::hltTrigBranchDefString.c_str());
   fFakeFakeTree->Branch("nTightPhotons",&fNTightPhotons,"nTightPhotons/I");
   fFakeFakeTree->Branch("nFakeablePhotons",&fNFakeablePhotons,"nFakeablePhotons/I");
+  fFakeFakeTree->Branch("GenPhoton1",&fGenPhotonInfo1,ExoDiPhotons::genParticleInfoBranchDefString.c_str());
+  fFakeFakeTree->Branch("GenPhoton2",&fGenPhotonInfo2,ExoDiPhotons::genParticleInfoBranchDefString.c_str());
   fFakeFakeTree->Branch("Photon1",&fRecoPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fFakeFakeTree->Branch("Photon2",&fRecoPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fFakeFakeTree->Branch("Diphoton",&fDiphotonInfo,ExoDiPhotons::diphotonInfoBranchDefString.c_str());
@@ -1219,6 +1233,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // basic event info
   ExoDiPhotons::InitEventInfo(fEventInfo,-5000.);
   ExoDiPhotons::FillEventInfo(fEventInfo,iEvent);
+
+  // initialize GenPhoton structs
+  ExoDiPhotons::InitGenParticleInfo(fGenPhotonInfo1);
+  ExoDiPhotons::InitGenParticleInfo(fGenPhotonInfo2);
    
   //-----------------taken from Ilya-----------------
   // Retrieve the collection of photons from the event.
@@ -1244,7 +1262,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     iEvent.getByToken(genParticlesToken_,genParticles);
   else
     iEvent.getByToken(genParticlesMiniAODToken_,genParticles);
-  
   //Get rho
   edm::Handle< double > rhoH;
   iEvent.getByToken(rhoToken_,rhoH);
@@ -1278,7 +1295,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   edm::Handle<GenEventInfoProduct> GenInfoHandle;
   if(fkRequireGenEventInfo){
-    iEvent.getByLabel("generator",GenInfoHandle);
+    iEvent.getByToken(genEvtInfoProdToken_,GenInfoHandle);
     if(!GenInfoHandle.isValid()) {
       cout << "Gen Event Info Product collection empty! Bailing out!" <<endl;
       return;
@@ -1364,32 +1381,32 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   //cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
 
-  if (fisMC){
-    edm::Handle<std::vector<PileupSummaryInfo> > pileupHandle;
-    iEvent.getByLabel(fpileupCollectionTag, pileupHandle);
-    std::vector<PileupSummaryInfo>::const_iterator PUI;
+ //  if (fisMC){
+ //    edm::Handle<std::vector<PileupSummaryInfo> > pileupHandle;
+ //    iEvent.getByLabel(fpileupCollectionTag, pileupHandle);
+ //    std::vector<PileupSummaryInfo>::const_iterator PUI;
    
-    if (pileupHandle.isValid()){
+ //    if (pileupHandle.isValid()){
     
-      for (PUI = pileupHandle->begin();PUI != pileupHandle->end(); ++PUI){
+ //      for (PUI = pileupHandle->begin();PUI != pileupHandle->end(); ++PUI){
       
-	fBC = PUI->getBunchCrossing() ;
-	if(fBC==0){ 
-	  //Select only the in time bunch crossing with bunch crossing=0
-	  PileupSummaryInfo oldpileup = (*pileupHandle.product())[0];
-	  fpu_n = PUI->getTrueNumInteractions();
-	  fold_pu_n = oldpileup.getPU_NumInteractions();
-	  fpu_n_BeforeCuts->Fill(fpu_n);
+	// fBC = PUI->getBunchCrossing() ;
+	// if(fBC==0){ 
+	//   //Select only the in time bunch crossing with bunch crossing=0
+	//   PileupSummaryInfo oldpileup = (*pileupHandle.product())[0];
+	//   fpu_n = PUI->getTrueNumInteractions();
+	//   fold_pu_n = oldpileup.getPU_NumInteractions();
+	//   fpu_n_BeforeCuts->Fill(fpu_n);
          
-	}
-      }
+	// }
+ //      }
     
    
-      fMCPUWeight = LumiWeights.weight(fpu_n);  
-      fpu_n_BeforeCutsAfterReWeight->Fill(fpu_n,fMCPUWeight);
+ //      fMCPUWeight = LumiWeights.weight(fpu_n);  
+ //      fpu_n_BeforeCutsAfterReWeight->Fill(fpu_n,fMCPUWeight);
   
-    }
-  } 
+ //    }
+ //  } // end fisMC block
   //add rho correction
 
   //      double rho;
@@ -2356,9 +2373,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     //We need to compute only 03 isol variables so far
     //because they are the official ones
 
-    double rhocorPFIsoCH = isoChargedHadronsWithEA;
-    double rhocorPFIsoNH = isoNeutralHadronsWithEA;
-    double rhocorPFIsoPH = isoPhotonsWithEA;
+    // double rhocorPFIsoCH = isoChargedHadronsWithEA;
+    // double rhocorPFIsoNH = isoNeutralHadronsWithEA;
+    // double rhocorPFIsoPH = isoPhotonsWithEA;
     //double pfisoall = rhocorPFIsoCH + rhocorPFIsoNH + rhocorPFIsoPH;
     
     // conversion safe electron veto
@@ -2417,7 +2434,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     //Now we choose which ID to use (PF or Det)
     if(MethodID.Contains("highpt")){
       // if(ExoDiPhotons::isPFTightPhoton(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID,isSaturated)){
-      if(ExoDiPhotons::passHighPtID(&(*recoPhoton),MethodID,CategoryPFID,rhocorPFIsoCH,phIso,full5x5sigmaIetaIeta,rho_,passelecveto,isSaturated)){
+      if(ExoDiPhotons::passHighPtID(&(*recoPhoton),MethodID,CategoryPFID,chIso,phIso,full5x5sigmaIetaIeta,rho_,passelecveto,isSaturated)){
         selectedPhotons.push_back(*recoPhoton);
         if (fDebug) cout << "photon passed the high pt id!" << endl;
       }
@@ -2431,7 +2448,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
     // also check for fakeable objects
     if(MethodID.Contains("highpt")){
-      if(ExoDiPhotons::isPFFakeableObject(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID,isSaturated) ) {
+      if(ExoDiPhotons::passDenominatorCut(&(*recoPhoton),MethodID,CategoryPFID,chIso,phIso,full5x5sigmaIetaIeta,rho_,passelecveto,isSaturated)) {
 
 	//        cout << "Fakeable photon! ";
 	//        cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
@@ -2451,7 +2468,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       }
     }
     else if(MethodID.Contains("egamma")){
-      if(ExoDiPhotons::isPFFakeableObject(&(*recoPhoton),rhocorPFIsoCH,rhocorPFIsoNH,rhocorPFIsoPH,full5x5sigmaIetaIeta,passelecveto,MethodID,CategoryPFID,isSaturated) ) {
+      if(ExoDiPhotons::passDenominatorCut(&(*recoPhoton),MethodID,CategoryPFID,chIso,phIso,full5x5sigmaIetaIeta,rho_,passelecveto,isSaturated)) {
 	 
 	//        cout << "Fakeable photon! ";
 	//        cout << "Photon et, eta, phi = " << recoPhoton->et() <<", "<<recoPhoton->eta()<< ", "<< recoPhoton->phi();
@@ -2514,7 +2531,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fNTightPhotons = selectedPhotons.size();
   if (fDebug) {
     if(fNTightPhotons >= 2) cout<<"great we have two tight photons"<<endl;
-    else cout << "only " << fNTightPhotons << "photons passed the cuts!" << endl;
+    else cout << "only " << fNTightPhotons << " photons passed the cuts!" << endl;
   }
   // now consider possible Fakeable objects
 
@@ -2560,6 +2577,44 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (fDebug) cout << "allTightOrFakeableObjects.size(): " << allTightOrFakeableObjects.size() << endl;
   if(allTightOrFakeableObjects.size()>=2) {
 
+    reco::Photon* TorFObject1 = &(allTightOrFakeableObjects[0].first);
+    reco::Photon* TorFObject2 = &(allTightOrFakeableObjects[1].first);
+
+    // match to GEN photons if running over MC
+    if (fisMC){
+      // cout << "Matching to GEN Photons.." << endl;
+      vector<reco::GenParticle> tempPhotons;
+      // first match to two hard process gen photons and fill GEN photon branches
+      for(unsigned int i=0; i<genParticles->size(); i++){
+        const reco::GenParticle iParticle = genParticles->at(i);
+        if ( iParticle.isHardProcess() && iParticle.pdgId()==22) tempPhotons.push_back(iParticle);
+      }
+      // cout << "Found " << tempPhotons.size() << " hard process GEN photons.." << endl;
+      sort(tempPhotons.begin(),tempPhotons.end(),ExoDiPhotons::compareGenParticlesByPt);
+
+      // the leading GEN photon is not necessarily matched to the leading reco photon (though most of the time this is the case)
+      // need to dR match
+
+      TLorentzVector gen1,reco1,reco2;
+      gen1.SetPtEtaPhiE(tempPhotons[0].pt(),tempPhotons[0].eta(),tempPhotons[0].phi(),tempPhotons[0].energy());
+      reco1.SetPtEtaPhiE(TorFObject1->pt(),TorFObject1->eta(),TorFObject1->phi(),TorFObject1->energy());
+      reco2.SetPtEtaPhiE(TorFObject2->pt(),TorFObject2->eta(),TorFObject2->phi(),TorFObject2->energy());
+      
+      double dRGen1Reco1 = gen1.DeltaR(reco1);
+      double dRGen1Reco2 = gen1.DeltaR(reco2);
+
+      bool oneToOne = dRGen1Reco1 <= dRGen1Reco2;
+
+      if (oneToOne){
+        ExoDiPhotons::FillGenParticleInfo(fGenPhotonInfo1,tempPhotons[0]);
+        ExoDiPhotons::FillGenParticleInfo(fGenPhotonInfo2,tempPhotons[1]);
+      }
+      else{
+        ExoDiPhotons::FillGenParticleInfo(fGenPhotonInfo1,tempPhotons[1]);
+        ExoDiPhotons::FillGenParticleInfo(fGenPhotonInfo2,tempPhotons[0]);  
+      }
+    } // end GEN photon matching code
+
     // now, we are always going to consider the top two objects
     // regardless of their 'nature'
     // so we can fill the structs now
@@ -2577,8 +2632,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     //so lets find it back
 
     if (fDebug) cout<<"here testing whether i get the correct pointer to my photon TorF"<<endl;
-    reco::Photon* TorFObject1 = &(allTightOrFakeableObjects[0].first);
-    reco::Photon* TorFObject2 = &(allTightOrFakeableObjects[1].first);
     if (fDebug) {
       cout<<TorFObject1->energy()<<" "
     <<TorFObject1->eta()<<" "
@@ -2956,7 +3009,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       cout << "Neither TT, TF, FT nor FF?! Impossible!" <<endl;
     }
 
-  } // end require two objects
+  } // end require two objects (tight or fakeable)
 
   //
   //
@@ -3200,9 +3253,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 void 
 ExoDiPhotonAnalyzer::beginJob()
 {
-  if (fisMC){
-    LumiWeights = edm::LumiReWeighting(fPUMCFileName,fPUDataFileName,fPUMCHistName,fPUDataHistName);
-  }
+  // if (fisMC){
+  //   LumiWeights = edm::LumiReWeighting(fPUMCFileName,fPUDataFileName,fPUMCHistName,fPUDataHistName);
+  // }
 }
 
 // ------------ method called once each job just after ending the event loop  ------------

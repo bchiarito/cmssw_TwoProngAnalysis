@@ -12,12 +12,12 @@ config.JobType.outputFiles = ['ExoDiPhotonAnalyzer.root']
 config.section_('Data')
 config.Data.inputDataset = '/QCD_Pt_20_30_EMEnriched_TuneZ2star_8TeV_pythia6/Summer12_DR53X-PU_S10_START53_V7A-v1/AODSIM'
 config.Data.outputDatasetTag = ''
-config.Data.outLFNDirBase = '/store/user/skaplan/noreplica/750GeVResonanceNtuples/BrandonSteveMerged/'
+config.Data.outLFNDirBase = '/store/user/skaplan/noreplica/ExoDiPhotonNtuples/Data2016/'
 config.Data.publication = False
 config.Data.unitsPerJob = 100
 config.Data.totalUnits = -1
 config.Data.splitting = 'LumiBased'
-config.Data.lumiMask = 'Cert_271036-276097_13TeV_PromptReco_Collisions16_JSON_NoL1T_v2.txt'
+config.Data.lumiMask = 'Cert_271036-276811_13TeV_PromptReco_Collisions16_JSON.txt' #ICHEP JSON file
 config.section_('User')
 config.section_('Site')
 config.Site.storageSite = 'T3_US_FNALLPC'
@@ -55,6 +55,14 @@ if __name__ == '__main__':
 
     config.General.requestName = 'DoubleEG_Run2016C_V2'
     config.Data.inputDataset = '/DoubleEG/Run2016C-PromptReco-v2/MINIAOD'
+    submit(config)
+
+    config.General.requestName = 'DoubleEG_Run2016D_V2'
+    config.Data.inputDataset = '/DoubleEG/Run2016D-PromptReco-v2/MINIAOD'
+    submit(config)
+
+    config.General.requestName = 'DoubleEG_Run2016E_V2'
+    config.Data.inputDataset = '/DoubleEG/Run2016E-PromptReco-v2/MINIAOD'
     submit(config)
 
     config.General.requestName = 'JetHT_Run2016B_V1'
