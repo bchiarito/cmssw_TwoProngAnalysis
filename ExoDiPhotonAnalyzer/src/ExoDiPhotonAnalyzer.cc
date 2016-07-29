@@ -527,6 +527,9 @@ private:
   vector<Double_t> fGenEta_py;
   vector<Double_t> fGenEta_pz;
   vector<Double_t> fGenEta_energy;
+  vector<Double_t> fGenEta_candDR;
+  vector<Double_t> fGenEta_passedCandDR;
+  vector<Double_t> fGenEta_jetDR;
   int fGen_decayType;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo1;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo2;
@@ -1043,6 +1046,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("GenEta_py",&fGenEta_py);
   fTree2->Branch("GenEta_pz",&fGenEta_pz);
   fTree2->Branch("GenEta_energy",&fGenEta_energy); 
+  fTree2->Branch("GenEta_candDR",&fGenEta_candDR); 
+  fTree2->Branch("GenEta_passedCandDR",&fGenEta_passedCandDR); 
+  fTree2->Branch("GenEta_jetDR",&fGenEta_jetDR); 
   fTree2->Branch("Gen_decayType",&fGen_decayType);
   // Combined Objects
   fTree2->Branch("TwoProngTwoProng",&fTwoProngTwoProngInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
@@ -1797,6 +1803,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fGenEta_eta.clear();
   fGenEta_phi.clear();
   fGenEta_energy.clear();
+  fGenEta_candDR.clear();
+  fGenEta_passedCandDR.clear();
+  fGenEta_jetDR.clear();
   fGenEta_px.clear();
   fGenEta_py.clear();
   fGenEta_pz.clear();
@@ -2079,6 +2088,43 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   } // end making candidates
   fNumPrunedPF = pruned_count;
   fNumTwoProngFake = nFake;
+
+  // More matching, by gen Eta perspective now
+  if (fisSignal && fisMC) {
+    for (unsigned int i = 0; i < genparticles->size(); i++) {
+      const reco::GenParticle &genparticle = (*genparticles)[i];
+      TLorentzVector GenParticle;
+      GenParticle.SetPtEtaPhiM(genparticle.pt(), genparticle.eta(), genparticle.phi(), genparticle.mass());
+      if ((genparticle.pdgId() == 221 || genparticle.pdgId() == 331) && genparticle.status() == 2) {
+        double candDR = 99.9;
+        double passedCandDR = 99.9;
+        double jetDR = 99.9;
+        for (unsigned int j = 0; j < fCand_pt.size(); j++) {
+          TLorentzVector Candidate;
+          Candidate.SetPtEtaPhiM(fCand_pt[j], fCand_eta[j], fCand_phi[j], fCand_mass[j]);
+          double dr = Candidate.DeltaR(GenParticle);
+          if (dr < candDR) candDR = dr;
+        }
+        for (unsigned int j = 0; j < fCand_pt.size(); j++) {
+          if (!fCand_pass[j]) continue;
+          TLorentzVector PassedCandidate;
+          PassedCandidate.SetPtEtaPhiM(fCand_pt[j], fCand_eta[j], fCand_phi[j], fCand_mass[j]);
+          double dr = PassedCandidate.DeltaR(GenParticle);
+          if (dr < passedCandDR) passedCandDR = dr;
+        }
+        for (unsigned int i = 0; i < ak4jets->size(); i++) {
+          const pat::Jet &jet = (*ak4jets)[i];
+          TLorentzVector Jet;
+          Jet.SetPtEtaPhiM(jet.pt(), jet.eta(), jet.phi(), jet.mass());
+          double dr = Jet.DeltaR(GenParticle);
+          if (dr < jetDR) jetDR = dr;
+        }
+        fGenEta_candDR.push_back(candDR);
+        fGenEta_passedCandDR.push_back(passedCandDR);
+        fGenEta_jetDR.push_back(jetDR);
+      }
+    }
+  }
 
   // Create sorted-by-pt list of passed candidates
   if (fDebug) cout << ". sorting" << endl;
