@@ -22,9 +22,12 @@ diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   photonEtaBoxSize = cms.untracked.double(0.087),
                                   photonPtCut = cms.untracked.double(10.0),
                                   chargedIsoCut = cms.untracked.double(0.1),
+                                  chargedIsoFakeMax = cms.untracked.double(0.3),
                                   neutralIsoCut = cms.untracked.double(0.1),
+                                  neutralIsoFakeMax = cms.untracked.double(0.3),
                                   egammaIsoCut = cms.untracked.double(0.1),
-                                  generatorEtaMatchDR = cms.untracked.double(0.4),
+                                  egammaIsoFakeMax = cms.untracked.double(0.3),
+                                  generatorEtaMatchDR = cms.untracked.double(0.1),
                                   chargedDecayCutflow = cms.untracked.bool(True),
                                   # charged decay configuration end
                                   #If running on Data do not change. Only loaded as strings into the Analyzer and will have no effect. If on MC then change to the specific files you need lodaed for the MC   

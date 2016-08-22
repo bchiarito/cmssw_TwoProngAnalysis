@@ -44,6 +44,7 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 #include "TH1.h"
+#include "TH2.h"
 #include "TTree.h"
 #include "TString.h"
 
@@ -288,7 +289,6 @@ private:
   TH1F *fNumTotalEvents;
   TH1F *fNumTotalWeightedEvents;
 
-  // ** charged decay analysis **
   edm::EDGetTokenT<pat::PackedCandidateCollection> pfcandsToken_;
   edm::EDGetTokenT<vector<reco::GenParticle>> genToken_;
   edm::EDGetTokenT<vector<reco::Vertex>> pvToken_;
@@ -296,6 +296,7 @@ private:
   edm::EDGetTokenT<std::vector<pat::Jet>> ak4Token_;
   double fJetPtCut;
   double fJetEtaCut;
+  // ** charged decay analysis **
   double fCandidatePairDR;
   double fCandidatePairMinPt;
   double fCandidatePairIsolationDR;
@@ -305,18 +306,29 @@ private:
   double fCandidatePairChargedIsoCut;
   double fCandidatePairNeutralIsoCut;
   double fCandidatePairEGammaIsoCut;
+  double fCandidatePairChargedIsoFakeCut;
+  double fCandidatePairNeutralIsoFakeCut;
+  double fCandidatePairEGammaIsoFakeCut;
   double fCandidatePairGenMatchDR;
   bool fOmitChargedDecayCode;
-  // Fake rate histos
-  TH1F *fTwoProngFakeRate_pt;
-  TH1F *fTwoProngFakeRate_eta;
-  TH1F *fTwoProngFakeRate_phi;
-  TH1F *fTwoProngFakeNumer_pt;
-  TH1F *fTwoProngFakeDenom_pt;
-  TH1F *fTwoProngFakeNumer_eta;
-  TH1F *fTwoProngFakeDenom_eta;
-  TH1F *fTwoProngFakeNumer_phi;
-  TH1F *fTwoProngFakeDenom_phi;
+  TH2F *fTwoProngFakeNume_even_pt;
+  TH2F *fTwoProngFakeDeno_even_pt;
+  TH2F *fTwoProngFakeRate_even_pt;
+  TH2F *fTwoProngFakeNume_even_eta;
+  TH2F *fTwoProngFakeDeno_even_eta;
+  TH2F *fTwoProngFakeRate_even_eta;
+  TH2F *fTwoProngFakeNume_even_phi;
+  TH2F *fTwoProngFakeDeno_even_phi;
+  TH2F *fTwoProngFakeRate_even_phi;
+  TH2F *fTwoProngFakeNume_odd_pt;
+  TH2F *fTwoProngFakeDeno_odd_pt;
+  TH2F *fTwoProngFakeRate_odd_pt;
+  TH2F *fTwoProngFakeNume_odd_eta;
+  TH2F *fTwoProngFakeDeno_odd_eta;
+  TH2F *fTwoProngFakeRate_odd_eta;
+  TH2F *fTwoProngFakeNume_odd_phi;
+  TH2F *fTwoProngFakeDeno_odd_phi;
+  TH2F *fTwoProngFakeRate_odd_phi;
 
   //-----------------taken from Ilya-----------------
   // Format-independent data members
@@ -589,6 +601,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fCandidatePairChargedIsoCut(iConfig.getUntrackedParameter<double>("chargedIsoCut")),
     fCandidatePairNeutralIsoCut(iConfig.getUntrackedParameter<double>("neutralIsoCut")),
     fCandidatePairEGammaIsoCut(iConfig.getUntrackedParameter<double>("egammaIsoCut")),
+    fCandidatePairChargedIsoFakeCut(iConfig.getUntrackedParameter<double>("chargedIsoFakeMax")),
+    fCandidatePairNeutralIsoFakeCut(iConfig.getUntrackedParameter<double>("neutralIsoFakeMax")),
+    fCandidatePairEGammaIsoFakeCut(iConfig.getUntrackedParameter<double>("egammaIsoFakeMax")),
     fCandidatePairGenMatchDR(iConfig.getUntrackedParameter<double>("generatorEtaMatchDR")),
     //-----------------taken from Ilya-----------------
     rhoToken_(consumes<double> (iConfig.getParameter<edm::InputTag>("rho"))),
@@ -899,7 +914,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("nPrunedPF",&fNumPrunedPF,"numPrunedPF/I");
   fTree2->Branch("HT",&fHT,"HT/D");
   // Jets
-  fTree2->Branch("nJets",&fNumAK4jets,"nPF/I");
+  fTree2->Branch("nJets",&fNumAK4jets,"nJets/I");
   fTree2->Branch("jet_pt",&fAK4jet_pt);
   fTree2->Branch("jet_eta",&fAK4jet_eta);
   fTree2->Branch("jet_phi",&fAK4jet_phi);
@@ -916,7 +931,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("nPassNeutralIso",&fNumTwoProngPassNeutralIso,"nPassNeutralIso/I");
   fTree2->Branch("nPassEGammaIso",&fNumTwoProngPassEGammaIso,"nPassEGammaIso/I");
   fTree2->Branch("nPassPhotonPtIso",&fNumTwoProngPassChargedIso,"nPassPhotonIso/I");
-  fTree2->Branch("nTwoProngFakes",&fNumTwoProngFake,"nTwoProngFakes/I");
+  fTree2->Branch("nFakes",&fNumTwoProngFake,"nFakes/I");
   fTree2->Branch("nTightPhotons",&fNumTightPhotons,"nTightPhotons/I");
   // Candidate information
   fTree2->Branch("Cand_pt",&fCand_pt);
@@ -1065,15 +1080,46 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("GammaFake",&fGammaFakeInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("GammaGamma",&fGammaGammaInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   // Fake rate histograms
-  fTwoProngFakeNumer_pt = fs->make<TH1F>("twoprongfakenumer_pt","Fake Numerator count for CH pairs, inverted charged iso cut, pt binned",26,0.0,1300.0);
-  fTwoProngFakeDenom_pt = fs->make<TH1F>("twoprongfakedenom_pt","Fake Denominator count for CH pairs, inverted charged iso cut, pt binned",26,0.0,1300.0);
-  fTwoProngFakeRate_pt = fs->make<TH1F>("twoprongfake_pt","Fake Rate for CH pairs, inverted charged iso cut, pt binned",26,0.,1300);
-  fTwoProngFakeNumer_eta = fs->make<TH1F>("twoprongfakenumer_eta","Fake Numerator count for CH pairs, inverted charged iso cut, eta binned",24,-6.0,6.0);
-  fTwoProngFakeDenom_eta = fs->make<TH1F>("twoprongfakedenom_eta","Fake Denominator count for CH pairs, inverted charged iso cut, eta binned",24,-6.0,6.0);
-  fTwoProngFakeRate_eta = fs->make<TH1F>("twoprongfake_eta","Fake Rate for CH pairs, inverted charged iso cut, eta binned",24,-6.0,6.0);
-  fTwoProngFakeNumer_phi = fs->make<TH1F>("twoprongfakenumer_phi","Fake Numerator count for CH pairs, inverted charged iso cut, phi binned",24,-6.0,6.0);
-  fTwoProngFakeDenom_phi = fs->make<TH1F>("twoprongfakedenom_phi","Fake Denominator count for CH pairs, inverted charged iso cut, phi binned",24,-6.0,6.0);
-  fTwoProngFakeRate_phi = fs->make<TH1F>("twoprongfake_phi","Fake Rate for CH pairs, inverted charged iso cut",24,-6.0,6.0); }
+  int num_even_mass_bins = 9;
+  double even_mass_bins_array[num_even_mass_bins+1] = {0,.400,.600,.800,1.000,1.200,1.400,1.600,1.800,2.000};
+  double *even_mass_bins = even_mass_bins_array;
+  int num_odd_mass_bins = 9;
+  double odd_mass_bins_array[num_odd_mass_bins+1] = {0,.300,.500,.700,.900,1.100,1.300,1.500,1.700,1.900};
+  double *odd_mass_bins = odd_mass_bins_array;
+
+  int num_pt_bins = 26;
+  double pt_low = 0;
+  double pt_high = 1300;
+  int num_eta_bins = 20;
+  double eta_low = -5;
+  double eta_high = 5;
+  int num_phi_bins = 24;
+  double phi_low = -3.15;
+  double phi_high = 3.15;
+
+  fTwoProngFakeNume_even_pt = fs->make<TH2F>("twoprongfakenume_even_pt","Fake Numerator count, pt vs even mass bins",num_pt_bins,pt_low,pt_high,num_even_mass_bins,even_mass_bins);
+  fTwoProngFakeDeno_even_pt = fs->make<TH2F>("twoprongfakedeno_even_pt","Fake Denominator count, pt vs even mass bins",num_pt_bins,pt_low,pt_high,num_even_mass_bins,even_mass_bins);
+  fTwoProngFakeRate_even_pt = fs->make<TH2F>("twoprongfakerate_even_pt","Fake Rate, pt vs even mass bins",num_pt_bins,pt_low,pt_high,num_even_mass_bins,even_mass_bins);
+  fTwoProngFakeNume_odd_pt = fs->make<TH2F>("twoprongfakenume_odd_pt","Fake Numerator count, pt vs odd mass bins",num_pt_bins,pt_low,pt_high,num_odd_mass_bins,odd_mass_bins);
+  fTwoProngFakeDeno_odd_pt = fs->make<TH2F>("twoprongfakedeno_odd_pt","Fake Denominator count, pt vs odd mass bins",num_pt_bins,pt_low,pt_high,num_odd_mass_bins,odd_mass_bins);
+  fTwoProngFakeRate_odd_pt = fs->make<TH2F>("twoprongfakerate_odd_pt","Fake Rate, pt vs odd mass bins",num_pt_bins,pt_low,pt_high,num_odd_mass_bins,odd_mass_bins);
+
+  fTwoProngFakeNume_even_eta = fs->make<TH2F>("twoprongfakenume_even_eta","Fake Numerator count, eta vs even mass bins",num_eta_bins,eta_low,eta_high,num_even_mass_bins,even_mass_bins);
+  fTwoProngFakeDeno_even_eta = fs->make<TH2F>("twoprongfakedeno_even_eta","Fake Denominator count, eta vs even mass bins",num_eta_bins,eta_low,eta_high,num_even_mass_bins,even_mass_bins);
+  fTwoProngFakeRate_even_eta = fs->make<TH2F>("twoprongfakerate_even_eta","Fake Rate, eta vs even mass bins",num_eta_bins,eta_low,eta_high,num_even_mass_bins,even_mass_bins);
+  fTwoProngFakeNume_odd_eta = fs->make<TH2F>("twoprongfakenume_odd_eta","Fake Numerator count, eta vs odd mass bins",num_eta_bins,eta_low,eta_high,num_odd_mass_bins,odd_mass_bins);
+  fTwoProngFakeDeno_odd_eta = fs->make<TH2F>("twoprongfakedeno_odd_eta","Fake Denominator count, eta vs odd mass bins",num_eta_bins,eta_low,eta_high,num_odd_mass_bins,odd_mass_bins);
+  fTwoProngFakeRate_odd_eta = fs->make<TH2F>("twoprongfakerate_odd_eta","Fake Rate, eta vs odd mass bins",num_eta_bins,eta_low,eta_high,num_odd_mass_bins,odd_mass_bins);
+
+  fTwoProngFakeNume_even_phi = fs->make<TH2F>("twoprongfakenume_even_phi","Fake Numerator count, phi vs even mass bins",num_phi_bins,phi_low,phi_high,num_even_mass_bins,even_mass_bins);
+  fTwoProngFakeDeno_even_phi = fs->make<TH2F>("twoprongfakedeno_even_phi","Fake Denominator count, phi vs even mass bins",num_phi_bins,phi_low,phi_high,num_even_mass_bins,even_mass_bins);
+  fTwoProngFakeRate_even_phi = fs->make<TH2F>("twoprongfakerate_even_phi","Fake Rate, phi vs even mass bins",num_phi_bins,phi_low,phi_high,num_even_mass_bins,even_mass_bins);
+  fTwoProngFakeNume_odd_phi = fs->make<TH2F>("twoprongfakenume_odd_phi","Fake Numerator count, phi vs odd mass bins",num_phi_bins,phi_low,phi_high,num_odd_mass_bins,odd_mass_bins);
+  fTwoProngFakeDeno_odd_phi = fs->make<TH2F>("twoprongfakedeno_odd_phi","Fake Denominator count, phi vs odd mass bins",num_phi_bins,phi_low,phi_high,num_odd_mass_bins,odd_mass_bins);
+  fTwoProngFakeRate_odd_phi = fs->make<TH2F>("twoprongfakerate_odd_phi","Fake Rate, phi vs odd mass bins",num_phi_bins,phi_low,phi_high,num_odd_mass_bins,odd_mass_bins);
+
+  } // done with charged decay code conditional
+
   // repeating all this for each of tight-fake and fake-fake trees
   // basically they'll all point to the same structs, but the structs will contain
   // different values for the event, depending on the event category
@@ -1867,7 +1913,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   int pruned_count = 0;
   int nMatch = 0;
   int nPassMatch = 0;
-  TLorentzVector LeadingFake; 
+  TLorentzVector LeadingFakeTwoProng; 
   if (fDebug) cout << ". starting candidate loop" << endl;
   for (unsigned int i = 0; i < pfcands->size(); i++) {
     const pat::PackedCandidate &pf1 = (*pfcands)[i];
@@ -1921,10 +1967,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
         if (n != -1) {
           // CH pair is close and has at least one pf photon, definition of candidate, fill vectors
           leading_pf_photon.SetPtEtaPhiE((*pfcands)[n].pt(), (*pfcands)[n].eta(), (*pfcands)[n].phiAtVtx(), (*pfcands)[n].energy());
-          TLorentzVector EtaCandidate;
-          EtaCandidate = center + photon;
-          TLorentzVector EtaMassCandidate;
-          EtaMassCandidate = center + leading_pf_photon;
+          TLorentzVector TwoProngObject;
+          TwoProngObject = center + photon;
+          TLorentzVector TwoProngObject_leadingPfPhoton;
+          TwoProngObject_leadingPfPhoton = center + leading_pf_photon;
+          double TwoProng_Mass = TwoProngObject_leadingPfPhoton.M();
           if (pf1.pdgId() > 0) {
             fCand_CHpos_pt.push_back(pfcand1.Pt());
             fCand_CHpos_eta.push_back(pfcand1.Eta());
@@ -1988,11 +2035,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           fCand_photon_mass.push_back(photon.M());
           fCand_photon_nGamma.push_back(numgamma);
           fCand_photon_nElectron.push_back(nume);
-          fCand_pt.push_back(EtaCandidate.Pt());
-          fCand_eta.push_back(EtaCandidate.Eta());
-          fCand_phi.push_back(EtaCandidate.Phi());
-          fCand_mass.push_back(EtaCandidate.M());
-          fCand_Mass.push_back(EtaMassCandidate.M());
+          fCand_pt.push_back(TwoProngObject.Pt());
+          fCand_eta.push_back(TwoProngObject.Eta());
+          fCand_phi.push_back(TwoProngObject.Phi());
+          fCand_mass.push_back(TwoProngObject.M());
+          fCand_Mass.push_back(TwoProng_Mass);
           // Now define isolations
           double chargedIso = 0;
           double neutralIso = 0;
@@ -2035,9 +2082,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
               }
             }
           } // end pf cand loop
-          double relchargedIso = chargedIso / EtaCandidate.Pt();
-          double relneutralIso = neutralIso / EtaCandidate.Pt();
-          double relegammaIso = egammaIso / EtaCandidate.Pt();
+          double relchargedIso = chargedIso / TwoProngObject.Pt();
+          double relneutralIso = neutralIso / TwoProngObject.Pt();
+          double relegammaIso = egammaIso / TwoProngObject.Pt();
           if (fDebug) cout << ". finished isolation" << endl;
           fCand_chargedIso.push_back(relchargedIso);
           fCand_neutralIso.push_back(relneutralIso);
@@ -2052,7 +2099,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           bool passEGamma = relegammaIso < fCandidatePairEGammaIsoCut;
           bool passPhotonPt = photon.Pt() > fCandidatePairPhotonPtCut;
           bool pass = passCharged && passNeutral && passEGamma && passPhotonPt;
-          bool fake = !passCharged && passNeutral && passEGamma && passPhotonPt;
+          bool fake = !pass && passPhotonPt &&
+                      ( (relchargedIso > fCandidatePairChargedIsoCut && relchargedIso < fCandidatePairChargedIsoFakeCut) ||
+                      (relneutralIso > fCandidatePairNeutralIsoCut && relneutralIso < fCandidatePairNeutralIsoFakeCut) ||
+                      (relegammaIso > fCandidatePairEGammaIsoCut && relegammaIso < fCandidatePairEGammaIsoFakeCut) );
           fCand_pass.push_back(pass);
           fCand_passChargedIso.push_back(passCharged);
           fCand_passNeutralIso.push_back(passNeutral);
@@ -2068,7 +2118,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 	            if ((genparticle.pdgId() == 221 || genparticle.pdgId() == 331) && genparticle.status() == 2) {
                 TLorentzVector genEta;
                 genEta.SetPtEtaPhiM(genparticle.pt(), genparticle.eta(), genparticle.phi(), genparticle.mass());
-                double match_dR = genEta.DeltaR(EtaCandidate);
+                double match_dR = genEta.DeltaR(TwoProngObject);
                 if (match_dR < gen_dR) gen_dR = match_dR;
                 if (match_dR < fCandidatePairGenMatchDR)
                   match = true;
@@ -2084,18 +2134,24 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           if (passPhotonPt) nPassPhotonPt++;
           if (match) nMatch++;
           if (match && pass) nPassMatch++;
+          if (fake) nFake++;
+          if (fake) { if (TwoProngObject.Pt() > LeadingFakeTwoProng.Pt()) LeadingFakeTwoProng = TwoProngObject; }
           // Fake rate histograms
           if (!fOmitChargedDecayCode) {
             if (pass) {
-              fTwoProngFakeNumer_pt->Fill(EtaCandidate.Pt());
-              fTwoProngFakeNumer_eta->Fill(EtaCandidate.Eta());
-              fTwoProngFakeNumer_phi->Fill(EtaCandidate.Phi());
+              fTwoProngFakeNume_even_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
+              fTwoProngFakeNume_even_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
+              fTwoProngFakeNume_even_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
+              fTwoProngFakeNume_odd_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
+              fTwoProngFakeNume_odd_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
+              fTwoProngFakeNume_odd_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
             } if (fake) {
-              fTwoProngFakeDenom_pt->Fill(EtaCandidate.Pt());
-              fTwoProngFakeDenom_eta->Fill(EtaCandidate.Eta());
-              fTwoProngFakeDenom_phi->Fill(EtaCandidate.Phi());
-              nFake++;
-              if (EtaCandidate.Pt() > LeadingFake.Pt()) LeadingFake = EtaCandidate;
+              fTwoProngFakeDeno_even_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
+              fTwoProngFakeDeno_even_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
+              fTwoProngFakeDeno_even_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
+              fTwoProngFakeDeno_odd_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
+              fTwoProngFakeDeno_odd_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
+              fTwoProngFakeDeno_odd_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
             }
             if (fDebug) cout << ". finished fake rate filling" << endl;
           }
@@ -3179,8 +3235,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   {
     TLorentzVector Eta;
     Eta.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
-    FillRecoDiObjectInfo(fTwoProngFakeInfo, Eta, LeadingFake);
-    fTwoProngFakeInfo.dMass = fabs(fTwoProng_Mass[0] - LeadingFake.M());
+    FillRecoDiObjectInfo(fTwoProngFakeInfo, Eta, LeadingFakeTwoProng);
+    fTwoProngFakeInfo.dMass = fabs(fTwoProng_Mass[0] - LeadingFakeTwoProng.M());
   }
   if (fDebug) cout << ". done making TwoProng Fake" << endl;
   // Tight Photon and Passed Eta
@@ -3199,8 +3255,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   {
     TLorentzVector Photon;
     Photon.SetPtEtaPhiM(fRecoTightPhotonInfo1.pt, fRecoTightPhotonInfo1.eta, fRecoTightPhotonInfo1.phi, 0);
-    FillRecoDiObjectInfo(fGammaFakeInfo, Photon, LeadingFake);
-    fGammaFakeInfo.dMass = fabs(LeadingFake.M() - 0);
+    FillRecoDiObjectInfo(fGammaFakeInfo, Photon, LeadingFakeTwoProng);
+    fGammaFakeInfo.dMass = fabs(LeadingFakeTwoProng.M() - 0);
   }
   if (fDebug) cout << ". done making Gamma Fake" << endl;
   // Tight Photon and Tight Photon
@@ -3263,18 +3319,31 @@ ExoDiPhotonAnalyzer::endJob()
 {
   // fake rate histograms
   if (!fOmitChargedDecayCode) {
-  fTwoProngFakeNumer_pt->Sumw2();
-  fTwoProngFakeDenom_pt->Sumw2();
-  fTwoProngFakeRate_pt->Add(fTwoProngFakeNumer_pt);
-  fTwoProngFakeRate_pt->Divide(fTwoProngFakeDenom_pt);
-  fTwoProngFakeNumer_eta->Sumw2();
-  fTwoProngFakeDenom_eta->Sumw2();
-  fTwoProngFakeRate_eta->Add(fTwoProngFakeNumer_eta);
-  fTwoProngFakeRate_eta->Divide(fTwoProngFakeDenom_eta);
-  fTwoProngFakeNumer_phi->Sumw2();
-  fTwoProngFakeDenom_phi->Sumw2();
-  fTwoProngFakeRate_phi->Add(fTwoProngFakeNumer_phi);
-  fTwoProngFakeRate_phi->Divide(fTwoProngFakeDenom_phi); }
+  fTwoProngFakeNume_even_pt->Sumw2();
+  fTwoProngFakeDeno_even_pt->Sumw2();
+  fTwoProngFakeRate_even_pt->Add(fTwoProngFakeNume_even_pt);
+  fTwoProngFakeRate_even_pt->Divide(fTwoProngFakeDeno_even_pt);
+  fTwoProngFakeNume_even_eta->Sumw2();
+  fTwoProngFakeDeno_even_eta->Sumw2();
+  fTwoProngFakeRate_even_eta->Add(fTwoProngFakeNume_even_eta);
+  fTwoProngFakeRate_even_eta->Divide(fTwoProngFakeDeno_even_eta);
+  fTwoProngFakeNume_even_phi->Sumw2();
+  fTwoProngFakeDeno_even_phi->Sumw2();
+  fTwoProngFakeRate_even_phi->Add(fTwoProngFakeNume_even_phi);
+  fTwoProngFakeRate_even_phi->Divide(fTwoProngFakeDeno_even_phi);
+  fTwoProngFakeNume_odd_pt->Sumw2();
+  fTwoProngFakeDeno_odd_pt->Sumw2();
+  fTwoProngFakeRate_odd_pt->Add(fTwoProngFakeNume_odd_pt);
+  fTwoProngFakeRate_odd_pt->Divide(fTwoProngFakeDeno_odd_pt);
+  fTwoProngFakeNume_odd_eta->Sumw2();
+  fTwoProngFakeDeno_odd_eta->Sumw2();
+  fTwoProngFakeRate_odd_eta->Add(fTwoProngFakeNume_odd_eta);
+  fTwoProngFakeRate_odd_eta->Divide(fTwoProngFakeDeno_odd_eta);
+  fTwoProngFakeNume_odd_phi->Sumw2();
+  fTwoProngFakeDeno_odd_phi->Sumw2();
+  fTwoProngFakeRate_odd_phi->Add(fTwoProngFakeNume_odd_phi);
+  fTwoProngFakeRate_odd_phi->Divide(fTwoProngFakeDeno_odd_phi);
+  } // done with charged decay code conditional
 
   // Print Cutflow
   if (!fOmitChargedDecayCode && fchargedDecayCutflow) {
