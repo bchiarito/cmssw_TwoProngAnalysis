@@ -32,6 +32,11 @@ options.register('debug',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "True includes all output, False removes most of the per event output")
+options.register('fakeRateOnly',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "Only fill the fake rate histos for Brandon's analysis, no tree")
 options.register('pumcfilename',
                 'PileUpMC_DiPhotonJetsBox_M60_8TeV-sherpa_Summer12_DR53X-PU_S10_START53_V7C-v1_rebinned.root',
                 VarParsing.multiplicity.singleton,
@@ -6896,6 +6901,7 @@ process.diphotonAnalyzer.isAOD = cms.bool(options.useAOD) # True=AOD, False=Mini
 process.diphotonAnalyzer.isMC = cms.untracked.bool(isMC)
 process.diphotonAnalyzer.isSignal = cms.untracked.bool(isSignal)
 process.diphotonAnalyzer.debug = cms.untracked.bool(options.debug)
+process.diphotonAnalyzer.noTreeOnlyFakeRateHistos = cms.untracked.bool(options.fakeRateOnly)
 process.diphotonAnalyzer.IDMethod = cms.untracked.string("highpt")
 process.diphotonAnalyzer.PFIDCategory = cms.untracked.string("Loose")
 process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")

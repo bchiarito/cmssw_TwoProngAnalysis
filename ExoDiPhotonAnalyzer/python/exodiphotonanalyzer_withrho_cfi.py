@@ -29,6 +29,7 @@ diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   egammaIsoFakeMax = cms.untracked.double(0.3),
                                   generatorEtaMatchDR = cms.untracked.double(0.1),
                                   chargedDecayCutflow = cms.untracked.bool(True),
+                                  noTreeOnlyFakeRateHistos = cms.untracked.bool(False),
                                   # charged decay configuration end
                                   #If running on Data do not change. Only loaded as strings into the Analyzer and will have no effect. If on MC then change to the specific files you need lodaed for the MC   
                                   PUMCFileName = cms.untracked.string("PileUpMC.root"),

@@ -311,6 +311,7 @@ private:
   double fCandidatePairEGammaIsoFakeCut;
   double fCandidatePairGenMatchDR;
   bool fOmitChargedDecayCode;
+  bool fTwoProngFakeRateCalcOnly;
   TH2F *fTwoProngFakeNume_even_pt;
   TH2F *fTwoProngFakeDeno_even_pt;
   TH2F *fTwoProngFakeRate_even_pt;
@@ -605,6 +606,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fCandidatePairNeutralIsoFakeCut(iConfig.getUntrackedParameter<double>("neutralIsoFakeMax")),
     fCandidatePairEGammaIsoFakeCut(iConfig.getUntrackedParameter<double>("egammaIsoFakeMax")),
     fCandidatePairGenMatchDR(iConfig.getUntrackedParameter<double>("generatorEtaMatchDR")),
+    fTwoProngFakeRateCalcOnly(iConfig.getUntrackedParameter<bool>("noTreeOnlyFakeRateHistos")),
     //-----------------taken from Ilya-----------------
     rhoToken_(consumes<double> (iConfig.getParameter<edm::InputTag>("rho"))),
     // Cluster shapes
@@ -3301,7 +3303,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
 
   // Now fill fTree2, it's filled for every event 
-  if (!fOmitChargedDecayCode) fTree2->Fill();
+  if (!fOmitChargedDecayCode && !fTwoProngFakeRateCalcOnly) fTree2->Fill();
 }
 
 // ------------ method called once each job just before starting event loop  ------------
