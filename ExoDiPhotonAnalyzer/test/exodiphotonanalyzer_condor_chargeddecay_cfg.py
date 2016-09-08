@@ -109,6 +109,34 @@ if sample == "Eta_pipipi0":
        'file:/cms/data24/chiarito/diphoton_gen/CMSSW_7_6_3/src/MiniAODv2_Eta_pipipi0.root',
     ] )
     
+if sample == "Eta125_pipipi0":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/cms/data24/chiarito/diphoton_gen/CMSSW_7_6_3/src/MiniAODv2_Eta_125_pipipi0.root',
+    ] )
+    
+if sample == "Eta300_pipipi0":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/cms/data24/chiarito/diphoton_gen/CMSSW_7_6_3/src/MiniAODv2_Eta_300_pipipi0.root',
+    ] )
+    
+if sample == "Eta500_pipipi0":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/cms/data24/chiarito/diphoton_gen/CMSSW_7_6_3/src/MiniAODv2_Eta_500_pipipi0.root',
+    ] )
+    
+if sample == "Eta1000_pipipi0":
+    isMC = True
+    isSignal = True
+    readFiles.extend( [
+       'file:/cms/data24/chiarito/diphoton_gen/CMSSW_7_6_3/src/MiniAODv2_Eta_1000_pipipi0.root',
+    ] )
+    
 if sample == "Etaprime_generic":
     isMC = True
     isSignal = True

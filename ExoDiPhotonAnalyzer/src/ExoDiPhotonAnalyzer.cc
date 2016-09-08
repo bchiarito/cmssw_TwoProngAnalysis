@@ -2102,9 +2102,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           bool passPhotonPt = photon.Pt() > fCandidatePairPhotonPtCut;
           bool pass = passCharged && passNeutral && passEGamma && passPhotonPt;
           bool fake = !pass && passPhotonPt &&
-                      ( (relchargedIso > fCandidatePairChargedIsoCut && relchargedIso < fCandidatePairChargedIsoFakeCut) ||
-                      (relneutralIso > fCandidatePairNeutralIsoCut && relneutralIso < fCandidatePairNeutralIsoFakeCut) ||
-                      (relegammaIso > fCandidatePairEGammaIsoCut && relegammaIso < fCandidatePairEGammaIsoFakeCut) );
+                      relchargedIso < fCandidatePairChargedIsoFakeCut &&
+                      relneutralIso < fCandidatePairNeutralIsoFakeCut &&
+                      relegammaIso < fCandidatePairEGammaIsoFakeCut;
           fCand_pass.push_back(pass);
           fCand_passChargedIso.push_back(passCharged);
           fCand_passNeutralIso.push_back(passNeutral);
