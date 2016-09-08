@@ -463,13 +463,18 @@ private:
   vector<Int_t> fCand_nNeutralIsoCone;
   vector<Int_t> fCand_nEGammaIsoCone;
   vector<Double_t> fCand_genDR;
-  vector<Bool_t> fCand_pass;
+  vector<Bool_t> fCand_tight;
   vector<Bool_t> fCand_passChargedIso;
   vector<Bool_t> fCand_passNeutralIso;
   vector<Bool_t> fCand_passEGammaIso;
   vector<Bool_t> fCand_passPhotonPt;
-  vector<Bool_t> fCand_fake;
+  vector<Bool_t> fCand_loose;
   vector<Bool_t> fCand_match;
+  vector<Double_t> fTwoProngLoose_pt;
+  vector<Double_t> fTwoProngLoose_eta;
+  vector<Double_t> fTwoProngLoose_phi;
+  vector<Double_t> fTwoProngLoose_mass;
+  vector<Double_t> fTwoProngLoose_Mass;
   vector<Double_t> fTwoProng_pt;
   vector<Double_t> fTwoProng_eta;
   vector<Double_t> fTwoProng_phi;
@@ -936,7 +941,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("nFakes",&fNumTwoProngFake,"nFakes/I");
   fTree2->Branch("nTightPhotons",&fNumTightPhotons,"nTightPhotons/I");
   // Candidate information
-  fTree2->Branch("Cand_pt",&fCand_pt);
+  /*fTree2->Branch("Cand_pt",&fCand_pt);
   fTree2->Branch("Cand_eta",&fCand_eta);
   fTree2->Branch("Cand_phi",&fCand_phi);
   fTree2->Branch("Cand_mass",&fCand_mass);
@@ -989,13 +994,19 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Cand_nNeutralIsoCone",&fCand_nNeutralIsoCone);
   fTree2->Branch("Cand_nEGammaIsoCone",&fCand_nEGammaIsoCone);
   fTree2->Branch("Cand_genDR",&fCand_genDR);
-  fTree2->Branch("Cand_pass",&fCand_pass);
+  fTree2->Branch("Cand_pass",&fCand_tight);
   fTree2->Branch("Cand_passChargedIso",&fCand_passChargedIso);
   fTree2->Branch("Cand_passNeutralIso",&fCand_passNeutralIso);
   fTree2->Branch("Cand_passEGammaIso",&fCand_passEGammaIso);
   fTree2->Branch("Cand_passPhotonPt",&fCand_passPhotonPt);
-  fTree2->Branch("Cand_fake",&fCand_fake);
-  // Passing Candidate information, sorted by pt
+  fTree2->Branch("Cand_fake",&fCand_loose);*/
+  // Loose Candidate information, sorted by pt
+  fTree2->Branch("TwoProngLoose_pt",&fTwoProngLoose_pt);
+  fTree2->Branch("TwoProngLoose_eta",&fTwoProngLoose_eta);
+  fTree2->Branch("TwoProngLoose_phi",&fTwoProngLoose_phi);
+  fTree2->Branch("TwoProngLoose_mass",&fTwoProngLoose_mass);
+  fTree2->Branch("TwoProngLoose_Mass",&fTwoProngLoose_Mass);
+  // Tight Candidate information, sorted by pt
   fTree2->Branch("TwoProng_pt",&fTwoProng_pt);
   fTree2->Branch("TwoProng_eta",&fTwoProng_eta);
   fTree2->Branch("TwoProng_phi",&fTwoProng_phi);
@@ -1793,13 +1804,18 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fCand_nNeutralIsoCone.clear();
   fCand_nEGammaIsoCone.clear();
   fCand_genDR.clear();
-  fCand_pass.clear();
+  fCand_tight.clear();
   fCand_passChargedIso.clear();
   fCand_passNeutralIso.clear();
   fCand_passEGammaIso.clear();
   fCand_passPhotonPt.clear();
-  fCand_fake.clear();
+  fCand_loose.clear();
   fCand_match.clear();
+  fTwoProngLoose_pt.clear();
+  fTwoProngLoose_eta.clear();
+  fTwoProngLoose_phi.clear();
+  fTwoProngLoose_mass.clear();
+  fTwoProngLoose_Mass.clear();
   fTwoProng_pt.clear();
   fTwoProng_eta.clear();
   fTwoProng_phi.clear();
@@ -2100,17 +2116,17 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           bool passNeutral = relneutralIso < fCandidatePairNeutralIsoCut;
           bool passEGamma = relegammaIso < fCandidatePairEGammaIsoCut;
           bool passPhotonPt = photon.Pt() > fCandidatePairPhotonPtCut;
-          bool pass = passCharged && passNeutral && passEGamma && passPhotonPt;
-          bool fake = !pass && passPhotonPt &&
-                      relchargedIso < fCandidatePairChargedIsoFakeCut &&
-                      relneutralIso < fCandidatePairNeutralIsoFakeCut &&
-                      relegammaIso < fCandidatePairEGammaIsoFakeCut;
-          fCand_pass.push_back(pass);
+          bool tight = passCharged && passNeutral && passEGamma && passPhotonPt;
+          bool loose = !tight && passPhotonPt &&
+                       relchargedIso < fCandidatePairChargedIsoFakeCut &&
+                       relneutralIso < fCandidatePairNeutralIsoFakeCut &&
+                       relegammaIso < fCandidatePairEGammaIsoFakeCut;
+          fCand_tight.push_back(tight);
           fCand_passChargedIso.push_back(passCharged);
           fCand_passNeutralIso.push_back(passNeutral);
           fCand_passEGammaIso.push_back(passEGamma);
           fCand_passPhotonPt.push_back(passPhotonPt);
-          fCand_fake.push_back(fake);
+          fCand_loose.push_back(loose);
           // Generator Matching
           bool match = false;
           double gen_dR = 99.9;
@@ -2135,19 +2151,19 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           if (passEGamma) nPassEGamma++;
           if (passPhotonPt) nPassPhotonPt++;
           if (match) nMatch++;
-          if (match && pass) nPassMatch++;
-          if (fake) nFake++;
-          if (fake) { if (TwoProngObject.Pt() > LeadingFakeTwoProng.Pt()) LeadingFakeTwoProng = TwoProngObject; }
+          if (match && tight) nPassMatch++;
+          if (loose) nFake++;
+          if (loose) { if (TwoProngObject.Pt() > LeadingFakeTwoProng.Pt()) LeadingFakeTwoProng = TwoProngObject; }
           // Fake rate histograms
           if (!fOmitChargedDecayCode) {
-            if (pass) {
+            if (tight) {
               fTwoProngFakeNume_even_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
               fTwoProngFakeNume_even_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
               fTwoProngFakeNume_even_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
               fTwoProngFakeNume_odd_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
               fTwoProngFakeNume_odd_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
               fTwoProngFakeNume_odd_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
-            } if (fake) {
+            } if (loose) {
               fTwoProngFakeDeno_even_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
               fTwoProngFakeDeno_even_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
               fTwoProngFakeDeno_even_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
@@ -2181,7 +2197,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           if (dr < candDR) candDR = dr;
         }
         for (unsigned int j = 0; j < fCand_pt.size(); j++) {
-          if (!fCand_pass[j]) continue;
+          if (!fCand_tight[j]) continue;
           TLorentzVector PassedCandidate;
           PassedCandidate.SetPtEtaPhiM(fCand_pt[j], fCand_eta[j], fCand_phi[j], fCand_mass[j]);
           double dr = PassedCandidate.DeltaR(GenParticle);
@@ -2223,9 +2239,18 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   for (unsigned int i = 0; i < sorted_indecies.size(); i++) {
     unsigned int index = sorted_indecies[i];
-    if (fCand_pass[index])
+    if (fCand_loose[index])
     {
-      // Candidate passes and is next leading, fill all passed candidate collections
+      // Candidate is loose and is next leading, fill all loose candidate collections
+      fTwoProngLoose_pt.push_back(fCand_pt[index]);
+      fTwoProngLoose_eta.push_back(fCand_eta[index]);
+      fTwoProngLoose_phi.push_back(fCand_phi[index]);
+      fTwoProngLoose_mass.push_back(fCand_mass[index]);
+      fTwoProngLoose_Mass.push_back(fCand_Mass[index]);
+    }
+    if (fCand_tight[index])
+    {
+      // Candidate is tight and is next leading, fill all tight candidate collections
       fTwoProng_pt.push_back(fCand_pt[index]);
       fTwoProng_eta.push_back(fCand_eta[index]);
       fTwoProng_phi.push_back(fCand_phi[index]);
