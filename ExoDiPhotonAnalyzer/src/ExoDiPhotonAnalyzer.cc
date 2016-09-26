@@ -2214,13 +2214,18 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
         if (fDebug) cout << ". finished photon" << endl;
         int n = index_of_leading_pf_photon;
         if (n != -1) {
-          // CH pair is close and has at least one pf photon, definition of candidate, fill vectors
           leading_pf_photon.SetPtEtaPhiE((*pfcands)[n].pt(), (*pfcands)[n].eta(), (*pfcands)[n].phiAtVtx(), (*pfcands)[n].energy());
           TLorentzVector TwoProngObject;
           TwoProngObject = center + photon;
           TLorentzVector TwoProngObject_leadingPfPhoton;
           TwoProngObject_leadingPfPhoton = center + leading_pf_photon;
           double TwoProng_Mass = TwoProngObject_leadingPfPhoton.M();
+          if (fabs(TwoProngObject.Eta()) > 2.5) continue;
+          // CH pair: 
+          // within dr 0.5
+          // has at least one pf photon
+          // |eta| < 2.5
+          //   meets definition of candidate twoprong, fill vectors
           if (pf1.pdgId() > 0) {
             fCand_CHpos_pt.push_back(pfcand1.Pt());
             fCand_CHpos_eta.push_back(pfcand1.Eta());
