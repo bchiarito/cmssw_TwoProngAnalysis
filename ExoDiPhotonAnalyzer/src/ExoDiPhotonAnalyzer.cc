@@ -319,6 +319,7 @@ private:
   double fCandidatePairEGammaIsoFakeCut;
   double fCandidatePairGenMatchDR;
   bool fOmitChargedDecayCode;
+  bool fSkipPhotonMCCode;
   bool fTwoProngFakeRateCalcOnly;
   TH2F *fTwoProngFakeNume_even_pt;
   TH2F *fTwoProngFakeDeno_even_pt;
@@ -715,6 +716,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 
   // setting requested by Steve, omit all Brandon's code
   fOmitChargedDecayCode = ( iConfig.exists("omitChargedDecayCode") ? iConfig.getParameter<bool>("omitChargedDecayCode") : false );  
+  fSkipPhotonMCCode = ( iConfig.exists("skipPhotonMCCode") ? iConfig.getParameter<bool>("skipPhotonMCCode") : false );  
 
   // Initialize cutflow variables
   fCutflow_total = 0;
@@ -2951,7 +2953,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     reco::Photon* TorFObject1 = &(allTightOrFakeableObjects[0].first);
     reco::Photon* TorFObject2 = &(allTightOrFakeableObjects[1].first);
     // match to GEN photons if running over MC
-    if (fisMC && !fisSignal){
+    if (!fSkipPhotonMCCode && fisMC && !fisSignal){
       // cout << "Matching to GEN Photons.." << endl;
       vector<reco::GenParticle> tempPhotons;
       // first match to two hard process gen photons and fill GEN photon branches
