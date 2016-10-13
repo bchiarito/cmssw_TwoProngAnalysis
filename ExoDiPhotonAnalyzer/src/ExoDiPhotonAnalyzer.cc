@@ -716,7 +716,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 
   // setting requested by Steve, omit all Brandon's code
   fOmitChargedDecayCode = ( iConfig.exists("omitChargedDecayCode") ? iConfig.getParameter<bool>("omitChargedDecayCode") : false );  
-  fSkipPhotonMCCode = ( iConfig.exists("skipPhotonMCCode") ? iConfig.getParameter<bool>("skipPhotonMCCode") : false );  
+  fSkipPhotonMCCode = ( iConfig.exists("skipPhotonMCCode") ? iConfig.getParameter<bool>("skipPhotonMCCode") : true );  
 
   // Initialize cutflow variables
   fCutflow_total = 0;
