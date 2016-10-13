@@ -7083,9 +7083,8 @@ process.diphotonAnalyzer.IDMethod = cms.untracked.string("highpt")
 process.diphotonAnalyzer.PFIDCategory = cms.untracked.string("Loose")
 process.diphotonAnalyzer.photonCollection = cms.untracked.InputTag("gedPhotons")
 process.diphotonAnalyzer.jetCollection    = cms.InputTag("slimmedJets")
-process.diphotonAnalyzer.omitChargedDecayCode = cms.bool(True)
+process.diphotonAnalyzer.omitChargedDecayCode = cms.bool(False)
 process.diphotonAnalyzer.skipPhotonMCCode = cms.bool(True)
-
 # If running on data the following four entries should not be changed. They are loaded into the analyzer as strings but in the case isMC = False then all the both old_pu_n and pu_n will both be filled with -9999.99
 process.diphotonAnalyzer.PUDataFileName = 'PileupDataAug10thHistogram.root' #DataPileUp
 process.diphotonAnalyzer.PUMCFileName = cms.untracked.string(options.pumcfilename)  #"MC PileUP"
