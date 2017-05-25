@@ -408,23 +408,11 @@ if sample == "EtaOld":
        '/store/user/bchiari1/noreplica/diphotonProject/miniaod/DiPhoton750GeVSignalEta/pythia8_MiniAODv2/160621_132817/0000/MiniAODv2_98.root',
        '/store/user/bchiari1/noreplica/diphotonProject/miniaod/DiPhoton750GeVSignalEta/pythia8_MiniAODv2/160621_132817/0000/MiniAODv2_99.root' ] )
 
-if sample == "Eta":
+if sample == "local":
     isMC = True
     isSignal = True
     readFiles.extend( [
-        'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/miniaod/signal750gevPhi/step3_output_1.root',
-        'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/miniaod/signal750gevPhi/step3_output_3.root',
-        'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/miniaod/signal750gevPhi/step3_output_4.root',
-        'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/miniaod/signal750gevPhi/step3_output_7.root',
-        'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/miniaod/signal750gevPhi/step3_output_8.root',
-        'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/miniaod/signal750gevPhi/step3_output_9.root',
-        'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/miniaod/signal750gevPhi/step3_output_11.root',
-        'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/miniaod/signal750gevPhi/step3_output_12.root',
-        'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/miniaod/signal750gevPhi/step3_output_14.root',
-        'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/miniaod/signal750gevPhi/step3_output_15.root',
-        'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/miniaod/signal750gevPhi/step3_output_16.root',
-        'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/miniaod/signal750gevPhi/step3_output_17.root',
-        'root://cmseos.fnal.gov//store/user/bchiari1/noreplica/diphotonProject/miniaod/signal750gevPhi/step3_output_19.root'] )
+        'file:./MiniAODv2_Eta_generic.root' ] )
 
 if sample == "DoubleEG_2016runB_v1":
     isMC = False
