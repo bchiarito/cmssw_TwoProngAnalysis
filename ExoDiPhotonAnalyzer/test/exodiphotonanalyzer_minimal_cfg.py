@@ -12,7 +12,7 @@ options.register('doLumis',
                 VarParsing.varType.bool,
                 "let config file do lumi selection instead of CRAB - must be FALSE if using CRAB!")
 options.register('debug',
-                True,
+                False,
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "True includes all output, False removes most of the per event output")
@@ -27,7 +27,7 @@ options.register('pumcfilename',
                 VarParsing.varType.string,
                 "MC Pileup Filename")
 options.register("sample",
-                "",
+                "local",
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "which sample we want to run over")
@@ -52,16 +52,18 @@ if sample == "local":
     isSignal = True
     readFiles.extend( [
         'file:./MiniAODv2_Eta_generic.root' ] )
-if sample == "jet":
+elif sample == "jet":
     isMC = False
     isSignal = False
     readFiles.extend( [
        '/store/data/Run2016G/JetHT/MINIAOD/03Feb2017-v1/100000/006E7AF2-AEEC-E611-A88D-7845C4FC3B00.root' ] )
-if sample == "photon":
+elif sample == "photon":
     isMC = False
     isSignal = False
     readFiles.extend( [
        '/store/data/Run2016G/SinglePhoton/MINIAOD/03Feb2017-v1/110000/00F4619E-9BEB-E611-8D7A-002590494BE2.root' ] )
+else:
+    print "Not a valid sample name!!"
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( readFiles ))
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( options.maxEvents ) )
 
@@ -145,6 +147,7 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   genParticles = cms.InputTag("genParticles"),
                                   # Objects specific to MiniAOD format
                                   photonsMiniAOD = cms.InputTag("slimmedPhotons"),
+                                  gedphotonsMiniAOD = cms.InputTag("slimmedPhotons"), # new block of code
                                   genParticlesMiniAOD = cms.InputTag("prunedGenParticles"),
                                   # ValueMap names from the producer upstream
                                   full5x5SigmaIEtaIEtaMap   = cms.InputTag("photonIDValueMapProducer:phoFull5x5SigmaIEtaIEta"),

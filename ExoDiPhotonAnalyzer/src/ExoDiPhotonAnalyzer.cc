@@ -167,6 +167,7 @@ using namespace std;
   bool passChargedHadronCut(const pat::Photon* );
   bool passHadTowerOverEmCut(const pat::Photon*);
   double corPhoIsoHighPtID(const pat::Photon*, double );
+  bool compareCandsByPt(const edm::Ptr<const reco::Candidate> , const edm::Ptr<const reco::Candidate>);
 
 //
 // class declaration
@@ -372,6 +373,7 @@ private:
   
   // MiniAOD case data members
   edm::EDGetToken photonsMiniAODToken_;
+  edm::EDGetToken gedphotonsToken_;
   edm::EDGetToken patPhotonToken_;
   edm::EDGetTokenT<edm::View<reco::GenParticle> > genParticlesMiniAODToken_;
   edm::EDGetToken genEvtInfoProdToken_;
@@ -431,6 +433,8 @@ private:
   int fNumTwoProngPassPhotonPtIso;
   int fNumTwoProngFake;
   int fNumTightPhotons;
+  int fNumTightPhotons_v2;
+  int fNumOffset;
   double fHT;
   double fMET;
   double fMET_phi;
@@ -660,6 +664,9 @@ private:
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo1;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo2;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo3;
+  ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo1_v2;
+  ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo2_v2;
+  ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo3_v2;
 
   ExoDiPhotons::recoDiObjectInfo_t fTwoProngTwoProngInfo; 
   ExoDiPhotons::recoDiObjectInfo_t fGammaTwoProngInfo; 
@@ -778,6 +785,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   photonsMiniAODToken_ = mayConsume<edm::View<reco::Photon> >
     (iConfig.getParameter<edm::InputTag>
      ("photonsMiniAOD"));
+  gedphotonsToken_ = mayConsume<edm::View<pat::Photon> >
+    (iConfig.getParameter<edm::InputTag>
+     ("gedphotonsMiniAOD"));
   patPhotonToken_ = mayConsume<edm::View<pat::Photon> >
     (iConfig.getParameter<edm::InputTag>
      ("photonsMiniAOD"));
@@ -1064,6 +1074,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("nPassPhotonPtIso",&fNumTwoProngPassChargedIso,"nPassPhotonIso/I");
   fTree2->Branch("nFakes",&fNumTwoProngFake,"nFakes/I");
   fTree2->Branch("nTightPhotons",&fNumTightPhotons,"nTightPhotons/I");
+  fTree2->Branch("nTightPhotons_v2",&fNumTightPhotons_v2,"nTightPhotons_v2/I");
+  fTree2->Branch("nOffset",&fNumOffset,"nOffset/I");
   // Candidate information
   /*fTree2->Branch("Cand_pt",&fCand_pt);
   fTree2->Branch("Cand_eta",&fCand_eta);
@@ -1238,6 +1250,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Photon1",&fRecoTightPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree2->Branch("Photon2",&fRecoTightPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree2->Branch("Photon3",&fRecoTightPhotonInfo3,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  fTree2->Branch("Photon1_v2",&fRecoTightPhotonInfo1_v2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  fTree2->Branch("Photon2_v2",&fRecoTightPhotonInfo2_v2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  fTree2->Branch("Photon3_v2",&fRecoTightPhotonInfo3_v2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   // Generator Objects
   fTree2->Branch("GenPhi_pt",&fGenPhi_pt);
   fTree2->Branch("GenPhi_eta",&fGenPhi_eta);
@@ -3416,6 +3431,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // ***
   // New code block reimplementing photon id  
   // ***
+  if (fDebug) cout << ". new block code enter" << endl;
 
   const CaloSubdetectorTopology* subDetTopologyEB_;
   const CaloSubdetectorTopology* subDetTopologyEE_;
@@ -3425,7 +3441,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   subDetTopologyEE_ = caloTopology->getSubdetectorTopology(DetId::Ecal,EcalEndcap);
 
   edm::Handle<edm::View<pat::Photon> > ged_photons;
-  iEvent.getByToken(photonsMiniAODToken_,ged_photons);
+  iEvent.getByToken(gedphotonsToken_,ged_photons);
+
+  if (fDebug) cout << ". got handles" << endl;
 
   bool isSat = false;
   std::vector<edm::Ptr<pat::Photon>> goodPhotons;
@@ -3446,10 +3464,27 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     //  realAndFakePhotons.push_back(std::pair<edm::Ptr<pat::Photon>, int>(pho, FAKE)); }
   }
 
-  
+  if (fDebug) cout << ". done photon loop" << endl;
 
+  sort(goodPhotons.begin(),goodPhotons.end(),compareCandsByPt);
+
+  if (fDebug) cout << ". done sorting" << endl;
+
+  fNumTightPhotons_v2 = goodPhotons.size();
+
+  InitRecoPhotonInfo(fRecoTightPhotonInfo1_v2);
+  InitRecoPhotonInfo(fRecoTightPhotonInfo2_v2);
+  InitRecoPhotonInfo(fRecoTightPhotonInfo3_v2);
+  if (goodPhotons.size() > 0)
+    ExoDiPhotons::FillRecoPhotonInfo(fRecoTightPhotonInfo1_v2,&(*goodPhotons[0]),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup); 
+  if (goodPhotons.size() > 1)
+    ExoDiPhotons::FillRecoPhotonInfo(fRecoTightPhotonInfo2_v2,&(*goodPhotons[1]),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup); 
+  if (goodPhotons.size() > 2)
+    ExoDiPhotons::FillRecoPhotonInfo(fRecoTightPhotonInfo3_v2,&(*goodPhotons[2]),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup); 
+
+  if (fDebug) cout << ". new block code exit" << endl;
   // ***
-  // end mew code block
+  // end new code block
   // ***
 
   InitRecoPhotonInfo(fRecoTightPhotonInfo1);
@@ -3592,6 +3627,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   } // end loop over tight or fakable collection 
   if (fDebug) cout << ". done making tight photons" << endl;
   fNumTightPhotons = tightPhotonsCount;
+  fNumOffset = tightPhotonsCount - goodPhotons.size();;
   // Construct Di-Objects
   InitRecoDiObjectInfo(fTwoProngTwoProngInfo);
   InitRecoDiObjectInfo(fGammaTwoProngInfo);
@@ -3926,6 +3962,10 @@ bool ExoDiPhotonAnalyzer::photon_passHighPtID(const pat::Photon* photon, double 
     }
   }
 
+// sorting by pt
+bool compareCandsByPt(const edm::Ptr<const reco::Candidate> photon1, const edm::Ptr<const reco::Candidate> photon2) {
+    return(photon1->pt()>=photon2->pt());
+  }
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(ExoDiPhotonAnalyzer);
