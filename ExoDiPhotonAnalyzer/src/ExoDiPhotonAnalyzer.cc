@@ -28,6 +28,15 @@
 #include "TVector3.h"
 #include "TLorentzVector.h"
 
+// for new photon code block
+#include "Geometry/CaloTopology/interface/CaloTopology.h"
+#include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
+#include "FWCore/Framework/interface/ESHandle.h"
+#include "FWCore/Framework/interface/EventSetup.h"
+#include "DataFormats/EcalDetId/interface/EBDetId.h"
+#include "DataFormats/EcalDetId/interface/EEDetId.h"
+
+
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
@@ -150,6 +159,14 @@
 
 using namespace std;
 
+  double phoKappaHighPtID(const pat::Photon *);
+  double phoEAHighPtID(const pat::Photon* );
+  double phoAlphaHighPtID(const pat::Photon *);
+  bool passCorPhoIsoHighPtID(const pat::Photon* , double );
+  bool passSigmaIetaIetaCut(const pat::Photon* , bool );
+  bool passChargedHadronCut(const pat::Photon* );
+  bool passHadTowerOverEmCut(const pat::Photon*);
+  double corPhoIsoHighPtID(const pat::Photon*, double );
 
 //
 // class declaration
@@ -217,6 +234,11 @@ private:
   edm::EDGetTokenT<EcalRecHitCollection> recHitsEBToken;
   edm::EDGetTokenT<EcalRecHitCollection> recHitsEEToken;
 
+  // photon subroutines
+  bool photon_isSaturated(const pat::Photon*, const EcalRecHitCollection *, const EcalRecHitCollection *,
+       const CaloSubdetectorTopology*, const CaloSubdetectorTopology*);
+
+  bool photon_passHighPtID(const pat::Photon*, double , bool ) ;
 
   // to get L1 info, the L1 guide recommends to make this a member
   // this allows the event setup parts to be cached, rather than refetched every event
@@ -3390,6 +3412,46 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   //
   //
   if (fDebug) cout << ". starting charged decay code part two" << endl;
+
+  // ***
+  // New code block reimplementing photon id  
+  // ***
+
+  const CaloSubdetectorTopology* subDetTopologyEB_;
+  const CaloSubdetectorTopology* subDetTopologyEE_;
+  edm::ESHandle<CaloTopology> caloTopology;
+  iSetup.get<CaloTopologyRecord>().get(caloTopology);
+  subDetTopologyEB_ = caloTopology->getSubdetectorTopology(DetId::Ecal,EcalBarrel);
+  subDetTopologyEE_ = caloTopology->getSubdetectorTopology(DetId::Ecal,EcalEndcap);
+
+  edm::Handle<edm::View<pat::Photon> > ged_photons;
+  iEvent.getByToken(photonsMiniAODToken_,ged_photons);
+
+  bool isSat = false;
+  std::vector<edm::Ptr<pat::Photon>> goodPhotons;
+  //std::vector<std::pair<edm::Ptr<pat::Photon>, int> > realAndFakePhotons;
+
+  for (size_t i = 0; i < ged_photons->size(); ++i) {
+    const auto pho = ged_photons->ptrAt(i);
+    
+    isSat = photon_isSaturated(&(*pho), &(*recHitsEB), &(*recHitsEE), &(*subDetTopologyEB_), &(*subDetTopologyEE_));
+    bool passID = photon_passHighPtID(&(*pho), rho_, isSat);
+    //bool denominatorObject = ExoDiPhotons::passDenominatorCut(&(*pho), rho_, isSat);
+
+    if(passID) {
+      goodPhotons.push_back(pho);
+      //realAndFakePhotons.push_back(std::pair<edm::Ptr<pat::Photon>, int>(pho, TRUE));
+    }
+    //if(denominatorObject) {
+    //  realAndFakePhotons.push_back(std::pair<edm::Ptr<pat::Photon>, int>(pho, FAKE)); }
+  }
+
+  
+
+  // ***
+  // end mew code block
+  // ***
+
   InitRecoPhotonInfo(fRecoTightPhotonInfo1);
   InitRecoPhotonInfo(fRecoTightPhotonInfo2);
   InitRecoPhotonInfo(fRecoTightPhotonInfo3);
@@ -3682,6 +3744,187 @@ ExoDiPhotonAnalyzer::endJob()
   }
 }
 
+bool ExoDiPhotonAnalyzer::photon_isSaturated(const pat::Photon *photon, const EcalRecHitCollection *recHitsEB, const EcalRecHitCollection *recHitsEE,
+		   const CaloSubdetectorTopology* subDetTopologyEB_, const CaloSubdetectorTopology* subDetTopologyEE_) {
+    using namespace std;
+    
+    bool isSat = false;
+    DetId seedDetId = ((photon->superCluster())->seed())->seed();
+    
+    // check EB
+    if (seedDetId.subdetId()==EcalBarrel) {
+      CaloNavigator<DetId> cursor = CaloNavigator<DetId>(seedDetId,subDetTopologyEB_);
+      for (int i = -2; i <= 2; ++i) {
+      	for (int j = -2; j <= 2; ++j) {
+      	  cursor.home();
+      	  cursor.offsetBy(i,j);
+      	  EcalRecHitCollection::const_iterator it = recHitsEB->find(*cursor);
+      	  if(it != recHitsEB->end()) {
+      	    /*cout << "Energy of (" << i << ", " << j << "): " << it-> energy()
+	      << ", kSaturated: " << it->checkFlag(EcalRecHit::kSaturated)
+	      << ", kDead: " << it->checkFlag(EcalRecHit::kDead)
+	      << ", kKilled: " << it->checkFlag(EcalRecHit::kKilled)
+	      << endl;*/
+      	    if (it->checkFlag(EcalRecHit::kSaturated) && !it->checkFlag(EcalRecHit::kDead) && !it->checkFlag(EcalRecHit::kKilled)) {
+      	      isSat = true;
+      	    }
+      	  }	  
+      	}
+      }
+    }
+    // check EE
+    else if (seedDetId.subdetId()==EcalEndcap) {
+      CaloNavigator<DetId> cursor = CaloNavigator<DetId>(seedDetId,subDetTopologyEE_);
+      for (int i = -2; i <= 2; ++i) {
+      	for (int j = -2; j <= 2; ++j) {
+      	  cursor.home();
+      	  cursor.offsetBy(i,j);
+      	  EcalRecHitCollection::const_iterator it = recHitsEE->find(*cursor);
+      	  if(it != recHitsEE->end()) {
+      	    /*cout << "Energy of (" << i << ", " << j << "): " << it->energy()
+	      << ", kSaturated: " << it->checkFlag(EcalRecHit::kSaturated)
+	      << ", kDead: " << it->checkFlag(EcalRecHit::kDead)
+	      << ", kKilled: " << it->checkFlag(EcalRecHit::kKilled)
+	      << endl;*/
+      	    if (it->checkFlag(EcalRecHit::kSaturated) && !it->checkFlag(EcalRecHit::kDead) && !it->checkFlag(EcalRecHit::kKilled)) {
+      	      isSat = true;
+      	    }
+      	  }
+      	}
+      }
+    }
+    return isSat;
+  }
+
+bool ExoDiPhotonAnalyzer::photon_passHighPtID(const pat::Photon* photon, double rho, bool isSat) {
+    if (
+      passHadTowerOverEmCut(photon) &&
+      passChargedHadronCut(photon) &&
+      passSigmaIetaIetaCut(photon,isSat) &&
+      passCorPhoIsoHighPtID(photon,rho) &&
+      photon->passElectronVeto()
+    ) return true;
+
+    else return false;
+  }
+// H/E
+  bool passHadTowerOverEmCut(const pat::Photon* photon) {
+    double hOverE = photon->hadTowOverEm();
+    if (hOverE < 0.05) return true;
+    else return false;
+  }
+// CH ISO
+  bool passChargedHadronCut(const pat::Photon* photon) {
+    double chIsoCut = 5.;
+    double chIso = photon->chargedHadronIso();
+    if (chIso < chIsoCut) return true;
+    else return false;
+  }
+// SIGMAiETAiETA
+  bool passSigmaIetaIetaCut(const pat::Photon* photon, bool isSaturated) {
+    double phoEta = fabs(photon->superCluster()->eta());
+    double sIeIe = photon->full5x5_sigmaIetaIeta();
+    double sIeIeCut = -1.;
+    
+    if (phoEta < 1.4442 && !isSaturated) sIeIeCut = 0.0105; 
+    else if (phoEta < 1.4442 && isSaturated) sIeIeCut = 0.0112;
+    else if (1.566 < phoEta && phoEta < 2.5 && !isSaturated) sIeIeCut = 0.0280; 
+    else if (1.566 < phoEta && phoEta < 2.5 && isSaturated) sIeIeCut = 0.0300;
+
+    if (sIeIe < sIeIeCut) return true;
+    else return false;
+  }
+// COR ISO
+  bool passCorPhoIsoHighPtID(const pat::Photon* photon, double rho) {
+    double phoEta = fabs(photon->superCluster()->eta());
+    double corPhoIsoCut = -999.9;
+    double corPhoIso = corPhoIsoHighPtID(photon,rho);
+
+    if (phoEta < 1.4442) corPhoIsoCut = 2.75;
+    if (1.566 < phoEta && phoEta < 2.5) corPhoIsoCut = 2.00;
+
+    if (corPhoIso < corPhoIsoCut) return true;
+    else return false;
+  }
+  double corPhoIsoHighPtID(const pat::Photon* photon, double rho) {
+    double phoIso = photon->photonIso();
+    return (phoAlphaHighPtID(photon) + phoIso - rho*phoEAHighPtID(photon) - phoKappaHighPtID(photon)*photon->pt());
+  }
+  double phoAlphaHighPtID(const pat::Photon *photon) {
+    double phoEta = fabs(photon->superCluster()->eta());
+    if (phoEta < 1.4442) {
+      if (phoEta < 0.9) {
+	return 2.5;
+      }
+      else {
+	return 2.5;
+      }
+    } // end EB
+    else if (1.566 < phoEta && phoEta < 2.5) {
+      if (phoEta < 2.0) {
+	return 2.5;
+      }
+      else if (phoEta < 2.2) {
+	return 2.5;
+      }
+      else {
+	return 2.5;
+      }
+    } // end EE
+    else {
+      return 99999.99;
+    }
+  }
+  double phoEAHighPtID(const pat::Photon* photon) {
+    double phoEta = fabs(photon->superCluster()->eta());
+    if (phoEta < 1.4442) {
+      if (phoEta < 0.9) {
+	return 0.17;
+      }
+      else {
+	return 0.14;
+      }
+    } // end EB
+    else if (1.566 < phoEta && phoEta < 2.5) {
+      if (phoEta < 2.0) {
+	return 0.11;
+      }
+      else if (phoEta < 2.2) {
+	return 0.14;
+      }
+      else {
+	return 0.22;
+      }
+    } // end EE
+    else {
+      return -99999.99;
+    }
+  }
+  double phoKappaHighPtID(const pat::Photon *photon) {
+    double phoEta = fabs(photon->superCluster()->eta());
+    if (phoEta < 1.4442) {
+      if (phoEta < 0.9) {
+	return 0.0045;
+      }
+      else {
+	return 0.0045;
+      }
+    } // end EB
+    else if (1.566 < phoEta && phoEta < 2.5) {
+      if (phoEta < 2.0) {
+	return 0.003;
+      }
+      else if (phoEta < 2.2) {
+	return 0.003;
+      }
+      else {
+	return 0.003;
+      }
+    } // end EE
+    else {
+      return -99999.99;
+    }
+  }
 
 
 //define this as a plug-in
