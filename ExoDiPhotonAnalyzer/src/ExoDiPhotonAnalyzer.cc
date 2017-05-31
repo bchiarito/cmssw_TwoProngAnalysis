@@ -194,7 +194,6 @@ private:
   bool               fisSignal;  // option to decide if Signal MC or Backround MC
   bool               fDebug;  // if set to False, mean to limit per event stdout output
   bool               fchargedDecayCutflow;  // option to print cutflow of the charged selection to stdout at the end of the job
-  bool               fisAOD;
 
   float fCutflow_total;
   float fCutflow_oneCand;
