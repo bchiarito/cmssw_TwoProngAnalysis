@@ -17,16 +17,15 @@
 //
 //
 
-
 // system include files
-#include <memory>
-
-#include <algorithm>
 #include <vector>
-#include <utility>  // for std::pair
-#include "TClonesArray.h"
+
 #include "TVector3.h"
 #include "TLorentzVector.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TTree.h"
+#include "TMath.h"
 
 // for new photon code block
 #include "Geometry/CaloTopology/interface/CaloTopology.h"
@@ -36,126 +35,24 @@
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
 
-
-// user include files
-#include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/EDAnalyzer.h"
-
-#include "FWCore/Framework/interface/Event.h"
-#include "FWCore/Framework/interface/MakerMacros.h"
-
-#include "FWCore/ParameterSet/interface/ParameterSet.h"
-
-#include "FWCore/Framework/interface/ESHandle.h"
-
-
-// to use TfileService for histograms and trees
+// fileservice
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
-#include "TH1.h"
-#include "TH2.h"
-#include "TTree.h"
-#include "TString.h"
-
-// geometry
-#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
-//#include "Geometry/Records/interface/IdealGeometryRecord.h"
-#include "Geometry/Records/interface/CaloGeometryRecord.h"
-//#include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
-//#include "Geometry/CaloGeometry/interface/CaloCellGeometry.h"
-//#include "Geometry/CaloGeometry/interface/CaloSubdetectorGeometry.h"
-#include "Geometry/EcalAlgo/interface/EcalPreshowerGeometry.h"
-
-
-//for vertex
-#include "DataFormats/VertexReco/interface/Vertex.h"
-#include "DataFormats/VertexReco/interface/VertexFwd.h"
-
-// for beamspot
-#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 // for ecal
-#include "DataFormats/DetId/interface/DetId.h"
-#include "DataFormats/EcalDetId/interface/EBDetId.h"
-#include "DataFormats/EcalDetId/interface/EEDetId.h"
-#include "DataFormats/EcalDetId/interface/EcalSubdetector.h"
-#include "DataFormats/EcalRecHit/interface/EcalRecHitCollections.h"
-#include "RecoLocalCalo/EcalRecAlgos/interface/EcalSeverityLevelAlgo.h"
-#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
-#include "CondFormats/DataRecord/interface/EcalChannelStatusRcd.h"
-#include "CondFormats/EcalObjects/interface/EcalChannelStatus.h"
+//#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 
-
-//for photons
-#include "DataFormats/EgammaCandidates/interface/Photon.h"
-#include "DataFormats/EgammaCandidates/interface/PhotonFwd.h"
-
-#include "DataFormats/Candidate/interface/LeafCandidate.h"
-#include "DataFormats/Math/interface/deltaPhi.h"
-#include "TMath.h"
-
-//for trigger
-#include "DataFormats/Common/interface/TriggerResults.h"
-#include "FWCore/Common/interface/TriggerNames.h"
-// #include "CondFormats/L1TObjects/interface/L1GtTriggerMenuFwd.h"
-// #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerReadoutRecord.h" 
-// #include "DataFormats/L1GlobalTrigger/interface/L1GlobalTriggerRecord.h" 
-// #include "CondFormats/L1TObjects/interface/L1GtTriggerMenu.h"
-// #include "CondFormats/DataRecord/interface/L1GtTriggerMenuRcd.h"
-// #include "L1Trigger/GlobalTrigger/plugins/L1GlobalTrigger.h"
-// #include "L1Trigger/GlobalTriggerAnalyzer/interface/L1GtUtils.h"
-
-// new CommonClasses approach
 // these objects are all in the namespace 'ExoDiPhotons'
 #include "DiPhotonAnalysis/CommonClasses/interface/RecoPhotonInfo.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/RecoTwoProngInfo.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/RecoDiObjectInfo.h"
-#include "DiPhotonAnalysis/CommonClasses/interface/GenParticleInfo.h"
-#include "DiPhotonAnalysis/CommonClasses/interface/TriggerInfo.h"
-#include "DiPhotonAnalysis/CommonClasses/interface/PhotonID.h"
-#include "DiPhotonAnalysis/CommonClasses/interface/EventAndVertexInfo.h"
-#include "DiPhotonAnalysis/CommonClasses/interface/DiphotonInfo.h"
-#include "DiPhotonAnalysis/CommonClasses/interface/JetInfo.h"
-#include "DiPhotonAnalysis/CommonClasses/interface/ConversionInfo.h"
 
-//new for PU gen
-#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
-
-// new for LumiReweighting 
-#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
-
-//new for PF ID definition
-#include "DiPhotonAnalysis/CommonClasses/interface/PFPhotonID.h"
-
-//for conversion safe electron veto
-#include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
-
-//new for PFIsolation code
-//#include "EGamma/EGammaAnalysisTools/src/PFIsolationEstimator.cc"
-
-#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-
-#include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
-#include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
-
-//-----------------taken from Ilya-----------------
-#include "RecoEgamma/EgammaTools/interface/EffectiveAreas.h"
-#include "Math/VectorUtil.h"
-#include "DataFormats/Common/interface/ValueMap.h"
-#include "DataFormats/Candidate/interface/Candidate.h"
-#include "DataFormats/Candidate/interface/CandidateFwd.h"
-//-----------------taken from Ilya-----------------
-
-#include "DataFormats/PatCandidates/interface/Electron.h"
+// pat objects
 #include "DataFormats/PatCandidates/interface/Photon.h"
-
-// for jets
-#include "DataFormats/PatCandidates/interface/Jet.h"
-
-// other miniaod objects
 #include "DataFormats/PatCandidates/interface/MET.h"
-#include "DataFormats/PatCandidates/interface/Muon.h"
+//#include "DataFormats/PatCandidates/interface/Electron.h"
+//#include "DataFormats/PatCandidates/interface/Jet.h"
+//#include "DataFormats/PatCandidates/interface/Muon.h"
 
 using namespace std;
 
