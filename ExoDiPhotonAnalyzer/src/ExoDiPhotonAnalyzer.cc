@@ -187,8 +187,8 @@ private:
   Float_t rho_;      // the rho variable
 
   // ** charged decay analysis **
-  bool fHLT_Photon175;
-  bool fHLT_Photon22_Iso;
+  int fHLT_Photon175;
+  int fHLT_Photon22_Iso;
   int fEventNum;
   int fRunNum;
   int fLumiNum;
@@ -870,27 +870,48 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.getByToken(triggerPrescales_, triggerPrescales);
 
   const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
+  bool found_175 = false;
+  bool found_22_iso = false;
+  string trigger_photon175  = "HLT_Photon175_v";
+  string trigger_photon22_iso  = "HLT_Photon22_R9Id90_HE10_IsoM_v";
+  bool bit_photon175 = false;
+  bool bit_photon22_iso = false;
+  
   for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i)
   {
      string triggerName = names.triggerName(i);
-     //int ps = triggerPrescales->getPrescaleForIndex(i);
      
-     string trigger_photon175  = "HLT_Photon175";
-     std::size_t found_175 = triggerName.find(trigger_photon175);
-     if ( found_175 != std::string::npos ) {
-       fHLT_Photon175 = true;
-     } else {
-       fHLT_Photon175 = false;
+     std::size_t pos_175 = triggerName.find(trigger_photon175);
+     if ( pos_175 != std::string::npos ) {
+       found_175 = true;
+       bit_photon175 = triggerBits->accept(i);
      }
 
-     string trigger_photon22_iso  = "HLT_Photon22_R9Id90_HE10_IsoM";
-     std::size_t found_22_iso = triggerName.find(trigger_photon22_iso);
-     if ( found_22_iso != std::string::npos ) {
-       fHLT_Photon22_Iso = true;
-     } else {
-       fHLT_Photon22_Iso = false;
+     std::size_t pos_22_iso = triggerName.find(trigger_photon22_iso);
+     if ( pos_22_iso != std::string::npos ) {
+       found_22_iso = true;
+       bit_photon22_iso = triggerBits->accept(i);
      }
   }
+  if(!found_175) cout << "didn't find trigger! : " << trigger_photon175 << endl;
+  if(!found_22_iso) cout << "didn't find trigger! : " << trigger_photon22_iso << endl;
+  if(found_175) cout << "found : " << trigger_photon175 << ", bit: " << bit_photon175 << endl;
+  if(found_22_iso) cout << "found : " << trigger_photon22_iso << ", bit: " << bit_photon22_iso << endl;
+  fHLT_Photon175 = bit_photon175;
+  fHLT_Photon22_Iso = bit_photon22_iso;
+
+  // trigger dump 
+  /*if(fDebug) {
+    for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i)
+    {
+      string triggerName = names.triggerName(i);
+      int ps = triggerPrescales->getPrescaleForIndex(i);
+      std::size_t found = triggerName.find("HLT_Photon");
+      if ( found==std::string::npos )
+        continue;
+      cout << triggerName << " " << ps << " " << triggerBits->accept(i) << endl;
+    }
+  }*/
 
   // ecal information
   lazyTools_ = std::auto_ptr<noZS::EcalClusterLazyTools>( new noZS::EcalClusterLazyTools(iEvent, iSetup, recHitsEBToken, recHitsEEToken));   
