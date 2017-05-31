@@ -169,12 +169,7 @@ private:
 
   edm::EDGetTokenT<double> rhoToken_;
   
-  // MiniAOD case data members
-  edm::EDGetToken photonsMiniAODToken_;
   edm::EDGetToken gedphotonsToken_;
-  edm::EDGetToken patPhotonToken_;
-  edm::EDGetTokenT<edm::View<reco::GenParticle> > genParticlesMiniAODToken_;
-  edm::EDGetToken genEvtInfoProdToken_;
   
   Float_t rho_;      // the rho variable
 
@@ -467,7 +462,6 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fCandidatePairEGammaIsoFakeCut(iConfig.getUntrackedParameter<double>("egammaIsoFakeMax")),
     fCandidatePairGenMatchDR(iConfig.getUntrackedParameter<double>("generatorEtaMatchDR")),
     fTwoProngFakeRateCalcOnly(iConfig.getUntrackedParameter<bool>("noTreeOnlyFakeRateHistos")),
-
     rhoToken_(consumes<double> (iConfig.getParameter<edm::InputTag>("rho")))
 {
   // setting requested by Steve, omit all Brandon's code
@@ -498,6 +492,10 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   metToken_ = consumes<std::vector<pat::MET>>(edm::InputTag("slimmedMETs"));
   electronToken_ = consumes<std::vector<pat::Electron>>(edm::InputTag("slimmedElectrons"));
   muonToken_ = consumes<std::vector<pat::Muon>>(edm::InputTag("slimmedMuons"));
+
+  //gedphotonsToken_ = consumes<std::vector<pat::Photon>>(edm::InputTag("slimmedPhotons"));
+  //gedphotonsToken_ = mayConsume<edm::View<pat::Photon>>(iConfig.getParameter<edm::InputTag>("photonsMiniAOD"));
+  gedphotonsToken_ = mayConsume<edm::View<pat::Photon>>( edm::InputTag("slimmedPhotons") );
 
   edm::Service<TFileService> fs;
   // Branches for charged decay analysis
@@ -899,6 +897,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   edm::Handle<std::vector<pat::Photon>> miniaod_photons;
   iEvent.getByToken(photonToken_, miniaod_photons);
+
+  edm::Handle<edm::View<pat::Photon> > ged_photons;
+  iEvent.getByToken(gedphotonsToken_,ged_photons);
 
   edm::Handle<std::vector<pat::MET>> MET;
   iEvent.getByToken(metToken_, MET);
@@ -1656,8 +1657,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   subDetTopologyEB_ = caloTopology->getSubdetectorTopology(DetId::Ecal,EcalBarrel);
   subDetTopologyEE_ = caloTopology->getSubdetectorTopology(DetId::Ecal,EcalEndcap);
 
-  edm::Handle<edm::View<pat::Photon> > ged_photons;
-  iEvent.getByToken(gedphotonsToken_,ged_photons);
 
   if (fDebug) cout << ". got handles" << endl;
 
