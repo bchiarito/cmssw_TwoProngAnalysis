@@ -432,15 +432,6 @@ private:
 };
 
 //
-// constants, enums and typedefs
-// 
-
-
-//
-// static data member definitions
-//
-
-//
 // constructors and destructor
 //
 ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
@@ -492,8 +483,6 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   metToken_ = consumes<std::vector<pat::MET>>(edm::InputTag("slimmedMETs"));
   electronToken_ = consumes<std::vector<pat::Electron>>(edm::InputTag("slimmedElectrons"));
   muonToken_ = consumes<std::vector<pat::Muon>>(edm::InputTag("slimmedMuons"));
-
-  //gedphotonsToken_ = consumes<std::vector<pat::Photon>>(edm::InputTag("slimmedPhotons"));
   //gedphotonsToken_ = mayConsume<edm::View<pat::Photon>>(iConfig.getParameter<edm::InputTag>("photonsMiniAOD"));
   gedphotonsToken_ = mayConsume<edm::View<pat::Photon>>( edm::InputTag("slimmedPhotons") );
 
