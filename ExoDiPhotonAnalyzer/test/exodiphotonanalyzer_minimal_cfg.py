@@ -37,6 +37,8 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
+globalTag = options.globalTag
+
 # The source
 sample = options.sample
 readFiles = []
@@ -49,11 +51,13 @@ if sample == "local":
 elif sample == "jet":
     isMC = False
     isSignal = False
+    globalTag = 80X_dataRun2_2016SeptRepro_v7
     readFiles.extend( [
        '/store/data/Run2016G/JetHT/MINIAOD/03Feb2017-v1/100000/006E7AF2-AEEC-E611-A88D-7845C4FC3B00.root' ] )
 elif sample == "photon":
     isMC = False
     isSignal = False
+    globalTag = 80X_dataRun2_2016SeptRepro_v7
     readFiles.extend( [
        '/store/data/Run2016G/SinglePhoton/MINIAOD/03Feb2017-v1/110000/00F4619E-9BEB-E611-8D7A-002590494BE2.root' ] )
 else:
@@ -72,7 +76,7 @@ process.options.allowUnscheduled = cms.untracked.bool(True)
 
 # Global Tag
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = options.globalTag
+process.GlobalTag.globaltag = globalTag
 
 # Geometry for photon saturation 
 process.load("Configuration.StandardSequences.GeometryDB_cff")
