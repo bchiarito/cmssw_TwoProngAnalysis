@@ -54,6 +54,13 @@
 //#include "DataFormats/PatCandidates/interface/Jet.h"
 //#include "DataFormats/PatCandidates/interface/Muon.h"
 
+// for trigger
+#include "DataFormats/Math/interface/deltaR.h"
+#include "FWCore/Common/interface/TriggerNames.h"
+#include "DataFormats/Common/interface/TriggerResults.h"
+#include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
+#include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
+
 using namespace std;
 
   double phoKappaHighPtID(const pat::Photon *);
@@ -87,6 +94,11 @@ private:
   bool isCharged(int one, int two, int three);
 
   // ----------member data ---------------------------
+
+  // trigger
+  edm::EDGetTokenT<edm::TriggerResults> triggerBits_;
+  edm::EDGetTokenT<pat::TriggerObjectStandAloneCollection> triggerObjects_;
+  edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescales_;
   bool               fisMC;  // option to decide if MC or Data     
   bool               fisSignal;  // option to decide if Signal MC or Backround MC
   bool               fDebug;  // if set to False, mean to limit per event stdout output
@@ -105,6 +117,7 @@ private:
   float fCutflow_passNeutral;
   float fCutflow_passEGamma;
   float fCutflow_passPhotonPt;
+
  
   // tools for clusters
   std::auto_ptr<noZS::EcalClusterLazyTools> lazyTools_;
@@ -174,6 +187,8 @@ private:
   Float_t rho_;      // the rho variable
 
   // ** charged decay analysis **
+  bool fHLT_Photon175;
+  bool fHLT_Photon22_Iso;
   int fEventNum;
   int fRunNum;
   int fLumiNum;
@@ -435,7 +450,11 @@ private:
 // constructors and destructor
 //
 ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
-  : fisMC(iConfig.getUntrackedParameter<bool>("isMC")),
+  : 
+    triggerBits_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("bits"))),
+    triggerObjects_(consumes<pat::TriggerObjectStandAloneCollection>(iConfig.getParameter<edm::InputTag>("objects"))),
+    triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("prescales"))),
+    fisMC(iConfig.getUntrackedParameter<bool>("isMC")),
     fisSignal(iConfig.getUntrackedParameter<bool>("isSignal")),
     fDebug(iConfig.getUntrackedParameter<bool>("debug")),
     fchargedDecayCutflow(iConfig.getUntrackedParameter<bool>("chargedDecayCutflow")),
@@ -490,6 +509,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   // Branches for charged decay analysis
   if (!fOmitChargedDecayCode) {
   fTree2 = fs->make<TTree>("fTree2","ChargedDecayTree");
+  // Trigger
+  fTree2->Branch("HLT_Photon175",&fHLT_Photon175,"HLT_Photon175/I");
+  fTree2->Branch("HLT_Photon22_Iso",&fHLT_Photon22_Iso,"HLT_Photon22_Iso/I");
   // Event wide
   fTree2->Branch("eventNum",&fEventNum,"eventNum/I");
   fTree2->Branch("runNum",&fRunNum,"runNum/I");
@@ -838,6 +860,37 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   edm::Handle< double > rhoH;
   iEvent.getByToken(rhoToken_,rhoH);
   rho_ = *rhoH;
+
+  // trigger 
+  edm::Handle<edm::TriggerResults> triggerBits;
+  edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects;
+  edm::Handle<pat::PackedTriggerPrescales> triggerPrescales;
+  iEvent.getByToken(triggerBits_, triggerBits);
+  iEvent.getByToken(triggerObjects_, triggerObjects);
+  iEvent.getByToken(triggerPrescales_, triggerPrescales);
+
+  const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
+  for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i)
+  {
+     string triggerName = names.triggerName(i);
+     //int ps = triggerPrescales->getPrescaleForIndex(i);
+     
+     string trigger_photon175  = "HLT_Photon175";
+     std::size_t found_175 = triggerName.find(trigger_photon175);
+     if ( found_175 != std::string::npos ) {
+       fHLT_Photon175 = true;
+     } else {
+       fHLT_Photon175 = false;
+     }
+
+     string trigger_photon22_iso  = "HLT_Photon22_R9Id90_HE10_IsoM";
+     std::size_t found_22_iso = triggerName.find(trigger_photon22_iso);
+     if ( found_22_iso != std::string::npos ) {
+       fHLT_Photon22_Iso = true;
+     } else {
+       fHLT_Photon22_Iso = false;
+     }
+  }
 
   // ecal information
   lazyTools_ = std::auto_ptr<noZS::EcalClusterLazyTools>( new noZS::EcalClusterLazyTools(iEvent, iSetup, recHitsEBToken, recHitsEEToken));   

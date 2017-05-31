@@ -21,9 +21,13 @@ options.register("sample",
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "which sample we want to run over")
+options.register("out",
+                'Trial',
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.string,
+                "output file name")
 options.setDefault('maxEvents', 10)
 options.parseArguments()
-
 # Begin configuration
 import FWCore.ParameterSet.Config as cms
 process = cms.Process("ExoDiPhotonAnalysis")
@@ -74,7 +78,7 @@ process.GlobalTag.globaltag = options.globalTag
 process.load("Configuration.StandardSequences.GeometryDB_cff")
 
 # Output file service
-process.TFileService = cms.Service( "TFileService", fileName = cms.string('ExoDiPhotonAnalyzer.root') )
+process.TFileService = cms.Service( "TFileService", fileName = cms.string( options.out + '_ExoDiPhotonAnalyzer.root') )
 
 # filter on vertices
 vtxCollName = 'offlineSlimmedPrimaryVertices'
@@ -114,6 +118,9 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   noTreeOnlyFakeRateHistos = cms.untracked.bool(False),
                                   rho = cms.InputTag("fixedGridRhoFastjetAll"),
                                   gedphotonsMiniAOD = cms.InputTag("slimmedPhotons"), # new block of code
+                                  bits = cms.InputTag("TriggerResults","","HLT"),
+                                  prescales = cms.InputTag("patTrigger"),
+                                  objects = cms.InputTag("selectedPatTrigger"),
                                   )
 process.diphotonAnalyzer.isMC = cms.untracked.bool(isMC)
 process.diphotonAnalyzer.isSignal = cms.untracked.bool(isSignal)
