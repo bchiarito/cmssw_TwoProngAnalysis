@@ -22,7 +22,7 @@ options.register("sample",
                 VarParsing.varType.string,
                 "which sample we want to run over")
 options.register("out",
-                'Trial',
+                '',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "output file name")
@@ -55,6 +55,7 @@ elif sample == "jet":
     readFiles.extend( [
        '/store/data/Run2016G/JetHT/MINIAOD/03Feb2017-v1/100000/006E7AF2-AEEC-E611-A88D-7845C4FC3B00.root' ] )
 elif sample == "photon":
+    # 99,000 events
     isMC = False
     isSignal = False
     globalTag = "80X_dataRun2_2016SeptRepro_v7"
@@ -82,7 +83,11 @@ process.GlobalTag.globaltag = globalTag
 process.load("Configuration.StandardSequences.GeometryDB_cff")
 
 # Output file service
-process.TFileService = cms.Service( "TFileService", fileName = cms.string( options.out + '_ExoDiPhotonAnalyzer.root') )
+if options.out == "":
+  prefix = options.sample
+else:
+  prefix = options.out
+process.TFileService = cms.Service( "TFileService", fileName = cms.string( prefix + '_ExoDiPhotonAnalyzer.root') )
 
 # filter on vertices
 vtxCollName = 'offlineSlimmedPrimaryVertices'

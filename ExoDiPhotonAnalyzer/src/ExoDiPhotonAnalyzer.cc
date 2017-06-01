@@ -893,10 +893,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
        bit_photon22_iso = triggerBits->accept(i);
      }
   }
-  if(!found_175) cout << "didn't find trigger! : " << trigger_photon175 << endl;
-  if(!found_22_iso) cout << "didn't find trigger! : " << trigger_photon22_iso << endl;
-  if(found_175) cout << "found : " << trigger_photon175 << ", bit: " << bit_photon175 << endl;
-  if(found_22_iso) cout << "found : " << trigger_photon22_iso << ", bit: " << bit_photon22_iso << endl;
+  if(fDebug && !found_175) cout << "didn't find trigger! : " << trigger_photon175 << endl;
+  if(fDebug && !found_22_iso) cout << "didn't find trigger! : " << trigger_photon22_iso << endl;
+  if(fDebug && found_175) cout << "found : " << trigger_photon175 << ", bit: " << bit_photon175 << endl;
+  if(fDebug && found_22_iso) cout << "found : " << trigger_photon22_iso << ", bit: " << bit_photon22_iso << endl;
   fHLT_Photon175 = bit_photon175;
   fHLT_Photon22_Iso = bit_photon22_iso;
 
