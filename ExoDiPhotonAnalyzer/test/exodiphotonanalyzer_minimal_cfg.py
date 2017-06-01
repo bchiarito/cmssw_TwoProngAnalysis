@@ -51,13 +51,13 @@ if sample == "local":
 elif sample == "jet":
     isMC = False
     isSignal = False
-    globalTag = 80X_dataRun2_2016SeptRepro_v7
+    globalTag = "80X_dataRun2_2016SeptRepro_v7"
     readFiles.extend( [
        '/store/data/Run2016G/JetHT/MINIAOD/03Feb2017-v1/100000/006E7AF2-AEEC-E611-A88D-7845C4FC3B00.root' ] )
 elif sample == "photon":
     isMC = False
     isSignal = False
-    globalTag = 80X_dataRun2_2016SeptRepro_v7
+    globalTag = "80X_dataRun2_2016SeptRepro_v7"
     readFiles.extend( [
        '/store/data/Run2016G/SinglePhoton/MINIAOD/03Feb2017-v1/110000/00F4619E-9BEB-E611-8D7A-002590494BE2.root' ] )
 else:
