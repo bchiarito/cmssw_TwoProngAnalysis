@@ -4,3 +4,5 @@ __init__.py
 *.root
 */test/**/plotting/
 *_crab3jobs/
+crab.log
+*.pdf
