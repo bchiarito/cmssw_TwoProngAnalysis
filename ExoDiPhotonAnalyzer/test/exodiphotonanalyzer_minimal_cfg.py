@@ -65,7 +65,7 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 readFiles = []
 if sample == "signal":
     readFiles.extend( [
-        'file:/users/h2/chiarito/samples/MiniAODv2_Eta_generic.root' ] )
+        'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_generic.root' ] )
     if options.local:
       isMC = True
       isSignal = True
