@@ -71,7 +71,8 @@ if sample == "signal":
       isSignal = True
       doLumis = False
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      outname = "signal"
+      if outname == "":
+        outname = "signal"
 elif sample == "jet":
     # 100k events
     readFiles.extend( [
@@ -81,7 +82,8 @@ elif sample == "jet":
       isSignal = False
       doLumis = True
       globalTag = "80X_dataRun2_2016SeptRepro_v7"
-      outname = "jet"
+      if outname == "":
+        outname = "jet"
 elif sample == "photon":
     # 100k events
     readFiles.extend( [
@@ -91,7 +93,8 @@ elif sample == "photon":
       isSignal = False
       doLumis = True
       globalTag = "80X_dataRun2_2016SeptRepro_v7"
-      outname = "photon"
+      if outname == "":
+        outname = "photon"
 elif options.local:
     print "Not a valid sample name!!"
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( readFiles ))
