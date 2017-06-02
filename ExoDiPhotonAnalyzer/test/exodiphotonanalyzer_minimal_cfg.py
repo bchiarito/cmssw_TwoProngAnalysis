@@ -2,7 +2,7 @@
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 options.register('globalTag',
-                '76X_dataRun2_16Dec2015_v0',
+                '',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "global tag to use when running")
@@ -46,8 +46,9 @@ doLumis = options.doLumis
 if sample == "local":
     isMC = True
     isSignal = True
+    globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
     readFiles.extend( [
-        'file:./MiniAODv2_Eta_generic.root' ] )
+        'file:/users/h2/chiarito/samples/MiniAODv2_Eta_generic.root' ] )
 elif sample == "jet":
     isMC = False
     isSignal = False
