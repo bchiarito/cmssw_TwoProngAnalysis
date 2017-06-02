@@ -26,8 +26,32 @@ options.register("out",
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "output file name")
+options.register('isMC',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "Specify bkg MC for looking for gen particles")
+options.register('isSignal',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "Specify singal MC for looking for Phi and omega gen particles")
+options.register('local',
+                True,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "Specify running on the command line, as opposed to crab/conder")
 options.setDefault('maxEvents', 10)
 options.parseArguments()
+
+# set variables
+isMC = options.isMC
+isSignal = options.isSignal
+doLumis = options.doLumis
+sample = options.sample
+globalTag = options.globalTag
+outname = options.out
+
 # Begin configuration
 import FWCore.ParameterSet.Config as cms
 process = cms.Process("ExoDiPhotonAnalysis")
@@ -37,44 +61,55 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
-
-# The source
-sample = options.sample
+# Source
 readFiles = []
-doLumis = options.doLumis
-if sample == "local":
-    isMC = True
-    isSignal = True
-    globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+if sample == "signal":
     readFiles.extend( [
         'file:/users/h2/chiarito/samples/MiniAODv2_Eta_generic.root' ] )
+    if options.local:
+      isMC = True
+      isSignal = True
+      doLumis = False
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      outname = "signal"
 elif sample == "jet":
-    isMC = False
-    isSignal = False
-    globalTag = "80X_dataRun2_2016SeptRepro_v7"
+    # 100k events
     readFiles.extend( [
        '/store/data/Run2016G/JetHT/MINIAOD/03Feb2017-v1/100000/006E7AF2-AEEC-E611-A88D-7845C4FC3B00.root' ] )
+    if options.local:
+      isMC = False
+      isSignal = False
+      doLumis = True
+      globalTag = "80X_dataRun2_2016SeptRepro_v7"
+      outname = "jet"
 elif sample == "photon":
-    # 99,000 events
-    isMC = False
-    isSignal = False
-    globalTag = "80X_dataRun2_2016SeptRepro_v7"
+    # 100k events
     readFiles.extend( [
        '/store/data/Run2016G/SinglePhoton/MINIAOD/03Feb2017-v1/110000/00F4619E-9BEB-E611-8D7A-002590494BE2.root' ] )
-else:
+    if options.local:
+      isMC = False
+      isSignal = False
+      doLumis = True
+      globalTag = "80X_dataRun2_2016SeptRepro_v7"
+      outname = "photon"
+elif options.local:
     print "Not a valid sample name!!"
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( readFiles ))
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( options.maxEvents ) )
 
+# Output files
+if outname == "":
+  post = 'TwoProngNtuplizer.root'
+else:
+  post = '_TwoProngNtuplizer.root'
+process.TFileService = cms.Service( "TFileService", fileName = cms.string( outname + post ) )
+
 # Global Tag
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
-if options.globalTag != "":
-  process.GlobalTag.globaltag = options.globalTag
-else:
-  process.GlobalTag.globaltag = globalTag
+process.GlobalTag.globaltag = globalTag
 
 # JSON file to choose what lumis to process
-if doLumis==True: 
+if options.doLumis==True: 
     import FWCore.PythonUtilities.LumiList as LumiList
     goodlumis = "Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt"
     process.source.lumisToProcess = LumiList.LumiList(filename = goodlumis).getVLuminosityBlockRange()
@@ -84,13 +119,6 @@ process.options.allowUnscheduled = cms.untracked.bool(True)
 
 # Geometry for photon saturation 
 process.load("Configuration.StandardSequences.GeometryDB_cff")
-
-# Output file service
-if options.out == '':
-  outfile = options.sample + '_ExoDiPhotonAnalyzer.root'
-else:
-  outfile = options.out
-process.TFileService = cms.Service( "TFileService", fileName = cms.string( outfile ) )
 
 # filter on vertices
 vtxCollName = 'offlineSlimmedPrimaryVertices'
