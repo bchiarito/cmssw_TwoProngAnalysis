@@ -37,7 +37,6 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
 
-globalTag = options.globalTag
 
 # The source
 sample = options.sample
@@ -67,6 +66,13 @@ else:
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( readFiles ))
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( options.maxEvents ) )
 
+# Global Tag
+process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
+if options.globalTag != "":
+  process.GlobalTag.globaltag = options.globalTag
+else:
+  process.GlobalTag.globaltag = globalTag
+
 # JSON file to choose what lumis to process
 if doLumis==True: 
     import FWCore.PythonUtilities.LumiList as LumiList
@@ -76,19 +82,15 @@ if doLumis==True:
 # Allow unscheduled
 process.options.allowUnscheduled = cms.untracked.bool(True)
 
-# Global Tag
-process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = globalTag
-
 # Geometry for photon saturation 
 process.load("Configuration.StandardSequences.GeometryDB_cff")
 
 # Output file service
-if options.out == "":
-  prefix = options.sample
+if options.out == '':
+  outfile = options.sample + '_ExoDiPhotonAnalyzer.root'
 else:
-  prefix = options.out
-process.TFileService = cms.Service( "TFileService", fileName = cms.string( prefix + '_ExoDiPhotonAnalyzer.root') )
+  outfile = options.out
+process.TFileService = cms.Service( "TFileService", fileName = cms.string( outfile ) )
 
 # filter on vertices
 vtxCollName = 'offlineSlimmedPrimaryVertices'
