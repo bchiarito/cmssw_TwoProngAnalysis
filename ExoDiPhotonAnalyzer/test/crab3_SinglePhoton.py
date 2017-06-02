@@ -3,13 +3,13 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'photondata2016test_crab3jobs'
+config.General.workArea = 'photondata2016full_crab3jobs'
 config.section_('JobType')
 config.JobType.psetName = 'exodiphotonanalyzer_minimal_cfg.py'
 config.JobType.pyCfgParams = ['globalTag=80X_dataRun2_2016SeptRepro_v7','out=TwoProngAnalyzer.root']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/noreplica/diphotonProject/scratch/photon_eff_calc'
+config.Data.outLFNDirBase = '/store/user/bchiari1/noreplica/diphotonProject/scratch/photon_eff_calc_full'
 config.Data.publication = False
 config.Data.outputDatasetTag = ''
 config.Data.unitsPerJob = 100000
