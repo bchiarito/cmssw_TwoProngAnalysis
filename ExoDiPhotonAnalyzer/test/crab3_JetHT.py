@@ -3,16 +3,16 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'jetdata2016test_crab3jobs'
+config.General.workArea = 'jetdata2016full_crab3jobs'
 config.section_('JobType')
 config.JobType.psetName = 'exodiphotonanalyzer_minimal_cfg.py'
 config.JobType.pyCfgParams = ['local=False','globalTag=80X_dataRun2_2016SeptRepro_v7']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/noreplica/diphotonProject/scratch/photon_eff_calc'
+config.Data.outLFNDirBase = '/store/user/bchiari1/noreplica/diphotonProject/scratch/photon_eff_calc_fulldatasets'
 config.Data.publication = False
 config.Data.unitsPerJob = 100
-config.Data.totalUnits = 100
+config.Data.totalUnits = -1
 config.Data.splitting = 'LumiBased'
 config.Data.lumiMask = 'Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt'
 config.section_('User')
