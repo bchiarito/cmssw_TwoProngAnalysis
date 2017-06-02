@@ -102,10 +102,11 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( options.max
 
 # Output files
 if outname == "":
-  post = 'TwoProngNtuplizer.root'
+  pre = 'TwoProngNtuplizer'
 else:
-  post = '_TwoProngNtuplizer.root'
-process.TFileService = cms.Service( "TFileService", fileName = cms.string( outname + post ) )
+  pre = 'TwoProngNtuplizer_'
+post = '.root'
+process.TFileService = cms.Service( "TFileService", fileName = cms.string( pre + outname + post ) )
 
 # Global Tag
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
