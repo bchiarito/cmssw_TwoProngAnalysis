@@ -103,6 +103,7 @@ private:
   bool               fisSignal;  // option to decide if Signal MC or Backround MC
   bool               fDebug;  // if set to False, mean to limit per event stdout output
   bool               fchargedDecayCutflow;  // option to print cutflow of the charged selection to stdout at the end of the job
+  bool               fTriggerEffOnly;
 
   float fCutflow_total;
   float fCutflow_oneCand;
@@ -179,6 +180,16 @@ private:
   TH2F *fTwoProngFakeNume_odd_phi;
   TH2F *fTwoProngFakeDeno_odd_phi;
   TH2F *fTwoProngFakeRate_odd_phi;
+
+  TH1F *fPhotonTriggerEff_Photon175_Numerator;
+  TH1F *fPhotonTriggerEff_Photon175_Denominator;
+  TH1F *fPhotonTriggerEff_Photon175_Division;
+  TH1F *fPhotonTriggerEff_Photon22_Iso_Numerator;
+  TH1F *fPhotonTriggerEff_Photon22_Iso_Denominator;
+  TH1F *fPhotonTriggerEff_Photon22_Iso_Division;
+  TH1F *fPhotonTriggerEff_all_Numerator;
+  TH1F *fPhotonTriggerEff_all_Denominator;
+  TH1F *fPhotonTriggerEff_all_Division;
 
   edm::EDGetTokenT<double> rhoToken_;
   
@@ -458,6 +469,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fisSignal(iConfig.getUntrackedParameter<bool>("isSignal")),
     fDebug(iConfig.getUntrackedParameter<bool>("debug")),
     fchargedDecayCutflow(iConfig.getUntrackedParameter<bool>("chargedDecayCutflow")),
+    fTriggerEffOnly(iConfig.getUntrackedParameter<bool>("triggerEffOnly")),
     fCandidatePairDR(iConfig.getUntrackedParameter<double>("chargedHadronPairMinDeltaR")),
     fCandidatePairMinPt(iConfig.getUntrackedParameter<double>("chargedHadronMinPt")),
     fCandidatePairIsolationDR(iConfig.getUntrackedParameter<double>("isolationConeR")),
@@ -798,6 +810,30 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTwoProngFakeNume_odd_phi = fs->make<TH2F>("twoprongfakenume_odd_phi","Fake Numerator count, phi vs odd mass bins",num_phi_bins,phi_low,phi_high,num_odd_mass_bins,odd_mass_bins);
   fTwoProngFakeDeno_odd_phi = fs->make<TH2F>("twoprongfakedeno_odd_phi","Fake Denominator count, phi vs odd mass bins",num_phi_bins,phi_low,phi_high,num_odd_mass_bins,odd_mass_bins);
   fTwoProngFakeRate_odd_phi = fs->make<TH2F>("twoprongfakerate_odd_phi","Fake Rate, phi vs odd mass bins",num_phi_bins,phi_low,phi_high,num_odd_mass_bins,odd_mass_bins);
+
+  int eff_num_bins = 23;
+  float eff_bins[eff_num_bins+1] = {0,10,12,14,16,18,20,22,25,30,40,60,80,100,120,140,160,180,200,300,400,500,600,2000};
+
+  fPhotonTriggerEff_all_Numerator = 
+  fs->make<TH1F>("photon_trig_eff_nume","HLT_Photon175 or HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  fPhotonTriggerEff_all_Denominator = 
+  fs->make<TH1F>("photon_trig_eff_deno","HLT_Photon175 or HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id-photon p_{T};Demominator", eff_num_bins,&eff_bins[0]);
+  fPhotonTriggerEff_all_Division = 
+  fs->make<TH1F>("photon_trig_eff","HLT_Photon175 or HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id-photon p_{T};Efficency",eff_num_bins,&eff_bins[0]);
+
+  fPhotonTriggerEff_Photon175_Numerator = 
+  fs->make<TH1F>("photon_trig_eff_175_nume","HLT_Photon175;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  fPhotonTriggerEff_Photon175_Denominator = 
+  fs->make<TH1F>("photon_trig_eff_175_deno","HLT_Photon175;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  fPhotonTriggerEff_Photon175_Division = 
+  fs->make<TH1F>("photon_trig_eff_175","HLT_Photon175;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+
+  fPhotonTriggerEff_Photon22_Iso_Numerator = 
+  fs->make<TH1F>("photon_trig_eff_22iso_nume","HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  fPhotonTriggerEff_Photon22_Iso_Denominator = 
+  fs->make<TH1F>("photon_trig_eff_22iso_deno","HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  fPhotonTriggerEff_Photon22_Iso_Division = 
+  fs->make<TH1F>("photon_trig_eff_22iso","HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
 
   } // done with charged decay code conditional
 
@@ -1793,8 +1829,19 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     fGen_decayType = decayType;
   }
 
-  // Now fill fTree2, it's filled for every event 
-  if (!fOmitChargedDecayCode && !fTwoProngFakeRateCalcOnly) fTree2->Fill();
+  // Photon Trigger Eff
+  if (fNumTightPhotons > 0) {
+    fPhotonTriggerEff_all_Denominator->Fill( (*goodPhotons[0]).pt() );     
+    if(found_175 && found_22_iso && (fHLT_Photon175) )
+        fPhotonTriggerEff_Photon175_Numerator->Fill( (*goodPhotons[0]).pt() );
+    if(found_175 && found_22_iso && (fHLT_Photon22_Iso) )
+        fPhotonTriggerEff_Photon22_Iso_Numerator->Fill( (*goodPhotons[0]).pt() );
+    if(found_175 && found_22_iso && (fHLT_Photon175 || fHLT_Photon22_Iso) )
+        fPhotonTriggerEff_all_Numerator->Fill( (*goodPhotons[0]).pt() );
+  }
+
+  // Now fill fTree2
+  if (!fOmitChargedDecayCode && !fTwoProngFakeRateCalcOnly && !fTriggerEffOnly) fTree2->Fill();
 }
 
 void 
@@ -1832,6 +1879,22 @@ ExoDiPhotonAnalyzer::endJob()
   fTwoProngFakeRate_odd_phi->Add(fTwoProngFakeNume_odd_phi);
   fTwoProngFakeRate_odd_phi->Divide(fTwoProngFakeDeno_odd_phi);
   } // done with charged decay code conditional
+
+  // photon trigg eff histograms
+  fPhotonTriggerEff_all_Denominator->Sumw2();
+  fPhotonTriggerEff_all_Numerator->Sumw2();
+  fPhotonTriggerEff_all_Division->Add(fPhotonTriggerEff_all_Numerator);
+  fPhotonTriggerEff_all_Division->Divide(fPhotonTriggerEff_all_Denominator);
+
+  fPhotonTriggerEff_Photon175_Denominator->Sumw2();
+  fPhotonTriggerEff_Photon175_Numerator->Sumw2();
+  fPhotonTriggerEff_Photon175_Division->Add(fPhotonTriggerEff_all_Numerator);
+  fPhotonTriggerEff_Photon175_Division->Divide(fPhotonTriggerEff_all_Denominator);
+
+  fPhotonTriggerEff_Photon22_Iso_Denominator->Sumw2();
+  fPhotonTriggerEff_Photon22_Iso_Numerator->Sumw2();
+  fPhotonTriggerEff_Photon22_Iso_Division->Add(fPhotonTriggerEff_all_Numerator);
+  fPhotonTriggerEff_Photon22_Iso_Division->Divide(fPhotonTriggerEff_all_Denominator);
 
   // Print Cutflow
   if (!fOmitChargedDecayCode && fchargedDecayCutflow) {

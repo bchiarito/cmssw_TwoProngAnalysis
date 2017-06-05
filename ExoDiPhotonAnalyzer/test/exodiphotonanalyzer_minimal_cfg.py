@@ -165,6 +165,7 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   bits = cms.InputTag("TriggerResults","","HLT"),
                                   prescales = cms.InputTag("patTrigger"),
                                   objects = cms.InputTag("selectedPatTrigger"),
+                                  triggerEffOnly = cms.untracked.bool(True)
                                   )
 process.diphotonAnalyzer.isMC = cms.untracked.bool(isMC)
 process.diphotonAnalyzer.isSignal = cms.untracked.bool(isSignal)
