@@ -814,6 +814,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   int eff_num_bins = 23;
   float eff_bins[eff_num_bins+1] = {0,10,12,14,16,18,20,22,25,30,40,60,80,100,120,140,160,180,200,300,400,500,600,2000};
 
+  // photon trigger eff histos
   fPhotonTriggerEff_all_Numerator = 
   fs->make<TH1F>("photon_trig_eff_nume","HLT_Photon175 or HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
   fPhotonTriggerEff_all_Denominator = 
@@ -823,15 +824,11 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 
   fPhotonTriggerEff_Photon175_Numerator = 
   fs->make<TH1F>("photon_trig_eff_175_nume","HLT_Photon175;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
-  fPhotonTriggerEff_Photon175_Denominator = 
-  fs->make<TH1F>("photon_trig_eff_175_deno","HLT_Photon175;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
   fPhotonTriggerEff_Photon175_Division = 
   fs->make<TH1F>("photon_trig_eff_175","HLT_Photon175;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
 
   fPhotonTriggerEff_Photon22_Iso_Numerator = 
   fs->make<TH1F>("photon_trig_eff_22iso_nume","HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
-  fPhotonTriggerEff_Photon22_Iso_Denominator = 
-  fs->make<TH1F>("photon_trig_eff_22iso_deno","HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
   fPhotonTriggerEff_Photon22_Iso_Division = 
   fs->make<TH1F>("photon_trig_eff_22iso","HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
 
@@ -1888,12 +1885,12 @@ ExoDiPhotonAnalyzer::endJob()
 
   fPhotonTriggerEff_Photon175_Denominator->Sumw2();
   fPhotonTriggerEff_Photon175_Numerator->Sumw2();
-  fPhotonTriggerEff_Photon175_Division->Add(fPhotonTriggerEff_all_Numerator);
+  fPhotonTriggerEff_Photon175_Division->Add(fPhotonTriggerEff_Photon175_Numerator);
   fPhotonTriggerEff_Photon175_Division->Divide(fPhotonTriggerEff_all_Denominator);
 
   fPhotonTriggerEff_Photon22_Iso_Denominator->Sumw2();
   fPhotonTriggerEff_Photon22_Iso_Numerator->Sumw2();
-  fPhotonTriggerEff_Photon22_Iso_Division->Add(fPhotonTriggerEff_all_Numerator);
+  fPhotonTriggerEff_Photon22_Iso_Division->Add(fPhotonTriggerEff_Photon22_Iso_Numerator);
   fPhotonTriggerEff_Photon22_Iso_Division->Divide(fPhotonTriggerEff_all_Denominator);
 
   // Print Cutflow
