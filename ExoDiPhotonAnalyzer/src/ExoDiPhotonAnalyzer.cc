@@ -70,6 +70,7 @@ using namespace std;
   bool passSigmaIetaIetaCut(const pat::Photon* , bool );
   bool passChargedHadronCut(const pat::Photon* );
   bool passHadTowerOverEmCut(const pat::Photon*);
+  bool passHadDrConeOverEmCut(const pat::Photon*);
   double corPhoIsoHighPtID(const pat::Photon*, double );
   bool compareCandsByPt(const edm::Ptr<const reco::Candidate> , const edm::Ptr<const reco::Candidate>);
 
@@ -104,6 +105,8 @@ private:
   bool               fDebug;  // if set to False, mean to limit per event stdout output
   bool               fchargedDecayCutflow;  // option to print cutflow of the charged selection to stdout at the end of the job
   bool               fTriggerEffOnly;
+  bool               fAddDrConePhotonCut;
+  bool               fTwoProngFakeRateCalcOnly;
 
   float fCutflow_total;
   float fCutflow_oneCand;
@@ -132,6 +135,7 @@ private:
        const CaloSubdetectorTopology*, const CaloSubdetectorTopology*);
 
   bool photon_passHighPtID(const pat::Photon*, double , bool ) ;
+  bool photon_passHighPtID_DrCone(const pat::Photon* , double , bool ) ;
 
   TTree *fTree2;
 
@@ -159,9 +163,6 @@ private:
   double fCandidatePairNeutralIsoFakeCut;
   double fCandidatePairEGammaIsoFakeCut;
   double fCandidatePairGenMatchDR;
-  bool fOmitChargedDecayCode;
-  bool fSkipPhotonMCCode;
-  bool fTwoProngFakeRateCalcOnly;
   TH2F *fTwoProngFakeNume_even_pt;
   TH2F *fTwoProngFakeDeno_even_pt;
   TH2F *fTwoProngFakeRate_even_pt;
@@ -181,13 +182,21 @@ private:
   TH2F *fTwoProngFakeDeno_odd_phi;
   TH2F *fTwoProngFakeRate_odd_phi;
 
+  TH1F *fPhotonTriggerEff_all_Numerator;
+  TH1F *fPhotonTriggerEff_all_Denominator;
+  TH1F *fPhotonTriggerEff_all_Division;
   TH1F *fPhotonTriggerEff_Photon175_Numerator;
   TH1F *fPhotonTriggerEff_Photon175_Division;
   TH1F *fPhotonTriggerEff_Photon22_Iso_Numerator;
   TH1F *fPhotonTriggerEff_Photon22_Iso_Division;
-  TH1F *fPhotonTriggerEff_all_Numerator;
-  TH1F *fPhotonTriggerEff_all_Denominator;
-  TH1F *fPhotonTriggerEff_all_Division;
+
+  TH1F *fPhotonTriggerEff_ConeHE_all_Numerator;
+  TH1F *fPhotonTriggerEff_ConeHE_all_Denominator;
+  TH1F *fPhotonTriggerEff_ConeHE_all_Division;
+  TH1F *fPhotonTriggerEff_ConeHE_Photon175_Numerator;
+  TH1F *fPhotonTriggerEff_ConeHE_Photon175_Division;
+  TH1F *fPhotonTriggerEff_ConeHE_Photon22_Iso_Numerator;
+  TH1F *fPhotonTriggerEff_ConeHE_Photon22_Iso_Division;
 
   edm::EDGetTokenT<double> rhoToken_;
   
@@ -213,10 +222,15 @@ private:
   int fNumTwoProngPassPhotonPtIso;
   int fNumTwoProngFake;
   int fNumTightPhotons;
+  int fNumTightPhotons_ConeHE;
   vector<Double_t> fIDPhoton_pt;
   vector<Double_t> fIDPhoton_eta;
   vector<Double_t> fIDPhoton_phi;
   vector<Double_t> fIDPhoton_mass;
+  vector<Double_t> fID2Photon_pt;
+  vector<Double_t> fID2Photon_eta;
+  vector<Double_t> fID2Photon_phi;
+  vector<Double_t> fID2Photon_mass;
   int fNumOffset;
   double fHT;
   double fMET;
@@ -468,6 +482,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fDebug(iConfig.getUntrackedParameter<bool>("debug")),
     fchargedDecayCutflow(iConfig.getUntrackedParameter<bool>("chargedDecayCutflow")),
     fTriggerEffOnly(iConfig.getUntrackedParameter<bool>("triggerEffOnly")),
+    fAddDrConePhotonCut(iConfig.getUntrackedParameter<bool>("addPhotonCutDrConeHE")),
+    fTwoProngFakeRateCalcOnly(iConfig.getUntrackedParameter<bool>("noTreeOnlyFakeRateHistos")),
     fCandidatePairDR(iConfig.getUntrackedParameter<double>("chargedHadronPairMinDeltaR")),
     fCandidatePairMinPt(iConfig.getUntrackedParameter<double>("chargedHadronMinPt")),
     fCandidatePairIsolationDR(iConfig.getUntrackedParameter<double>("isolationConeR")),
@@ -481,13 +497,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fCandidatePairNeutralIsoFakeCut(iConfig.getUntrackedParameter<double>("neutralIsoFakeMax")),
     fCandidatePairEGammaIsoFakeCut(iConfig.getUntrackedParameter<double>("egammaIsoFakeMax")),
     fCandidatePairGenMatchDR(iConfig.getUntrackedParameter<double>("generatorEtaMatchDR")),
-    fTwoProngFakeRateCalcOnly(iConfig.getUntrackedParameter<bool>("noTreeOnlyFakeRateHistos")),
     rhoToken_(consumes<double> (iConfig.getParameter<edm::InputTag>("rho")))
 {
-  // setting requested by Steve, omit all Brandon's code
-  fOmitChargedDecayCode = ( iConfig.exists("omitChargedDecayCode") ? iConfig.getParameter<bool>("omitChargedDecayCode") : false );  
-  fSkipPhotonMCCode = ( iConfig.exists("skipPhotonMCCode") ? iConfig.getParameter<bool>("skipPhotonMCCode") : true );  
-
   // Initialize cutflow variables
   fCutflow_total = 0;
   fCutflow_oneCand = 0;
@@ -503,6 +514,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fCutflow_passEGamma = 0;
   fCutflow_passPhotonPt = 0;
 
+  // MiniAOD event content
   pfcandsToken_ = consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates"));
   genToken_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
   pvToken_ = consumes<vector<reco::Vertex>>(edm::InputTag("offlineSlimmedPrimaryVertices"));
@@ -517,7 +529,6 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 
   edm::Service<TFileService> fs;
   // Branches for charged decay analysis
-  if (!fOmitChargedDecayCode) {
   fTree2 = fs->make<TTree>("fTree2","ChargedDecayTree");
   // Trigger
   fTree2->Branch("HLT_Photon175",&fHLT_Photon175,"HLT_Photon175/I");
@@ -736,6 +747,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("TwoProng_genDR",&fTwoProng_genDR);
   // Tight Photons, sorted by pt
   fTree2->Branch("nTightPhotons",&fNumTightPhotons,"nTightPhotons/I");
+  if (fAddDrConePhotonCut) {
+  fTree2->Branch("nTightPhotons_ConeHE",&fNumTightPhotons_ConeHE,"nTightPhotons_ConeHE/I");
+  }
   fTree2->Branch("Photon_pt",&fIDPhoton_pt);
   fTree2->Branch("Photon_eta",&fIDPhoton_eta);
   fTree2->Branch("Photon_phi",&fIDPhoton_phi);
@@ -743,6 +757,12 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Photon1",&fRecoTightPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree2->Branch("Photon2",&fRecoTightPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree2->Branch("Photon3",&fRecoTightPhotonInfo3,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  if (fAddDrConePhotonCut) {
+  fTree2->Branch("Photon_ConeHE_pt",&fID2Photon_pt);
+  fTree2->Branch("Photon_ConeHE_eta",&fID2Photon_eta);
+  fTree2->Branch("Photon_ConeHE_phi",&fID2Photon_phi);
+  fTree2->Branch("Photon_ConeHE_mass",&fID2Photon_mass);
+  }
   // Generator Objects
   fTree2->Branch("GenPhi_pt",&fGenPhi_pt);
   fTree2->Branch("GenPhi_eta",&fGenPhi_eta);
@@ -830,12 +850,29 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fPhotonTriggerEff_Photon22_Iso_Division = 
   fs->make<TH1F>("photon_trig_eff_22iso","HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
 
-  } // done with charged decay code conditional
+  if (fAddDrConePhotonCut) {
+  fPhotonTriggerEff_ConeHE_all_Numerator = 
+  fs->make<TH1F>("photon_trig_eff_nume","HLT_Photon175 or HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  fPhotonTriggerEff_ConeHE_all_Denominator = 
+  fs->make<TH1F>("photon_trig_eff_deno","HLT_Photon175 or HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Demominator", eff_num_bins,&eff_bins[0]);
+  fPhotonTriggerEff_ConeHE_all_Division = 
+  fs->make<TH1F>("photon_trig_eff","HLT_Photon175 or HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Efficency",eff_num_bins,&eff_bins[0]);
 
-    recHitsEBTag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEBTag",edm::InputTag("reducedEgamma:reducedEBRecHits"));
-    recHitsEETag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEETag",edm::InputTag("reducedEgamma:reducedEERecHits"));
-    recHitsEBToken = consumes < EcalRecHitCollection > (recHitsEBTag_);
-    recHitsEEToken = consumes < EcalRecHitCollection > (recHitsEETag_);
+  fPhotonTriggerEff_ConeHE_Photon175_Numerator = 
+  fs->make<TH1F>("photon_trig_eff_175_nume","HLT_Photon175;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  fPhotonTriggerEff_ConeHE_Photon175_Division = 
+  fs->make<TH1F>("photon_trig_eff_175","HLT_Photon175;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+
+  fPhotonTriggerEff_ConeHE_Photon22_Iso_Numerator = 
+  fs->make<TH1F>("photon_trig_eff_22iso_nume","HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  fPhotonTriggerEff_ConeHE_Photon22_Iso_Division = 
+  fs->make<TH1F>("photon_trig_eff_22iso","HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  }
+
+  recHitsEBTag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEBTag",edm::InputTag("reducedEgamma:reducedEBRecHits"));
+  recHitsEETag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEETag",edm::InputTag("reducedEgamma:reducedEERecHits"));
+  recHitsEBToken = consumes < EcalRecHitCollection > (recHitsEBTag_);
+  recHitsEEToken = consumes < EcalRecHitCollection > (recHitsEETag_);
 }
 
 
@@ -1220,6 +1257,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fIDPhoton_eta.clear();
   fIDPhoton_phi.clear();
   fIDPhoton_mass.clear();
+  fID2Photon_pt.clear();
+  fID2Photon_eta.clear();
+  fID2Photon_phi.clear();
+  fID2Photon_mass.clear();
 
   fNumPVs = primaryvertecies->size();
   fNumPF = pfcands->size();
@@ -1489,24 +1530,22 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           if (loose) nFake++;
           if (loose) { if (TwoProngObject.Pt() > LeadingFakeTwoProng.Pt()) LeadingFakeTwoProng = TwoProngObject; }
           // Fake rate histograms
-          if (!fOmitChargedDecayCode) {
-            if (tight) {
-              fTwoProngFakeNume_even_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
-              fTwoProngFakeNume_even_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
-              fTwoProngFakeNume_even_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
-              fTwoProngFakeNume_odd_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
-              fTwoProngFakeNume_odd_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
-              fTwoProngFakeNume_odd_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
-            } if (loose) {
-              fTwoProngFakeDeno_even_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
-              fTwoProngFakeDeno_even_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
-              fTwoProngFakeDeno_even_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
-              fTwoProngFakeDeno_odd_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
-              fTwoProngFakeDeno_odd_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
-              fTwoProngFakeDeno_odd_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
-            }
-            if (fDebug) cout << ". finished fake rate filling" << endl;
+          if (tight) {
+            fTwoProngFakeNume_even_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
+            fTwoProngFakeNume_even_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
+            fTwoProngFakeNume_even_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
+            fTwoProngFakeNume_odd_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
+            fTwoProngFakeNume_odd_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
+            fTwoProngFakeNume_odd_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
+          } if (loose) {
+            fTwoProngFakeDeno_even_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
+            fTwoProngFakeDeno_even_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
+            fTwoProngFakeDeno_even_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
+            fTwoProngFakeDeno_odd_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
+            fTwoProngFakeDeno_odd_eta->Fill(TwoProngObject.Eta(), TwoProng_Mass);
+            fTwoProngFakeDeno_odd_phi->Fill(TwoProngObject.Phi(), TwoProng_Mass);
           }
+          if (fDebug) cout << ". finished fake rate filling" << endl;
         }
       } // end conditionals on CH pair
     }
@@ -1740,9 +1779,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (nMatch > 1) fCutflow_twoMatch++;
   if (nPassMatch > 0) fCutflow_onePassMatch++;
   if (nPassMatch > 1) fCutflow_twoPassMatch++;
-  if (fDebug) cout << ". finish charged decay code part one" << endl;
 
-  if (fDebug) cout << ". starting charged decay code part two" << endl;
+  if (fDebug) cout << ". high-pt-id" << endl;
 
   // Photon id  
   const CaloSubdetectorTopology* subDetTopologyEB_;
@@ -1753,6 +1791,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   subDetTopologyEE_ = caloTopology->getSubdetectorTopology(DetId::Ecal,EcalEndcap);
   bool isSat = false;
   std::vector<edm::Ptr<pat::Photon>> goodPhotons;
+  std::vector<edm::Ptr<pat::Photon>> goodPhotons_ConeHE;
   for (size_t i = 0; i < ged_photons->size(); ++i) {
     const auto pho = ged_photons->ptrAt(i);
     isSat = photon_isSaturated(&(*pho), &(*recHitsEB), &(*recHitsEE), &(*subDetTopologyEB_), &(*subDetTopologyEE_));
@@ -1760,11 +1799,22 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     if(passID) {
       goodPhotons.push_back(pho);
     }
+    bool passIDConeHE = photon_passHighPtID_DrCone(&(*pho), rho_, isSat);
+    if(passIDConeHE) {
+      goodPhotons_ConeHE.push_back(pho);
+    }
   }
   fNumTightPhotons = goodPhotons.size();
 
+  if (fDebug) cout << ". done making photon collections" << endl;
+
   // sort and fill
   sort(goodPhotons.begin(),goodPhotons.end(),compareCandsByPt);
+  sort(goodPhotons_ConeHE.begin(),goodPhotons_ConeHE.end(),compareCandsByPt);
+
+  if (fDebug) cout << ". done sorting photon collections" << endl;
+
+  // fill new branches
   for (unsigned int i = 0; i < goodPhotons.size(); i++ )
   {
     fIDPhoton_pt.push_back( (*goodPhotons[i]).pt() );
@@ -1772,6 +1822,17 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     fIDPhoton_phi.push_back( (*goodPhotons[i]).phi() );
     fIDPhoton_mass.push_back( (*goodPhotons[i]).mass() );
   }
+  if (fAddDrConePhotonCut) {
+    fNumTightPhotons_ConeHE = goodPhotons_ConeHE.size();
+    for (unsigned int i = 0; i < goodPhotons_ConeHE.size(); i++ )
+    {
+      fID2Photon_pt.push_back( (*goodPhotons_ConeHE[i]).pt() );
+      fID2Photon_eta.push_back( (*goodPhotons_ConeHE[i]).eta() );
+      fID2Photon_phi.push_back( (*goodPhotons_ConeHE[i]).phi() );
+      fID2Photon_mass.push_back( (*goodPhotons_ConeHE[i]).mass() );
+    }
+  }
+  // fill old style structs, keeping because of extra info stored there in case needed
   InitRecoPhotonInfo(fRecoTightPhotonInfo1);
   InitRecoPhotonInfo(fRecoTightPhotonInfo2);
   InitRecoPhotonInfo(fRecoTightPhotonInfo3);
@@ -1782,6 +1843,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (goodPhotons.size() > 2)
     ExoDiPhotons::FillRecoPhotonInfo(fRecoTightPhotonInfo3,&(*goodPhotons[2]),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup); 
 
+  if (fDebug) cout << ". done high-pt-id photons" << endl;
 
   // Construct Di-Objects
   InitRecoDiObjectInfo(fTwoProngTwoProngInfo);
@@ -1795,6 +1857,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     FillRecoDiObjectInfo(fTwoProngTwoProngInfo, Eta1, Eta2);
     fTwoProngTwoProngInfo.dMass = fabs(fTwoProng_Mass[0] - fTwoProng_Mass[1]);
   }
+
+  if (fDebug) cout << ". done making di-objects" << endl;
 
   // generator decay type
   if (fisSignal)
@@ -1824,6 +1888,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     fGen_decayType = decayType;
   }
 
+  if (fDebug) cout << ". done generator decay type determination" << endl;
+
   // Photon Trigger Eff
   if (fNumTightPhotons > 0) {
     fPhotonTriggerEff_all_Denominator->Fill( (*goodPhotons[0]).pt() );     
@@ -1834,21 +1900,44 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     if(found_175 && found_22_iso && (fHLT_Photon175 || fHLT_Photon22_Iso) )
         fPhotonTriggerEff_all_Numerator->Fill( (*goodPhotons[0]).pt() );
   }
+  if (fAddDrConePhotonCut) {
+    if (fNumTightPhotons_ConeHE > 0) {
+      fPhotonTriggerEff_ConeHE_all_Denominator->Fill( (*goodPhotons_ConeHE[0]).pt() );     
+      if(found_175 && found_22_iso && (fHLT_Photon175) )
+          fPhotonTriggerEff_ConeHE_Photon175_Numerator->Fill( (*goodPhotons_ConeHE[0]).pt() );
+      if(found_175 && found_22_iso && (fHLT_Photon22_Iso) )
+          fPhotonTriggerEff_ConeHE_Photon22_Iso_Numerator->Fill( (*goodPhotons_ConeHE[0]).pt() );
+      if(found_175 && found_22_iso && (fHLT_Photon175 || fHLT_Photon22_Iso) )
+          fPhotonTriggerEff_ConeHE_all_Numerator->Fill( (*goodPhotons_ConeHE[0]).pt() );
+    }
+  }
+
+  if (fDebug) cout << ". done photon trigger efficiency histograms" << endl;
 
   // Now fill fTree2
-  if (!fOmitChargedDecayCode && !fTwoProngFakeRateCalcOnly && !fTriggerEffOnly) fTree2->Fill();
+  if (!fTwoProngFakeRateCalcOnly && !fTriggerEffOnly) fTree2->Fill();
 }
 
 void 
 ExoDiPhotonAnalyzer::beginJob()
 {
+  cout << "===========================" << endl;
+  cout << "= Ntuplizer Configuration =" << endl;
+  cout << "===========================" << endl;
+  cout << "fisMC: " << fisMC << endl;
+  cout << "fisSignal: " << fisSignal << endl;
+  cout << "fDebug: " << fDebug << endl;
+  cout << "fchargedDecayCutflow: " << fchargedDecayCutflow << endl;
+  cout << "fTriggerEffOnly: " << fTriggerEffOnly << endl;
+  cout << "fAddDrConePhotonCut: " << fAddDrConePhotonCut << endl;
+  cout << "fTwoProngFakeRateCalcOnly: " << fTwoProngFakeRateCalcOnly << endl;
+  cout << "===========================" << endl;
 }
 
 void 
 ExoDiPhotonAnalyzer::endJob()
 {
   // fake rate histograms
-  if (!fOmitChargedDecayCode) {
   fTwoProngFakeNume_even_pt->Sumw2();
   fTwoProngFakeDeno_even_pt->Sumw2();
   fTwoProngFakeRate_even_pt->Add(fTwoProngFakeNume_even_pt);
@@ -1873,7 +1962,6 @@ ExoDiPhotonAnalyzer::endJob()
   fTwoProngFakeDeno_odd_phi->Sumw2();
   fTwoProngFakeRate_odd_phi->Add(fTwoProngFakeNume_odd_phi);
   fTwoProngFakeRate_odd_phi->Divide(fTwoProngFakeDeno_odd_phi);
-  } // done with charged decay code conditional
 
   // photon trigg eff histograms
   fPhotonTriggerEff_all_Denominator->Sumw2();
@@ -1889,8 +1977,23 @@ ExoDiPhotonAnalyzer::endJob()
   fPhotonTriggerEff_Photon22_Iso_Division->Add(fPhotonTriggerEff_Photon22_Iso_Numerator);
   fPhotonTriggerEff_Photon22_Iso_Division->Divide(fPhotonTriggerEff_all_Denominator);
 
+  if (fAddDrConePhotonCut) {
+  fPhotonTriggerEff_ConeHE_all_Denominator->Sumw2();
+  fPhotonTriggerEff_ConeHE_all_Numerator->Sumw2();
+  fPhotonTriggerEff_ConeHE_all_Division->Add(fPhotonTriggerEff_ConeHE_all_Numerator);
+  fPhotonTriggerEff_ConeHE_all_Division->Divide(fPhotonTriggerEff_ConeHE_all_Denominator);
+
+  fPhotonTriggerEff_ConeHE_Photon175_Numerator->Sumw2();
+  fPhotonTriggerEff_ConeHE_Photon175_Division->Add(fPhotonTriggerEff_ConeHE_Photon175_Numerator);
+  fPhotonTriggerEff_ConeHE_Photon175_Division->Divide(fPhotonTriggerEff_ConeHE_all_Denominator);
+
+  fPhotonTriggerEff_ConeHE_Photon22_Iso_Numerator->Sumw2();
+  fPhotonTriggerEff_ConeHE_Photon22_Iso_Division->Add(fPhotonTriggerEff_ConeHE_Photon22_Iso_Numerator);
+  fPhotonTriggerEff_ConeHE_Photon22_Iso_Division->Divide(fPhotonTriggerEff_ConeHE_all_Denominator);
+  }
+
   // Print Cutflow
-  if (!fOmitChargedDecayCode && fchargedDecayCutflow) {
+  if (fchargedDecayCutflow) {
     cout << "Efficiencies for charged decay mode" << endl;
     cout << "Total number of events processed                        : " << fCutflow_total << " " << (fCutflow_total/fCutflow_total)*100 << "%" << endl;
     cout << "Events with at least one candidate Eta                  : " << fCutflow_oneCand << " " << (fCutflow_oneCand/fCutflow_total)*100 << "%" << endl;
@@ -1909,6 +2012,7 @@ ExoDiPhotonAnalyzer::endJob()
   }
 }
 
+// determine if saturated, needed for high-pt-id
 bool ExoDiPhotonAnalyzer::photon_isSaturated(const pat::Photon *photon, const EcalRecHitCollection *recHitsEB, const EcalRecHitCollection *recHitsEE,
 		   const CaloSubdetectorTopology* subDetTopologyEB_, const CaloSubdetectorTopology* subDetTopologyEE_) {
     using namespace std;
@@ -1961,6 +2065,7 @@ bool ExoDiPhotonAnalyzer::photon_isSaturated(const pat::Photon *photon, const Ec
     return isSat;
   }
 
+// The high-pt-id
 bool ExoDiPhotonAnalyzer::photon_passHighPtID(const pat::Photon* photon, double rho, bool isSat) {
     if (
       passHadTowerOverEmCut(photon) &&
@@ -1972,9 +2077,28 @@ bool ExoDiPhotonAnalyzer::photon_passHighPtID(const pat::Photon* photon, double 
 
     else return false;
   }
-// H/E
+// The modified high-pt-id
+bool ExoDiPhotonAnalyzer::photon_passHighPtID_DrCone(const pat::Photon* photon, double rho, bool isSat) {
+    if (
+      passHadTowerOverEmCut(photon) &&
+      passHadDrConeOverEmCut(photon) && // new cut
+      passChargedHadronCut(photon) &&
+      passSigmaIetaIetaCut(photon,isSat) &&
+      passCorPhoIsoHighPtID(photon,rho) &&
+      photon->passElectronVeto()
+    ) return true;
+
+    else return false;
+  }
+// H/E TOWER (part of high-pt-id)
   bool passHadTowerOverEmCut(const pat::Photon* photon) {
     double hOverE = photon->hadTowOverEm();
+    if (hOverE < 0.05) return true;
+    else return false;
+  }
+// H/E DR CONE (method of trigger)
+  bool passHadDrConeOverEmCut(const pat::Photon* photon) {
+    double hOverE = photon->hadronicOverEm();
     if (hOverE < 0.05) return true;
     else return false;
   }
