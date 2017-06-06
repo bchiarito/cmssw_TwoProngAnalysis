@@ -182,10 +182,8 @@ private:
   TH2F *fTwoProngFakeRate_odd_phi;
 
   TH1F *fPhotonTriggerEff_Photon175_Numerator;
-  TH1F *fPhotonTriggerEff_Photon175_Denominator;
   TH1F *fPhotonTriggerEff_Photon175_Division;
   TH1F *fPhotonTriggerEff_Photon22_Iso_Numerator;
-  TH1F *fPhotonTriggerEff_Photon22_Iso_Denominator;
   TH1F *fPhotonTriggerEff_Photon22_Iso_Division;
   TH1F *fPhotonTriggerEff_all_Numerator;
   TH1F *fPhotonTriggerEff_all_Denominator;
@@ -1883,12 +1881,10 @@ ExoDiPhotonAnalyzer::endJob()
   fPhotonTriggerEff_all_Division->Add(fPhotonTriggerEff_all_Numerator);
   fPhotonTriggerEff_all_Division->Divide(fPhotonTriggerEff_all_Denominator);
 
-  fPhotonTriggerEff_Photon175_Denominator->Sumw2();
   fPhotonTriggerEff_Photon175_Numerator->Sumw2();
   fPhotonTriggerEff_Photon175_Division->Add(fPhotonTriggerEff_Photon175_Numerator);
   fPhotonTriggerEff_Photon175_Division->Divide(fPhotonTriggerEff_all_Denominator);
 
-  fPhotonTriggerEff_Photon22_Iso_Denominator->Sumw2();
   fPhotonTriggerEff_Photon22_Iso_Numerator->Sumw2();
   fPhotonTriggerEff_Photon22_Iso_Division->Add(fPhotonTriggerEff_Photon22_Iso_Numerator);
   fPhotonTriggerEff_Photon22_Iso_Division->Divide(fPhotonTriggerEff_all_Denominator);
