@@ -41,6 +41,16 @@ options.register('local',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "Specify running on the command line, as opposed to crab/conder")
+options.register('addConeHE',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "Add cut to high-pt-photon-id: Cone based HE < 0.05")
+options.register('TrigEffOnly',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "Don't produce trees, only the photon eff trigger histograms")
 options.setDefault('maxEvents', 10)
 options.parseArguments()
 
@@ -145,6 +155,7 @@ for idmod in my_id_modules:
 
 # the ntuplizer
 process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
+                                  # two-prong object
                                   chargedHadronPairMinDeltaR = cms.untracked.double(0.05),
                                   chargedHadronMinPt = cms.untracked.double(10.0),
                                   isolationConeR = cms.untracked.double(0.3),
@@ -158,20 +169,21 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   egammaIsoCut = cms.untracked.double(0.1),
                                   egammaIsoFakeMax = cms.untracked.double(0.3),
                                   generatorEtaMatchDR = cms.untracked.double(0.1),
-                                  chargedDecayCutflow = cms.untracked.bool(True),
-                                  noTreeOnlyFakeRateHistos = cms.untracked.bool(False),
+                                  # high-pt-photon-id 
                                   rho = cms.InputTag("fixedGridRhoFastjetAll"),
-                                  gedphotonsMiniAOD = cms.InputTag("slimmedPhotons"), # new block of code
+                                  # HLT paths
                                   bits = cms.InputTag("TriggerResults","","HLT"),
                                   prescales = cms.InputTag("patTrigger"),
                                   objects = cms.InputTag("selectedPatTrigger"),
-                                  triggerEffOnly = cms.untracked.bool(True)
                                   )
+# Ntuplizer Options
 process.diphotonAnalyzer.isMC = cms.untracked.bool(isMC)
 process.diphotonAnalyzer.isSignal = cms.untracked.bool(isSignal)
 process.diphotonAnalyzer.debug = cms.untracked.bool(options.debug)
+process.diphotonAnalyzer.triggerEffOnly = cms.untracked.bool(options.TrigEffOnly)
+process.diphotonAnalyzer.addPhotonCutDrConeHE = cms.untracked.bool(options.addConeHE)
+process.diphotonAnalyzer.chargedDecayCutflow = cms.untracked.bool(False)
 process.diphotonAnalyzer.noTreeOnlyFakeRateHistos = cms.untracked.bool(False)
-process.diphotonAnalyzer.omitChargedDecayCode = cms.bool(False)
 
 # The full cmssw configuration path
 process.path  = cms.Path(process.primaryVertexFilter * process.egmPhotonIDSequence * process.diphotonAnalyzer)

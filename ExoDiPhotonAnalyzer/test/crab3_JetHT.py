@@ -3,10 +3,10 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'trigeffcalc_jetdata2016_crab3jobs'
+config.General.workArea = 'trigeffcalc_jetdata2016_wConeHE_crab3jobs'
 config.section_('JobType')
 config.JobType.psetName = 'exodiphotonanalyzer_minimal_cfg.py'
-config.JobType.pyCfgParams = ['local=False','globalTag=80X_dataRun2_2016SeptRepro_v7']
+config.JobType.pyCfgParams = ['local=False','globalTag=80X_dataRun2_2016SeptRepro_v7','TrigEffOnly=True','addConeHE=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
 config.Data.outLFNDirBase = '/store/user/bchiari1/noreplica/diphotonProject/scratch/photon_eff_calc'
