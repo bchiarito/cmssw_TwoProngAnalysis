@@ -852,21 +852,21 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 
   if (fAddDrConePhotonCut) {
   fPhotonTriggerEff_ConeHE_all_Numerator = 
-  fs->make<TH1F>("photon_trig_eff_nume","HLT_Photon175 or HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  fs->make<TH1F>("photon_trig_eff_nume_coneHE","HLT_Photon175 or HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
   fPhotonTriggerEff_ConeHE_all_Denominator = 
-  fs->make<TH1F>("photon_trig_eff_deno","HLT_Photon175 or HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Demominator", eff_num_bins,&eff_bins[0]);
+  fs->make<TH1F>("photon_trig_eff_deno_coneHE","HLT_Photon175 or HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Demominator", eff_num_bins,&eff_bins[0]);
   fPhotonTriggerEff_ConeHE_all_Division = 
-  fs->make<TH1F>("photon_trig_eff","HLT_Photon175 or HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Efficency",eff_num_bins,&eff_bins[0]);
+  fs->make<TH1F>("photon_trig_eff_coneHE","HLT_Photon175 or HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Efficency",eff_num_bins,&eff_bins[0]);
 
   fPhotonTriggerEff_ConeHE_Photon175_Numerator = 
-  fs->make<TH1F>("photon_trig_eff_175_nume","HLT_Photon175;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  fs->make<TH1F>("photon_trig_eff_175_nume_coneHE","HLT_Photon175;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
   fPhotonTriggerEff_ConeHE_Photon175_Division = 
-  fs->make<TH1F>("photon_trig_eff_175","HLT_Photon175;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  fs->make<TH1F>("photon_trig_eff_175_coneHE","HLT_Photon175;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
 
   fPhotonTriggerEff_ConeHE_Photon22_Iso_Numerator = 
-  fs->make<TH1F>("photon_trig_eff_22iso_nume","HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  fs->make<TH1F>("photon_trig_eff_22iso_nume_coneHE","HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
   fPhotonTriggerEff_ConeHE_Photon22_Iso_Division = 
-  fs->make<TH1F>("photon_trig_eff_22iso","HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
+  fs->make<TH1F>("photon_trig_eff_22iso_coneHE","HLT_Photon22_R9Id90_HE10_IsoM;leading high-pt-id+ConeHE5-photon p_{T};Numerator",eff_num_bins,&eff_bins[0]);
   }
 
   recHitsEBTag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEBTag",edm::InputTag("reducedEgamma:reducedEBRecHits"));
