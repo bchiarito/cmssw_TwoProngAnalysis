@@ -41,6 +41,11 @@ options.register('addConeHE',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "Add cut to high-pt-photon-id: Cone based HE < 0.05")
+options.register('includeLoose',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "Include Loose twoprongs in ntuple")
 options.register('TrigEffOnly',
                 False,
                 VarParsing.multiplicity.singleton,
@@ -181,7 +186,8 @@ process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
                                            maxd0 = cms.double(2)	
 )
 
-### what is this for?
+# some more Photon ID decisions, block comes from high-pt-id code, but these ids are not currently being use in high-pt-id
+# included for reference
 # Setup VID for EGM ID
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
 switchOnVIDPhotonIdProducer(process, DataFormat.MiniAOD)
@@ -207,7 +213,7 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   egammaIsoCut = cms.untracked.double(0.1),
                                   egammaIsoFakeMax = cms.untracked.double(0.3),
                                   generatorEtaMatchDR = cms.untracked.double(0.1),
-                                  # high-pt-photon-id 
+                                  # high-pt-photon-id options
                                   rho = cms.InputTag("fixedGridRhoFastjetAll"),
                                   # HLT paths
                                   bits = cms.InputTag("TriggerResults","","HLT"),
@@ -215,15 +221,15 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   objects = cms.InputTag("selectedPatTrigger"),
                                   )
 # Ntuplizer Options
-process.diphotonAnalyzer.debug = cms.untracked.bool(options.debug)
-process.diphotonAnalyzer.triggerEffOnly = cms.untracked.bool(options.TrigEffOnly)
-process.diphotonAnalyzer.addPhotonCutDrConeHE = cms.untracked.bool(options.addConeHE)
 process.diphotonAnalyzer.chargedDecayCutflow = cms.untracked.bool(False)
 process.diphotonAnalyzer.noTreeOnlyFakeRateHistos = cms.untracked.bool(False)
 process.diphotonAnalyzer.includeAllCandObjects = cms.untracked.bool(False)
-process.diphotonAnalyzer.includeAllLooseObjects = cms.untracked.bool(False)
 process.diphotonAnalyzer.includeOldPhotons = cms.untracked.bool(False)
-process.diphotonAnalyzer.includeSignalMCObjects = cms.untracked.bool(isSignal)
+process.diphotonAnalyzer.debug = cms.untracked.bool(options.debug)
+process.diphotonAnalyzer.triggerEffOnly = cms.untracked.bool(options.TrigEffOnly)
+process.diphotonAnalyzer.addPhotonCutDrConeHE = cms.untracked.bool(options.addConeHE)
+process.diphotonAnalyzer.includeAllLooseObjects = cms.untracked.bool(options.includeLoose)
+process.diphotonAnalyzer.includeSignalGenParticles = cms.untracked.bool(isSignal)
 
 # The full cmssw configuration path
 process.path  = cms.Path(process.primaryVertexFilter * process.egmPhotonIDSequence * process.diphotonAnalyzer)
