@@ -26,11 +26,6 @@ options.register("out",
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "output file name")
-options.register('isMC',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "Specify bkg MC for looking for gen particles")
 options.register('isSignal',
                 False,
                 VarParsing.multiplicity.singleton,
@@ -55,7 +50,6 @@ options.setDefault('maxEvents', 10)
 options.parseArguments()
 
 # set variables
-isMC = options.isMC
 isSignal = options.isSignal
 doLumis = options.doLumis
 sample = options.sample
@@ -77,18 +71,63 @@ if sample == "signal":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_generic.root' ] )
     if options.local:
-      isMC = True
       isSignal = True
       doLumis = False
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal"
+
+elif sample == "signal125":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_125_pipipi0.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal125"
+elif sample == "signal300":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_300_pipipi0.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal300"
+elif sample == "signal500":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_500_pipipi0.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal500"
+elif sample == "signal750":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_750_pipipi0.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal750"
+elif sample == "signal1000":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_1000_pipipi0.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal1000"
+
 elif sample == "jet":
     # 100k events
     readFiles.extend( [
        '/store/data/Run2016G/JetHT/MINIAOD/03Feb2017-v1/100000/006E7AF2-AEEC-E611-A88D-7845C4FC3B00.root' ] )
     if options.local:
-      isMC = False
       isSignal = False
       doLumis = True
       globalTag = "80X_dataRun2_2016SeptRepro_v7"
@@ -99,7 +138,6 @@ elif sample == "photon":
     readFiles.extend( [
        '/store/data/Run2016G/SinglePhoton/MINIAOD/03Feb2017-v1/110000/00F4619E-9BEB-E611-8D7A-002590494BE2.root' ] )
     if options.local:
-      isMC = False
       isSignal = False
       doLumis = True
       globalTag = "80X_dataRun2_2016SeptRepro_v7"
@@ -177,13 +215,15 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   objects = cms.InputTag("selectedPatTrigger"),
                                   )
 # Ntuplizer Options
-process.diphotonAnalyzer.isMC = cms.untracked.bool(isMC)
-process.diphotonAnalyzer.isSignal = cms.untracked.bool(isSignal)
 process.diphotonAnalyzer.debug = cms.untracked.bool(options.debug)
 process.diphotonAnalyzer.triggerEffOnly = cms.untracked.bool(options.TrigEffOnly)
 process.diphotonAnalyzer.addPhotonCutDrConeHE = cms.untracked.bool(options.addConeHE)
 process.diphotonAnalyzer.chargedDecayCutflow = cms.untracked.bool(False)
 process.diphotonAnalyzer.noTreeOnlyFakeRateHistos = cms.untracked.bool(False)
+process.diphotonAnalyzer.includeAllCandObjects = cms.untracked.bool(False)
+process.diphotonAnalyzer.includeAllLooseObjects = cms.untracked.bool(False)
+process.diphotonAnalyzer.includeOldPhotons = cms.untracked.bool(False)
+process.diphotonAnalyzer.includeSignalMCObjects = cms.untracked.bool(isSignal)
 
 # The full cmssw configuration path
 process.path  = cms.Path(process.primaryVertexFilter * process.egmPhotonIDSequence * process.diphotonAnalyzer)

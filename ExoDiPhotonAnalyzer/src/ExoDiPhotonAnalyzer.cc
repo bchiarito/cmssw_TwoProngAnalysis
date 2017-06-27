@@ -100,13 +100,30 @@ private:
   edm::EDGetTokenT<edm::TriggerResults> triggerBits_;
   edm::EDGetTokenT<pat::TriggerObjectStandAloneCollection> triggerObjects_;
   edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescales_;
-  bool               fisMC;  // option to decide if MC or Data     
-  bool               fisSignal;  // option to decide if Signal MC or Backround MC
+  bool               fincludeSignalGenParticles; // includes the GenPhi and other gen particles in ntuple
   bool               fDebug;  // if set to False, mean to limit per event stdout output
   bool               fchargedDecayCutflow;  // option to print cutflow of the charged selection to stdout at the end of the job
-  bool               fTriggerEffOnly;
-  bool               fAddDrConePhotonCut;
-  bool               fTwoProngFakeRateCalcOnly;
+  bool               fTriggerEffOnly; // only fills photon trigger eff histograms, no tree
+  bool               fAddDrConePhotonCut; // option needed for studying the Trigger ID, no longer needd
+  bool               fTwoProngFakeRateCalcOnly; // only fills fake rate histos, no tree
+  bool               fincludeAllLooseObjects; // include all loose twoprong objects in ntuple
+  bool               fincludeAllCandObjects; // include all twoprong candidate objects (no iso req) in ntuple
+  bool               fincludeOldPhotons;  // include the Photon1,Photon2,Photon3 objects in ntuple
+
+  // other configuration file options
+  double fCandidatePairDR;
+  double fCandidatePairMinPt;
+  double fCandidatePairIsolationDR;
+  double fCandidatePairPhiBox;
+  double fCandidatePairEtaBox;
+  double fCandidatePairPhotonPtCut;
+  double fCandidatePairChargedIsoCut;
+  double fCandidatePairNeutralIsoCut;
+  double fCandidatePairEGammaIsoCut;
+  double fCandidatePairChargedIsoFakeCut;
+  double fCandidatePairNeutralIsoFakeCut;
+  double fCandidatePairEGammaIsoFakeCut;
+  double fCandidatePairGenMatchDR;
 
   float fCutflow_total;
   float fCutflow_oneCand;
@@ -150,19 +167,6 @@ private:
   edm::EDGetTokenT<std::vector<pat::Electron>> electronToken_;
   edm::EDGetTokenT<std::vector<pat::Muon>> muonToken_;
   edm::EDGetTokenT<std::vector<pat::MET>> metToken_;
-  double fCandidatePairDR;
-  double fCandidatePairMinPt;
-  double fCandidatePairIsolationDR;
-  double fCandidatePairPhiBox;
-  double fCandidatePairEtaBox;
-  double fCandidatePairPhotonPtCut;
-  double fCandidatePairChargedIsoCut;
-  double fCandidatePairNeutralIsoCut;
-  double fCandidatePairEGammaIsoCut;
-  double fCandidatePairChargedIsoFakeCut;
-  double fCandidatePairNeutralIsoFakeCut;
-  double fCandidatePairEGammaIsoFakeCut;
-  double fCandidatePairGenMatchDR;
   TH2F *fTwoProngFakeNume_even_pt;
   TH2F *fTwoProngFakeDeno_even_pt;
   TH2F *fTwoProngFakeRate_even_pt;
@@ -463,10 +467,6 @@ private:
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo3;
 
   ExoDiPhotons::recoDiObjectInfo_t fTwoProngTwoProngInfo; 
-  ExoDiPhotons::recoDiObjectInfo_t fGammaTwoProngInfo; 
-  ExoDiPhotons::recoDiObjectInfo_t fTwoProngFakeInfo; 
-  ExoDiPhotons::recoDiObjectInfo_t fGammaFakeInfo; 
-  ExoDiPhotons::recoDiObjectInfo_t fGammaGammaInfo; 
 };
 
 //
@@ -477,13 +477,15 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     triggerBits_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("bits"))),
     triggerObjects_(consumes<pat::TriggerObjectStandAloneCollection>(iConfig.getParameter<edm::InputTag>("objects"))),
     triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("prescales"))),
-    fisMC(iConfig.getUntrackedParameter<bool>("isMC")),
-    fisSignal(iConfig.getUntrackedParameter<bool>("isSignal")),
+    fincludeSignalGenParticles(iConfig.getUntrackedParameter<bool>("includeSignalGenParticles")),
     fDebug(iConfig.getUntrackedParameter<bool>("debug")),
     fchargedDecayCutflow(iConfig.getUntrackedParameter<bool>("chargedDecayCutflow")),
     fTriggerEffOnly(iConfig.getUntrackedParameter<bool>("triggerEffOnly")),
     fAddDrConePhotonCut(iConfig.getUntrackedParameter<bool>("addPhotonCutDrConeHE")),
     fTwoProngFakeRateCalcOnly(iConfig.getUntrackedParameter<bool>("noTreeOnlyFakeRateHistos")),
+    fincludeAllLooseObjects(iConfig.getUntrackedParameter<bool>("includeAllLooseObjects")),
+    fincludeAllCandObjects(iConfig.getUntrackedParameter<bool>("includeAllCandObjects")),
+    fincludeOldPhotons(iConfig.getUntrackedParameter<bool>("includeOldPhotons")),
     fCandidatePairDR(iConfig.getUntrackedParameter<double>("chargedHadronPairMinDeltaR")),
     fCandidatePairMinPt(iConfig.getUntrackedParameter<double>("chargedHadronMinPt")),
     fCandidatePairIsolationDR(iConfig.getUntrackedParameter<double>("isolationConeR")),
@@ -575,8 +577,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("nPassPhotonPtIso",&fNumTwoProngPassChargedIso,"nPassPhotonIso/I");
   fTree2->Branch("nFakes",&fNumTwoProngFake,"nFakes/I");
   fTree2->Branch("nOffset",&fNumOffset,"nOffset/I");
+  if(fincludeAllCandObjects) {
   // Candidate information
-  /*fTree2->Branch("Cand_pt",&fCand_pt);
+  fTree2->Branch("Cand_pt",&fCand_pt);
   fTree2->Branch("Cand_eta",&fCand_eta);
   fTree2->Branch("Cand_phi",&fCand_phi);
   fTree2->Branch("Cand_mass",&fCand_mass);
@@ -634,7 +637,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Cand_passNeutralIso",&fCand_passNeutralIso);
   fTree2->Branch("Cand_passEGammaIso",&fCand_passEGammaIso);
   fTree2->Branch("Cand_passPhotonPt",&fCand_passPhotonPt);
-  fTree2->Branch("Cand_fake",&fCand_loose);*/
+  fTree2->Branch("Cand_fake",&fCand_loose);
+  }
+  if(fincludeAllLooseObjects) {
   // Loose Candidate information, sorted by pt
   fTree2->Branch("TwoProngLoose_pt",&fTwoProngLoose_pt);
   fTree2->Branch("TwoProngLoose_eta",&fTwoProngLoose_eta);
@@ -690,6 +695,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("TwoProngLoose_isoPF_dxy_PV",&fTwoProngLoose_isoPF_dxy_PV);
   fTree2->Branch("TwoProngLoose_isoPF_dxy_beamspot",&fTwoProngLoose_isoPF_dxy_beamspot);
   fTree2->Branch("TwoProngLoose_genDR",&fTwoProngLoose_genDR);
+  }
   // Tight Candidate information, sorted by pt
   fTree2->Branch("TwoProng_pt",&fTwoProng_pt);
   fTree2->Branch("TwoProng_eta",&fTwoProng_eta);
@@ -754,9 +760,11 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Photon_eta",&fIDPhoton_eta);
   fTree2->Branch("Photon_phi",&fIDPhoton_phi);
   fTree2->Branch("Photon_mass",&fIDPhoton_mass);
+  if(fincludeOldPhotons) {
   fTree2->Branch("Photon1",&fRecoTightPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree2->Branch("Photon2",&fRecoTightPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
   fTree2->Branch("Photon3",&fRecoTightPhotonInfo3,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  }
   if (fAddDrConePhotonCut) {
   fTree2->Branch("Photon_ConeHE_pt",&fID2Photon_pt);
   fTree2->Branch("Photon_ConeHE_eta",&fID2Photon_eta);
@@ -786,10 +794,6 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Gen_decayType",&fGen_decayType);
   // Combined Objects
   fTree2->Branch("TwoProngTwoProng",&fTwoProngTwoProngInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
-  fTree2->Branch("TwoProngFake",&fTwoProngFakeInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
-  fTree2->Branch("GammaTwoProng",&fGammaTwoProngInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
-  fTree2->Branch("GammaFake",&fGammaFakeInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
-  fTree2->Branch("GammaGamma",&fGammaGammaInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   // Fake rate histograms
   int num_even_mass_bins = 9;
   double even_mass_bins_array[num_even_mass_bins+1] = {0,.400,.600,.800,1.000,1.200,1.400,1.600,1.800,2.000};
@@ -944,7 +948,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   string trigger_photon22_iso  = "HLT_Photon22_R9Id90_HE10_IsoM_v";
   bool bit_photon175 = false;
   bool bit_photon22_iso = false;
-  
   for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i)
   {
      string triggerName = names.triggerName(i);
@@ -967,19 +970,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if(fDebug && found_22_iso) cout << "found : " << trigger_photon22_iso << ", bit: " << bit_photon22_iso << endl;
   fHLT_Photon175 = bit_photon175;
   fHLT_Photon22_Iso = bit_photon22_iso;
-
-  // trigger dump 
-  /*if(fDebug) {
-    for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i)
-    {
-      string triggerName = names.triggerName(i);
-      int ps = triggerPrescales->getPrescaleForIndex(i);
-      std::size_t found = triggerName.find("HLT_Photon");
-      if ( found==std::string::npos )
-        continue;
-      cout << triggerName << " " << ps << " " << triggerBits->accept(i) << endl;
-    }
-  }*/
 
   // ecal information
   lazyTools_ = std::auto_ptr<noZS::EcalClusterLazyTools>( new noZS::EcalClusterLazyTools(iEvent, iSetup, recHitsEBToken, recHitsEEToken));   
@@ -1013,7 +1003,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.getByToken(pfcandsToken_, pfcands);
 
   edm::Handle<vector<reco::GenParticle>> genparticles;
-  if (fisMC) {
+  if (fincludeSignalGenParticles) {
     iEvent.getByToken(genToken_, genparticles);
   }
 
@@ -1042,6 +1032,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.getByToken(muonToken_, muons);
 
   if (fDebug) cout << ". initializing branches" << endl;
+
   fCand_pt.clear();
   fCand_eta.clear();
   fCand_phi.clear();
@@ -1219,6 +1210,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fGenPhi_eta.clear();
   fGenPhi_phi.clear();
   fGenPhi_energy.clear();
+  fGenPhi_mass.clear();
   fGenPhi_px.clear();
   fGenPhi_py.clear();
   fGenPhi_pz.clear();
@@ -1227,13 +1219,13 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fGenEta_eta.clear();
   fGenEta_phi.clear();
   fGenEta_energy.clear();
+  fGenEta_mass.clear();
   fGenEta_candDR.clear();
   fGenEta_passedCandDR.clear();
   fGenEta_jetDR.clear();
   fGenEta_px.clear();
   fGenEta_py.clear();
   fGenEta_pz.clear();
-  fGenEta_energy.clear();
 
   fAK4jet_pt.clear();
   fAK4jet_eta.clear();
@@ -1266,7 +1258,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fNumPF = pfcands->size();
 
   // Generator information if Signal
-  if (fisSignal && fisMC) {
+  if (fincludeSignalGenParticles) {
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle &genparticle = (*genparticles)[i];
       if (genparticle.pdgId() == 9000006 && genparticle.status() == 62) {
@@ -1505,7 +1497,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           // Generator Matching
           bool match = false;
           double gen_dR = 99.9;
-	        if (fisSignal && fisMC) {
+	        if (fincludeSignalGenParticles) {
 	          for (unsigned int i = 0; i < genparticles->size(); i++) {
 	            const reco::GenParticle &genparticle = (*genparticles)[i];
 	            if ((genparticle.pdgId() == 221 || genparticle.pdgId() == 331) && genparticle.status() == 2) {
@@ -1554,7 +1546,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fNumTwoProngFake = nFake;
 
   // More matching, by gen Eta perspective now
-  if (fisSignal && fisMC) {
+  if (fincludeSignalGenParticles) {
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle &genparticle = (*genparticles)[i];
       TLorentzVector GenParticle;
@@ -1861,7 +1853,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (fDebug) cout << ". done making di-objects" << endl;
 
   // generator decay type
-  if (fisSignal)
+  if (fincludeSignalGenParticles)
   {
     int decayType = 0;
     for (unsigned int i = 0; i < genparticles->size(); i++) {
@@ -1924,13 +1916,15 @@ ExoDiPhotonAnalyzer::beginJob()
   cout << "===========================" << endl;
   cout << "= Ntuplizer Configuration =" << endl;
   cout << "===========================" << endl;
-  cout << "fisMC: " << fisMC << endl;
-  cout << "fisSignal: " << fisSignal << endl;
   cout << "fDebug: " << fDebug << endl;
   cout << "fchargedDecayCutflow: " << fchargedDecayCutflow << endl;
   cout << "fTriggerEffOnly: " << fTriggerEffOnly << endl;
-  cout << "fAddDrConePhotonCut: " << fAddDrConePhotonCut << endl;
   cout << "fTwoProngFakeRateCalcOnly: " << fTwoProngFakeRateCalcOnly << endl;
+  cout << "fAddDrConePhotonCut: " << fAddDrConePhotonCut << endl;
+  cout << "fincludeAllCandObjects: " << fincludeAllCandObjects << endl;
+  cout << "fincludeAllLooseObjects: " << fincludeAllLooseObjects << endl;
+  cout << "fincludeOldPhotons: " << fincludeOldPhotons << endl;
+  cout << "fincludeSignalGenParticles: " << fincludeSignalGenParticles << endl;
   cout << "===========================" << endl;
 }
 
