@@ -102,7 +102,6 @@ private:
   edm::EDGetTokenT<pat::PackedTriggerPrescales> triggerPrescales_;
   bool               fincludeSignalGenParticles; // includes the GenPhi and other gen particles in ntuple
   bool               fDebug;  // if set to False, mean to limit per event stdout output
-  bool               fchargedDecayCutflow;  // option to print cutflow of the charged selection to stdout at the end of the job
   bool               fTriggerEffOnly; // only fills photon trigger eff histograms, no tree
   bool               fAddDrConePhotonCut; // option needed for studying the Trigger ID, no longer needd
   bool               fTwoProngFakeRateCalcOnly; // only fills fake rate histos, no tree
@@ -127,21 +126,6 @@ private:
   double fCandidateAbsMaxEta;
   double fCandidateMinPt;
 
-  float fCutflow_total;
-  float fCutflow_oneCand;
-  float fCutflow_twoCand;
-  float fCutflow_onePass;
-  float fCutflow_twoPass;
-  float fCutflow_oneMatch;
-  float fCutflow_twoMatch;
-  float fCutflow_onePassMatch;
-  float fCutflow_twoPassMatch;
-  float fCutflow_passCharged;
-  float fCutflow_passNeutral;
-  float fCutflow_passEGamma;
-  float fCutflow_passPhotonPt;
-
- 
   // tools for clusters
   std::auto_ptr<noZS::EcalClusterLazyTools> lazyTools_;
   edm::InputTag recHitsEBTag_;
@@ -481,7 +465,6 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     triggerPrescales_(consumes<pat::PackedTriggerPrescales>(iConfig.getParameter<edm::InputTag>("prescales"))),
     fincludeSignalGenParticles(iConfig.getUntrackedParameter<bool>("includeSignalGenParticles")),
     fDebug(iConfig.getUntrackedParameter<bool>("debug")),
-    fchargedDecayCutflow(iConfig.getUntrackedParameter<bool>("chargedDecayCutflow")),
     fTriggerEffOnly(iConfig.getUntrackedParameter<bool>("triggerEffOnly")),
     fAddDrConePhotonCut(iConfig.getUntrackedParameter<bool>("addPhotonCutDrConeHE")),
     fTwoProngFakeRateCalcOnly(iConfig.getUntrackedParameter<bool>("noTreeOnlyFakeRateHistos")),
@@ -505,21 +488,6 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fCandidateMinPt(iConfig.getUntrackedParameter<double>("candidateMinPt")),
     rhoToken_(consumes<double> (iConfig.getParameter<edm::InputTag>("rho")))
 {
-  // Initialize cutflow variables
-  fCutflow_total = 0;
-  fCutflow_oneCand = 0;
-  fCutflow_twoCand = 0;
-  fCutflow_onePass = 0;
-  fCutflow_twoPass = 0;
-  fCutflow_oneMatch = 0;
-  fCutflow_twoMatch = 0;
-  fCutflow_onePassMatch = 0;
-  fCutflow_twoPassMatch = 0;
-  fCutflow_passCharged = 0;
-  fCutflow_passNeutral = 0;
-  fCutflow_passEGamma = 0;
-  fCutflow_passPhotonPt = 0;
-
   // MiniAOD event content
   pfcandsToken_ = consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates"));
   genToken_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
@@ -1762,21 +1730,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fMET = (*MET)[0].pt();
   fMET_phi = (*MET)[0].phi();
   
-  // Cutflow
-  fCutflow_total++;
-  if (fCand_pt.size() > 0) fCutflow_oneCand++;
-  if (fCand_pt.size() > 1) fCutflow_twoCand++;
-  if (fTwoProng_pt.size() > 0)  fCutflow_onePass++;
-  if (fTwoProng_pt.size() > 1)  fCutflow_twoPass++;
-  if (nPassCharged > 0) fCutflow_passCharged++;
-  if (nPassNeutral > 0) fCutflow_passNeutral++;
-  if (nPassEGamma > 0) fCutflow_passEGamma++;
-  if (nPassPhotonPt > 0) fCutflow_passPhotonPt++;
-  if (nMatch > 0) fCutflow_oneMatch++;
-  if (nMatch > 1) fCutflow_twoMatch++;
-  if (nPassMatch > 0) fCutflow_onePassMatch++;
-  if (nPassMatch > 1) fCutflow_twoPassMatch++;
-
   if (fDebug) cout << ". high-pt-id" << endl;
 
   // Photon id  
@@ -1922,7 +1875,6 @@ ExoDiPhotonAnalyzer::beginJob()
   cout << "= Ntuplizer Configuration =" << endl;
   cout << "===========================" << endl;
   cout << "fDebug: " << fDebug << endl;
-  cout << "fchargedDecayCutflow: " << fchargedDecayCutflow << endl;
   cout << "fTriggerEffOnly: " << fTriggerEffOnly << endl;
   cout << "fTwoProngFakeRateCalcOnly: " << fTwoProngFakeRateCalcOnly << endl;
   cout << "fAddDrConePhotonCut: " << fAddDrConePhotonCut << endl;
@@ -1989,25 +1941,6 @@ ExoDiPhotonAnalyzer::endJob()
   fPhotonTriggerEff_ConeHE_Photon22_Iso_Numerator->Sumw2();
   fPhotonTriggerEff_ConeHE_Photon22_Iso_Division->Add(fPhotonTriggerEff_ConeHE_Photon22_Iso_Numerator);
   fPhotonTriggerEff_ConeHE_Photon22_Iso_Division->Divide(fPhotonTriggerEff_ConeHE_all_Denominator);
-  }
-
-  // Print Cutflow
-  if (fchargedDecayCutflow) {
-    cout << "Efficiencies for charged decay mode" << endl;
-    cout << "Total number of events processed                        : " << fCutflow_total << " " << (fCutflow_total/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least one candidate Eta                  : " << fCutflow_oneCand << " " << (fCutflow_oneCand/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least two candidate Etas                 : " << fCutflow_twoCand << " " << (fCutflow_twoCand/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least one passing Eta                    : " << fCutflow_onePass << " " << (fCutflow_onePass/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least two passing Etas                   : " << fCutflow_twoPass << " " << (fCutflow_twoPass/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least one matched candidate              : " << fCutflow_oneMatch << " " << (fCutflow_oneMatch/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least two matched candidate              : " << fCutflow_twoMatch << " " << (fCutflow_twoMatch/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least one passing and matched candidate  : " << fCutflow_onePassMatch << " " << (fCutflow_onePassMatch/fCutflow_total)*100 << "%" << endl;
-    cout << "Events with at least two passing and matched candidates : " << fCutflow_twoPassMatch << " " << (fCutflow_twoPassMatch/fCutflow_total)*100 << "%" << endl;
-    cout << "Cutflow for two prong selection" << endl;
-    cout << "Pass relative charged isolation        : " << fCutflow_passCharged << " " << (fCutflow_passCharged/fCutflow_oneCand)*100 << "%" << endl;
-    cout << "Pass relative neutral isolation        : " << fCutflow_passNeutral << " " << (fCutflow_passNeutral/fCutflow_oneCand)*100 << "%" << endl;
-    cout << "Pass relative egamma isolation         : " << fCutflow_passEGamma << " " << (fCutflow_passEGamma/fCutflow_oneCand)*100 << "%" << endl;
-    cout << "Pass pt of combined photon requirement : " << fCutflow_passPhotonPt << " " << (fCutflow_passPhotonPt/fCutflow_oneCand)*100 << "%" << endl;
   }
 }
 

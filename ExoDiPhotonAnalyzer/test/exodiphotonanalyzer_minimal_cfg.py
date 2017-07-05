@@ -42,7 +42,7 @@ options.register('addConeHE',
                 VarParsing.varType.bool,
                 "Add cut to high-pt-photon-id: Cone based HE < 0.05")
 options.register('includeLoose',
-                False,
+                True,
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "Include Loose twoprongs in ntuple")
@@ -51,7 +51,22 @@ options.register('TrigEffOnly',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "Don't produce trees, only the photon eff trigger histograms")
-options.setDefault('maxEvents', 10)
+options.register("minPt",
+                0,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.float,
+                "")
+options.register("maxEta",
+                2.5,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.float,
+                "")
+options.register("constituentMinPt",
+                10,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.float,
+                "")
+options.setDefault('maxEvents', 100)
 options.parseArguments()
 
 # set variables
@@ -67,8 +82,8 @@ process = cms.Process("ExoDiPhotonAnalysis")
 
 # Log messages
 process.load("FWCore.MessageService.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
-process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(True) )
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(options.debug) )
 
 # Source
 readFiles = []
@@ -186,33 +201,33 @@ process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
                                            maxd0 = cms.double(2)	
 )
 
-# some more Photon ID decisions, block comes from high-pt-id code, but these ids are not currently being use in high-pt-id
-# included for reference
+# adds computation of more Photon ID decisions, this block comes from high-pt-id code, but these ids are not currently being use in high-pt-id
+# included for reference and for agreement with high-pt-id framework
 # Setup VID for EGM ID
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
 switchOnVIDPhotonIdProducer(process, DataFormat.MiniAOD)
-# define which IDs we want to produce
 my_id_modules = ['RecoEgamma.PhotonIdentification.Identification.cutBasedPhotonID_Spring15_25ns_V1_cff']
-#add them to the VID producer
 for idmod in my_id_modules:
     setupAllVIDIdsInModule(process,idmod,setupVIDPhotonSelection)
 
 # the ntuplizer
 process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   # two-prong object
-                                  chargedHadronPairMinDeltaR = cms.untracked.double(0.05),
-                                  chargedHadronMinPt = cms.untracked.double(10.0),
-                                  isolationConeR = cms.untracked.double(0.3),
+                                  candidateMinPt = cms.untracked.double(options.minPt),
+                                  candidateAbsMaxEta = cms.untracked.double(options.maxEta),
+                                  chargedHadronPairMinDR = cms.untracked.double(0.05),
+                                  chargedHadronMinPt = cms.untracked.double(options.constituentMinPt),
+                                  photonPtCut = cms.untracked.double(options.constituentMinPt),
                                   photonPhiBoxSize = cms.untracked.double(0.8),
                                   photonEtaBoxSize = cms.untracked.double(0.087),
-                                  photonPtCut = cms.untracked.double(10.0),
+                                  isolationConeR = cms.untracked.double(0.3),
                                   chargedIsoCut = cms.untracked.double(0.1),
-                                  chargedIsoFakeMax = cms.untracked.double(0.3),
+                                  chargedIsoLooseMax = cms.untracked.double(0.3),
                                   neutralIsoCut = cms.untracked.double(0.1),
-                                  neutralIsoFakeMax = cms.untracked.double(0.3),
+                                  neutralIsoLooseMax = cms.untracked.double(0.3),
                                   egammaIsoCut = cms.untracked.double(0.1),
-                                  egammaIsoFakeMax = cms.untracked.double(0.3),
-                                  generatorEtaMatchDR = cms.untracked.double(0.1),
+                                  egammaIsoLooseMax = cms.untracked.double(0.3),
+                                  generatorMatchDR = cms.untracked.double(0.1),
                                   # high-pt-photon-id options
                                   rho = cms.InputTag("fixedGridRhoFastjetAll"),
                                   # HLT paths
@@ -221,7 +236,6 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   objects = cms.InputTag("selectedPatTrigger"),
                                   )
 # Ntuplizer Options
-process.diphotonAnalyzer.chargedDecayCutflow = cms.untracked.bool(False)
 process.diphotonAnalyzer.noTreeOnlyFakeRateHistos = cms.untracked.bool(False)
 process.diphotonAnalyzer.includeAllCandObjects = cms.untracked.bool(False)
 process.diphotonAnalyzer.includeOldPhotons = cms.untracked.bool(False)
