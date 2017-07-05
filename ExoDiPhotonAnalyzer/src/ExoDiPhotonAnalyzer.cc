@@ -124,6 +124,8 @@ private:
   double fCandidatePairNeutralIsoFakeCut;
   double fCandidatePairEGammaIsoFakeCut;
   double fCandidatePairGenMatchDR;
+  double fCandidateAbsMaxEta;
+  double fCandidateMinPt;
 
   float fCutflow_total;
   float fCutflow_oneCand;
@@ -486,7 +488,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fincludeAllLooseObjects(iConfig.getUntrackedParameter<bool>("includeAllLooseObjects")),
     fincludeAllCandObjects(iConfig.getUntrackedParameter<bool>("includeAllCandObjects")),
     fincludeOldPhotons(iConfig.getUntrackedParameter<bool>("includeOldPhotons")),
-    fCandidatePairDR(iConfig.getUntrackedParameter<double>("chargedHadronPairMinDeltaR")),
+    fCandidatePairDR(iConfig.getUntrackedParameter<double>("chargedHadronPairMinDR")),
     fCandidatePairMinPt(iConfig.getUntrackedParameter<double>("chargedHadronMinPt")),
     fCandidatePairIsolationDR(iConfig.getUntrackedParameter<double>("isolationConeR")),
     fCandidatePairPhiBox(iConfig.getUntrackedParameter<double>("photonPhiBoxSize")),
@@ -495,10 +497,12 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fCandidatePairChargedIsoCut(iConfig.getUntrackedParameter<double>("chargedIsoCut")),
     fCandidatePairNeutralIsoCut(iConfig.getUntrackedParameter<double>("neutralIsoCut")),
     fCandidatePairEGammaIsoCut(iConfig.getUntrackedParameter<double>("egammaIsoCut")),
-    fCandidatePairChargedIsoFakeCut(iConfig.getUntrackedParameter<double>("chargedIsoFakeMax")),
-    fCandidatePairNeutralIsoFakeCut(iConfig.getUntrackedParameter<double>("neutralIsoFakeMax")),
-    fCandidatePairEGammaIsoFakeCut(iConfig.getUntrackedParameter<double>("egammaIsoFakeMax")),
-    fCandidatePairGenMatchDR(iConfig.getUntrackedParameter<double>("generatorEtaMatchDR")),
+    fCandidatePairChargedIsoFakeCut(iConfig.getUntrackedParameter<double>("chargedIsoLooseMax")),
+    fCandidatePairNeutralIsoFakeCut(iConfig.getUntrackedParameter<double>("neutralIsoLooseMax")),
+    fCandidatePairEGammaIsoFakeCut(iConfig.getUntrackedParameter<double>("egammaIsoLooseMax")),
+    fCandidatePairGenMatchDR(iConfig.getUntrackedParameter<double>("generatorMatchDR")),
+    fCandidateAbsMaxEta(iConfig.getUntrackedParameter<double>("candidateAbsMaxEta")),
+    fCandidateMinPt(iConfig.getUntrackedParameter<double>("candidateMinPt")),
     rhoToken_(consumes<double> (iConfig.getParameter<edm::InputTag>("rho")))
 {
   // Initialize cutflow variables
@@ -1351,11 +1355,12 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           TLorentzVector TwoProngObject_leadingPfPhoton;
           TwoProngObject_leadingPfPhoton = center + leading_pf_photon;
           double TwoProng_Mass = TwoProngObject_leadingPfPhoton.M();
-          if (fabs(TwoProngObject.Eta()) > 2.5) continue;
-          // CH pair: 
-          // within dr 0.5
+          if (fabs(TwoProngObject.Eta()) > fCandidateAbsMaxEta) continue;
+          if (TwoProngObject.Pt() < fCandidateMinPt) continue;
+          // CH pair within dr range
           // has at least one pf photon
-          // |eta| < 2.5
+          // |eta| <= eta requirement
+          // pt >= min pt requirement
           //   meets definition of candidate twoprong, fill vectors
           if (pf1.pdgId() > 0) {
             fCand_CHpos_pt.push_back(pfcand1.Pt());
