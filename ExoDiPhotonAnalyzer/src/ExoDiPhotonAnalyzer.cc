@@ -1880,6 +1880,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (fDebug) cout << ". done photon trigger efficiency histograms" << endl;
   }
 
+  // twoprong yield analysis
+  for (unsigned int i = 0; i < fTwoProng_pt.size(); i++) {
+    fTwoProngYield->Fill(fTwoProng_pt[i]);
+  }
+
   // Now fill fTree2
   if (fMakeTrees) fTree2->Fill();
 }
@@ -1887,16 +1892,16 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 void 
 ExoDiPhotonAnalyzer::beginJob()
 {
+  if (fMakeTrees) {
   cout << "===========================" << endl;
   cout << "= Ntuplizer Configuration =" << endl;
   cout << "===========================" << endl;
-  cout << "fDebug: " << fDebug << endl;
-  cout << "fAddDrConePhotonCut: " << fAddDrConePhotonCut << endl;
   cout << "fincludeAllCandObjects: " << fincludeAllCandObjects << endl;
   cout << "fincludeAllLooseObjects: " << fincludeAllLooseObjects << endl;
   cout << "fincludeOldPhotons: " << fincludeOldPhotons << endl;
   cout << "fincludeSignalGenParticles: " << fincludeSignalGenParticles << endl;
   cout << "===========================" << endl;
+  }
 }
 
 void 
