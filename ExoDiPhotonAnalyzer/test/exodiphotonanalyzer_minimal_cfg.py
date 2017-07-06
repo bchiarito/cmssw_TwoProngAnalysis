@@ -46,11 +46,26 @@ options.register('includeLoose',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "Include Loose twoprongs in ntuple")
-options.register('TrigEffOnly',
+options.register('ntuples',
+                True,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "Add ntuples (Ttrees) to output")
+options.register('fakeRateHistos',
                 False,
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
-                "Don't produce trees, only the photon eff trigger histograms")
+                "Add ntuples (Ttrees) to output")
+options.register('triggerEffHistos',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "Add ntuples (Ttrees) to output")
+options.register('twoprongYieldHistos',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "Add ntuples (Ttrees) to output")
 options.register("minPt",
                 0,
                 VarParsing.multiplicity.singleton,
@@ -236,14 +251,16 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   objects = cms.InputTag("selectedPatTrigger"),
                                   )
 # Ntuplizer Options
-process.diphotonAnalyzer.noTreeOnlyFakeRateHistos = cms.untracked.bool(False)
+process.diphotonAnalyzer.addPhotonCutDrConeHE = cms.untracked.bool(options.addConeHE)
 process.diphotonAnalyzer.includeAllCandObjects = cms.untracked.bool(False)
 process.diphotonAnalyzer.includeOldPhotons = cms.untracked.bool(False)
 process.diphotonAnalyzer.debug = cms.untracked.bool(options.debug)
-process.diphotonAnalyzer.triggerEffOnly = cms.untracked.bool(options.TrigEffOnly)
-process.diphotonAnalyzer.addPhotonCutDrConeHE = cms.untracked.bool(options.addConeHE)
 process.diphotonAnalyzer.includeAllLooseObjects = cms.untracked.bool(options.includeLoose)
 process.diphotonAnalyzer.includeSignalGenParticles = cms.untracked.bool(isSignal)
+process.diphotonAnalyzer.makeTrees = cms.untracked.bool(options.ntuples)
+process.diphotonAnalyzer.fakeRateHistos = cms.untracked.bool(False)
+process.diphotonAnalyzer.triggerEffHistos = cms.untracked.bool(False)
+process.diphotonAnalyzer.twoprongYieldHistos = cms.untracked.bool(True)
 
 # The full cmssw configuration path
 process.path  = cms.Path(process.primaryVertexFilter * process.egmPhotonIDSequence * process.diphotonAnalyzer)
