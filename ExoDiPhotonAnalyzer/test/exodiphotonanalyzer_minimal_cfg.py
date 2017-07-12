@@ -17,7 +17,7 @@ options.register('debug',
                 VarParsing.varType.bool,
                 "True includes all output, False removes most of the per event output")
 options.register("sample",
-                "local",
+                "signal",
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.string,
                 "which sample we want to run over")
@@ -31,6 +31,11 @@ options.register('isSignal',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "Specify singal MC for looking for Phi and omega gen particles")
+options.register('mcInfo',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "include mc weight in Ttree")
 options.register('local',
                 True,
                 VarParsing.multiplicity.singleton,
@@ -67,7 +72,7 @@ options.register('twoprongYieldHistos',
                 VarParsing.varType.bool,
                 "Add ntuples (Ttrees) to output")
 options.register("minPt",
-                0,
+                20.0,
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.float,
                 "")
@@ -77,10 +82,20 @@ options.register("maxEta",
                 VarParsing.varType.float,
                 "")
 options.register("constituentMinPt",
-                10,
+                1.0,
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.float,
                 "")
+options.register("mcXS",
+                1.0,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.float,
+                "mc cross section, if desired to be filled in trees")
+options.register("mcN",
+                1.0,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.float,
+                "mc number generated, if desired to be filled in trees")
 options.setDefault('maxEvents', 100)
 options.parseArguments()
 
@@ -90,6 +105,7 @@ doLumis = options.doLumis
 sample = options.sample
 globalTag = options.globalTag
 outname = options.out
+mcInfo = options.mcInfo
 
 # Begin configuration
 import FWCore.ParameterSet.Config as cms
@@ -102,12 +118,15 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(options.d
 
 # Source
 readFiles = []
+
+# SIGNAL MC
 if sample == "signal":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_generic.root' ] )
     if options.local:
       isSignal = True
       doLumis = False
+      mcInfo = True
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal"
@@ -118,6 +137,7 @@ elif sample == "signal125":
     if options.local:
       isSignal = True
       doLumis = False
+      mcInfo = True
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal125"
@@ -127,6 +147,7 @@ elif sample == "signal300":
     if options.local:
       isSignal = True
       doLumis = False
+      mcInfo = True
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal300"
@@ -136,6 +157,7 @@ elif sample == "signal500":
     if options.local:
       isSignal = True
       doLumis = False
+      mcInfo = True
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal500"
@@ -145,6 +167,7 @@ elif sample == "signal750":
     if options.local:
       isSignal = True
       doLumis = False
+      mcInfo = True
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal750"
@@ -154,10 +177,12 @@ elif sample == "signal1000":
     if options.local:
       isSignal = True
       doLumis = False
+      mcInfo = True
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal1000"
 
+# DATA
 elif sample == "jet":
     # 100k events
     readFiles.extend( [
@@ -165,6 +190,7 @@ elif sample == "jet":
     if options.local:
       isSignal = False
       doLumis = True
+      mcInfo = False
       globalTag = "80X_dataRun2_2016SeptRepro_v7"
       if outname == "":
         outname = "jet"
@@ -175,11 +201,27 @@ elif sample == "photon":
     if options.local:
       isSignal = False
       doLumis = True
+      mcInfo = False
       globalTag = "80X_dataRun2_2016SeptRepro_v7"
       if outname == "":
         outname = "photon"
+
+# BKG MC
+elif sample == "qcd":
+    # 87k events
+    readFiles.extend( [
+       '/store/mc/RunIISummer16MiniAODv2/QCD_Pt_30to50_TuneCUETP8M1_13TeV_pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/120000/04915DCA-1BB2-E611-8A4B-0CC47A4C8E56.root' ] )
+    if options.local:
+      isSignal = False
+      doLumis = False
+      mcInfo = True
+      globalTag = "80X_mcRun2_asymptotic_2016_TrancheIV_v6"
+      if outname == "":
+        outname = "qcd"
+
 elif options.local:
-    print "Not a valid sample name!!"
+    print "Not a valid sample name!"
+
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( readFiles ))
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( options.maxEvents ) )
 
@@ -258,9 +300,12 @@ process.diphotonAnalyzer.debug = cms.untracked.bool(options.debug)
 process.diphotonAnalyzer.includeAllLooseObjects = cms.untracked.bool(options.includeLoose)
 process.diphotonAnalyzer.includeSignalGenParticles = cms.untracked.bool(isSignal)
 process.diphotonAnalyzer.makeTrees = cms.untracked.bool(options.ntuples)
-process.diphotonAnalyzer.fakeRateHistos = cms.untracked.bool(False)
-process.diphotonAnalyzer.triggerEffHistos = cms.untracked.bool(False)
-process.diphotonAnalyzer.twoprongYieldHistos = cms.untracked.bool(True)
+process.diphotonAnalyzer.fakeRateHistos = cms.untracked.bool(options.fakeRateHistos)
+process.diphotonAnalyzer.triggerEffHistos = cms.untracked.bool(options.triggerEffHistos)
+process.diphotonAnalyzer.twoprongYieldHistos = cms.untracked.bool(options.twoprongYieldHistos)
+process.diphotonAnalyzer.includeMCInfo = cms.untracked.bool(mcInfo)
+process.diphotonAnalyzer.mcXS = cms.untracked.double(options.mcXS)
+process.diphotonAnalyzer.mcN = cms.untracked.double(options.mcN)
 
 # The full cmssw configuration path
 process.path  = cms.Path(process.primaryVertexFilter * process.egmPhotonIDSequence * process.diphotonAnalyzer)

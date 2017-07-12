@@ -34,25 +34,22 @@
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
+//#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 
 // fileservice
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
-// for ecal
-//#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
-
 // these objects are all in the namespace 'ExoDiPhotons'
 #include "DiPhotonAnalysis/CommonClasses/interface/RecoPhotonInfo.h"
-#include "DiPhotonAnalysis/CommonClasses/interface/RecoTwoProngInfo.h"
 #include "DiPhotonAnalysis/CommonClasses/interface/RecoDiObjectInfo.h"
 
 // pat objects
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
-//#include "DataFormats/PatCandidates/interface/Electron.h"
-//#include "DataFormats/PatCandidates/interface/Jet.h"
-//#include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
+#include "DataFormats/PatCandidates/interface/Jet.h"
+#include "DataFormats/PatCandidates/interface/Muon.h"
 
 // for trigger
 #include "DataFormats/Math/interface/deltaR.h"
@@ -61,18 +58,22 @@
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 
+// for gen event info
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
+
 using namespace std;
 
-  double phoKappaHighPtID(const pat::Photon *);
-  double phoEAHighPtID(const pat::Photon* );
-  double phoAlphaHighPtID(const pat::Photon *);
-  bool passCorPhoIsoHighPtID(const pat::Photon* , double );
-  bool passSigmaIetaIetaCut(const pat::Photon* , bool );
-  bool passChargedHadronCut(const pat::Photon* );
-  bool passHadTowerOverEmCut(const pat::Photon*);
-  bool passHadDrConeOverEmCut(const pat::Photon*);
-  double corPhoIsoHighPtID(const pat::Photon*, double );
-  bool compareCandsByPt(const edm::Ptr<const reco::Candidate> , const edm::Ptr<const reco::Candidate>);
+// forward declare photon functions
+double phoKappaHighPtID(const pat::Photon *);
+double phoEAHighPtID(const pat::Photon* );
+double phoAlphaHighPtID(const pat::Photon *);
+bool passCorPhoIsoHighPtID(const pat::Photon* , double );
+bool passSigmaIetaIetaCut(const pat::Photon* , bool );
+bool passChargedHadronCut(const pat::Photon* );
+bool passHadTowerOverEmCut(const pat::Photon*);
+bool passHadDrConeOverEmCut(const pat::Photon*);
+double corPhoIsoHighPtID(const pat::Photon*, double );
+bool compareCandsByPt(const edm::Ptr<const reco::Candidate> , const edm::Ptr<const reco::Candidate>);
 
 //
 // class declaration
@@ -108,6 +109,9 @@ private:
   bool               fincludeAllLooseObjects;    // include all loose twoprong objects in ntuple
   bool               fincludeAllCandObjects;     // include all twoprong candidate objects (no iso req) in ntuple
   bool               fincludeOldPhotons;         // include the Photon1,Photon2,Photon3 objects in ntuple
+  bool               fincludeMCInfo;             // include MC weight in ntuple from GenEventInfo
+  double             fMcXS;                      // the mc cross section for scaling purposes
+  double             fMcN;                       // the mc number generated for scaling purposes
   bool               fMakeTrees;                // flag to include ttrees in output
   bool               fFakeRateHistos;       // flag to include histograms in output
   bool               fTriggerEffHistos;     // flag to include histograms in output
@@ -137,7 +141,7 @@ private:
   edm::EDGetTokenT<EcalRecHitCollection> recHitsEBToken;
   edm::EDGetTokenT<EcalRecHitCollection> recHitsEEToken;
 
-  // foward declare photon subroutines
+  // photon subroutines
   bool photon_isSaturated(const pat::Photon*, const EcalRecHitCollection *, const EcalRecHitCollection *,
                           const CaloSubdetectorTopology*, const CaloSubdetectorTopology*);
   bool photon_passHighPtID(const pat::Photon*, double , bool ) ;
@@ -155,6 +159,7 @@ private:
   edm::EDGetTokenT<std::vector<pat::MET>> metToken_;
   edm::EDGetTokenT<double> rhoToken_; 
   edm::EDGetToken gedphotonsToken_;
+  edm::EDGetToken genEventInfoToken_;
 
   //double fRho25;
   //Float_t rho_;
@@ -208,14 +213,14 @@ private:
   int fNumPVs;
   int fNumPF;
   int fNumPrunedPF;
-  int fNumTwoProng;
-  int fNumTwoProngPass;
-  int fNumTwoProngMatched;
-  int fNumTwoProngPassChargedIso;
-  int fNumTwoProngPassNeutralIso;
-  int fNumTwoProngPassEGammaIso;
-  int fNumTwoProngPassPhotonPtIso;
-  int fNumTwoProngFake;
+  double fHT;
+  double fMET;
+  double fMET_phi;
+  int fNumElectrons;
+  int fNumMuons;
+  double fMcW;
+  double fMcWProd;
+
   int fNumTightPhotons;
   int fNumTightPhotons_ConeHE;
   vector<Double_t> fIDPhoton_pt;
@@ -226,12 +231,6 @@ private:
   vector<Double_t> fID2Photon_eta;
   vector<Double_t> fID2Photon_phi;
   vector<Double_t> fID2Photon_mass;
-  int fNumOffset;
-  double fHT;
-  double fMET;
-  double fMET_phi;
-  int fNumElectrons;
-  int fNumMuons;
 
   int fNumAK4jets;
   vector<Double_t> fAK4jet_pt;
@@ -253,6 +252,14 @@ private:
   vector<Double_t> fPhoton_pz;
   vector<Double_t> fPhoton_energy;
 
+  int fNumTwoProng;
+  int fNumTwoProngPass;
+  int fNumTwoProngMatched;
+  int fNumTwoProngPassChargedIso;
+  int fNumTwoProngPassNeutralIso;
+  int fNumTwoProngPassEGammaIso;
+  int fNumTwoProngPassPhotonPtIso;
+  int fNumTwoProngFake;
   vector<Double_t> fCand_pt;
   vector<Double_t> fCand_eta;
   vector<Double_t> fCand_phi;
@@ -474,6 +481,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fincludeAllLooseObjects(iConfig.getUntrackedParameter<bool>("includeAllLooseObjects")),
     fincludeAllCandObjects(iConfig.getUntrackedParameter<bool>("includeAllCandObjects")),
     fincludeOldPhotons(iConfig.getUntrackedParameter<bool>("includeOldPhotons")),
+    fincludeMCInfo(iConfig.getUntrackedParameter<bool>("includeMCInfo")),
+    fMcXS(iConfig.getUntrackedParameter<double>("mcXS")),
+    fMcN(iConfig.getUntrackedParameter<double>("mcN")),
     fMakeTrees(iConfig.getUntrackedParameter<bool>("makeTrees")),
     fFakeRateHistos(iConfig.getUntrackedParameter<bool>("fakeRateHistos")),
     fTriggerEffHistos(iConfig.getUntrackedParameter<bool>("triggerEffHistos")),
@@ -505,7 +515,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   metToken_ = consumes<std::vector<pat::MET>>(edm::InputTag("slimmedMETs"));
   electronToken_ = consumes<std::vector<pat::Electron>>(edm::InputTag("slimmedElectrons"));
   muonToken_ = consumes<std::vector<pat::Muon>>(edm::InputTag("slimmedMuons"));
-  gedphotonsToken_ = mayConsume<edm::View<pat::Photon>>( edm::InputTag("slimmedPhotons") );
+  gedphotonsToken_ = consumes<edm::View<pat::Photon>>( edm::InputTag("slimmedPhotons") );
+  genEventInfoToken_ = mayConsume<GenEventInfoProduct>( edm::InputTag("generator") );
 
   recHitsEBTag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEBTag",edm::InputTag("reducedEgamma:reducedEBRecHits"));
   recHitsEETag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEETag",edm::InputTag("reducedEgamma:reducedEERecHits"));
@@ -515,6 +526,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   // output setup
   edm::Service<TFileService> fs;
   // Branches for charged decay analysis
+  if (fMakeTrees) {
   fTree2 = fs->make<TTree>("fTree2","ChargedDecayTree");
   // Trigger
   fTree2->Branch("HLT_Photon175",&fHLT_Photon175,"HLT_Photon175/I");
@@ -531,6 +543,10 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("MET_phi",&fMET_phi,"MET_phi/D");
   fTree2->Branch("nElectrons",&fNumElectrons,"nElectrons/I");
   fTree2->Branch("nMuons",&fNumMuons,"nMuons/I");
+  fTree2->Branch("mcW",&fMcW,"mcW/D");
+  fTree2->Branch("mcWProd",&fMcWProd,"mcWProd/D");
+  fTree2->Branch("mcXS",&fMcXS,"mcXS/D");
+  fTree2->Branch("mcN",&fMcN,"mcN/D");
   // Jets
   fTree2->Branch("nJets",&fNumAK4jets,"nJets/I");
   fTree2->Branch("jet_pt",&fAK4jet_pt);
@@ -560,7 +576,6 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("nPassEGammaIso",&fNumTwoProngPassEGammaIso,"nPassEGammaIso/I");
   fTree2->Branch("nPassPhotonPtIso",&fNumTwoProngPassChargedIso,"nPassPhotonIso/I");
   fTree2->Branch("nFakes",&fNumTwoProngFake,"nFakes/I");
-  fTree2->Branch("nOffset",&fNumOffset,"nOffset/I");
   if(fincludeAllCandObjects) {
   // Candidate information
   fTree2->Branch("Cand_pt",&fCand_pt);
@@ -778,6 +793,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Gen_decayType",&fGen_decayType);
   // Combined Objects
   fTree2->Branch("TwoProngTwoProng",&fTwoProngTwoProngInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
+  }
   // Fake rate histograms
   int num_even_mass_bins = 9;
   double even_mass_bins_array[num_even_mass_bins+1] = {0,.400,.600,.800,1.000,1.200,1.400,1.600,1.800,2.000};
@@ -861,7 +877,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   } // end DrCone conditional
   } // end trigger eff histos conditional
 
+  if (fTwoProngYieldHistos) {
   fTwoProngYield = fs->make<TH1F>("twoprongyield_pt","TwoProng Object Yield", 50, 0, 5000);
+  }
 }
 
 
@@ -910,13 +928,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   using namespace reco;
 
   if (fDebug) cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
-  fEventNum = iEvent.id().event();
-  fRunNum = iEvent.id().run();
-  fLumiNum = iEvent.id().luminosityBlock();
-
-  edm::Handle< double > rhoH;
-  iEvent.getByToken(rhoToken_,rhoH);
-  //rho_ = *rhoH;
 
   // trigger 
   edm::Handle<edm::TriggerResults> triggerBits;
@@ -956,10 +967,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fHLT_Photon175 = bit_photon175;
   fHLT_Photon22_Iso = bit_photon22_iso;
 
-  // ecal information
+  // ecal tool
   lazyTools_ = std::auto_ptr<noZS::EcalClusterLazyTools>( new noZS::EcalClusterLazyTools(iEvent, iSetup, recHitsEBToken, recHitsEEToken));   
 
-  // get ecal barrel recHits for spike rejection
+  // get event products
   edm::Handle<EcalRecHitCollection> recHitsEB_h;
   iEvent.getByToken(recHitsEBToken, recHitsEB_h );
   const EcalRecHitCollection * recHitsEB = 0;
@@ -978,12 +989,14 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     recHitsEE = recHitsEE_h.product();
   }
 
+  edm::Handle< double > rhoH;
+  iEvent.getByToken(rhoToken_,rhoH);
+  //rho_ = *rhoH;
+
   edm::ESHandle<EcalChannelStatus> chStatus;
   iSetup.get<EcalChannelStatusRcd>().get(chStatus);
   const EcalChannelStatus *ch_status = chStatus.product(); 
 
-  // Charged decay analysis
-  if (fDebug) cout << ". start charged decay code" << endl;
   edm::Handle<pat::PackedCandidateCollection> pfcands;
   iEvent.getByToken(pfcandsToken_, pfcands);
 
@@ -1016,8 +1029,114 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   edm::Handle<std::vector<pat::Muon>> muons;
   iEvent.getByToken(muonToken_, muons);
 
-  if (fDebug) cout << ". initializing branches" << endl;
+  edm::Handle<GenEventInfoProduct> genEventInfo;
+  if (fincludeMCInfo) {
+    iEvent.getByToken(genEventInfoToken_, genEventInfo);
+    // MC weights
+    fMcW = genEventInfo->weight();
+    fMcWProd = genEventInfo->weightProduct();
+  }
 
+  // Signal MC Generator information
+  if (fincludeSignalGenParticles) {
+    for (unsigned int i = 0; i < genparticles->size(); i++) {
+      const reco::GenParticle &genparticle = (*genparticles)[i];
+      if (genparticle.pdgId() == 9000006 && genparticle.status() == 62) {
+        fGenPhi_pt.push_back(genparticle.pt());
+        fGenPhi_eta.push_back(genparticle.eta());
+        fGenPhi_phi.push_back(genparticle.phi());
+        fGenPhi_mass.push_back(genparticle.mass());
+        fGenPhi_px.push_back(genparticle.px());
+        fGenPhi_py.push_back(genparticle.py());
+        fGenPhi_pz.push_back(genparticle.pz());
+        fGenPhi_energy.push_back(genparticle.energy());
+      }
+      if ((genparticle.pdgId() == 221 || genparticle.pdgId() == 331) && genparticle.status() == 2) {
+        fGenEta_pt.push_back(genparticle.pt());
+        fGenEta_eta.push_back(genparticle.eta());
+        fGenEta_phi.push_back(genparticle.phi());
+        fGenEta_mass.push_back(genparticle.mass());
+        fGenEta_px.push_back(genparticle.px());
+        fGenEta_py.push_back(genparticle.py());
+        fGenEta_pz.push_back(genparticle.pz());
+        fGenEta_energy.push_back(genparticle.energy());
+      }
+    }
+  }
+  // generator decay type
+  if (fincludeSignalGenParticles) {
+    int decayType = 0;
+    for (unsigned int i = 0; i < genparticles->size(); i++) {
+      const reco::GenParticle &genparticle = (*genparticles)[i];
+      if (genparticle.pdgId() != 9000006 || genparticle.status() != 62) continue;
+      if (fDebug) cout << genparticle.pdgId() << ", status=" << genparticle.status() << endl; 
+      for (unsigned int j = 0; j < genparticle.numberOfDaughters(); j++) {
+        const reco::Candidate * genparticle2 = genparticle.daughter(j);
+        if (fDebug) cout << "-> " << genparticle2->pdgId() << ", status=" << genparticle2->status() << endl; 
+        int decay1 = 0;
+        int decay2 = 0;
+        int decay3 = 0;
+        for (unsigned int jj = 0; jj < genparticle2->numberOfDaughters(); jj++) {
+          const reco::Candidate * genparticle3 = genparticle2->daughter(jj);
+          if (fDebug) cout << "  -> " << genparticle3->pdgId() << ", status=" << genparticle3->status() << endl;
+          if (jj == 0) decay1 = genparticle3->pdgId();
+          if (jj == 1) decay2 = genparticle3->pdgId();
+          if (jj == 2) decay3 = genparticle3->pdgId();
+        }
+        if (isNeutral(decay1, decay2, decay3)) decayType += 0;
+        if (isCharged(decay1, decay2, decay3)) decayType += 1;
+      }
+    }
+    fGen_decayType = decayType;
+  }
+  if (fDebug) cout << ". done generator decay type determination" << endl;
+
+  // Jets
+  for (unsigned int i = 0; i < ak4jets->size(); i++) {
+    const pat::Jet &jet = (*ak4jets)[i];
+    fAK4jet_pt.push_back(jet.pt());
+    fAK4jet_eta.push_back(jet.eta());
+    fAK4jet_phi.push_back(jet.phi());
+    fAK4jet_mass.push_back(jet.mass());
+    fAK4jet_px.push_back(jet.px());
+    fAK4jet_py.push_back(jet.py());
+    fAK4jet_pz.push_back(jet.pz());
+    fAK4jet_energy.push_back(jet.energy());
+  }
+  fNumAK4jets = ak4jets->size();
+
+  // Photons
+  for (unsigned int i = 0; i < miniaod_photons->size(); i++) {
+    const pat::Photon &photon = (*miniaod_photons)[i];
+    fPhoton_pt.push_back(photon.pt());
+    fPhoton_eta.push_back(photon.eta());
+    fPhoton_phi.push_back(photon.phi());
+    fPhoton_mass.push_back(photon.mass());
+    fPhoton_px.push_back(photon.px());
+    fPhoton_py.push_back(photon.py());
+    fPhoton_pz.push_back(photon.pz());
+    fPhoton_energy.push_back(photon.energy());
+  }
+  fNumPhotons = miniaod_photons->size();
+
+  // Event wide information
+  fEventNum = iEvent.id().event();
+  fRunNum = iEvent.id().run();
+  fLumiNum = iEvent.id().luminosityBlock();
+  fNumElectrons = electrons->size();
+  fNumMuons = muons->size();
+  fHT = 0.0;
+  for (unsigned int i = 0; i < ak4jets->size(); i++) {
+    const pat::Jet &jet = (*ak4jets)[i];
+    if (jet.pt() < 30) continue;
+    if (fabs(jet.eta()) > 2.5) continue;
+    fHT += jet.pt();
+  }
+  fMET = (*MET)[0].pt();
+  fMET_phi = (*MET)[0].phi();
+
+  // Two prongs
+  if (fDebug) cout << ". starting two prong code" << endl;
   fCand_pt.clear();
   fCand_eta.clear();
   fCand_phi.clear();
@@ -1241,33 +1360,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   fNumPVs = primaryvertecies->size();
   fNumPF = pfcands->size();
-
-  // Generator information if Signal
-  if (fincludeSignalGenParticles) {
-    for (unsigned int i = 0; i < genparticles->size(); i++) {
-      const reco::GenParticle &genparticle = (*genparticles)[i];
-      if (genparticle.pdgId() == 9000006 && genparticle.status() == 62) {
-        fGenPhi_pt.push_back(genparticle.pt());
-        fGenPhi_eta.push_back(genparticle.eta());
-        fGenPhi_phi.push_back(genparticle.phi());
-        fGenPhi_mass.push_back(genparticle.mass());
-        fGenPhi_px.push_back(genparticle.px());
-        fGenPhi_py.push_back(genparticle.py());
-        fGenPhi_pz.push_back(genparticle.pz());
-        fGenPhi_energy.push_back(genparticle.energy());
-      }
-      if ((genparticle.pdgId() == 221 || genparticle.pdgId() == 331) && genparticle.status() == 2) {
-        fGenEta_pt.push_back(genparticle.pt());
-        fGenEta_eta.push_back(genparticle.eta());
-        fGenEta_phi.push_back(genparticle.phi());
-        fGenEta_mass.push_back(genparticle.mass());
-        fGenEta_px.push_back(genparticle.px());
-        fGenEta_py.push_back(genparticle.py());
-        fGenEta_pz.push_back(genparticle.pz());
-        fGenEta_energy.push_back(genparticle.energy());
-      }
-    }
-  }
 
   // Find all pairs of one CH pos and one CH neg within specified DR of each other
   int nPassCharged = 0;
@@ -1507,7 +1599,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           if (match && tight) nPassMatch++;
           if (loose) nFake++;
           if (loose) { if (TwoProngObject.Pt() > LeadingFakeTwoProng.Pt()) LeadingFakeTwoProng = TwoProngObject; }
-          // Fake rate histograms
+          // Fake rate Analysis histograms
           if (fFakeRateHistos) {
           if (tight) {
             fTwoProngFakeNume_even_pt->Fill(TwoProngObject.Pt(), TwoProng_Mass);
@@ -1532,43 +1624,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   } // end making candidates
   fNumPrunedPF = pruned_count;
   fNumTwoProngFake = nFake;
-
-  // More matching, by gen Eta perspective now
-  if (fincludeSignalGenParticles) {
-    for (unsigned int i = 0; i < genparticles->size(); i++) {
-      const reco::GenParticle &genparticle = (*genparticles)[i];
-      TLorentzVector GenParticle;
-      GenParticle.SetPtEtaPhiM(genparticle.pt(), genparticle.eta(), genparticle.phi(), genparticle.mass());
-      if ((genparticle.pdgId() == 221 || genparticle.pdgId() == 331) && genparticle.status() == 2) {
-        double candDR = 99.9;
-        double passedCandDR = 99.9;
-        double jetDR = 99.9;
-        for (unsigned int j = 0; j < fCand_pt.size(); j++) {
-          TLorentzVector Candidate;
-          Candidate.SetPtEtaPhiM(fCand_pt[j], fCand_eta[j], fCand_phi[j], fCand_mass[j]);
-          double dr = Candidate.DeltaR(GenParticle);
-          if (dr < candDR) candDR = dr;
-        }
-        for (unsigned int j = 0; j < fCand_pt.size(); j++) {
-          if (!fCand_tight[j]) continue;
-          TLorentzVector PassedCandidate;
-          PassedCandidate.SetPtEtaPhiM(fCand_pt[j], fCand_eta[j], fCand_phi[j], fCand_mass[j]);
-          double dr = PassedCandidate.DeltaR(GenParticle);
-          if (dr < passedCandDR) passedCandDR = dr;
-        }
-        for (unsigned int i = 0; i < ak4jets->size(); i++) {
-          const pat::Jet &jet = (*ak4jets)[i];
-          TLorentzVector Jet;
-          Jet.SetPtEtaPhiM(jet.pt(), jet.eta(), jet.phi(), jet.mass());
-          double dr = Jet.DeltaR(GenParticle);
-          if (dr < jetDR) jetDR = dr;
-        }
-        fGenEta_candDR.push_back(candDR);
-        fGenEta_passedCandDR.push_back(passedCandDR);
-        fGenEta_jetDR.push_back(jetDR);
-      }
-    }
-  }
 
   // Create sorted-by-pt lists
   if (fDebug) cout << ". sorting" << endl;
@@ -1697,37 +1752,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       fTwoProng_genDR.push_back(fCand_genDR[index]);
     }
   }
-  if (fDebug) cout << ". finished passed collections" << endl;
-
-  // Jets
-  for (unsigned int i = 0; i < ak4jets->size(); i++) {
-    const pat::Jet &jet = (*ak4jets)[i];
-    fAK4jet_pt.push_back(jet.pt());
-    fAK4jet_eta.push_back(jet.eta());
-    fAK4jet_phi.push_back(jet.phi());
-    fAK4jet_mass.push_back(jet.mass());
-    fAK4jet_px.push_back(jet.px());
-    fAK4jet_py.push_back(jet.py());
-    fAK4jet_pz.push_back(jet.pz());
-    fAK4jet_energy.push_back(jet.energy());
-  }
-  // Photons
-  for (unsigned int i = 0; i < miniaod_photons->size(); i++) {
-    const pat::Photon &photon = (*miniaod_photons)[i];
-    fPhoton_pt.push_back(photon.pt());
-    fPhoton_eta.push_back(photon.eta());
-    fPhoton_phi.push_back(photon.phi());
-    fPhoton_mass.push_back(photon.mass());
-    fPhoton_px.push_back(photon.px());
-    fPhoton_py.push_back(photon.py());
-    fPhoton_pz.push_back(photon.pz());
-    fPhoton_energy.push_back(photon.energy());
-  }
-  // Fill other event wide information
-  fNumAK4jets = ak4jets->size();
-  fNumPhotons = miniaod_photons->size();
-  fNumElectrons = electrons->size();
-  fNumMuons = muons->size();
   fNumTwoProng = fCand_pt.size();
   fNumTwoProngPass = fTwoProng_pt.size();
   fNumTwoProngMatched = nMatch;
@@ -1735,19 +1759,48 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fNumTwoProngPassNeutralIso = nPassNeutral;
   fNumTwoProngPassEGammaIso = nPassEGamma;
   fNumTwoProngPassChargedIso = nPassPhotonPt;
-  fHT = 0.0;
-  for (unsigned int i = 0; i < ak4jets->size(); i++) {
-    const pat::Jet &jet = (*ak4jets)[i];
-    if (jet.pt() < 30) continue;
-    if (fabs(jet.eta()) > 2.5) continue;
-    fHT += jet.pt();
+  if (fDebug) cout << ". finished passed collections" << endl;
+
+  // More matching, by gen Eta perspective now
+  if (fincludeSignalGenParticles) {
+    for (unsigned int i = 0; i < genparticles->size(); i++) {
+      const reco::GenParticle &genparticle = (*genparticles)[i];
+      TLorentzVector GenParticle;
+      GenParticle.SetPtEtaPhiM(genparticle.pt(), genparticle.eta(), genparticle.phi(), genparticle.mass());
+      if ((genparticle.pdgId() == 221 || genparticle.pdgId() == 331) && genparticle.status() == 2) {
+        double candDR = 99.9;
+        double passedCandDR = 99.9;
+        double jetDR = 99.9;
+        for (unsigned int j = 0; j < fCand_pt.size(); j++) {
+          TLorentzVector Candidate;
+          Candidate.SetPtEtaPhiM(fCand_pt[j], fCand_eta[j], fCand_phi[j], fCand_mass[j]);
+          double dr = Candidate.DeltaR(GenParticle);
+          if (dr < candDR) candDR = dr;
+        }
+        for (unsigned int j = 0; j < fCand_pt.size(); j++) {
+          if (!fCand_tight[j]) continue;
+          TLorentzVector PassedCandidate;
+          PassedCandidate.SetPtEtaPhiM(fCand_pt[j], fCand_eta[j], fCand_phi[j], fCand_mass[j]);
+          double dr = PassedCandidate.DeltaR(GenParticle);
+          if (dr < passedCandDR) passedCandDR = dr;
+        }
+        for (unsigned int i = 0; i < ak4jets->size(); i++) {
+          const pat::Jet &jet = (*ak4jets)[i];
+          TLorentzVector Jet;
+          Jet.SetPtEtaPhiM(jet.pt(), jet.eta(), jet.phi(), jet.mass());
+          double dr = Jet.DeltaR(GenParticle);
+          if (dr < jetDR) jetDR = dr;
+        }
+        fGenEta_candDR.push_back(candDR);
+        fGenEta_passedCandDR.push_back(passedCandDR);
+        fGenEta_jetDR.push_back(jetDR);
+      }
+    }
   }
-  fMET = (*MET)[0].pt();
-  fMET_phi = (*MET)[0].phi();
-  
+
   if (fDebug) cout << ". high-pt-id" << endl;
 
-  // Photon id  
+  // High-pT Photon id  
   const CaloSubdetectorTopology* subDetTopologyEB_;
   const CaloSubdetectorTopology* subDetTopologyEE_;
   edm::ESHandle<CaloTopology> caloTopology;
@@ -1770,16 +1823,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     }
   }
   fNumTightPhotons = goodPhotons.size();
-
   if (fDebug) cout << ". done making photon collections" << endl;
-
   // sort and fill
   sort(goodPhotons.begin(),goodPhotons.end(),compareCandsByPt);
   sort(goodPhotons_ConeHE.begin(),goodPhotons_ConeHE.end(),compareCandsByPt);
-
   if (fDebug) cout << ". done sorting photon collections" << endl;
-
-  // fill new branches
   for (unsigned int i = 0; i < goodPhotons.size(); i++ )
   {
     fIDPhoton_pt.push_back( (*goodPhotons[i]).pt() );
@@ -1807,7 +1855,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     ExoDiPhotons::FillRecoPhotonInfo(fRecoTightPhotonInfo2,&(*goodPhotons[1]),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup); 
   if (goodPhotons.size() > 2)
     ExoDiPhotons::FillRecoPhotonInfo(fRecoTightPhotonInfo3,&(*goodPhotons[2]),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup); 
-
   if (fDebug) cout << ". done high-pt-id photons" << endl;
 
   // Construct Di-Objects
@@ -1822,38 +1869,12 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     FillRecoDiObjectInfo(fTwoProngTwoProngInfo, Eta1, Eta2);
     fTwoProngTwoProngInfo.dMass = fabs(fTwoProng_Mass[0] - fTwoProng_Mass[1]);
   }
-
   if (fDebug) cout << ". done making di-objects" << endl;
 
-  // generator decay type
-  if (fincludeSignalGenParticles)
-  {
-    int decayType = 0;
-    for (unsigned int i = 0; i < genparticles->size(); i++) {
-      const reco::GenParticle &genparticle = (*genparticles)[i];
-      if (genparticle.pdgId() != 9000006 || genparticle.status() != 62) continue;
-      if (fDebug) cout << genparticle.pdgId() << ", status=" << genparticle.status() << endl; 
-      for (unsigned int j = 0; j < genparticle.numberOfDaughters(); j++) {
-        const reco::Candidate * genparticle2 = genparticle.daughter(j);
-        if (fDebug) cout << "-> " << genparticle2->pdgId() << ", status=" << genparticle2->status() << endl; 
-        int decay1 = 0;
-        int decay2 = 0;
-        int decay3 = 0;
-        for (unsigned int jj = 0; jj < genparticle2->numberOfDaughters(); jj++) {
-          const reco::Candidate * genparticle3 = genparticle2->daughter(jj);
-          if (fDebug) cout << "  -> " << genparticle3->pdgId() << ", status=" << genparticle3->status() << endl;
-          if (jj == 0) decay1 = genparticle3->pdgId();
-          if (jj == 1) decay2 = genparticle3->pdgId();
-          if (jj == 2) decay3 = genparticle3->pdgId();
-        }
-        if (isNeutral(decay1, decay2, decay3)) decayType += 0;
-        if (isCharged(decay1, decay2, decay3)) decayType += 1;
-      }
-    }
-    fGen_decayType = decayType;
-  }
+  // Now fill fTree2
+  if (fMakeTrees) fTree2->Fill();
 
-  if (fDebug) cout << ". done generator decay type determination" << endl;
+  // Optional Analysis code here
 
   // Photon Trigger Eff
   if (fTriggerEffHistos) {
@@ -1880,13 +1901,12 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (fDebug) cout << ". done photon trigger efficiency histograms" << endl;
   }
 
+  if (fTwoProngYieldHistos) {
   // twoprong yield analysis
   for (unsigned int i = 0; i < fTwoProng_pt.size(); i++) {
     fTwoProngYield->Fill(fTwoProng_pt[i]);
   }
-
-  // Now fill fTree2
-  if (fMakeTrees) fTree2->Fill();
+  }
 }
 
 void 
@@ -1967,213 +1987,227 @@ ExoDiPhotonAnalyzer::endJob()
   }
 }
 
+// High-pt Id subroutines
+
 // determine if saturated, needed for high-pt-id
 bool ExoDiPhotonAnalyzer::photon_isSaturated(const pat::Photon *photon, const EcalRecHitCollection *recHitsEB, const EcalRecHitCollection *recHitsEE,
-		   const CaloSubdetectorTopology* subDetTopologyEB_, const CaloSubdetectorTopology* subDetTopologyEE_) {
-    using namespace std;
-    
-    bool isSat = false;
-    DetId seedDetId = ((photon->superCluster())->seed())->seed();
-    
-    // check EB
-    if (seedDetId.subdetId()==EcalBarrel) {
-      CaloNavigator<DetId> cursor = CaloNavigator<DetId>(seedDetId,subDetTopologyEB_);
-      for (int i = -2; i <= 2; ++i) {
-      	for (int j = -2; j <= 2; ++j) {
-      	  cursor.home();
-      	  cursor.offsetBy(i,j);
-      	  EcalRecHitCollection::const_iterator it = recHitsEB->find(*cursor);
-      	  if(it != recHitsEB->end()) {
-      	    /*cout << "Energy of (" << i << ", " << j << "): " << it-> energy()
-	      << ", kSaturated: " << it->checkFlag(EcalRecHit::kSaturated)
-	      << ", kDead: " << it->checkFlag(EcalRecHit::kDead)
-	      << ", kKilled: " << it->checkFlag(EcalRecHit::kKilled)
-	      << endl;*/
-      	    if (it->checkFlag(EcalRecHit::kSaturated) && !it->checkFlag(EcalRecHit::kDead) && !it->checkFlag(EcalRecHit::kKilled)) {
-      	      isSat = true;
-      	    }
-      	  }	  
-      	}
+		                                         const CaloSubdetectorTopology* subDetTopologyEB_, const CaloSubdetectorTopology* subDetTopologyEE_)
+{
+  using namespace std;    
+  bool isSat = false;
+  DetId seedDetId = ((photon->superCluster())->seed())->seed();
+  // check EB
+  if (seedDetId.subdetId()==EcalBarrel) {
+    CaloNavigator<DetId> cursor = CaloNavigator<DetId>(seedDetId,subDetTopologyEB_);
+    for (int i = -2; i <= 2; ++i) {
+      for (int j = -2; j <= 2; ++j) {
+        cursor.home();
+        cursor.offsetBy(i,j);
+        EcalRecHitCollection::const_iterator it = recHitsEB->find(*cursor);
+        if(it != recHitsEB->end()) {
+          if (it->checkFlag(EcalRecHit::kSaturated) && !it->checkFlag(EcalRecHit::kDead) && !it->checkFlag(EcalRecHit::kKilled)) {
+            isSat = true;
+          }
+        }	  
       }
     }
-    // check EE
-    else if (seedDetId.subdetId()==EcalEndcap) {
-      CaloNavigator<DetId> cursor = CaloNavigator<DetId>(seedDetId,subDetTopologyEE_);
-      for (int i = -2; i <= 2; ++i) {
-      	for (int j = -2; j <= 2; ++j) {
-      	  cursor.home();
-      	  cursor.offsetBy(i,j);
-      	  EcalRecHitCollection::const_iterator it = recHitsEE->find(*cursor);
-      	  if(it != recHitsEE->end()) {
-      	    /*cout << "Energy of (" << i << ", " << j << "): " << it->energy()
-	      << ", kSaturated: " << it->checkFlag(EcalRecHit::kSaturated)
-	      << ", kDead: " << it->checkFlag(EcalRecHit::kDead)
-	      << ", kKilled: " << it->checkFlag(EcalRecHit::kKilled)
-	      << endl;*/
-      	    if (it->checkFlag(EcalRecHit::kSaturated) && !it->checkFlag(EcalRecHit::kDead) && !it->checkFlag(EcalRecHit::kKilled)) {
-      	      isSat = true;
-      	    }
-      	  }
-      	}
-      }
-    }
-    return isSat;
   }
+  // check EE
+  else if (seedDetId.subdetId()==EcalEndcap) {
+    CaloNavigator<DetId> cursor = CaloNavigator<DetId>(seedDetId,subDetTopologyEE_);
+    for (int i = -2; i <= 2; ++i) {
+      for (int j = -2; j <= 2; ++j) {
+        cursor.home();
+        cursor.offsetBy(i,j);
+        EcalRecHitCollection::const_iterator it = recHitsEE->find(*cursor);
+        if(it != recHitsEE->end()) {
+          if (it->checkFlag(EcalRecHit::kSaturated) && !it->checkFlag(EcalRecHit::kDead) && !it->checkFlag(EcalRecHit::kKilled)) {
+            isSat = true;
+          }
+        }
+      }
+    }
+  }
+  return isSat;
+}
 
 // The high-pt-id
-bool ExoDiPhotonAnalyzer::photon_passHighPtID(const pat::Photon* photon, double rho, bool isSat) {
-    if (
-      passHadTowerOverEmCut(photon) &&
-      passChargedHadronCut(photon) &&
-      passSigmaIetaIetaCut(photon,isSat) &&
-      passCorPhoIsoHighPtID(photon,rho) &&
-      photon->passElectronVeto()
-    ) return true;
+bool ExoDiPhotonAnalyzer::photon_passHighPtID(const pat::Photon* photon, double rho, bool isSat)
+{
+  if (
+    passHadTowerOverEmCut(photon) &&
+    passChargedHadronCut(photon) &&
+    passSigmaIetaIetaCut(photon,isSat) &&
+    passCorPhoIsoHighPtID(photon,rho) &&
+    photon->passElectronVeto()
+  ) return true;
 
-    else return false;
-  }
+  else return false;
+}
 // The modified high-pt-id
-bool ExoDiPhotonAnalyzer::photon_passHighPtID_DrCone(const pat::Photon* photon, double rho, bool isSat) {
-    if (
-      passHadTowerOverEmCut(photon) &&
-      passHadDrConeOverEmCut(photon) && // new cut
-      passChargedHadronCut(photon) &&
-      passSigmaIetaIetaCut(photon,isSat) &&
-      passCorPhoIsoHighPtID(photon,rho) &&
-      photon->passElectronVeto()
-    ) return true;
+bool ExoDiPhotonAnalyzer::photon_passHighPtID_DrCone(const pat::Photon* photon, double rho, bool isSat)
+{
+  if (
+    passHadTowerOverEmCut(photon) &&
+    passHadDrConeOverEmCut(photon) && // new cut
+    passChargedHadronCut(photon) &&
+    passSigmaIetaIetaCut(photon,isSat) &&
+    passCorPhoIsoHighPtID(photon,rho) &&
+    photon->passElectronVeto()
+  ) return true;
 
-    else return false;
-  }
+  else return false;
+}
+
+// photon subroutines as global functions, eventually move to private class functions
+
 // H/E TOWER (part of high-pt-id)
-  bool passHadTowerOverEmCut(const pat::Photon* photon) {
-    double hOverE = photon->hadTowOverEm();
-    if (hOverE < 0.05) return true;
-    else return false;
-  }
+bool passHadTowerOverEmCut(const pat::Photon* photon)
+{
+  double hOverE = photon->hadTowOverEm();
+  if (hOverE < 0.05) return true;
+  else return false;
+}
+
 // H/E DR CONE (method of trigger)
-  bool passHadDrConeOverEmCut(const pat::Photon* photon) {
-    double hOverE = photon->hadronicOverEm();
-    if (hOverE < 0.05) return true;
-    else return false;
-  }
+bool passHadDrConeOverEmCut(const pat::Photon* photon)
+{
+  double hOverE = photon->hadronicOverEm();
+  if (hOverE < 0.05) return true;
+  else return false;
+}
+
 // CH ISO
-  bool passChargedHadronCut(const pat::Photon* photon) {
-    double chIsoCut = 5.;
-    double chIso = photon->chargedHadronIso();
-    if (chIso < chIsoCut) return true;
-    else return false;
-  }
+bool passChargedHadronCut(const pat::Photon* photon)
+{
+  double chIsoCut = 5.;
+  double chIso = photon->chargedHadronIso();
+  if (chIso < chIsoCut) return true;
+  else return false;
+}
+
 // SIGMAiETAiETA
-  bool passSigmaIetaIetaCut(const pat::Photon* photon, bool isSaturated) {
-    double phoEta = fabs(photon->superCluster()->eta());
-    double sIeIe = photon->full5x5_sigmaIetaIeta();
-    double sIeIeCut = -1.;
-    
-    if (phoEta < 1.4442 && !isSaturated) sIeIeCut = 0.0105; 
-    else if (phoEta < 1.4442 && isSaturated) sIeIeCut = 0.0112;
-    else if (1.566 < phoEta && phoEta < 2.5 && !isSaturated) sIeIeCut = 0.0280; 
-    else if (1.566 < phoEta && phoEta < 2.5 && isSaturated) sIeIeCut = 0.0300;
+bool passSigmaIetaIetaCut(const pat::Photon* photon, bool isSaturated)
+{
+  double phoEta = fabs(photon->superCluster()->eta());
+  double sIeIe = photon->full5x5_sigmaIetaIeta();
+  double sIeIeCut = -1.;
+  
+  if (phoEta < 1.4442 && !isSaturated) sIeIeCut = 0.0105; 
+  else if (phoEta < 1.4442 && isSaturated) sIeIeCut = 0.0112;
+  else if (1.566 < phoEta && phoEta < 2.5 && !isSaturated) sIeIeCut = 0.0280; 
+  else if (1.566 < phoEta && phoEta < 2.5 && isSaturated) sIeIeCut = 0.0300;
 
-    if (sIeIe < sIeIeCut) return true;
-    else return false;
-  }
+  if (sIeIe < sIeIeCut) return true;
+  else return false;
+}
+
 // COR ISO
-  bool passCorPhoIsoHighPtID(const pat::Photon* photon, double rho) {
-    double phoEta = fabs(photon->superCluster()->eta());
-    double corPhoIsoCut = -999.9;
-    double corPhoIso = corPhoIsoHighPtID(photon,rho);
+bool passCorPhoIsoHighPtID(const pat::Photon* photon, double rho)
+{
+  double phoEta = fabs(photon->superCluster()->eta());
+  double corPhoIsoCut = -999.9;
+  double corPhoIso = corPhoIsoHighPtID(photon,rho);
 
-    if (phoEta < 1.4442) corPhoIsoCut = 2.75;
-    if (1.566 < phoEta && phoEta < 2.5) corPhoIsoCut = 2.00;
+  if (phoEta < 1.4442) corPhoIsoCut = 2.75;
+  if (1.566 < phoEta && phoEta < 2.5) corPhoIsoCut = 2.00;
 
-    if (corPhoIso < corPhoIsoCut) return true;
-    else return false;
-  }
-  double corPhoIsoHighPtID(const pat::Photon* photon, double rho) {
-    double phoIso = photon->photonIso();
-    return (phoAlphaHighPtID(photon) + phoIso - rho*phoEAHighPtID(photon) - phoKappaHighPtID(photon)*photon->pt());
-  }
-  double phoAlphaHighPtID(const pat::Photon *photon) {
-    double phoEta = fabs(photon->superCluster()->eta());
-    if (phoEta < 1.4442) {
-      if (phoEta < 0.9) {
-	return 2.5;
-      }
-      else {
-	return 2.5;
-      }
-    } // end EB
-    else if (1.566 < phoEta && phoEta < 2.5) {
-      if (phoEta < 2.0) {
-	return 2.5;
-      }
-      else if (phoEta < 2.2) {
-	return 2.5;
-      }
-      else {
-	return 2.5;
-      }
-    } // end EE
-    else {
-      return 99999.99;
-    }
-  }
-  double phoEAHighPtID(const pat::Photon* photon) {
-    double phoEta = fabs(photon->superCluster()->eta());
-    if (phoEta < 1.4442) {
-      if (phoEta < 0.9) {
-	return 0.17;
-      }
-      else {
-	return 0.14;
-      }
-    } // end EB
-    else if (1.566 < phoEta && phoEta < 2.5) {
-      if (phoEta < 2.0) {
-	return 0.11;
-      }
-      else if (phoEta < 2.2) {
-	return 0.14;
-      }
-      else {
-	return 0.22;
-      }
-    } // end EE
-    else {
-      return -99999.99;
-    }
-  }
-  double phoKappaHighPtID(const pat::Photon *photon) {
-    double phoEta = fabs(photon->superCluster()->eta());
-    if (phoEta < 1.4442) {
-      if (phoEta < 0.9) {
-	return 0.0045;
-      }
-      else {
-	return 0.0045;
-      }
-    } // end EB
-    else if (1.566 < phoEta && phoEta < 2.5) {
-      if (phoEta < 2.0) {
-	return 0.003;
-      }
-      else if (phoEta < 2.2) {
-	return 0.003;
-      }
-      else {
-	return 0.003;
-      }
-    } // end EE
-    else {
-      return -99999.99;
-    }
-  }
+  if (corPhoIso < corPhoIsoCut) return true;
+  else return false;
+}
 
-// sorting by pt
-bool compareCandsByPt(const edm::Ptr<const reco::Candidate> photon1, const edm::Ptr<const reco::Candidate> photon2) {
-    return(photon1->pt()>=photon2->pt());
+double corPhoIsoHighPtID(const pat::Photon* photon, double rho)
+{
+  double phoIso = photon->photonIso();
+  return (phoAlphaHighPtID(photon) + phoIso - rho*phoEAHighPtID(photon) - phoKappaHighPtID(photon)*photon->pt());
+}
+
+double phoAlphaHighPtID(const pat::Photon *photon)
+{
+  double phoEta = fabs(photon->superCluster()->eta());
+  if (phoEta < 1.4442) {
+    if (phoEta < 0.9) {
+      return 2.5;
+    }
+    else {
+      return 2.5;
+    }
+  } // end EB
+  else if (1.566 < phoEta && phoEta < 2.5) {
+    if (phoEta < 2.0) {
+      return 2.5;
+    }
+    else if (phoEta < 2.2) {
+      return 2.5;
+    }
+    else {
+      return 2.5;
+    }
+  } // end EE
+  else {
+    return 99999.99;
   }
+}
+
+double phoEAHighPtID(const pat::Photon* photon)
+{
+  double phoEta = fabs(photon->superCluster()->eta());
+  if (phoEta < 1.4442) {
+    if (phoEta < 0.9) {
+      return 0.17;
+    }
+    else {
+      return 0.14;
+    }
+  } // end EB
+  else if (1.566 < phoEta && phoEta < 2.5) {
+    if (phoEta < 2.0) {
+      return 0.11;
+    }
+    else if (phoEta < 2.2) {
+      return 0.14;
+    }
+    else {
+      return 0.22;
+    }
+  } // end EE
+  else {
+    return -99999.99;
+  }
+}
+
+double phoKappaHighPtID(const pat::Photon *photon)
+{
+  double phoEta = fabs(photon->superCluster()->eta());
+  if (phoEta < 1.4442) {
+    if (phoEta < 0.9) {
+      return 0.0045;
+    }
+    else {
+      return 0.0045;
+    }
+  } // end EB
+  else if (1.566 < phoEta && phoEta < 2.5) {
+    if (phoEta < 2.0) {
+      return 0.003;
+    }
+    else if (phoEta < 2.2) {
+      return 0.003;
+    }
+    else {
+      return 0.003;
+    }
+  } // end EE
+  else {
+    return -99999.99;
+  }
+}
+
+// global sorting by pt function
+bool compareCandsByPt(const edm::Ptr<const reco::Candidate> cand1, const edm::Ptr<const reco::Candidate> cand2)
+{
+  return(cand1->pt() >= cand2->pt());
+}
 
 //define this as a plug-in
 DEFINE_FWK_MODULE(ExoDiPhotonAnalyzer);
