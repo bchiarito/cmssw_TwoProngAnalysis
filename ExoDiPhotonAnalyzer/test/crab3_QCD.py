@@ -3,13 +3,13 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'qcd_pt20_con1_crab3jobs'
+config.General.workArea = 'qcd_fullrun_crab3jobs'
 config.section_('JobType')
 config.JobType.psetName = 'exodiphotonanalyzer_minimal_cfg.py'
-config.JobType.pyCfgParams = ['local=False','globalTag=80X_mcRun2_asymptotic_2016_TrancheIV_v6','minPt=20','constituentMinPt=1','maxEta=2.5']
+config.JobType.pyCfgParams = ['local=False','globalTag=80X_mcRun2_asymptotic_2016_TrancheIV_v6','mcInfo=True','mcN=1.0','mcXS=1.0']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/noreplica/diphotonProject/scratch/qcd_pt20_con1/'
+config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprongstudies/trees/fulldataset/'
 config.Data.publication = False
 config.Data.unitsPerJob = 250000
 config.Data.totalUnits = -1
@@ -17,7 +17,7 @@ config.Data.splitting = 'EventAwareLumiBased'
 config.Data.lumiMask = ''
 config.section_('User')
 config.section_('Site')
-config.Site.storageSite = 'T3_US_FNALLPC'
+config.Site.storageSite = 'T3_US_Rutgers'
 
 
 if __name__ == '__main__':
