@@ -46,8 +46,13 @@ options.register('addConeHE',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "Add cut to high-pt-photon-id: Cone based HE < 0.05")
+options.register('includeCands',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "Include all cand twoprongs in ntuple")
 options.register('includeLoose',
-                True,
+                False,
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "Include Loose twoprongs in ntuple")
@@ -71,6 +76,11 @@ options.register('twoprongYieldHistos',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "Add ntuples (Ttrees) to output")
+options.register("trackDR",
+                0.05,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.float,
+                "")
 options.register("minPt",
                 20.0,
                 VarParsing.multiplicity.singleton,
@@ -83,6 +93,36 @@ options.register("maxEta",
                 "")
 options.register("constituentMinPt",
                 1.0,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.float,
+                "")
+options.register("trackMinPt",
+                1.0,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.float,
+                "")
+options.register("photonMinPt",
+                1.0,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.float,
+                "")
+options.register("trackAsym",
+                0,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.float,
+                "")
+options.register("photonAsym",
+                0,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.float,
+                "")
+options.register("photonBoxPhi",
+                0.2,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.float,
+                "")
+options.register("photonBoxEta",
+                0.05,
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.float,
                 "")
@@ -120,20 +160,131 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(options.d
 readFiles = []
 
 # SIGNAL MC
-if sample == "signal":
+if sample == "eta":
     readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_generic.root' ] )
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_generic.root' ] )
     if options.local:
       isSignal = True
       doLumis = False
       mcInfo = True
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
-        outname = "signal"
+        outname = "signal_eta_generic"
+if sample == "eta_gg":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_gg.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      mcInfo = True
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal_eta_gg"
+if sample == "eta_3pi0":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_3pi0.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      mcInfo = True
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal_eta_3pi0"
+if sample == "eta_pipig":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_pipig.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      mcInfo = True
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal_eta_pipig"
+if sample == "eta_pipipi0":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_pipipi0.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      mcInfo = True
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal_eta_pipipi0"
+
+if sample == "etaprime":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_generic.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      mcInfo = True
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal_etaprime_generic"
+if sample == "etaprime_pipiEta_gg":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_pipiEta_gg.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      mcInfo = True
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal_etaprime_pipiEta_gg"
+if sample == "etaprime_pipiEta_3pi0":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_pipiEta_3pi0.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      mcInfo = True
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal_etaprime_pipiEta_3pi0"
+if sample == "etaprime_pi0pi0Eta_pipipi0":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_pi0pi0Eta_pipipi0.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      mcInfo = True
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal_etaprime_pi0pi0Eta_pipipi0"
+if sample == "etaprime_pi0pi0Eta_pipig":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_pi0pi0Eta_pipig.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      mcInfo = True
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal_etaprime_pi0pi0Eta_pipig"
+if sample == "etaprime_grho":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_grho.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      mcInfo = True
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal_etaprime_grho"
+if sample == "etaprime_gomega":
+    readFiles.extend( [
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_gomega.root' ] )
+    if options.local:
+      isSignal = True
+      doLumis = False
+      mcInfo = True
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "signal_etaprime_gomega"
 
 elif sample == "signal125":
     readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_125_pipipi0.root' ] )
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_125_pipipi0.root' ] )
     if options.local:
       isSignal = True
       doLumis = False
@@ -143,7 +294,7 @@ elif sample == "signal125":
         outname = "signal125"
 elif sample == "signal300":
     readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_300_pipipi0.root' ] )
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_300_pipipi0.root' ] )
     if options.local:
       isSignal = True
       doLumis = False
@@ -153,7 +304,7 @@ elif sample == "signal300":
         outname = "signal300"
 elif sample == "signal500":
     readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_500_pipipi0.root' ] )
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_500_pipipi0.root' ] )
     if options.local:
       isSignal = True
       doLumis = False
@@ -163,7 +314,7 @@ elif sample == "signal500":
         outname = "signal500"
 elif sample == "signal750":
     readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_750_pipipi0.root' ] )
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_750_pipipi0.root' ] )
     if options.local:
       isSignal = True
       doLumis = False
@@ -173,7 +324,7 @@ elif sample == "signal750":
         outname = "signal750"
 elif sample == "signal1000":
     readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/MiniAODv2_Eta_1000_pipipi0.root' ] )
+        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_1000_pipipi0.root' ] )
     if options.local:
       isSignal = True
       doLumis = False
@@ -272,11 +423,13 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   # two-prong object
                                   candidateMinPt = cms.untracked.double(options.minPt),
                                   candidateAbsMaxEta = cms.untracked.double(options.maxEta),
-                                  chargedHadronPairMinDR = cms.untracked.double(0.05),
-                                  chargedHadronMinPt = cms.untracked.double(options.constituentMinPt),
-                                  photonPtCut = cms.untracked.double(options.constituentMinPt),
-                                  photonPhiBoxSize = cms.untracked.double(0.8),
-                                  photonEtaBoxSize = cms.untracked.double(0.087),
+                                  candidateTrackAsymmetryCut = cms.untracked.double(options.trackAsym),
+                                  candidatePhotonAsymmetryCut = cms.untracked.double(options.photonAsym),
+                                  chargedHadronPairMinDR = cms.untracked.double(options.trackDR),
+                                  chargedHadronMinPt = cms.untracked.double(options.trackMinPt),
+                                  photonPtCut = cms.untracked.double(options.photonMinPt),
+                                  photonPhiBoxSize = cms.untracked.double(options.photonBoxPhi),
+                                  photonEtaBoxSize = cms.untracked.double(options.photonBoxEta),
                                   isolationConeR = cms.untracked.double(0.3),
                                   chargedIsoCut = cms.untracked.double(0.1),
                                   chargedIsoLooseMax = cms.untracked.double(0.3),
@@ -294,7 +447,7 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   )
 # Ntuplizer Options
 process.diphotonAnalyzer.addPhotonCutDrConeHE = cms.untracked.bool(options.addConeHE)
-process.diphotonAnalyzer.includeAllCandObjects = cms.untracked.bool(False)
+process.diphotonAnalyzer.includeAllCandObjects = cms.untracked.bool(options.includeCands)
 process.diphotonAnalyzer.includeOldPhotons = cms.untracked.bool(False)
 process.diphotonAnalyzer.debug = cms.untracked.bool(options.debug)
 process.diphotonAnalyzer.includeAllLooseObjects = cms.untracked.bool(options.includeLoose)
