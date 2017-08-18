@@ -268,6 +268,8 @@ private:
   vector<Double_t> fCand_Mass;
   vector<Double_t> fCand_Mass_l;
   vector<Double_t> fCand_MassEta;
+  vector<Double_t> fCand_MassEta_l;
+  vector<Double_t> fCand_Mass300;
   vector<Double_t> fCand_CHpos_pt;
   vector<Double_t> fCand_CHpos_eta;
   vector<Double_t> fCand_CHpos_phi;
@@ -350,6 +352,8 @@ private:
   vector<Double_t> fTwoProng_Mass;
   vector<Double_t> fTwoProng_Mass_l;
   vector<Double_t> fTwoProng_MassEta;
+  vector<Double_t> fTwoProng_MassEta_l;
+  vector<Double_t> fTwoProng_Mass300;
   vector<Double_t> fTwoProng_px;
   vector<Double_t> fTwoProng_py;
   vector<Double_t> fTwoProng_pz;
@@ -430,6 +434,8 @@ private:
   vector<Double_t> fTwoProngLoose_Mass;
   vector<Double_t> fTwoProngLoose_Mass_l;
   vector<Double_t> fTwoProngLoose_MassEta;
+  vector<Double_t> fTwoProngLoose_MassEta_l;
+  vector<Double_t> fTwoProngLoose_Mass300;
   vector<Double_t> fTwoProngLoose_px;
   vector<Double_t> fTwoProngLoose_py;
   vector<Double_t> fTwoProngLoose_pz;
@@ -507,18 +513,31 @@ private:
   vector<Double_t> fGenPhi_py;
   vector<Double_t> fGenPhi_pz;
   vector<Double_t> fGenPhi_energy;
-  vector<Double_t> fGenEta_pt;
-  vector<Double_t> fGenEta_eta;
-  vector<Double_t> fGenEta_phi;
-  vector<Double_t> fGenEta_mass;
-  vector<Double_t> fGenEta_px;
-  vector<Double_t> fGenEta_py;
-  vector<Double_t> fGenEta_pz;
-  vector<Double_t> fGenEta_energy;
-  vector<Double_t> fGenEta_candDR;
-  vector<Double_t> fGenEta_passedCandDR;
-  vector<Double_t> fGenEta_jetDR;
-  int fGen_decayType;
+  vector<Double_t> fGenOmega_pt;
+  vector<Double_t> fGenOmega_eta;
+  vector<Double_t> fGenOmega_phi;
+  vector<Double_t> fGenOmega_mass;
+  vector<Double_t> fGenOmega_px;
+  vector<Double_t> fGenOmega_py;
+  vector<Double_t> fGenOmega_pz;
+  vector<Double_t> fGenOmega_energy;
+
+  vector<Double_t> fGenOmega_neutral_pt;
+  vector<Double_t> fGenOmega_neutral_eta;
+  vector<Double_t> fGenOmega_neutral_phi;
+  vector<Double_t> fGenOmega_neutral_mass;
+  vector<Double_t> fGenOmega_positive_pt;
+  vector<Double_t> fGenOmega_positive_eta;
+  vector<Double_t> fGenOmega_positive_phi;
+  vector<Double_t> fGenOmega_positive_mass;
+  vector<Double_t> fGenOmega_negative_pt;
+  vector<Double_t> fGenOmega_negative_eta;
+  vector<Double_t> fGenOmega_negative_phi;
+  vector<Double_t> fGenOmega_negative_mass;
+
+  vector<Double_t> fGenOmega_objDR;
+  vector<Double_t> fGenOmega_candobjDR;
+  vector<Double_t> fGenOmega_jetDR;
 
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo1;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo2;
@@ -643,6 +662,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Cand_Mass",&fCand_Mass);
   fTree2->Branch("Cand_Mass_l",&fCand_Mass_l);
   fTree2->Branch("Cand_MassEta",&fCand_MassEta);
+  fTree2->Branch("Cand_MassEta_l",&fCand_MassEta_l);
+  fTree2->Branch("Cand_Mass300",&fCand_Mass300);
   fTree2->Branch("Cand_CHpos_pt",&fCand_CHpos_pt);
   fTree2->Branch("Cand_CHpos_eta",&fCand_CHpos_eta);
   fTree2->Branch("Cand_CHpos_phi",&fCand_CHpos_phi);
@@ -727,6 +748,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("TwoProngLoose_Mass",&fTwoProngLoose_Mass);
   fTree2->Branch("TwoProngLoose_Mass_l",&fTwoProngLoose_Mass_l);
   fTree2->Branch("TwoProngLoose_MassEta",&fTwoProngLoose_MassEta);
+  fTree2->Branch("TwoProngLoose_MassEta_l",&fTwoProngLoose_MassEta_l);
+  fTree2->Branch("TwoProngLoose_Mass300",&fTwoProngLoose_Mass300);
   fTree2->Branch("TwoProngLoose_px",&fTwoProngLoose_px);
   fTree2->Branch("TwoProngLoose_py",&fTwoProngLoose_py);
   fTree2->Branch("TwoProngLoose_pz",&fTwoProngLoose_pz);
@@ -801,6 +824,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("TwoProng_Mass",&fTwoProng_Mass);
   fTree2->Branch("TwoProng_Mass_l",&fTwoProng_Mass_l);
   fTree2->Branch("TwoProng_MassEta",&fTwoProng_MassEta);
+  fTree2->Branch("TwoProng_MassEta_l",&fTwoProng_MassEta_l);
+  fTree2->Branch("TwoProng_Mass300",&fTwoProng_Mass300);
   fTree2->Branch("TwoProng_px",&fTwoProng_px);
   fTree2->Branch("TwoProng_py",&fTwoProng_py);
   fTree2->Branch("TwoProng_pz",&fTwoProng_pz);
@@ -898,18 +923,29 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("GenPhi_py",&fGenPhi_py);
   fTree2->Branch("GenPhi_pz",&fGenPhi_pz);
   fTree2->Branch("GenPhi_energy",&fGenPhi_energy);
-  fTree2->Branch("GenEta_pt",&fGenEta_pt);
-  fTree2->Branch("GenEta_eta",&fGenEta_eta);
-  fTree2->Branch("GenEta_phi",&fGenEta_phi);
-  fTree2->Branch("GenEta_mass",&fGenEta_mass);
-  fTree2->Branch("GenEta_px",&fGenEta_px);
-  fTree2->Branch("GenEta_py",&fGenEta_py);
-  fTree2->Branch("GenEta_pz",&fGenEta_pz);
-  fTree2->Branch("GenEta_energy",&fGenEta_energy); 
-  fTree2->Branch("GenEta_candDR",&fGenEta_candDR); 
-  fTree2->Branch("GenEta_passedCandDR",&fGenEta_passedCandDR); 
-  fTree2->Branch("GenEta_jetDR",&fGenEta_jetDR); 
-  fTree2->Branch("Gen_decayType",&fGen_decayType);
+  fTree2->Branch("GenOmega_pt",&fGenOmega_pt);
+  fTree2->Branch("GenOmega_eta",&fGenOmega_eta);
+  fTree2->Branch("GenOmega_phi",&fGenOmega_phi);
+  fTree2->Branch("GenOmega_mass",&fGenOmega_mass);
+  fTree2->Branch("GenOmega_px",&fGenOmega_px);
+  fTree2->Branch("GenOmega_py",&fGenOmega_py);
+  fTree2->Branch("GenOmega_pz",&fGenOmega_pz);
+  fTree2->Branch("GenOmega_energy",&fGenOmega_energy); 
+  fTree2->Branch("GenOmega_neutral_pt",&fGenOmega_neutral_pt); 
+  fTree2->Branch("GenOmega_neutral_eta",&fGenOmega_neutral_eta); 
+  fTree2->Branch("GenOmega_neutral_phi",&fGenOmega_neutral_phi); 
+  fTree2->Branch("GenOmega_neutral_mass",&fGenOmega_neutral_mass); 
+  fTree2->Branch("GenOmega_positive_pt",&fGenOmega_positive_pt); 
+  fTree2->Branch("GenOmega_positive_eta",&fGenOmega_positive_eta); 
+  fTree2->Branch("GenOmega_positive_phi",&fGenOmega_positive_phi); 
+  fTree2->Branch("GenOmega_positive_mass",&fGenOmega_positive_mass); 
+  fTree2->Branch("GenOmega_negative_pt",&fGenOmega_negative_pt); 
+  fTree2->Branch("GenOmega_negative_eta",&fGenOmega_negative_eta); 
+  fTree2->Branch("GenOmega_negative_phi",&fGenOmega_negative_phi); 
+  fTree2->Branch("GenOmega_negative_mass",&fGenOmega_negative_mass); 
+  fTree2->Branch("GenOmega_objDR",&fGenOmega_objDR); 
+  fTree2->Branch("GenOmega_candobjDR",&fGenOmega_candobjDR); 
+  fTree2->Branch("GenOmega_jetDR",&fGenOmega_jetDR); 
   // Combined Objects
   fTree2->Branch("TwoProngTwoProng",&fTwoProngTwoProngInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   }
@@ -1046,7 +1082,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   using namespace std;
   using namespace reco;
 
-  if (fDebug) cout <<  iEvent.id().run() << " " <<  iEvent.id().luminosityBlock() << " " << iEvent.id().event() << endl;
+  if (fDebug) cout << "event " << iEvent.id().run() << " lumi " <<  iEvent.id().luminosityBlock() << " run " << iEvent.id().event() << endl;
 
   // clear member vectors
   fCand_pt.clear();
@@ -1057,6 +1093,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fCand_Mass.clear();
   fCand_Mass_l.clear();
   fCand_MassEta.clear();
+  fCand_MassEta_l.clear();
+  fCand_Mass300.clear();
   fCand_CHpos_pt.clear();
   fCand_CHpos_eta.clear();
   fCand_CHpos_phi.clear();
@@ -1143,6 +1181,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fTwoProngLoose_Mass.clear();
   fTwoProngLoose_Mass_l.clear();
   fTwoProngLoose_MassEta.clear();
+  fTwoProngLoose_MassEta_l.clear();
+  fTwoProngLoose_Mass300.clear();
   fTwoProngLoose_CHpos_pt.clear();
   fTwoProngLoose_CHpos_eta.clear();
   fTwoProngLoose_CHpos_phi.clear();
@@ -1216,6 +1256,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fTwoProng_Mass.clear();
   fTwoProng_Mass_l.clear();
   fTwoProng_MassEta.clear();
+  fTwoProng_MassEta_l.clear();
+  fTwoProng_Mass300.clear();
   fTwoProng_CHpos_pt.clear();
   fTwoProng_CHpos_eta.clear();
   fTwoProng_CHpos_phi.clear();
@@ -1281,27 +1323,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fTwoProng_CHneg_p3.clear();
   fTwoProng_photon_p3.clear();
 
-  fGenPhi_pt.clear();
-  fGenPhi_eta.clear();
-  fGenPhi_phi.clear();
-  fGenPhi_energy.clear();
-  fGenPhi_mass.clear();
-  fGenPhi_px.clear();
-  fGenPhi_py.clear();
-  fGenPhi_pz.clear();
-  fGenPhi_energy.clear();
-  fGenEta_pt.clear();
-  fGenEta_eta.clear();
-  fGenEta_phi.clear();
-  fGenEta_energy.clear();
-  fGenEta_mass.clear();
-  fGenEta_candDR.clear();
-  fGenEta_passedCandDR.clear();
-  fGenEta_jetDR.clear();
-  fGenEta_px.clear();
-  fGenEta_py.clear();
-  fGenEta_pz.clear();
-
   fAK4jet_pt.clear();
   fAK4jet_eta.clear();
   fAK4jet_phi.clear();
@@ -1328,6 +1349,39 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fID2Photon_eta.clear();
   fID2Photon_phi.clear();
   fID2Photon_mass.clear();
+
+  fGenPhi_pt.clear();
+  fGenPhi_eta.clear();
+  fGenPhi_phi.clear();
+  fGenPhi_mass.clear();
+  fGenPhi_px.clear();
+  fGenPhi_py.clear();
+  fGenPhi_pz.clear();
+  fGenPhi_energy.clear();
+  fGenOmega_pt.clear();
+  fGenOmega_eta.clear();
+  fGenOmega_phi.clear();
+  fGenOmega_mass.clear();
+  fGenOmega_px.clear();
+  fGenOmega_py.clear();
+  fGenOmega_pz.clear();
+  fGenOmega_energy.clear();
+  fGenOmega_neutral_pt.clear();
+  fGenOmega_neutral_eta.clear();
+  fGenOmega_neutral_phi.clear();
+  fGenOmega_neutral_mass.clear();
+  fGenOmega_positive_pt.clear();
+  fGenOmega_positive_eta.clear();
+  fGenOmega_positive_phi.clear();
+  fGenOmega_positive_mass.clear();
+  fGenOmega_negative_pt.clear();
+  fGenOmega_negative_eta.clear();
+  fGenOmega_negative_phi.clear();
+  fGenOmega_negative_mass.clear();
+
+  fGenOmega_objDR.clear();
+  fGenOmega_candobjDR.clear();
+  fGenOmega_jetDR.clear();
 
   // trigger 
   edm::Handle<edm::TriggerResults> triggerBits;
@@ -1440,55 +1494,72 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (fincludeSignalGenParticles) {
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle &genparticle = (*genparticles)[i];
-      if (genparticle.pdgId() == 9000006 && genparticle.status() == 62) {
-        fGenPhi_pt.push_back(genparticle.pt());
-        fGenPhi_eta.push_back(genparticle.eta());
-        fGenPhi_phi.push_back(genparticle.phi());
-        fGenPhi_mass.push_back(genparticle.mass());
-        fGenPhi_px.push_back(genparticle.px());
-        fGenPhi_py.push_back(genparticle.py());
-        fGenPhi_pz.push_back(genparticle.pz());
-        fGenPhi_energy.push_back(genparticle.energy());
-      }
-      if ((genparticle.pdgId() == 221) && genparticle.status() == 2) {
-        fGenEta_pt.push_back(genparticle.pt());
-        fGenEta_eta.push_back(genparticle.eta());
-        fGenEta_phi.push_back(genparticle.phi());
-        fGenEta_mass.push_back(genparticle.mass());
-        fGenEta_px.push_back(genparticle.px());
-        fGenEta_py.push_back(genparticle.py());
-        fGenEta_pz.push_back(genparticle.pz());
-        fGenEta_energy.push_back(genparticle.energy());
-      }
-    }
-  }
-  // generator decay type
-  if (fincludeSignalGenParticles) {
-    int decayType = 0;
-    for (unsigned int i = 0; i < genparticles->size(); i++) {
-      const reco::GenParticle &genparticle = (*genparticles)[i];
       if (genparticle.pdgId() != 9000006 || genparticle.status() != 62) continue;
+      TLorentzVector resonance;
+      resonance.SetPtEtaPhiM(genparticle.pt(),genparticle.eta(),genparticle.phi(),genparticle.mass());
+      fGenPhi_pt.push_back(resonance.Pt());
+      fGenPhi_eta.push_back(resonance.Eta());
+      fGenPhi_phi.push_back(resonance.Phi());
+      fGenPhi_mass.push_back(resonance.M());
+      fGenPhi_px.push_back(resonance.Px());
+      fGenPhi_py.push_back(resonance.Py());
+      fGenPhi_pz.push_back(resonance.Pz());
+      fGenPhi_energy.push_back(resonance.E());
       if (fDebug) cout << genparticle.pdgId() << ", status=" << genparticle.status() << endl; 
       for (unsigned int j = 0; j < genparticle.numberOfDaughters(); j++) {
-        const reco::Candidate * genparticle2 = genparticle.daughter(j);
+        const reco::Candidate* genparticle2 = genparticle.daughter(j);
         if (fDebug) cout << "-> " << genparticle2->pdgId() << ", status=" << genparticle2->status() << endl; 
-        int decay1 = 0;
-        int decay2 = 0;
-        int decay3 = 0;
+        TLorentzVector pseudoscalar;
+        pseudoscalar.SetPtEtaPhiE(genparticle2->pt(),genparticle2->eta(),genparticle2->phi(),genparticle2->energy());
+        TLorentzVector positivePion;
+        TLorentzVector negativePion;
+        TLorentzVector neutralContent;
+        neutralContent.SetXYZT(0,0,0,0);
         for (unsigned int jj = 0; jj < genparticle2->numberOfDaughters(); jj++) {
-          const reco::Candidate * genparticle3 = genparticle2->daughter(jj);
-          if (fDebug) cout << "  -> " << genparticle3->pdgId() << ", status=" << genparticle3->status() << endl;
-          if (jj == 0) decay1 = genparticle3->pdgId();
-          if (jj == 1) decay2 = genparticle3->pdgId();
-          if (jj == 2) decay3 = genparticle3->pdgId();
+          const reco::Candidate* genparticle3 = genparticle2->daughter(jj);
+          if (fDebug) cout << "  -> " << genparticle3->pdgId() << ", status=" << genparticle3->status() << endl; 
+          TLorentzVector genparticle3Vect;
+          genparticle3Vect.SetPtEtaPhiE(genparticle3->pt(), genparticle3->eta(), genparticle3->phi(), genparticle3->energy());
+          if(genparticle3->pdgId()==111 || genparticle3->pdgId()==22) neutralContent += genparticle3Vect;
+          if(fDebug && (genparticle3->pdgId()==111 || genparticle3->pdgId()==22)) cout << "  added neutral content: "<< genparticle3->pdgId() << endl;
+          if(genparticle3->pdgId()==211) positivePion.SetPtEtaPhiE(genparticle3->pt(),genparticle3->eta(),genparticle3->phi(),genparticle3->energy());
+          if(genparticle3->pdgId()==-211) negativePion.SetPtEtaPhiE(genparticle3->pt(),genparticle3->eta(),genparticle3->phi(),genparticle3->energy());
+          for (unsigned int jjj = 0; jjj < genparticle3->numberOfDaughters(); jjj++) {
+            const reco::Candidate* genparticle4 = genparticle3->daughter(jjj);
+            if (fDebug) cout << "    -> " << genparticle4->pdgId() << ", status=" << genparticle4->status() << endl;
+            if(genparticle3->pdgId()==111 || genparticle3->pdgId()==22) continue;
+            TLorentzVector genparticle4Vect;
+            genparticle4Vect.SetPtEtaPhiE(genparticle4->pt(), genparticle4->eta(), genparticle4->phi(), genparticle4->energy());
+            if(genparticle4->pdgId()==111 || genparticle4->pdgId()==22) neutralContent += genparticle4Vect;
+            if(fDebug && (genparticle4->pdgId()==111 || genparticle4->pdgId()==22)) cout << "    added neutral content: "<< genparticle4->pdgId() << endl;
+            if(genparticle4->pdgId()==211) positivePion.SetPtEtaPhiE(genparticle4->pt(),genparticle4->eta(),genparticle4->phi(),genparticle4->energy());
+            if(genparticle4->pdgId()==-211) negativePion.SetPtEtaPhiE(genparticle4->pt(),genparticle4->eta(),genparticle4->phi(),genparticle4->energy());
+          }
         }
-        if (isNeutral(decay1, decay2, decay3)) decayType += 0;
-        if (isCharged(decay1, decay2, decay3)) decayType += 1;
-      }
-    }
-    fGen_decayType = decayType;
+        fGenOmega_pt.push_back(pseudoscalar.Pt());
+        fGenOmega_eta.push_back(pseudoscalar.Eta());
+        fGenOmega_phi.push_back(pseudoscalar.Phi());
+        fGenOmega_mass.push_back(pseudoscalar.M());
+        fGenOmega_px.push_back(pseudoscalar.Px());
+        fGenOmega_py.push_back(pseudoscalar.Py());
+        fGenOmega_pz.push_back(pseudoscalar.Pz());
+        fGenOmega_energy.push_back(pseudoscalar.E());
+        fGenOmega_neutral_pt.push_back(neutralContent.Pt());
+        fGenOmega_neutral_eta.push_back(neutralContent.Eta());
+        fGenOmega_neutral_phi.push_back(neutralContent.Phi());
+        fGenOmega_neutral_mass.push_back(neutralContent.M());
+        fGenOmega_positive_pt.push_back(positivePion.Pt());
+        fGenOmega_positive_eta.push_back(positivePion.Eta());
+        fGenOmega_positive_phi.push_back(positivePion.Phi());
+        fGenOmega_positive_mass.push_back(positivePion.M());
+        fGenOmega_negative_pt.push_back(negativePion.Pt());
+        fGenOmega_negative_eta.push_back(negativePion.Eta());
+        fGenOmega_negative_phi.push_back(negativePion.Phi());
+        fGenOmega_negative_mass.push_back(negativePion.M());
+      } // end loop on daughters of Phi
+    } // end loop on all gen particles
   }
-  if (fDebug) cout << ". done generator decay type determination" << endl;
+  if (fDebug) cout << ". done generator logic" << endl;
 
   // Jets
   for (unsigned int i = 0; i < ak4jets->size(); i++) {
@@ -1593,18 +1664,25 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
         if (fDebug) cout << ". finished photon" << endl;
         int n = index_of_leading_pf_photon;
         if (n != -1) {
+          TLorentzVector TwoProngObject;
+          TwoProngObject = center + photon;
+
           leading_pf_photon.SetPtEtaPhiE((*pfcands)[n].pt(), (*pfcands)[n].eta(), (*pfcands)[n].phiAtVtx(), (*pfcands)[n].energy());
+
           TLorentzVector leading_pf_photon_as_pi0;
           leading_pf_photon_as_pi0.SetPtEtaPhiM((*pfcands)[n].pt(), (*pfcands)[n].eta(), (*pfcands)[n].phiAtVtx(), PI0_MASS);
 
-          TLorentzVector TwoProngObject;
-          TwoProngObject = center + photon;
+          TLorentzVector leading_pf_photon_as_eta;
+          leading_pf_photon_as_eta.SetPtEtaPhiM((*pfcands)[n].pt(), (*pfcands)[n].eta(), (*pfcands)[n].phiAtVtx(), ETA_MASS);
 
           TLorentzVector photon_summed_as_pi0;
           photon_summed_as_pi0.SetPtEtaPhiM(photon.Pt(), photon.Eta(), photon.Phi(), PI0_MASS);
            
           TLorentzVector photon_summed_as_eta;
           photon_summed_as_eta.SetPtEtaPhiM(photon.Pt(), photon.Eta(), photon.Phi(), ETA_MASS);
+
+          TLorentzVector photon_summed_as_300;
+          photon_summed_as_300.SetPtEtaPhiM(photon.Pt(), photon.Eta(), photon.Phi(), 0.3);
 
           if (fabs(TwoProngObject.Eta()) > fCandidateAbsMaxEta) continue;
           if (TwoProngObject.Pt() < fCandidateMinPt) continue;
@@ -1701,6 +1779,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           fCand_mass_l.push_back( (center + leading_pf_photon).M() );
           fCand_Mass_l.push_back( (center + leading_pf_photon_as_pi0).M() );
           fCand_MassEta.push_back( (center + photon_summed_as_eta).M() );
+          fCand_MassEta_l.push_back( (center + leading_pf_photon_as_eta).M() );
+          fCand_Mass300.push_back( (center + photon_summed_as_300).M() );
 
           fCand_trackAsym.push_back(track_asymmetry);
           fCand_photonAsym.push_back(photon_asymmetry);
@@ -1868,6 +1948,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       fTwoProngLoose_Mass.push_back(fCand_Mass[index]);
       fTwoProngLoose_Mass_l.push_back(fCand_Mass_l[index]);
       fTwoProngLoose_MassEta.push_back(fCand_MassEta[index]);
+      fTwoProngLoose_MassEta_l.push_back(fCand_MassEta_l[index]);
+      fTwoProngLoose_Mass300.push_back(fCand_Mass300[index]);
       fTwoProngLoose_CHpos_pt.push_back(fCand_CHpos_pt[index]);
       fTwoProngLoose_CHpos_eta.push_back(fCand_CHpos_eta[index]);
       fTwoProngLoose_CHpos_phi.push_back(fCand_CHpos_phi[index]);
@@ -1937,6 +2019,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       fTwoProng_Mass.push_back(fCand_Mass[index]);
       fTwoProng_Mass_l.push_back(fCand_Mass_l[index]);
       fTwoProng_MassEta.push_back(fCand_MassEta[index]);
+      fTwoProng_MassEta_l.push_back(fCand_MassEta_l[index]);
+      fTwoProng_Mass300.push_back(fCand_Mass300[index]);
       fTwoProng_CHpos_pt.push_back(fCand_CHpos_pt[index]);
       fTwoProng_CHpos_eta.push_back(fCand_CHpos_eta[index]);
       fTwoProng_CHpos_phi.push_back(fCand_CHpos_phi[index]);
@@ -2002,9 +2086,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (fincludeSignalGenParticles) {
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle &genparticle = (*genparticles)[i];
+      if (genparticle.pdgId() != 9000006 || genparticle.status() != 62) continue;
       TLorentzVector GenParticle;
       GenParticle.SetPtEtaPhiM(genparticle.pt(), genparticle.eta(), genparticle.phi(), genparticle.mass());
-      if ((genparticle.pdgId() == 221) && genparticle.status() == 2) {
+      if (genparticle.pdgId() == 221 || genparticle.pdgId() == 331) {
         double candDR = 99.9;
         double passedCandDR = 99.9;
         double jetDR = 99.9;
@@ -2028,9 +2113,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           double dr = Jet.DeltaR(GenParticle);
           if (dr < jetDR) jetDR = dr;
         }
-        fGenEta_candDR.push_back(candDR);
-        fGenEta_passedCandDR.push_back(passedCandDR);
-        fGenEta_jetDR.push_back(jetDR);
+        fGenOmega_objDR.push_back(passedCandDR);
+        fGenOmega_candobjDR.push_back(candDR);
+        fGenOmega_jetDR.push_back(jetDR);
       }
     }
   }
