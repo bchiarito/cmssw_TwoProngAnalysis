@@ -2087,35 +2087,38 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle &genparticle = (*genparticles)[i];
       if (genparticle.pdgId() != 9000006 || genparticle.status() != 62) continue;
-      TLorentzVector GenParticle;
-      GenParticle.SetPtEtaPhiM(genparticle.pt(), genparticle.eta(), genparticle.phi(), genparticle.mass());
-      if (genparticle.pdgId() == 221 || genparticle.pdgId() == 331) {
-        double candDR = 99.9;
-        double passedCandDR = 99.9;
-        double jetDR = 99.9;
-        for (unsigned int j = 0; j < fCand_pt.size(); j++) {
-          TLorentzVector Candidate;
-          Candidate.SetPtEtaPhiM(fCand_pt[j], fCand_eta[j], fCand_phi[j], fCand_mass[j]);
-          double dr = Candidate.DeltaR(GenParticle);
-          if (dr < candDR) candDR = dr;
+      for (unsigned int j = 0; j < genparticle.numberOfDaughters(); j++) {
+        const reco::Candidate* genparticle2 = genparticle.daughter(j);
+        TLorentzVector GenParticle;
+        GenParticle.SetPtEtaPhiM(genparticle2->pt(), genparticle2->eta(), genparticle2->phi(), genparticle2->mass());
+        if (genparticle2->pdgId() == 221 || genparticle2->pdgId() == 331) {
+          double candDR = 99.9;
+          double passedCandDR = 99.9;
+          double jetDR = 99.9;
+          for (unsigned int j = 0; j < fCand_pt.size(); j++) {
+            TLorentzVector Candidate;
+            Candidate.SetPtEtaPhiM(fCand_pt[j], fCand_eta[j], fCand_phi[j], fCand_mass[j]);
+            double dr = Candidate.DeltaR(GenParticle);
+            if (dr < candDR) candDR = dr;
+          }
+          for (unsigned int j = 0; j < fCand_pt.size(); j++) {
+            if (!fCand_tight[j]) continue;
+            TLorentzVector PassedCandidate;
+            PassedCandidate.SetPtEtaPhiM(fCand_pt[j], fCand_eta[j], fCand_phi[j], fCand_mass[j]);
+            double dr = PassedCandidate.DeltaR(GenParticle);
+            if (dr < passedCandDR) passedCandDR = dr;
+          }
+          for (unsigned int i = 0; i < ak4jets->size(); i++) {
+            const pat::Jet &jet = (*ak4jets)[i];
+            TLorentzVector Jet;
+            Jet.SetPtEtaPhiM(jet.pt(), jet.eta(), jet.phi(), jet.mass());
+            double dr = Jet.DeltaR(GenParticle);
+            if (dr < jetDR) jetDR = dr;
+          }
+          fGenOmega_objDR.push_back(passedCandDR);
+          fGenOmega_candobjDR.push_back(candDR);
+          fGenOmega_jetDR.push_back(jetDR);
         }
-        for (unsigned int j = 0; j < fCand_pt.size(); j++) {
-          if (!fCand_tight[j]) continue;
-          TLorentzVector PassedCandidate;
-          PassedCandidate.SetPtEtaPhiM(fCand_pt[j], fCand_eta[j], fCand_phi[j], fCand_mass[j]);
-          double dr = PassedCandidate.DeltaR(GenParticle);
-          if (dr < passedCandDR) passedCandDR = dr;
-        }
-        for (unsigned int i = 0; i < ak4jets->size(); i++) {
-          const pat::Jet &jet = (*ak4jets)[i];
-          TLorentzVector Jet;
-          Jet.SetPtEtaPhiM(jet.pt(), jet.eta(), jet.phi(), jet.mass());
-          double dr = Jet.DeltaR(GenParticle);
-          if (dr < jetDR) jetDR = dr;
-        }
-        fGenOmega_objDR.push_back(passedCandDR);
-        fGenOmega_candobjDR.push_back(candDR);
-        fGenOmega_jetDR.push_back(jetDR);
       }
     }
   }
