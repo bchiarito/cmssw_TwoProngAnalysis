@@ -170,7 +170,7 @@ if sample == "eta":
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal_eta_generic"
-if sample == "eta_gg":
+elif sample == "eta_gg":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_gg.root' ] )
     if options.local:
@@ -180,7 +180,7 @@ if sample == "eta_gg":
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal_eta_gg"
-if sample == "eta_3pi0":
+elif sample == "eta_3pi0":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_3pi0.root' ] )
     if options.local:
@@ -190,7 +190,7 @@ if sample == "eta_3pi0":
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal_eta_3pi0"
-if sample == "eta_pipig":
+elif sample == "eta_pipig":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_pipig.root' ] )
     if options.local:
@@ -200,7 +200,7 @@ if sample == "eta_pipig":
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal_eta_pipig"
-if sample == "eta_pipipi0":
+elif sample == "eta_pipipi0":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_pipipi0.root' ] )
     if options.local:
@@ -211,7 +211,7 @@ if sample == "eta_pipipi0":
       if outname == "":
         outname = "signal_eta_pipipi0"
 
-if sample == "etaprime":
+elif sample == "etaprime":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_generic.root' ] )
     if options.local:
@@ -221,7 +221,7 @@ if sample == "etaprime":
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal_etaprime_generic"
-if sample == "etaprime_pipiEta_gg":
+elif sample == "etaprime_pipiEta_gg":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_pipiEta_gg.root' ] )
     if options.local:
@@ -231,7 +231,7 @@ if sample == "etaprime_pipiEta_gg":
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal_etaprime_pipiEta_gg"
-if sample == "etaprime_pipiEta_3pi0":
+elif sample == "etaprime_pipiEta_3pi0":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_pipiEta_3pi0.root' ] )
     if options.local:
@@ -241,7 +241,7 @@ if sample == "etaprime_pipiEta_3pi0":
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal_etaprime_pipiEta_3pi0"
-if sample == "etaprime_pi0pi0Eta_pipipi0":
+elif sample == "etaprime_pi0pi0Eta_pipipi0":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_pi0pi0Eta_pipipi0.root' ] )
     if options.local:
@@ -251,7 +251,7 @@ if sample == "etaprime_pi0pi0Eta_pipipi0":
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal_etaprime_pi0pi0Eta_pipipi0"
-if sample == "etaprime_pi0pi0Eta_pipig":
+elif sample == "etaprime_pi0pi0Eta_pipig":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_pi0pi0Eta_pipig.root' ] )
     if options.local:
@@ -261,7 +261,7 @@ if sample == "etaprime_pi0pi0Eta_pipig":
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal_etaprime_pi0pi0Eta_pipig"
-if sample == "etaprime_grho":
+elif sample == "etaprime_grho":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_grho.root' ] )
     if options.local:
@@ -271,7 +271,7 @@ if sample == "etaprime_grho":
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal_etaprime_grho"
-if sample == "etaprime_gomega":
+elif sample == "etaprime_gomega":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_gomega.root' ] )
     if options.local:
@@ -356,7 +356,6 @@ elif sample == "photon":
       globalTag = "80X_dataRun2_2016SeptRepro_v7"
       if outname == "":
         outname = "photon"
-
 # BKG MC
 elif sample == "qcd":
     # 87k events
@@ -369,9 +368,8 @@ elif sample == "qcd":
       globalTag = "80X_mcRun2_asymptotic_2016_TrancheIV_v6"
       if outname == "":
         outname = "qcd"
-
 elif options.local:
-    print "Not a valid sample name!"
+    quit(sample+" is not a valid sample name!")
 
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( readFiles ))
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( options.maxEvents ) )
