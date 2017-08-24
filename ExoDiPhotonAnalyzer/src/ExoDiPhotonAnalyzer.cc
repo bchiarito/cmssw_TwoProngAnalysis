@@ -534,6 +534,7 @@ private:
   vector<Double_t> fGenOmega_negative_eta;
   vector<Double_t> fGenOmega_negative_phi;
   vector<Double_t> fGenOmega_negative_mass;
+  vector<Double_t> fGenOmega_posnegdr;
 
   vector<Double_t> fGenOmega_objDR;
   vector<Double_t> fGenOmega_candobjDR;
@@ -943,6 +944,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("GenOmega_negative_eta",&fGenOmega_negative_eta); 
   fTree2->Branch("GenOmega_negative_phi",&fGenOmega_negative_phi); 
   fTree2->Branch("GenOmega_negative_mass",&fGenOmega_negative_mass); 
+  fTree2->Branch("GenOmega_posnegdr",&fGenOmega_posnegdr); 
   fTree2->Branch("GenOmega_objDR",&fGenOmega_objDR); 
   fTree2->Branch("GenOmega_candobjDR",&fGenOmega_candobjDR); 
   fTree2->Branch("GenOmega_jetDR",&fGenOmega_jetDR); 
@@ -1378,6 +1380,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fGenOmega_negative_eta.clear();
   fGenOmega_negative_phi.clear();
   fGenOmega_negative_mass.clear();
+  fGenOmega_posnegdr.clear();
 
   fGenOmega_objDR.clear();
   fGenOmega_candobjDR.clear();
@@ -1556,6 +1559,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
         fGenOmega_negative_eta.push_back(negativePion.Eta());
         fGenOmega_negative_phi.push_back(negativePion.Phi());
         fGenOmega_negative_mass.push_back(negativePion.M());
+        fGenOmega_posnegdr.push_back(positivePion.DeltaR(negativePion));
       } // end loop on daughters of Phi
     } // end loop on all gen particles
   }
