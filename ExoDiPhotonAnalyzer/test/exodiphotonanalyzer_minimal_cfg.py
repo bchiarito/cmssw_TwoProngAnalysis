@@ -65,17 +65,22 @@ options.register('fakeRateHistos',
                 False,
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
-                "Add ntuples (Ttrees) to output")
+                "")
 options.register('triggerEffHistos',
                 False,
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
-                "Add ntuples (Ttrees) to output")
+                "")
 options.register('twoprongYieldHistos',
                 False,
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
-                "Add ntuples (Ttrees) to output")
+                "")
+options.register('stackedDalitzHistos',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "")
 options.register("trackDR",
                 0.05,
                 VarParsing.multiplicity.singleton,
@@ -360,7 +365,7 @@ elif sample == "photon":
 elif sample == "qcd":
     # 87k events
     readFiles.extend( [
-       '/store/mc/RunIISummer16MiniAODv2/QCD_Pt_30to50_TuneCUETP8M1_13TeV_pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/120000/04915DCA-1BB2-E611-8A4B-0CC47A4C8E56.root' ] )
+       '/store/mc/RunIISummer16MiniAODv2/QCD_HT50to100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/70000/00957AED-CCB6-E611-85F1-0CC47A7E0104.root' ] )
     if options.local:
       isSignal = False
       doLumis = False
@@ -454,6 +459,7 @@ process.diphotonAnalyzer.makeTrees = cms.untracked.bool(options.ntuples)
 process.diphotonAnalyzer.fakeRateHistos = cms.untracked.bool(options.fakeRateHistos)
 process.diphotonAnalyzer.triggerEffHistos = cms.untracked.bool(options.triggerEffHistos)
 process.diphotonAnalyzer.twoprongYieldHistos = cms.untracked.bool(options.twoprongYieldHistos)
+process.diphotonAnalyzer.stackedDalitzHistos = cms.untracked.bool(options.stackedDalitzHistos)
 process.diphotonAnalyzer.includeMCInfo = cms.untracked.bool(mcInfo)
 process.diphotonAnalyzer.mcXS = cms.untracked.double(options.mcXS)
 process.diphotonAnalyzer.mcN = cms.untracked.double(options.mcN)
