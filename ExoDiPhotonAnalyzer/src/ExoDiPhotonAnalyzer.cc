@@ -118,6 +118,7 @@ private:
   bool               fFakeRateHistos;       // flag to include histograms in output
   bool               fTriggerEffHistos;     // flag to include histograms in output
   bool               fTwoProngYieldHistos;  // flag to include histograms in output
+  bool               fStackedDalitzHistos;  // flag to include stacked dalitz plots
 
   // ntuplizer config file options
   double fCandidatePairDR;
@@ -206,7 +207,23 @@ private:
   TH1F *fPhotonTriggerEff_ConeHE_Photon22_Iso_Division;
 
   // twoprong yield histos
-  TH1F * fTwoProngYield;
+  TH1F *fTwoProngYield;
+
+  // stacked dalitz histos
+  TH2D *fHighvsMid;
+  TH2D *fHighvsLow;
+  TH2D *fMidvsLow;
+  TH2D *fPhotonvsLarger;
+  TH2D *fPhotonvsSmaller;
+  TH2D *fDoubleStackedDalitz;
+  TH2D *fTripleStackedDalitz;
+  // other dalitz versions
+  TH2D *fPhotonvsPositive;
+  TH2D *fPhotonvsNegative;
+  TH2D *fPositivevsNegative;
+  TH1F *fPhotonFraction;
+  TH1F *fPositiveFraction;
+  TH1F *fNegativeFraction;
  
   // Main Ntuple Ttree and braches
   TTree *fTree2;
@@ -544,7 +561,9 @@ private:
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo2;
   ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo3;
 
-  ExoDiPhotons::recoDiObjectInfo_t fTwoProngTwoProngInfo; 
+  ExoDiPhotons::recoDiObjectInfo_t fRecoPhiDiTwoProng; 
+  ExoDiPhotons::recoDiObjectInfo_t fRecoPhiPhotonTwoProng; 
+  ExoDiPhotons::recoDiObjectInfo_t fRecoPhiInclusive; 
 };
 
 //
@@ -568,6 +587,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fFakeRateHistos(iConfig.getUntrackedParameter<bool>("fakeRateHistos")),
     fTriggerEffHistos(iConfig.getUntrackedParameter<bool>("triggerEffHistos")),
     fTwoProngYieldHistos(iConfig.getUntrackedParameter<bool>("twoprongYieldHistos")),
+    fStackedDalitzHistos(iConfig.getUntrackedParameter<bool>("stackedDalitzHistos")),
     fCandidatePairDR(iConfig.getUntrackedParameter<double>("chargedHadronPairMinDR")),
     fCandidatePairMinPt(iConfig.getUntrackedParameter<double>("chargedHadronMinPt")),
     fCandidatePairIsolationDR(iConfig.getUntrackedParameter<double>("isolationConeR")),
@@ -949,7 +969,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("GenOmega_candobjDR",&fGenOmega_candobjDR); 
   fTree2->Branch("GenOmega_jetDR",&fGenOmega_jetDR); 
   // Combined Objects
-  fTree2->Branch("TwoProngTwoProng",&fTwoProngTwoProngInfo,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("RecoPhiDiTwoProng",&fRecoPhiDiTwoProng,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("RecoPhiPhotonTwoProng",&fRecoPhiPhotonTwoProng,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("RecoPhiInclusive",&fRecoPhiInclusive,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   }
   // Fake rate histograms
   int num_even_mass_bins = 9;
@@ -1036,6 +1058,24 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 
   if (fTwoProngYieldHistos) {
   fTwoProngYield = fs->make<TH1F>("twoprongyield_pt","TwoProng Object Yield", 50, 0, 5000);
+  }
+
+  if(fStackedDalitzHistos) {
+  fHighvsMid = fs->make<TH2D>("highvsmid","highvsmid",40,0,1,40,0,1);
+  fHighvsLow = fs->make<TH2D>("highvslow","highvslow",40,0,1,40,0,1);
+  fMidvsLow = fs->make<TH2D>("midvslow","midvslow",40,0,1,40,0,1);
+  fPhotonvsLarger = fs->make<TH2D>("photonvslarger","photonvslarger",40,0,1,40,0,1);
+  fPhotonvsSmaller = fs->make<TH2D>("photonvssmaller","photonvssmaller",40,0,1,40,0,1);
+  fDoubleStackedDalitz = fs->make<TH2D>("dalitz_double","dalitz_double",40,0,1,40,0,1);
+  fTripleStackedDalitz = fs->make<TH2D>("dalitz_triple","dalitz_triple",40,0,1,40,0,1);
+  
+  fPhotonvsPositive = fs->make<TH2D>("dalitz_photonvspos","dalitz_photonvspos",40,0,1,40,0,1);
+  fPhotonvsNegative = fs->make<TH2D>("dalitz_photonvsneg","dalitz_photonvsneg",40,0,1,40,0,1);
+  fPositivevsNegative = fs->make<TH2D>("dalitz_posvsneg","dalitz_posvsneg",40,0,1,40,0,1);
+
+  fPhotonFraction = fs->make<TH1F>("1d_photon_frac","1d_pos_frac",40,0,1);
+  fPositiveFraction = fs->make<TH1F>("1d_pos_frac","1d_pos_frac",40,0,1);
+  fNegativeFraction = fs->make<TH1F>("1d_negative_frac","1d_pos_frac",40,0,1);
   }
 }
 
@@ -2187,18 +2227,49 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (fDebug) cout << ". done high-pt-id photons" << endl;
 
   // Construct Di-Objects
-  InitRecoDiObjectInfo(fTwoProngTwoProngInfo);
-  // Passed Eta and Passed Eta
+  InitRecoDiObjectInfo(fRecoPhiDiTwoProng);
+  // Di-TwoProng
   if (fNumTwoProngPass >= 2)
   {
     TLorentzVector Eta1;
     Eta1.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
     TLorentzVector Eta2;
     Eta2.SetPtEtaPhiM(fTwoProng_pt[1], fTwoProng_eta[1], fTwoProng_phi[1], fTwoProng_mass[1]);
-    FillRecoDiObjectInfo(fTwoProngTwoProngInfo, Eta1, Eta2);
-    fTwoProngTwoProngInfo.dMass = fabs(fTwoProng_Mass[0] - fTwoProng_Mass[1]);
+    FillRecoDiObjectInfo(fRecoPhiDiTwoProng, Eta1, Eta2);
   }
-  if (fDebug) cout << ". done making di-objects" << endl;
+  InitRecoDiObjectInfo(fRecoPhiPhotonTwoProng);
+  if (fDebug) cout << ". done making di-twoprong" << endl;
+  // photon plus TwoProng
+  if (fNumTwoProngPass >= 1 && fNumTightPhotons >= 1)
+  {
+    TLorentzVector LeadingTwoProng;
+    LeadingTwoProng.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+    TLorentzVector LeadingPhoton;
+    LeadingPhoton.SetPtEtaPhiM(fIDPhoton_pt[0], fIDPhoton_eta[0], fIDPhoton_phi[0], fIDPhoton_mass[0]);
+    FillRecoDiObjectInfo(fRecoPhiPhotonTwoProng, LeadingTwoProng, LeadingPhoton);
+  }
+  InitRecoDiObjectInfo(fRecoPhiInclusive);
+  if (fDebug) cout << ". done making photon-twoprong" << endl;
+  // TwoProng plus (photon or TwoProng) inclusive
+  if (fNumTwoProngPass >=1 && (fNumTwoProngPass + fNumTightPhotons >= 2))
+  {
+    TLorentzVector LeadingTwoProng;
+    LeadingTwoProng.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+    TLorentzVector SubLeadingTwoProng;
+    TLorentzVector LeadingPhoton;
+    TLorentzVector LeadingSecondary;
+    if (fNumTightPhotons >= 1) LeadingPhoton.SetPtEtaPhiM(fIDPhoton_pt[0], fIDPhoton_eta[0], fIDPhoton_phi[0], fIDPhoton_mass[0]);
+    if (fNumTwoProngPass >= 2) SubLeadingTwoProng.SetPtEtaPhiM(fTwoProng_pt[1], fTwoProng_eta[1], fTwoProng_phi[1], fTwoProng_mass[1]);
+  
+    if (fNumTightPhotons == 0) LeadingSecondary = SubLeadingTwoProng;
+    if (fNumTwoProngPass == 1) LeadingSecondary = LeadingPhoton;
+    if (fNumTwoProngPass >= 2 && fNumTightPhotons >=1) {
+      if (SubLeadingTwoProng.Pt() > LeadingPhoton.Pt()) LeadingSecondary = SubLeadingTwoProng;
+      else LeadingSecondary = LeadingPhoton;
+    }
+    FillRecoDiObjectInfo(fRecoPhiInclusive, LeadingTwoProng, LeadingSecondary);
+  }
+  if (fDebug) cout << ". done making reco phi inclusive" << endl;
 
   // Now fill fTree2
   if (fMakeTrees) fTree2->Fill();
@@ -2231,10 +2302,46 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   }
 
   if (fTwoProngYieldHistos) {
+
   // twoprong yield analysis
   for (unsigned int i = 0; i < fTwoProng_pt.size(); i++) {
     fTwoProngYield->Fill(fTwoProng_pt[i]);
   }
+
+  }
+
+  if (fStackedDalitzHistos) {
+
+  for (unsigned int i = 0; i < fTwoProng_pt.size(); i++) {
+    double norm = fTwoProng_pt[i];
+    double ptg = fTwoProng_photon_pt[i] / norm;
+    double pt1 = fTwoProng_CHpos_pt[i] / norm;
+    double pt2 = fTwoProng_CHneg_pt[i] / norm;
+    double high = max(max(ptg,pt1),pt2);
+    double low = min(min(ptg,pt1),pt2);
+    double mid;
+    if(ptg > low && ptg < high) mid = ptg;
+    else if(pt1 > low && pt1 < high) mid = pt1;
+    else if(pt2 > low && pt2 < high) mid = pt2;
+    else mid = low;
+    double smaller = min(pt1,pt2);
+    double larger = max(pt1,pt2);
+    
+    fHighvsMid->Fill(mid, high, fMcXS/fMcN);
+    fHighvsLow->Fill(low, high, fMcXS/fMcN);
+    fMidvsLow->Fill(low, mid, fMcXS/fMcN);
+    fPhotonvsLarger->Fill(larger, ptg, fMcXS/fMcN);
+    fPhotonvsSmaller->Fill(smaller, ptg, fMcXS/fMcN);
+
+    fPhotonvsPositive->Fill(pt1, ptg, fMcXS/fMcN);
+    fPhotonvsNegative->Fill(pt2, ptg, fMcXS/fMcN);
+    fPositivevsNegative->Fill(pt2, pt1, fMcXS/fMcN);
+
+    fPhotonFraction->Fill(ptg, fMcXS/fMcN);
+    fPositiveFraction->Fill(pt1, fMcXS/fMcN);
+    fNegativeFraction->Fill(pt2, fMcXS/fMcN);
+  }
+
   }
 }
 
@@ -2258,6 +2365,7 @@ ExoDiPhotonAnalyzer::beginJob()
   cout << "FakeRateHistos " << fFakeRateHistos << endl;
   cout << "TriggerEffHistos " << fTriggerEffHistos << endl;
   cout << "TwoProngYieldHistos " << fTwoProngYieldHistos << endl;
+  cout << "StackedDalitzHistos " << fStackedDalitzHistos << endl;
   cout << "===========================" << endl;
   cout << "CandidatePairDR " << fCandidatePairDR << endl;
   cout << "CandidatePairMinPt " << fCandidatePairMinPt << endl;
@@ -2340,6 +2448,17 @@ ExoDiPhotonAnalyzer::endJob()
   fPhotonTriggerEff_ConeHE_Photon22_Iso_Division->Add(fPhotonTriggerEff_ConeHE_Photon22_Iso_Numerator);
   fPhotonTriggerEff_ConeHE_Photon22_Iso_Division->Divide(fPhotonTriggerEff_ConeHE_all_Denominator);
   }
+  }
+
+  // stacke dalitz histograms
+  if (fStackedDalitzHistos) {
+
+  fTripleStackedDalitz->Add(fHighvsMid);
+  fTripleStackedDalitz->Add(fHighvsLow);
+  fTripleStackedDalitz->Add(fMidvsLow);
+  fDoubleStackedDalitz->Add(fPhotonvsLarger);
+  fDoubleStackedDalitz->Add(fPhotonvsSmaller);
+
   }
 }
 
