@@ -31,6 +31,11 @@ options.register('isSignal',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "Specify singal MC for looking for Phi and omega gen particles")
+options.register('isTauTau',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "Specify singal MC for looking for Phi and omega gen particles")
 options.register('mcInfo',
                 False,
                 VarParsing.multiplicity.singleton,
@@ -41,6 +46,13 @@ options.register('local',
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
                 "Specify running on the command line, as opposed to crab/conder")
+
+options.register('taupreselection',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "add Z->tau tau filter to path")
+
 options.register('addConeHE',
                 False,
                 VarParsing.multiplicity.singleton,
@@ -77,6 +89,11 @@ options.register('twoprongYieldHistos',
                 VarParsing.varType.bool,
                 "")
 options.register('stackedDalitzHistos',
+                False,
+                VarParsing.multiplicity.singleton,
+                VarParsing.varType.bool,
+                "")
+options.register('optionalExtraTrack',
                 False,
                 VarParsing.multiplicity.singleton,
                 VarParsing.varType.bool,
@@ -146,6 +163,7 @@ options.parseArguments()
 
 # set variables
 isSignal = options.isSignal
+isTauTau = options.isTauTau
 doLumis = options.doLumis
 sample = options.sample
 globalTag = options.globalTag
@@ -373,6 +391,20 @@ elif sample == "qcd":
       globalTag = "80X_mcRun2_asymptotic_2016_TrancheIV_v6"
       if outname == "":
         outname = "qcd"
+# Z to ll
+elif sample == "ztoll":
+    # 87k events
+    readFiles.extend( [
+       '/store/mc/RunIISummer16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/100000/00BF45FC-5AED-E611-986A-A0000420FE80.root' ] )
+    if options.local:
+      isSignal = False
+      doLumis = False
+      mcInfo = True
+      isTauTau = True
+      globalTag = "80X_mcRun2_asymptotic_2016_TrancheIV_v6"
+      if outname == "":
+        outname = "ztoll"
+
 elif options.local:
     quit(sample+" is not a valid sample name!")
 
@@ -428,9 +460,10 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   candidateAbsMaxEta = cms.untracked.double(options.maxEta),
                                   candidateTrackAsymmetryCut = cms.untracked.double(options.trackAsym),
                                   candidatePhotonAsymmetryCut = cms.untracked.double(options.photonAsym),
+                                  candidateOptionalExtraTrack = cms.untracked.bool(options.optionalExtraTrack),
                                   chargedHadronPairMinDR = cms.untracked.double(options.trackDR),
-                                  chargedHadronMinPt = cms.untracked.double(options.trackMinPt),
-                                  photonPtCut = cms.untracked.double(options.photonMinPt),
+                                  chargedHadronMinPt = cms.untracked.double(options.constituentMinPt),
+                                  photonPtCut = cms.untracked.double(options.constituentMinPt),
                                   photonPhiBoxSize = cms.untracked.double(options.photonBoxPhi),
                                   photonEtaBoxSize = cms.untracked.double(options.photonBoxEta),
                                   isolationConeR = cms.untracked.double(0.3),
@@ -463,6 +496,11 @@ process.diphotonAnalyzer.stackedDalitzHistos = cms.untracked.bool(options.stacke
 process.diphotonAnalyzer.includeMCInfo = cms.untracked.bool(mcInfo)
 process.diphotonAnalyzer.mcXS = cms.untracked.double(options.mcXS)
 process.diphotonAnalyzer.mcN = cms.untracked.double(options.mcN)
+process.diphotonAnalyzer.runningOnTauTau = cms.untracked.bool(isTauTau)
 
 # The full cmssw configuration path
-process.path  = cms.Path(process.primaryVertexFilter * process.egmPhotonIDSequence * process.diphotonAnalyzer)
+if not options.taupreselection:
+  process.path  = cms.Path(process.primaryVertexFilter * process.egmPhotonIDSequence * process.diphotonAnalyzer)
+else:
+  process.tauFilter = cms.EDFilter('ZtoTauHad')
+  process.path  = cms.Path(process.primaryVertexFilter * process.tauFilter * process.egmPhotonIDSequence * process.diphotonAnalyzer)
