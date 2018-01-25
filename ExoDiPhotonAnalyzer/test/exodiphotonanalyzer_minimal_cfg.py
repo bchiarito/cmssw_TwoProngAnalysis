@@ -21,7 +21,7 @@ options.register('globalTag', '', VarParsing.multiplicity.singleton, VarParsing.
 options.register('isSignal', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "Specify singal MC for looking for Phi and omega gen particles")
 options.register('isTauTau', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
-                 "Specify singal MC for looking for Phi and omega gen particles")
+                 "Specify Z->ll MC")
 options.register('mcInfo', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
                  "include mc weight in Ttree")
 options.register("mcXS", 1.0, VarParsing.multiplicity.singleton, VarParsing.varType.float,
@@ -426,7 +426,7 @@ process.diphotonAnalyzer.stackedDalitzHistos = cms.untracked.bool(options.stacke
 process.diphotonAnalyzer.includeMCInfo = cms.untracked.bool(mcInfo)
 process.diphotonAnalyzer.mcXS = cms.untracked.double(options.mcXS)
 process.diphotonAnalyzer.mcN = cms.untracked.double(options.mcN)
-process.diphotonAnalyzer.runningOnTauTau = cms.untracked.bool(isTauTau)
+process.diphotonAnalyzer.runningOnTauTauMC = cms.untracked.bool(isTauTau)
 
 # the tau filter
 if options.taupreselection:

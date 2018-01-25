@@ -99,6 +99,7 @@ private:
   double iso_alpha(double, int);
   double iso_area(double, int);
   double iso_kappa(double, int);
+  vector<string> getDecay(const reco::Candidate &,int flag=0);
 
   // ----------member data ---------------------------
 
@@ -111,7 +112,7 @@ private:
   bool               fDebug;                       // if set to False, mean to limit per event stdout output
   bool               fAddDrConePhotonCut;          // option needed for studying the Trigger ID, no longer needd
   bool               fincludeSignalGenParticles; // includes the GenPhi and other gen particles in ntuple
-  bool               frunningOnTauTau;           // running on Z->tau tau, will do gen particle matching to hadronic taus
+  bool               frunningOnTauTauMC;           // running on Z->tau tau MC, will do gen particle matching to hadronic taus
   bool               fincludeAllLooseObjects;    // include all loose twoprong objects in ntuple
   bool               fincludeAllCandObjects;     // include all twoprong candidate objects (no iso req) in ntuple
   bool               fincludeOldPhotons;         // include the Photon1,Photon2,Photon3 objects in ntuple
@@ -251,6 +252,7 @@ private:
   double fMcW;
   double fMcWProd;
 
+  double fTauDecayType;
   vector<Double_t> fGenTau_pt;
   vector<Double_t> fGenTau_eta;
   vector<Double_t> fGenTau_phi;
@@ -620,7 +622,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fDebug(iConfig.getUntrackedParameter<bool>("debug")),
     fAddDrConePhotonCut(iConfig.getUntrackedParameter<bool>("addPhotonCutDrConeHE")),
     fincludeSignalGenParticles(iConfig.getUntrackedParameter<bool>("includeSignalGenParticles")),
-    frunningOnTauTau(iConfig.getUntrackedParameter<bool>("runningOnTauTau")),
+    frunningOnTauTauMC(iConfig.getUntrackedParameter<bool>("runningOnTauTauMC")),
     fincludeAllLooseObjects(iConfig.getUntrackedParameter<bool>("includeAllLooseObjects")),
     fincludeAllCandObjects(iConfig.getUntrackedParameter<bool>("includeAllCandObjects")),
     fincludeOldPhotons(iConfig.getUntrackedParameter<bool>("includeOldPhotons")),
@@ -1014,6 +1016,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Photon_ConeHE_mass",&fID2Photon_mass);
   }
   // Generator Objects
+  fTree2->Branch("tauDecayType",&fTauDecayType,"tauDecayType/D");
   fTree2->Branch("GenTau_pt",&fGenTau_pt);
   fTree2->Branch("GenTau_eta",&fGenTau_eta);
   fTree2->Branch("GenTau_phi",&fGenTau_phi);
@@ -1696,7 +1699,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.getByToken(pfcandsToken_, pfcands);
 
   edm::Handle<vector<reco::GenParticle>> genparticles;
-  if (fincludeSignalGenParticles || frunningOnTauTau) {
+  if (fincludeSignalGenParticles || frunningOnTauTauMC) {
     iEvent.getByToken(genToken_, genparticles);
   }
 
@@ -2195,7 +2198,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           if (fDebug) cout << ". finished gen omega matching" << endl;
           // Generator matching to tau
           double genTau_dR = 99.9;
-	        if (frunningOnTauTau) {
+	        if (frunningOnTauTauMC) {
 	          for (unsigned int i = 0; i < genparticles->size(); i++) {
 	            const reco::GenParticle &genparticle = (*genparticles)[i];
 	            if (abs(genparticle.pdgId()) == 15) {
@@ -2414,8 +2417,102 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fNumTwoProngPass = fTwoProng_pt.size();
   if (fDebug) cout << ". finished passed collections" << endl;
 
+  // tau decay type
+  if (frunningOnTauTauMC) {
+    vector<string> leptons;
+    for (unsigned int i = 0; i < genparticles->size(); i++) {
+      const reco::GenParticle & genparticle = (*genparticles)[i];
+      if (genparticle.status() != 22) continue;
+      leptons = getDecay(genparticle);
+    }
+    if (leptons.size() == 0) fTauDecayType = 0;
+    if (leptons.size() == 1) fTauDecayType = -1;
+    if (leptons.size() == 2) 
+    {
+      if (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end()) fTauDecayType = 3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-e") != leptons.end()) fTauDecayType = 4;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-e") != leptons.end()) fTauDecayType = 4;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-e") != leptons.end()) fTauDecayType = 4;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-e") != leptons.end()) fTauDecayType = 4;
+      else if (std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau+e") != leptons.end()) fTauDecayType = 4;
+      else if (std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau+e") != leptons.end()) fTauDecayType = 4;
+      else if (std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau+e") != leptons.end()) fTauDecayType = 4;
+      else if (std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau+e") != leptons.end()) fTauDecayType = 4;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-mu") != leptons.end()) fTauDecayType = 5.2;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-mu") != leptons.end()) fTauDecayType = 5.1;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-mu") != leptons.end()) fTauDecayType = 5.4;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-mu") != leptons.end()) fTauDecayType = 5.3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau+mu") != leptons.end()) fTauDecayType = 5.2;
+      else if (std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau+mu") != leptons.end()) fTauDecayType = 5.1;
+      else if (std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau+mu") != leptons.end()) fTauDecayType = 5.4;
+      else if (std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau+mu") != leptons.end()) fTauDecayType = 5.3;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+e") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-e") != leptons.end()) fTauDecayType = 6;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+mu") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-mu") != leptons.end()) fTauDecayType = 7;
+      else if (std::find(leptons.begin(), leptons.end(), "tau+e") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau-mu") != leptons.end()) fTauDecayType = 8;
+      else if (std::find(leptons.begin(), leptons.end(), "tau-e") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "tau+mu") != leptons.end()) fTauDecayType = 8;
+      else if (std::find(leptons.begin(), leptons.end(), "e+") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "e-") != leptons.end()) fTauDecayType = 1;
+      else if (std::find(leptons.begin(), leptons.end(), "mu+") != leptons.end() &&
+          std::find(leptons.begin(), leptons.end(), "mu-") != leptons.end()) fTauDecayType = 2;
+      else
+        fTauDecayType = 9;
+    }
+    if (leptons.size() > 2) fTauDecayType = 10;
+  }
+
   // More matching, by gen tau perspective now
-  if (frunningOnTauTau) {
+  if (frunningOnTauTauMC) {
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle & genparticle = (*genparticles)[i];
       if (abs(genparticle.pdgId()) != 15) continue;
@@ -3049,6 +3146,102 @@ double phoKappaHighPtID(const pat::Photon *photon)
     return -99999.99;
   }
 }
+
+// function for finding Ztoll decay type
+vector<string>
+ExoDiPhotonAnalyzer::getDecay(const reco::Candidate & genparticle, int flag)
+{
+  vector<string> products;
+
+  if (flag == 1) { // parent is tau
+    if (genparticle.pdgId() == 111) { products.push_back("npion"); return products; }
+    if (abs(genparticle.pdgId()) == 211) { products.push_back("cpion"); return products; }
+  }
+
+  // ignore quarks and gluons and their daughters
+  if (genparticle.pdgId() >= 1 && genparticle.pdgId() <= 8) { return products; }
+  if (genparticle.pdgId() == 21) { return products; }
+
+  if (genparticle.pdgId() == 11) { products.push_back("e-"); return products; }
+  if (genparticle.pdgId() == -11) { products.push_back("e+"); return products; }
+  if (genparticle.pdgId() == 13) { products.push_back("mu-"); return products; }
+  if (genparticle.pdgId() == -13) { products.push_back("mu+"); return products; }
+
+  if (abs(genparticle.pdgId()) == 15) {
+    vector<string> tau_products; 
+    for (unsigned int j = 0; j < genparticle.numberOfDaughters(); j++) {
+      const reco::Candidate* daughter = genparticle.daughter(j);
+      vector<string> daughter_products = getDecay(*daughter, 1);
+      tau_products.insert(tau_products.end(), daughter_products.begin(), daughter_products.end());
+    }
+  
+    if (tau_products.size() == 0) {
+      if (genparticle.pdgId() == 15) { products.push_back("tau-unid"); return products; }
+      if (genparticle.pdgId() == -15) { products.push_back("tau+unid"); return products; }
+    }
+
+    if (tau_products.size() == 1 && tau_products[0] == "e-") { products.push_back("tau-e"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "e+") { products.push_back("tau+e"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "mu-") { products.push_back("tau-mu"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "mu+") { products.push_back("tau+mu"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau-e") { products.push_back("tau-e"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau+e") { products.push_back("tau+e"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau-mu") { products.push_back("tau-mu"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau+mu") { products.push_back("tau+mu"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau+had10") { products.push_back("tau+had10"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau+had1") { products.push_back("tau+had1"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau+had30") { products.push_back("tau+had30"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau+had3") { products.push_back("tau+had3"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau-had10") { products.push_back("tau-had10"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau-had1") { products.push_back("tau-had1"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau-had30") { products.push_back("tau-had30"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau-had3") { products.push_back("tau-had3"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau+unid") { products.push_back("tau+unid"); return products; }
+    if (tau_products.size() == 1 && tau_products[0] == "tau-unid") { products.push_back("tau-unid"); return products; }
+
+    for (string prod : tau_products) {
+      if (prod != "cpion" && prod != "npion") {  
+        if (genparticle.pdgId() == 15) { products.push_back("tau-unid"); return products; }
+        if (genparticle.pdgId() == -15) { products.push_back("tau+unid"); return products; }
+      }
+    }
+
+    bool neutral = false;
+    if (std::find(tau_products.begin(), tau_products.end(), "npion") != tau_products.end() ) neutral = true;
+
+    int pion_count = 0;
+    while( std::find(tau_products.begin(), tau_products.end(), "cpion") != tau_products.end() ) 
+    {
+      tau_products.erase( std::find(tau_products.begin(), tau_products.end(), "cpion") );
+      pion_count += 1;
+    }
+
+    int charge = 0;
+    if (genparticle.pdgId() == 15) charge = -1;
+    if (genparticle.pdgId() == -15) charge = 1;
+
+    if      (charge>0 && neutral  && pion_count == 1) products.push_back("tau+had10");
+    else if (charge>0 && !neutral && pion_count == 1) products.push_back("tau+had1");
+    else if (charge>0 && neutral  && pion_count == 3) products.push_back("tau+had30");
+    else if (charge>0 && !neutral && pion_count == 3) products.push_back("tau+had3");
+    else if (charge<0 && neutral  && pion_count == 1) products.push_back("tau-had10");
+    else if (charge<0 && !neutral && pion_count == 1) products.push_back("tau-had1");
+    else if (charge<0 && neutral  && pion_count == 3) products.push_back("tau-had30");
+    else if (charge<0 && !neutral && pion_count == 3) products.push_back("tau-had3");
+    else if (charge>0)                                products.push_back("tau+unid");
+    else if (charge<0)                                products.push_back("tau-unid");
+
+    return products;
+  }
+
+  for (unsigned int j = 0; j < genparticle.numberOfDaughters(); j++) {
+    const reco::Candidate* daughter = genparticle.daughter(j);
+    vector<string> daughter_products = getDecay(*daughter);
+    products.insert(products.end(), daughter_products.begin(), daughter_products.end());
+  } 
+  return products;
+}
+
 
 // global sorting by pt function
 bool compareCandsByPt(const edm::Ptr<const reco::Candidate> cand1, const edm::Ptr<const reco::Candidate> cand2)
