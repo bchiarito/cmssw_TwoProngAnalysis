@@ -1,163 +1,81 @@
 # Command line options
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
-options.register('globalTag',
-                '',
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.string,
-                "global tag to use when running")
-options.register('doLumis',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "let config file do lumi selection instead of CRAB - must be FALSE if using CRAB!")
-options.register('debug',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "True includes all output, False removes most of the per event output")
-options.register("sample",
-                "signal",
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.string,
-                "which sample we want to run over")
-options.register("out",
-                '',
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.string,
-                "output file name")
-options.register('isSignal',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "Specify singal MC for looking for Phi and omega gen particles")
-options.register('isTauTau',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "Specify singal MC for looking for Phi and omega gen particles")
-options.register('mcInfo',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "include mc weight in Ttree")
-options.register('local',
-                True,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "Specify running on the command line, as opposed to crab/conder")
+# required
+options.register("sample", "signal125", VarParsing.multiplicity.singleton, VarParsing.varType.string,
+                 "which sample we want to run over")
+options.register("out", '', VarParsing.multiplicity.singleton, VarParsing.varType.string,
+                 "output file name")
+# other
+options.register('debug', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "True includes all output, False removes most of the per event output")
+options.register('taupreselection', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "add Z->tau tau filter to path")
+options.register('doLumis', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "let config file do lumi selection instead of CRAB - must be FALSE if using CRAB!")
+# for crab
+options.register('local', True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "Specify running on the command line, as opposed to crab/conder")
+options.register('globalTag', '', VarParsing.multiplicity.singleton, VarParsing.varType.string,
+                 "global tag to use when running")
+options.register('isSignal', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "Specify singal MC for looking for Phi and omega gen particles")
+options.register('isTauTau', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "Specify singal MC for looking for Phi and omega gen particles")
+options.register('mcInfo', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "include mc weight in Ttree")
+options.register("mcXS", 1.0, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "mc cross section, if desired to be filled in trees")
+options.register("mcN", 1.0, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "mc number generated, if desired to be filled in trees")
+# output specification
+options.register('ntuples', True, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "Add ntuples (Ttrees) to output")
+options.register('includeCands', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "Include all cand twoprongs in ntuple")
+options.register('includeLoose', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "Include Loose twoprongs in ntuple")
+options.register('fakeRateHistos', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "")
+options.register('triggerEffHistos', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "")
+options.register('twoprongYieldHistos', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "")
+options.register('stackedDalitzHistos', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "")
+# two-prong object definition
+options.register('optionalExtraTrack', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "")
+options.register("trackDR", 0.05, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "")
+options.register("minPt", 20.0, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "")
+options.register("maxEta", 2.5, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "")
+options.register("constituentMinPt", 1.0, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "")
+options.register("trackMinPt", 3.0, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "")
+options.register("photonMinPt", 3.0, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "")
+options.register("trackAsym", 0.15, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "")
+options.register("photonAsym", 0.2, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "")
+options.register("photonBoxPhi", 0.2, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "")
+options.register("photonBoxEta", 0.05, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "")
+options.register("chargedIsoCut", 0.1, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "")
+options.register("neutralIsoCut", 0.1, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "")
+options.register("egammaIsoCut", 0.1, VarParsing.multiplicity.singleton, VarParsing.varType.float,
+                 "")
+# photon definition
+options.register('addConeHE', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool,
+                 "Add cut to high-pt-photon-id: Cone based HE < 0.05")
 
-options.register('taupreselection',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "add Z->tau tau filter to path")
-
-options.register('addConeHE',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "Add cut to high-pt-photon-id: Cone based HE < 0.05")
-options.register('includeCands',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "Include all cand twoprongs in ntuple")
-options.register('includeLoose',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "Include Loose twoprongs in ntuple")
-options.register('ntuples',
-                True,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "Add ntuples (Ttrees) to output")
-options.register('fakeRateHistos',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "")
-options.register('triggerEffHistos',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "")
-options.register('twoprongYieldHistos',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "")
-options.register('stackedDalitzHistos',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "")
-options.register('optionalExtraTrack',
-                False,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.bool,
-                "")
-options.register("trackDR",
-                0.05,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.float,
-                "")
-options.register("minPt",
-                20.0,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.float,
-                "")
-options.register("maxEta",
-                2.5,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.float,
-                "")
-options.register("constituentMinPt",
-                1.0,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.float,
-                "")
-options.register("trackMinPt",
-                1.0,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.float,
-                "")
-options.register("photonMinPt",
-                1.0,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.float,
-                "")
-options.register("trackAsym",
-                0,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.float,
-                "")
-options.register("photonAsym",
-                0,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.float,
-                "")
-options.register("photonBoxPhi",
-                0.2,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.float,
-                "")
-options.register("photonBoxEta",
-                0.05,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.float,
-                "")
-options.register("mcXS",
-                1.0,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.float,
-                "mc cross section, if desired to be filled in trees")
-options.register("mcN",
-                1.0,
-                VarParsing.multiplicity.singleton,
-                VarParsing.varType.float,
-                "mc number generated, if desired to be filled in trees")
 options.setDefault('maxEvents', 100)
 options.parseArguments()
 
@@ -193,6 +111,16 @@ if sample == "eta":
       globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
       if outname == "":
         outname = "signal_eta_generic"
+elif sample == "test":
+    readFiles.extend( [
+        '/store/data/Run2016B/ParkingScoutingMonitor/MINIAOD/PromptReco-v1/000/272/680/00000/6E3617FE-EE14-E611-9F21-02163E0143BD.root' ] )
+    if options.local:
+      isSignal = False
+      doLumis = False
+      mcInfo = False
+      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+      if outname == "":
+        outname = "test"
 elif sample == "eta_gg":
     readFiles.extend( [
         'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_gg.root' ] )
@@ -379,6 +307,7 @@ elif sample == "photon":
       globalTag = "80X_dataRun2_2016SeptRepro_v7"
       if outname == "":
         outname = "photon"
+
 # BKG MC
 elif sample == "qcd":
     # 87k events
@@ -391,6 +320,7 @@ elif sample == "qcd":
       globalTag = "80X_mcRun2_asymptotic_2016_TrancheIV_v6"
       if outname == "":
         outname = "qcd"
+
 # Z to ll
 elif sample == "ztoll":
     # 87k events
@@ -467,11 +397,11 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   photonPhiBoxSize = cms.untracked.double(options.photonBoxPhi),
                                   photonEtaBoxSize = cms.untracked.double(options.photonBoxEta),
                                   isolationConeR = cms.untracked.double(0.3),
-                                  chargedIsoCut = cms.untracked.double(0.1),
+                                  chargedIsoCut = cms.untracked.double(options.chargedIsoCut),
                                   chargedIsoLooseMax = cms.untracked.double(0.3),
-                                  neutralIsoCut = cms.untracked.double(0.1),
+                                  neutralIsoCut = cms.untracked.double(options.neutralIsoCut),
                                   neutralIsoLooseMax = cms.untracked.double(0.3),
-                                  egammaIsoCut = cms.untracked.double(0.1),
+                                  egammaIsoCut = cms.untracked.double(options.egammaIsoCut),
                                   egammaIsoLooseMax = cms.untracked.double(0.3),
                                   generatorMatchDR = cms.untracked.double(0.1),
                                   # high-pt-photon-id options
@@ -498,9 +428,15 @@ process.diphotonAnalyzer.mcXS = cms.untracked.double(options.mcXS)
 process.diphotonAnalyzer.mcN = cms.untracked.double(options.mcN)
 process.diphotonAnalyzer.runningOnTauTau = cms.untracked.bool(isTauTau)
 
+# the tau filter
+if options.taupreselection:
+  process.tauFilter = cms.EDFilter('ZtoTauHad',
+        tree = cms.untracked.bool(False),
+        filterByTruthDecayType = cms.untracked.vdouble(5.3,5.4),
+        )
+
 # The full cmssw configuration path
 if not options.taupreselection:
   process.path  = cms.Path(process.primaryVertexFilter * process.egmPhotonIDSequence * process.diphotonAnalyzer)
 else:
-  process.tauFilter = cms.EDFilter('ZtoTauHad')
   process.path  = cms.Path(process.primaryVertexFilter * process.tauFilter * process.egmPhotonIDSequence * process.diphotonAnalyzer)

@@ -164,182 +164,8 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(options.d
 # Source
 readFiles = []
 
-# SIGNAL MC
-if sample == "eta":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_generic.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal_eta_generic"
-elif sample == "eta_gg":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_gg.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal_eta_gg"
-elif sample == "eta_3pi0":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_3pi0.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal_eta_3pi0"
-elif sample == "eta_pipig":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_pipig.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal_eta_pipig"
-elif sample == "eta_pipipi0":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_pipipi0.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal_eta_pipipi0"
-
-elif sample == "etaprime":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_generic.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal_etaprime_generic"
-elif sample == "etaprime_pipiEta_gg":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_pipiEta_gg.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal_etaprime_pipiEta_gg"
-elif sample == "etaprime_pipiEta_3pi0":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_pipiEta_3pi0.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal_etaprime_pipiEta_3pi0"
-elif sample == "etaprime_pi0pi0Eta_pipipi0":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_pi0pi0Eta_pipipi0.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal_etaprime_pi0pi0Eta_pipipi0"
-elif sample == "etaprime_pi0pi0Eta_pipig":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_pi0pi0Eta_pipig.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal_etaprime_pi0pi0Eta_pipig"
-elif sample == "etaprime_grho":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_grho.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal_etaprime_grho"
-elif sample == "etaprime_gomega":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Etaprime_gomega.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal_etaprime_gomega"
-
-elif sample == "signal125":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_125_pipipi0.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal125"
-elif sample == "signal300":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_300_pipipi0.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal300"
-elif sample == "signal500":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_500_pipipi0.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal500"
-elif sample == "signal750":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_750_pipipi0.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal750"
-elif sample == "signal1000":
-    readFiles.extend( [
-        'file:/cms/chiarito/samples/signal/miniaod/MiniAODv2_Eta_1000_pipipi0.root' ] )
-    if options.local:
-      isSignal = True
-      doLumis = False
-      mcInfo = True
-      globalTag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
-      if outname == "":
-        outname = "signal1000"
-
 # DATA
-elif sample == "jet":
+if sample == "jet":
     # 100k events
     readFiles.extend( [
        '/store/data/Run2016G/JetHT/MINIAOD/03Feb2017-v1/100000/006E7AF2-AEEC-E611-A88D-7845C4FC3B00.root' ] )
@@ -361,21 +187,9 @@ elif sample == "photon":
       globalTag = "80X_dataRun2_2016SeptRepro_v7"
       if outname == "":
         outname = "photon"
-# BKG MC
-elif sample == "qcd":
-    # 87k events
-    readFiles.extend( [
-       '/store/mc/RunIISummer16MiniAODv2/QCD_HT50to100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/70000/00957AED-CCB6-E611-85F1-0CC47A7E0104.root' ] )
-    if options.local:
-      isSignal = False
-      doLumis = False
-      mcInfo = True
-      globalTag = "80X_mcRun2_asymptotic_2016_TrancheIV_v6"
-      if outname == "":
-        outname = "qcd"
 
 # Z to ll
-elif sample == "ztoll":
+else:
     # 87k events
     readFiles.extend( [
        '/store/mc/RunIISummer16MiniAODv2/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/MINIAODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/100000/00BF45FC-5AED-E611-986A-A0000420FE80.root' ] )
@@ -386,10 +200,6 @@ elif sample == "ztoll":
       globalTag = "80X_mcRun2_asymptotic_2016_TrancheIV_v6"
       if outname == "":
         outname = "ztoll"
-
-# default
-elif options.local:
-    quit(sample+" is not a valid sample name!")
 
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( readFiles ))
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( options.maxEvents ) )
@@ -481,7 +291,62 @@ process.diphotonAnalyzer.mcN = cms.untracked.double(options.mcN)
 process.diphotonAnalyzer.runningOnTauTau = cms.untracked.bool(True)
 process.diphotonAnalyzer.candidateOptionalExtraTrack = cms.untracked.bool(False)
 
-process.tauFilter = cms.EDFilter('ZtoTauHad')
+# twoprong filter
+process.twoprongfilter = cms.EDFilter('TwoProngFilter',
+                                  # two-prong object
+                                  candidateMinPt = cms.untracked.double(options.minPt),
+                                  candidateAbsMaxEta = cms.untracked.double(options.maxEta),
+                                  candidateTrackAsymmetryCut = cms.untracked.double(options.trackAsym),
+                                  candidatePhotonAsymmetryCut = cms.untracked.double(options.photonAsym),
+                                  chargedHadronPairMinDR = cms.untracked.double(options.trackDR),
+                                  chargedHadronMinPt = cms.untracked.double(options.constituentMinPt),
+                                  photonPtCut = cms.untracked.double(options.constituentMinPt),
+                                  photonPhiBoxSize = cms.untracked.double(options.photonBoxPhi),
+                                  photonEtaBoxSize = cms.untracked.double(options.photonBoxEta),
+                                  isolationConeR = cms.untracked.double(0.3),
+                                  chargedIsoCut = cms.untracked.double(0.1),
+                                  chargedIsoLooseMax = cms.untracked.double(0.3),
+                                  neutralIsoCut = cms.untracked.double(0.1),
+                                  neutralIsoLooseMax = cms.untracked.double(0.3),
+                                  egammaIsoCut = cms.untracked.double(0.1),
+                                  egammaIsoLooseMax = cms.untracked.double(0.3),
+                                  generatorMatchDR = cms.untracked.double(0.1),
+                                  # high-pt-photon-id options
+                                  rho = cms.InputTag("fixedGridRhoFastjetAll"),
+                                  # HLT paths
+                                  bits = cms.InputTag("TriggerResults","","HLT"),
+                                  prescales = cms.InputTag("patTrigger"),
+                                  objects = cms.InputTag("selectedPatTrigger"),
+                                  )
+process.twoprongfilter.addPhotonCutDrConeHE = cms.untracked.bool(options.addConeHE)
+process.twoprongfilter.includeAllCandObjects = cms.untracked.bool(options.includeCands)
+process.twoprongfilter.includeOldPhotons = cms.untracked.bool(False)
+process.twoprongfilter.debug = cms.untracked.bool(options.debug)
+process.twoprongfilter.includeAllLooseObjects = cms.untracked.bool(options.includeLoose)
+process.twoprongfilter.includeSignalGenParticles = cms.untracked.bool(isSignal)
+process.twoprongfilter.makeTrees = cms.untracked.bool(False) # no ntuple for filter
+process.twoprongfilter.fakeRateHistos = cms.untracked.bool(options.fakeRateHistos)
+process.twoprongfilter.triggerEffHistos = cms.untracked.bool(options.triggerEffHistos)
+process.twoprongfilter.twoprongYieldHistos = cms.untracked.bool(options.twoprongYieldHistos)
+process.twoprongfilter.stackedDalitzHistos = cms.untracked.bool(options.stackedDalitzHistos)
+process.twoprongfilter.includeMCInfo = cms.untracked.bool(mcInfo)
+process.twoprongfilter.mcXS = cms.untracked.double(options.mcXS)
+process.twoprongfilter.mcN = cms.untracked.double(options.mcN)
+process.twoprongfilter.runningOnTauTau = cms.untracked.bool(True)
+process.twoprongfilter.candidateOptionalExtraTrack = cms.untracked.bool(False)
 
-# The full cmssw configuration path
-process.path  = cms.Path(process.primaryVertexFilter * process.tauFilter * process.egmPhotonIDSequence * process.diphotonAnalyzer)
+process.tauFilter = cms.EDFilter('ZtoTauHad', filterByMcTruth = cms.untracked.bool(True))
+
+# Paths
+process.filt  = cms.Path(process.primaryVertexFilter * process.tauFilter * process.egmPhotonIDSequence * process.twoprongfilter)
+
+process.out = cms.OutputModule("PoolOutputModule",
+      fileName = cms.untracked.string('DYJetsToLL_selected_ZtoTauTau_nTwoProng_MINIAOD.root'),
+      SelectEvents = cms.untracked.PSet(
+            SelectEvents = cms.vstring('filt') )
+)
+
+process.end = cms.EndPath(process.out)
+
+
+
