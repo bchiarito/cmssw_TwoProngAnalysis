@@ -77,6 +77,17 @@ bool passHadDrConeOverEmCut(const pat::Photon*);
 double corPhoIsoHighPtID(const pat::Photon*, double );
 bool compareCandsByPt(const edm::Ptr<const reco::Candidate> , const edm::Ptr<const reco::Candidate>);
 
+// temp for now global function
+bool isAncestorOfZ(const reco::Candidate * particle)
+{
+  if(particle->pdgId() == 23) return true;
+  for(size_t i=0; i<particle->numberOfMothers(); i++)
+  {
+    if(isAncestorOfZ(particle->mother(i))) return true;
+  }
+  return false;
+}
+
 //
 // class declaration
 //
@@ -355,6 +366,7 @@ private:
   vector<Double_t> fCand_MassEta_l;
   vector<Double_t> fCand_Mass300;
   vector<Bool_t> fCand_FoundExtraTrack;
+  vector<Int_t> fCand_nExtraTracks;
   vector<Double_t> fCand_CHpos_pt;
   vector<Double_t> fCand_CHpos_eta;
   vector<Double_t> fCand_CHpos_phi;
@@ -431,6 +443,8 @@ private:
   vector<Bool_t> fCand_passNeutralIso;
   vector<Bool_t> fCand_passEGammaIso;
   vector<Bool_t> fCand_passPhotonPt;
+  vector<Bool_t> fCand_passTrackAsymmetry;
+  vector<Bool_t> fCand_passPhotonAsymmetry;
   vector<Bool_t> fCand_loose;
   vector<Double_t> fCand_iso_gamma;
   vector<Double_t> fCand_iso_gamma_allPV;
@@ -452,6 +466,7 @@ private:
   vector<Double_t> fTwoProng_MassEta_l;
   vector<Double_t> fTwoProng_Mass300;
   vector<Bool_t> fTwoProng_FoundExtraTrack;
+  vector<Bool_t> fTwoProng_nExtraTracks;
   vector<Double_t> fTwoProng_px;
   vector<Double_t> fTwoProng_py;
   vector<Double_t> fTwoProng_pz;
@@ -536,6 +551,7 @@ private:
   vector<Double_t> fTwoProngLoose_MassEta_l;
   vector<Double_t> fTwoProngLoose_Mass300;
   vector<Bool_t> fTwoProngLoose_FoundExtraTrack;
+  vector<Bool_t> fTwoProngLoose_nExtraTracks;
   vector<Double_t> fTwoProngLoose_px;
   vector<Double_t> fTwoProngLoose_py;
   vector<Double_t> fTwoProngLoose_pz;
@@ -734,6 +750,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Cand_MassEta_l",&fCand_MassEta_l);
   fTree2->Branch("Cand_Mass300",&fCand_Mass300);
   fTree2->Branch("Cand_FoundExtraTrack",&fCand_FoundExtraTrack);
+  fTree2->Branch("Cand_nExtraTracks",&fCand_nExtraTracks);
   fTree2->Branch("Cand_CHpos_pt",&fCand_CHpos_pt);
   fTree2->Branch("Cand_CHpos_eta",&fCand_CHpos_eta);
   fTree2->Branch("Cand_CHpos_phi",&fCand_CHpos_phi);
@@ -798,6 +815,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Cand_passNeutralIso",&fCand_passNeutralIso);
   fTree2->Branch("Cand_passEGammaIso",&fCand_passEGammaIso);
   fTree2->Branch("Cand_passPhotonPt",&fCand_passPhotonPt);
+  fTree2->Branch("Cand_passTrackAsymmetry",&fCand_passTrackAsymmetry);
+  fTree2->Branch("Cand_passPhotonAsymmetry",&fCand_passPhotonAsymmetry);
   fTree2->Branch("Cand_mPosPho",&fCand_mPosPho);
   fTree2->Branch("Cand_mPosPho_l",&fCand_mPosPho_l);
   fTree2->Branch("Cand_mPosPho_pi0",&fCand_mPosPho_pi0);
@@ -833,6 +852,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("TwoProngLoose_MassEta_l",&fTwoProngLoose_MassEta_l);
   fTree2->Branch("TwoProngLoose_Mass300",&fTwoProngLoose_Mass300);
   fTree2->Branch("TwoProngLoose_FoundExtraTrack",&fTwoProngLoose_FoundExtraTrack);
+  fTree2->Branch("TwoProngLoose_nExtraTracks",&fTwoProngLoose_nExtraTracks);
   fTree2->Branch("TwoProngLoose_px",&fTwoProngLoose_px);
   fTree2->Branch("TwoProngLoose_py",&fTwoProngLoose_py);
   fTree2->Branch("TwoProngLoose_pz",&fTwoProngLoose_pz);
@@ -911,6 +931,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("TwoProng_MassEta_l",&fTwoProng_MassEta_l);
   fTree2->Branch("TwoProng_Mass300",&fTwoProng_Mass300);
   fTree2->Branch("TwoProng_FoundExtraTrack",&fTwoProng_FoundExtraTrack);
+  fTree2->Branch("TwoProng_nExtraTracks",&fTwoProng_nExtraTracks);
   fTree2->Branch("TwoProng_px",&fTwoProng_px);
   fTree2->Branch("TwoProng_py",&fTwoProng_py);
   fTree2->Branch("TwoProng_pz",&fTwoProng_pz);
@@ -1298,6 +1319,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fCand_MassEta_l.clear();
   fCand_Mass300.clear();
   fCand_FoundExtraTrack.clear();
+  fCand_nExtraTracks.clear();
   fCand_CHpos_pt.clear();
   fCand_CHpos_eta.clear();
   fCand_CHpos_phi.clear();
@@ -1374,12 +1396,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fCand_passNeutralIso.clear();
   fCand_passEGammaIso.clear();
   fCand_passPhotonPt.clear();
-  fCand_loose.clear();
-  fCand_tight.clear();
-  fCand_passChargedIso.clear();
-  fCand_passNeutralIso.clear();
-  fCand_passEGammaIso.clear();
-  fCand_passPhotonPt.clear();
+  fCand_passTrackAsymmetry.clear();
+  fCand_passPhotonAsymmetry.clear();
   fCand_loose.clear();
   fCand_iso_gamma.clear();
   fCand_iso_gamma_allPV.clear();
@@ -1405,6 +1423,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fTwoProngLoose_MassEta_l.clear();
   fTwoProngLoose_Mass300.clear();
   fTwoProngLoose_FoundExtraTrack.clear();
+  fTwoProngLoose_nExtraTracks.clear();
   fTwoProngLoose_CHpos_pt.clear();
   fTwoProngLoose_CHpos_eta.clear();
   fTwoProngLoose_CHpos_phi.clear();
@@ -1482,6 +1501,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fTwoProng_MassEta_l.clear();
   fTwoProng_Mass300.clear();
   fTwoProng_FoundExtraTrack.clear();
+  fTwoProng_nExtraTracks.clear();
   fTwoProng_CHpos_pt.clear();
   fTwoProng_CHpos_eta.clear();
   fTwoProng_CHpos_phi.clear();
@@ -1879,8 +1899,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       double dr = pfcand1.DeltaR(pfcand2);
       if (dr < fCandidatePairDR) {
         // search for extra tracks
-        vector<unsigned int> extras;
+        vector<unsigned int> index_of_extras;
         for (unsigned int e = 0; e < pfcands->size(); e++) {
+          if (e == i || e == j) continue;
           const pat::PackedCandidate &pfextra = (*pfcands)[e];
           if (pfextra.pt() < fCandidatePairMinPt) continue;
           if (pfextra.fromPV()<=1) continue;
@@ -1889,23 +1910,36 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           pfcandextra.SetPtEtaPhiE(pfextra.pt(), pfextra.eta(), pfextra.phiAtVtx(), pfextra.energy());
           double dr = max( pfcand1.DeltaR(pfcandextra), pfcand2.DeltaR(pfcandextra) );
           if (dr > fCandidatePairDR) continue;
-          extras.push_back(e);
+          index_of_extras.push_back(e);
         }
-        unsigned int extra = 99999;
+        unsigned int index_of_extra = 99999;
         bool found_extra_track = false;
         TLorentzVector pfcandextra;       
-        if (extras.size() == 1) {
-          const pat::PackedCandidate &pfextra = (*pfcands)[extras[0]];
-          extra = extras[0];
+        if (index_of_extras.size() == 1) {
+          index_of_extra = index_of_extras[0];
+          const pat::PackedCandidate &pfextra = (*pfcands)[index_of_extra];
+          pfcandextra.SetPtEtaPhiE(pfextra.pt(), pfextra.eta(), pfextra.phiAtVtx(), pfextra.energy());
+          found_extra_track = true;
+        }
+        if (index_of_extras.size() >= 2) {
+          double largest_pt_extra = -1.0;
+          for (unsigned int index : index_of_extras) {
+            double pt_of_extra = ((*pfcands)[index]).pt();
+            if (pt_of_extra > largest_pt_extra) {
+              largest_pt_extra = pt_of_extra;
+              index_of_extra = index; 
+            }
+          }
+          const pat::PackedCandidate &pfextra = (*pfcands)[index_of_extra];
           pfcandextra.SetPtEtaPhiE(pfextra.pt(), pfextra.eta(), pfextra.phiAtVtx(), pfextra.energy());
           found_extra_track = true;
         }
         // now define photon
         TLorentzVector center;
         if (fCandidateOptionalExtraTrack && found_extra_track) {
-          center = pfcand1 + pfcand2 + pfcandextra; }
+          center = pfcand1 + pfcand2; }
         else {
-          center = pfcand1 + pfcand2;}
+          center = pfcand1 + pfcand2; }
         TLorentzVector photon;
         TLorentzVector leading_pf_photon;
         int numgamma = 0;
@@ -1938,6 +1972,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
         if (n != -1) {
           TLorentzVector TwoProngObject;
           TwoProngObject = center + photon;
+          if (fCandidateOptionalExtraTrack && found_extra_track) {
+            TwoProngObject = center + photon + pfcandextra;
+          }
 
           leading_pf_photon.SetPtEtaPhiE((*pfcands)[n].pt(), (*pfcands)[n].eta(), (*pfcands)[n].phiAtVtx(), (*pfcands)[n].energy());
 
@@ -1958,15 +1995,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
           if (fabs(TwoProngObject.Eta()) > fCandidateAbsMaxEta) continue;
           if (TwoProngObject.Pt() < fCandidateMinPt) continue;
-          double track_asymmetry = min(pfcand1.Pt(),pfcand2.Pt()) / max(pfcand1.Pt(),pfcand2.Pt());
-          double photon_asymmetry = min(pfcand1.Pt()+pfcand2.Pt(),photon.Pt()) / max(pfcand1.Pt()+pfcand2.Pt(),photon.Pt());
-          if(track_asymmetry < fCandidateTrackAsymmetryCut) continue;
-          if(photon_asymmetry < fCandidatePhotonAsymmetryCut) continue;
+
           // CH pair within dr range
           // has at least one pf photon
           // |eta| <= eta requirement
           // pt >= min pt requirement
-          // passes asymmetry cuts
           //   meets definition of candidate twoprong, fill candidate vectors
           TLorentzVector poscand;
           TLorentzVector negcand;
@@ -2054,9 +2087,6 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           fCand_MassEta_l.push_back( (center + leading_pf_photon_as_eta).M() );
           fCand_Mass300.push_back( (center + photon_summed_as_300).M() );
 
-          fCand_trackAsym.push_back(track_asymmetry);
-          fCand_photonAsym.push_back(photon_asymmetry);
-
           fCand_mPosPho.push_back( (poscand + photon).M2() );
           fCand_mPosPho_l.push_back( (poscand + leading_pf_photon).M2() );
           fCand_mPosPho_pi0.push_back( (poscand + photon_summed_as_pi0).M2() );
@@ -2072,6 +2102,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           fCand_photon_p3.push_back(photon.P());
 
           fCand_FoundExtraTrack.push_back(found_extra_track);
+          fCand_nExtraTracks.push_back(index_of_extras.size());
 
           // Now define isolations
           double chargedIso = 0;
@@ -2090,7 +2121,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
             // charged (incl. muons)
             if (abs(pf4.pdgId()) == 13 || abs(pf4.pdgId()) == 211) {
               if ( center.DeltaR(pfcand4) < fCandidatePairIsolationDR && !(m == i || m == j) ) { // don't include one of CH from CH pair 
-                if ((found_extra_track && m != extra) || !found_extra_track) { // if we are including an extra track, skip it
+                if ((fCandidateOptionalExtraTrack && found_extra_track && m != index_of_extra) || !fCandidateOptionalExtraTrack  || !found_extra_track) { // if including an extra track, skip its iso
                   chargedIso += pfcand4.Pt();
                   chargedIsoCount++;
                   fCand_isoPF_vz.push_back( pf4.vz() );
@@ -2162,14 +2193,22 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           fCand_iso_ch_rel.push_back(chargedIso/TwoProngObject.Pt());
           fCand_iso_gammacor1.push_back(isoGammaCor1);
           fCand_iso_gammacor2.push_back(isoGammaCor2);
-          
+
+          // Asymmetry variables          
+          double track_asymmetry = min(pfcand1.Pt(),pfcand2.Pt()) / max(pfcand1.Pt(),pfcand2.Pt());
+          double photon_asymmetry = min(pfcand1.Pt()+pfcand2.Pt(),photon.Pt()) / max(pfcand1.Pt()+pfcand2.Pt(),photon.Pt());
+          bool passTrackAsymmetry = (track_asymmetry > fCandidateTrackAsymmetryCut);
+          bool passPhotonAsymmetry = (photon_asymmetry > fCandidatePhotonAsymmetryCut);
+          fCand_trackAsym.push_back(track_asymmetry);
+          fCand_photonAsym.push_back(photon_asymmetry);
+
           // Selection on Candidates
           bool passCharged = relchargedIso < fCandidatePairChargedIsoCut;
           bool passNeutral = relneutralIso < fCandidatePairNeutralIsoCut;
           bool passEGamma = relegammaIso < fCandidatePairEGammaIsoCut;
           bool passPhotonPt = photon.Pt() > fCandidatePairPhotonPtCut;
-          bool tight = passCharged && passNeutral && passEGamma && passPhotonPt;
-          bool loose = !tight && passPhotonPt &&
+          bool tight = passCharged && passNeutral && passEGamma && passPhotonPt && passTrackAsymmetry && passPhotonAsymmetry;
+          bool loose = !tight && passPhotonPt && passTrackAsymmetry && passPhotonAsymmetry &&
                        relchargedIso < fCandidatePairChargedIsoFakeCut &&
                        relneutralIso < fCandidatePairNeutralIsoFakeCut &&
                        relegammaIso < fCandidatePairEGammaIsoFakeCut;
@@ -2178,6 +2217,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           fCand_passNeutralIso.push_back(passNeutral);
           fCand_passEGammaIso.push_back(passEGamma);
           fCand_passPhotonPt.push_back(passPhotonPt);
+          fCand_passTrackAsymmetry.push_back(passTrackAsymmetry);
+          fCand_passPhotonAsymmetry.push_back(passPhotonAsymmetry);
           fCand_loose.push_back(loose);
 
           if (fDebug) cout << ". doing gen matching" << endl;
@@ -2282,6 +2323,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       fTwoProngLoose_MassEta_l.push_back(fCand_MassEta_l[index]);
       fTwoProngLoose_Mass300.push_back(fCand_Mass300[index]);
       fTwoProngLoose_FoundExtraTrack.push_back(fCand_FoundExtraTrack[index]);
+      fTwoProngLoose_nExtraTracks.push_back(fCand_nExtraTracks[index]);
       fTwoProngLoose_CHpos_pt.push_back(fCand_CHpos_pt[index]);
       fTwoProngLoose_CHpos_eta.push_back(fCand_CHpos_eta[index]);
       fTwoProngLoose_CHpos_phi.push_back(fCand_CHpos_phi[index]);
@@ -2355,6 +2397,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       fTwoProng_MassEta_l.push_back(fCand_MassEta_l[index]);
       fTwoProng_Mass300.push_back(fCand_Mass300[index]);
       fTwoProng_FoundExtraTrack.push_back(fCand_FoundExtraTrack[index]);
+      fTwoProng_nExtraTracks.push_back(fCand_nExtraTracks[index]);
       fTwoProng_CHpos_pt.push_back(fCand_CHpos_pt[index]);
       fTwoProng_CHpos_eta.push_back(fCand_CHpos_eta[index]);
       fTwoProng_CHpos_phi.push_back(fCand_CHpos_phi[index]);
@@ -2516,6 +2559,17 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle & genparticle = (*genparticles)[i];
       if (abs(genparticle.pdgId()) != 15) continue;
+      if (!isAncestorOfZ(&genparticle)) continue;
+      vector<string> leptons = getDecay(genparticle);
+      if (! (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() ||
+          std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() ||
+          std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() ||
+          std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() ||
+          std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end() ||
+          std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end() ||
+          std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end() ||
+          std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end() )
+        ) continue; // only including hadronically decaying taus in gen tau collection
       TLorentzVector GenParticle;
       GenParticle.SetPtEtaPhiM(genparticle.pt(), genparticle.eta(), genparticle.phi(), genparticle.mass());
       fGenTau_pt.push_back(genparticle.pt());
