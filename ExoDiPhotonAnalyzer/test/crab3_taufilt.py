@@ -3,15 +3,15 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'ztoll_truth3iprong_ex_con1_box01x04_dr15_taketwo_crab3jobs'
+config.General.workArea = 'taufilt_30prong_pt40_eta25_crab3jobs'
 config.section_('JobType')
-config.JobType.psetName = 'exodiphotonanalyzer_samples_cfg.py'
-config.JobType.pyCfgParams = ['local=False','globalTag=80X_mcRun2_asymptotic_2016_TrancheIV_v6','mcInfo=True','taupreselection=True','optionalExtraTrack=False','isTauTau=True','includeCands=True','constituentMinPt=1','photonBoxEta=0.1','photonBoxPhi=0.4','trackDR=0.15']
+config.JobType.psetName = 'taupreselection_30prong_pt40_eta25_cfg.py'
+config.JobType.pyCfgParams = []
 config.JobType.pluginName = 'Analysis'
 config.JobType.maxMemoryMB = 2500 # default = 2000
 config.JobType.maxJobRuntimeMin = 1315 # default = 1315 (22 hrs)
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprongstudies/trees/ztoll/truth3iprong_ex_con1_box01x04_dr15_taketwo'
+config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprongstudies/miniaod/ztoll/taufilt_30prong_pt40_eta25'
 config.Data.publication = False
 config.Data.unitsPerJob = 500000
 config.Data.totalUnits = -1
@@ -58,5 +58,5 @@ if __name__ == '__main__':
     config.General.requestName = 'DYJetsToLL_M10to50'
     config.Data.inputDataset = '/DYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcXS=1','mcN=1'])
-    #submit(config)
+    submit(config)
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
