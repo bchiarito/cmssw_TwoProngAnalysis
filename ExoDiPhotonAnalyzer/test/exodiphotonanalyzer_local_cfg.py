@@ -398,8 +398,7 @@ process.diphotonAnalyzer.runningOnTauTauMC = cms.untracked.bool(isTauTau)
 
 # the tau filter
 if options.taupreselection:
-  process.tauFilter = cms.EDFilter('ZtoTauHad',
-        tree = cms.untracked.bool(False),
+  process.tauFilter = cms.EDFilter('ZtoTauHadTruthSelector',
         filterByTruthDecayType = cms.untracked.vdouble(5.4,5.3),
         ptMin = cms.untracked.double(40.0),
         absEtaMax = cms.untracked.double(2.5),

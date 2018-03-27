@@ -11,8 +11,7 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32 (10000))
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.filt = cms.EDFilter('ZtoTauHad',
-  tree = cms.untracked.bool(False),
+process.filt = cms.EDFilter('ZtoTauHadTruthSelector',
   filterByTruthDecayType = cms.untracked.vdouble(5.4),
   ptMin = cms.untracked.double(40.0),
   absEtaMax = cms.untracked.double(2.5),
