@@ -2194,9 +2194,17 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
           fCand_iso_gammacor1.push_back(isoGammaCor1);
           fCand_iso_gammacor2.push_back(isoGammaCor2);
 
-          // Asymmetry variables          
-          double track_asymmetry = min(pfcand1.Pt(),pfcand2.Pt()) / max(pfcand1.Pt(),pfcand2.Pt());
-          double photon_asymmetry = min(pfcand1.Pt()+pfcand2.Pt(),photon.Pt()) / max(pfcand1.Pt()+pfcand2.Pt(),photon.Pt());
+          // Asymmetry variables
+          double track_asymmetry = 1.0;
+          double photon_asymmetry = 1.0;
+          if (!fCandidateOptionalExtraTrack || !found_extra_track) {
+            track_asymmetry = min(pfcand1.Pt(),pfcand2.Pt()) / max(pfcand1.Pt(),pfcand2.Pt());
+            photon_asymmetry = min(pfcand1.Pt()+pfcand2.Pt(),photon.Pt()) / max(pfcand1.Pt()+pfcand2.Pt(),photon.Pt());
+          }
+          else {
+            track_asymmetry = min( min(pfcand1.Pt(),pfcand2.Pt()), pfcandextra.Pt()) / max( max(pfcand1.Pt(),pfcand2.Pt()), pfcandextra.Pt() );
+            photon_asymmetry = min(pfcand1.Pt()+pfcand2.Pt()+pfcandextra.Pt(),photon.Pt()) / max(pfcand1.Pt()+pfcand2.Pt()+pfcandextra.Pt(),photon.Pt());
+          }
           bool passTrackAsymmetry = (track_asymmetry > fCandidateTrackAsymmetryCut);
           bool passPhotonAsymmetry = (photon_asymmetry > fCandidatePhotonAsymmetryCut);
           fCand_trackAsym.push_back(track_asymmetry);
