@@ -73,28 +73,28 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   generatorMatchDR = cms.untracked.double(0.1),
                                   # high-pt-photon-id options
                                   rho = cms.InputTag("fixedGridRhoFastjetAll"),
-                                  addPhotonCutDrConeHE = cms.untracked.bool(False)
-                                  includeOldPhotons = cms.untracked.bool(False)
+                                  addPhotonCutDrConeHE = cms.untracked.bool(False),
+                                  includeOldPhotons = cms.untracked.bool(False),
                                   # HLT paths
                                   bits = cms.InputTag("TriggerResults","","HLT"),
                                   prescales = cms.InputTag("patTrigger"),
                                   objects = cms.InputTag("selectedPatTrigger"),
                                   # MC options
-                                  includeSignalGenParticles = cms.untracked.bool(False)
-                                  includeMCInfo = cms.untracked.bool(False)
-                                  mcXS = cms.untracked.double(1.0)
-                                  mcN = cms.untracked.double(1.0)
-                                  runningOnTauTauMC = cms.untracked.bool(False)
+                                  includeSignalGenParticles = cms.untracked.bool(False),
+                                  includeMCInfo = cms.untracked.bool(False),
+                                  mcXS = cms.untracked.double(1.0),
+                                  mcN = cms.untracked.double(1.0),
+                                  runningOnTauTauMC = cms.untracked.bool(False),
                                   # control output
-                                  makeTrees = cms.untracked.bool(True)
-                                  includeAllCandObjects = cms.untracked.bool(True)
-                                  includeAllLooseObjects = cms.untracked.bool(False)
-                                  debug = cms.untracked.bool(False)
+                                  makeTrees = cms.untracked.bool(True),
+                                  includeAllCandObjects = cms.untracked.bool(True),
+                                  includeAllLooseObjects = cms.untracked.bool(False),
+                                  debug = cms.untracked.bool(False),
                                   # histos
-                                  fakeRateHistos = cms.untracked.bool(False)
-                                  triggerEffHistos = cms.untracked.bool(False)
-                                  twoprongYieldHistos = cms.untracked.bool(False)
-                                  stackedDalitzHistos = cms.untracked.bool(False)
+                                  fakeRateHistos = cms.untracked.bool(False),
+                                  triggerEffHistos = cms.untracked.bool(False),
+                                  twoprongYieldHistos = cms.untracked.bool(False),
+                                  stackedDalitzHistos = cms.untracked.bool(False),
                                   )
 
 process.path  = cms.Path(process.primaryVertexFilter * process.egmPhotonIDSequence * process.diphotonAnalyzer)
