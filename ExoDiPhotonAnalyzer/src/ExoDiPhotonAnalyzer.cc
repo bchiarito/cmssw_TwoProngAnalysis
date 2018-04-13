@@ -622,9 +622,11 @@ private:
   vector<Double_t> fTwoProngLoose_genOmega_dR;
   vector<Double_t> fTwoProngLoose_genTau_dR;
 
-  ExoDiPhotons::recoDiObjectInfo_t fRecoPhiDiTwoProng; 
-  ExoDiPhotons::recoDiObjectInfo_t fRecoPhiPhotonTwoProng; 
-  ExoDiPhotons::recoDiObjectInfo_t fRecoPhiInclusive; 
+  ExoDiPhotons::recoDiObjectInfo_t fRecoPhiDiTwoProng;
+  ExoDiPhotons::recoDiObjectInfo_t fRecoPhiPhotonTwoProng;
+  ExoDiPhotons::recoDiObjectInfo_t fRecoPhiInclusive;
+
+  double fZvis_mass;
 };
 
 //
@@ -1080,6 +1082,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("RecoPhiDiTwoProng",&fRecoPhiDiTwoProng,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("RecoPhiPhotonTwoProng",&fRecoPhiPhotonTwoProng,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("RecoPhiInclusive",&fRecoPhiInclusive,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("Zvis_mass",&fZvis_mass,"Zvis_mass/D");
   }
   // Fake rate histograms
   int num_even_mass_bins = 9;
@@ -2778,6 +2781,32 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     FillRecoDiObjectInfo(fRecoPhiInclusive, LeadingTwoProng, LeadingSecondary);
   }
   if (fDebug) cout << ". done making reco phi inclusive" << endl;
+
+  // make visible Z
+  vector<const pat::Muon *> passedMuons;
+  for (const pat::Muon &muon : *muons) {
+    if (muon.pt() > 19.0 &&
+        fabs(muon.eta()) < 2.1 &&
+        //(muon.chargedHadronIso() + muon.neutralHadronIso() + muon.photonIso())/muon.pt() - 0.5 * (*rho) < 0.1 &&
+        (muon.chargedHadronIso() + muon.neutralHadronIso() + muon.photonIso())/muon.pt() < 0.1 &&
+        muon.muonBestTrack()->dz((*primaryvertecies)[0].position()) < 0.2 &&
+        abs(muon.muonBestTrack()->dxy((*primaryvertecies)[0].position())) < 0.045 &&
+        muon.isMediumMuon() )
+      passedMuons.push_back(&muon);
+  }
+
+  if(passedMuons.size() > 0 && fNumTwoProngPass)
+  {
+    unsigned int muonIndex = 0;
+    for(unsigned int i = 0; i < passedMuons.size(); i++) {
+      if(passedMuons[i]->pt() < passedMuons[muonIndex]->pt()) muonIndex = i;
+    }
+    TLorentzVector theMuon; theMuon.SetPtEtaPhiE(passedMuons[muonIndex]->pt(), passedMuons[muonIndex]->eta(), passedMuons[muonIndex]->phi(), passedMuons[muonIndex]->energy());
+    TLorentzVector theTwoProng; theTwoProng.SetPtEtaPhiE(fTwoProng_pt[0],fTwoProng_eta[0],fTwoProng_phi[0],fTwoProng_energy[0]);
+    TLorentzVector Z_visible;
+    Z_visible = theMuon + theTwoProng;
+    fZvis_mass = Z_visible.M();
+  }
 
   // Now fill fTree2
   if (fMakeTrees) fTree2->Fill();
