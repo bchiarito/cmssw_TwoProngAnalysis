@@ -2,6 +2,7 @@ from FWCore.ParameterSet.VarParsing import VarParsing
 # Command line options
 options = VarParsing ('python')
 options.setDefault('maxEvents', 100)
+options.register("sample", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "which sample we want to run over")
 options.parseArguments()
 
 # Begin configuration
@@ -10,8 +11,8 @@ process = cms.Process("ExoDiPhotonAnalysis")
 
 # Log messages
 process.load("FWCore.MessageService.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
-process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(options.debug) )
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
+process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
 
 # Source
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( options.sample ))
