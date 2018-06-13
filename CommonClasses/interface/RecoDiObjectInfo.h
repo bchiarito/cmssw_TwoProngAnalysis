@@ -1,16 +1,6 @@
 #ifndef RECO_DIOBJECT_INFO_INC
 #define RECO_DIOBJECT_INFO_INC
 
-//********************************************************************
-// Definition of a struct that can be used for storing reco charged type decaying eta info
-// in a tree, from different analysers
-// Also includes a Fill function to fill the struct from the appropriate objects
-// and a string that can be used to define the tree branch
-// 
-//  $Id: RecoTwoProngInfo.h,v 1.00 2016 16:26:48 charaf Exp $
-// 
-//********************************************************************
-
 #include <string>
 
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -19,14 +9,6 @@
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Framework/interface/ESHandle.h"
-
-// geometry
-#include "Geometry/CaloGeometry/interface/CaloGeometry.h"
-#include "Geometry/Records/interface/CaloGeometryRecord.h"
-#include "Geometry/EcalAlgo/interface/EcalPreshowerGeometry.h"
-#include "RecoCaloTools/Navigation/interface/CaloNavigator.h"
-#include "Geometry/CaloTopology/interface/CaloTopology.h"
-#include "Geometry/CaloEventSetup/interface/CaloTopologyRecord.h"
 
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidateFwd.h"
 #include "DataFormats/ParticleFlowCandidate/interface/PFCandidate.h"
@@ -41,25 +23,24 @@ namespace ExoDiPhotons
     Double_t phi;
     Double_t eta;
     Double_t mass;
-    Double_t px;
-    Double_t py;
-    Double_t pz;
     Double_t energy;
+    Double_t part1_pt;
+    Double_t part1_eta;
+    Double_t part1_phi;
+    Double_t part1_mass;
+    Double_t part1_energy;
+    Double_t part2_pt;
+    Double_t part2_eta;
+    Double_t part2_phi;
+    Double_t part2_mass;
+    Double_t part2_energy;
     Double_t dR;
-    Double_t dPt;
-    Double_t dPhi;
-    Double_t dEta;
-    Double_t dMass;
   };
 
-  // also include a string that can be used to define the tree branch
-  // obviously this needs to be kept up-to-date with the struct definition
-  // but now at least this only needs to be done here in this file, 
-  // rather than in each individual analyser 
-  std::string recoDiObjectBranchDefString("pt/D:phi/D:eta/D:mass/D:px/D:py/D:pz/D:energy/D:dR/D:dPt/D:dPhi/D:dEta/D:dMass/D");
+  // to set branch string
+  std::string recoDiObjectBranchDefString("pt/D:phi/D:eta/D:mass/D:energy/D:part1_pt/D:part1_eta/D:part1_phi/D:part1_mass/D:part1_energy/D:part2_pt/D:part2_eta/D:part2_phi/D:part2_mass/D:part2_energy/D:dR/D");
 
-  // also want a Fill function, that can fill the struct values from the appropriate objects
-  // again, so that all editing only needs to be done here in this file
+  // fills the struct from two TLorentzVectors
   void FillRecoDiObjectInfo(recoDiObjectInfo_t &recodiobjectinfo, TLorentzVector vec1, TLorentzVector vec2)
   {
     TLorentzVector comb = vec1 + vec2;
@@ -67,34 +48,45 @@ namespace ExoDiPhotons
     recodiobjectinfo.phi = comb.Phi();
     recodiobjectinfo.eta = comb.Eta();
     recodiobjectinfo.mass = comb.M();
-    recodiobjectinfo.px = comb.Px();
-    recodiobjectinfo.py = comb.Py();
-    recodiobjectinfo.pz = comb.Pz();
     recodiobjectinfo.energy = comb.E();
 
+    recodiobjectinfo.part1_pt = vec1.Pt();
+    recodiobjectinfo.part1_eta = vec1.Eta();
+    recodiobjectinfo.part1_phi = vec1.Phi();
+    recodiobjectinfo.part1_mass = vec1.M();
+    recodiobjectinfo.part1_energy = vec1.E();
+
+    recodiobjectinfo.part2_pt = vec1.Pt();
+    recodiobjectinfo.part2_eta = vec1.Eta();
+    recodiobjectinfo.part2_phi = vec1.Phi();
+    recodiobjectinfo.part2_mass = vec1.M();
+    recodiobjectinfo.part2_energy = vec1.E();
+
     recodiobjectinfo.dR = vec1.DeltaR(vec2);
-    recodiobjectinfo.dPt = fabs(vec1.Pt() - vec2.Pt());
-    recodiobjectinfo.dPhi = vec1.DeltaPhi(vec2);
-    recodiobjectinfo.dEta = fabs(vec1.Eta() - vec2.Eta());
-    recodiobjectinfo.dMass = fabs(vec1.M() - vec2.M());
   }
 
+  // initializes the struct
   void InitRecoDiObjectInfo(recoDiObjectInfo_t &recodiobjectinfo)
   {
     recodiobjectinfo.pt = -99.9;
     recodiobjectinfo.phi = -99.9;
     recodiobjectinfo.eta = -99.9;
     recodiobjectinfo.mass = -99.9;
-    recodiobjectinfo.px = -99.9;
-    recodiobjectinfo.py = -99.9;
-    recodiobjectinfo.pz = -99.9;
     recodiobjectinfo.energy = -99.9;
 
+    recodiobjectinfo.part1_pt = -99.9;
+    recodiobjectinfo.part1_eta = -99.9;
+    recodiobjectinfo.part1_phi = -99.9;
+    recodiobjectinfo.part1_mass = -99.9;
+    recodiobjectinfo.part1_energy = -99.9;
+
+    recodiobjectinfo.part2_pt = -99.9;
+    recodiobjectinfo.part2_eta = -99.9;
+    recodiobjectinfo.part2_phi = -99.9;
+    recodiobjectinfo.part2_mass = -99.9;
+    recodiobjectinfo.part2_energy = -99.9;
+
     recodiobjectinfo.dR = -99.9;
-    recodiobjectinfo.dPt = -99.9;
-    recodiobjectinfo.dPhi = -99.9;
-    recodiobjectinfo.dEta = -99.9;
-    recodiobjectinfo.dMass = -99.9;
   }
 
 } //end of namespace
