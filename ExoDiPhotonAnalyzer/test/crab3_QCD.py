@@ -3,14 +3,13 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'qcd_fullrun_con5_crab3jobs'
+config.General.workArea = 'crab_mutlicrabjobs_qcd_twoprongntuplizer'
 config.section_('JobType')
-config.JobType.psetName = 'exodiphotonanalyzer_minimal_cfg.py'
-config.JobType.pyCfgParams = ['local=False','globalTag=80X_mcRun2_asymptotic_2016_TrancheIV_v6','mcInfo=True','constituentMinPt=5.0']
+config.JobType.psetName = 'twoprongntuplizer_crab_cfg.py'
+config.JobType.pyCfgParams = []
 config.JobType.pluginName = 'Analysis'
-config.JobType.maxMemoryMB = 4000
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprongstudies/trees/qcd/fullrun_con5/'
+config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprongstudies/trees/qcd/'
 config.Data.publication = False
 config.Data.unitsPerJob = 250000
 config.Data.totalUnits = -1
