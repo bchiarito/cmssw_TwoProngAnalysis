@@ -3,16 +3,16 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_mutlicrabjobs_qcd_twoprongntuplizer'
+config.General.workArea = 'crab_mutli_qcd_twoprongntuplizer'
 config.section_('JobType')
 config.JobType.psetName = 'twoprongntuplizer_crab_cfg.py'
 config.JobType.pyCfgParams = []
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprongstudies/trees/qcd/'
+config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/trees/qcd/'
 config.Data.publication = False
 config.Data.unitsPerJob = 250000
-config.Data.totalUnits = -1
+config.Data.totalUnits =  250000
 config.Data.splitting = 'EventAwareLumiBased'
 config.Data.lumiMask = ''
 config.section_('User')
