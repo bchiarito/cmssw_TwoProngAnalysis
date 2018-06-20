@@ -3,7 +3,7 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_mutli_qcd_twoprongntuplizer'
+config.General.workArea = 'crab_multi_qcd_twoprongntuplizer'
 config.section_('JobType')
 config.JobType.psetName = 'twoprongntuplizer_crab_cfg.py'
 config.JobType.pyCfgParams = []
