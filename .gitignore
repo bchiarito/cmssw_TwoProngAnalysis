@@ -8,3 +8,4 @@ crab.log
 *.pdf
 *.png
 *.txt
+crab_multi*/
