@@ -1623,6 +1623,16 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fAK4jet_phi.clear();
   fAK4jet_mass.clear();
 
+  fElectron_pt.clear();
+  fElectron_eta.clear();
+  fElectron_phi.clear();
+  fElectron_mass.clear();
+
+  fMuon_pt.clear();
+  fMuon_eta.clear();
+  fMuon_phi.clear();
+  fMuon_mass.clear();
+
   fPhoton_pt.clear();
   fPhoton_eta.clear();
   fPhoton_phi.clear();
