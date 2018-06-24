@@ -2,6 +2,7 @@
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('python')
 options.register("sample", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "which sample we want to run over")
+options.register('cmssw76X', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "running in 76X vs 80X")
 options.register("out", '', VarParsing.multiplicity.singleton, VarParsing.varType.string, "output file name")
 options.register('debug', False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "True includes all output, False removes most of the per event output")
 options.register('globalTag', '', VarParsing.multiplicity.singleton, VarParsing.varType.string, "global tag to use when running")
@@ -70,7 +71,10 @@ process.GlobalTag.globaltag = options.globalTag
 process.options.allowUnscheduled = cms.untracked.bool(True)
 
 # Geometry for photon saturation 
-process.load("Configuration.StandardSequences.GeometryDB_cff")
+if not options.cmssw76X:
+  process.load("Configuration.StandardSequences.GeometryDB_cff")
+else:
+  process.load("Configuration.Geometry.GeometryECALHCAL_cff")
 
 # filter on vertices
 vtxCollName = 'offlineSlimmedPrimaryVertices'
