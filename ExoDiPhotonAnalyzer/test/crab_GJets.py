@@ -3,16 +3,16 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_gjets_twoprongntuplizer'
+config.General.workArea = 'crab_multi_GJets_twoprongntuplizer'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_crab_cfg.py'
-config.JobType.pyCfgParams = []
+config.JobType.pyCfgParams = ['globalTag=80X_mcRun2_asymptotic_2016_TrancheIV_v8']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
 config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/trees/gjets/'
 config.Data.publication = False
 config.Data.unitsPerJob = 250000
-config.Data.totalUnits =  250000
+config.Data.totalUnits =  100
 config.Data.splitting = 'EventAwareLumiBased'
 config.Data.lumiMask = ''
 config.section_('User')
