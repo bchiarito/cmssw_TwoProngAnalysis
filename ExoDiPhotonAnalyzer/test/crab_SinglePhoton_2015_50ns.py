@@ -13,7 +13,7 @@ config.section_('Data')
 config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/photon2015_50ns/' % (getUsernameFromSiteDB())
 config.Data.publication = False
 config.Data.unitsPerJob = 100
-config.Data.totalUnits = 1
+config.Data.totalUnits = -1
 config.Data.splitting = 'LumiBased'
 config.Data.lumiMask = 'Cert_13TeV_16Dec2015ReReco_Collisions15_50ns_JSON_v2.txt'
 config.section_('User')

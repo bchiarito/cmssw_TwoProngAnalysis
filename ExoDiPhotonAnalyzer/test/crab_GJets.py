@@ -12,7 +12,7 @@ config.section_('Data')
 config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/trees/gjets/'
 config.Data.publication = False
 config.Data.unitsPerJob = 250000
-config.Data.totalUnits =  100
+config.Data.totalUnits =  -1
 config.Data.splitting = 'EventAwareLumiBased'
 config.Data.lumiMask = ''
 config.section_('User')
