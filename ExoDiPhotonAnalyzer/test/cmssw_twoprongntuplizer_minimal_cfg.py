@@ -11,7 +11,7 @@ process = cms.Process("ExoDiPhotonAnalysis")
 
 # Log messages
 process.load("FWCore.MessageService.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
 
 # Source
@@ -34,13 +34,13 @@ process.options.allowUnscheduled = cms.untracked.bool(True)
 process.load("Configuration.StandardSequences.GeometryDB_cff")
 
 # Filter on vertices
-#vtxCollName = 'offlineSlimmedPrimaryVertices'
-#process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
-#                                           vertexCollection = cms.InputTag(vtxCollName),
-#                                           minimumNDOF = cms.uint32(4),
-#                                           maxAbsZ = cms.double(24),	
-#                                           maxd0 = cms.double(2)	
-#)
+vtxCollName = 'offlineSlimmedPrimaryVertices'
+process.primaryVertexFilter = cms.EDFilter("GoodVertexFilter",
+                                           vertexCollection = cms.InputTag(vtxCollName),
+                                           minimumNDOF = cms.uint32(4),
+                                           maxAbsZ = cms.double(24),	
+                                           maxd0 = cms.double(2)	
+)
 
 # adds computation of more Photon ID decisions, this block comes from high-pt-id code, but these ids are not currently being use in high-pt-id
 # included for reference and for agreement with high-pt-id framework
@@ -81,7 +81,7 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   prescales = cms.InputTag("patTrigger"),
                                   objects = cms.InputTag("selectedPatTrigger"),
                                   # MC options
-                                  includeSignalGenParticles = cms.untracked.bool(False),
+                                  includeSignalGenParticles = cms.untracked.bool(True),
                                   includeMCInfo = cms.untracked.bool(False),
                                   mcXS = cms.untracked.double(1.0),
                                   mcN = cms.untracked.double(1.0),
