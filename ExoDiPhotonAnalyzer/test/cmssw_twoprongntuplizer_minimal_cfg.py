@@ -75,7 +75,7 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   # high-pt-photon-id options
                                   rho = cms.InputTag("fixedGridRhoFastjetAll"),
                                   addPhotonCutDrConeHE = cms.untracked.bool(False),
-                                  includeOldPhotons = cms.untracked.bool(False),
+                                  includeOldPhotons = cms.untracked.bool(True),
                                   # HLT paths
                                   bits = cms.InputTag("TriggerResults","","HLT"),
                                   prescales = cms.InputTag("patTrigger"),
@@ -98,4 +98,4 @@ process.diphotonAnalyzer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   stackedDalitzHistos = cms.untracked.bool(False),
                                   )
 
-process.path  = cms.Path(process.primaryVertexFilter * process.egmPhotonIDSequence * process.diphotonAnalyzer)
+process.path  = cms.Path(process.egmPhotonIDSequence * process.diphotonAnalyzer)
