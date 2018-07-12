@@ -56,11 +56,11 @@ namespace ExoDiPhotons
     recodiobjectinfo.part1_mass = vec1.M();
     recodiobjectinfo.part1_energy = vec1.E();
 
-    recodiobjectinfo.part2_pt = vec1.Pt();
-    recodiobjectinfo.part2_eta = vec1.Eta();
-    recodiobjectinfo.part2_phi = vec1.Phi();
-    recodiobjectinfo.part2_mass = vec1.M();
-    recodiobjectinfo.part2_energy = vec1.E();
+    recodiobjectinfo.part2_pt = vec2.Pt();
+    recodiobjectinfo.part2_eta = vec2.Eta();
+    recodiobjectinfo.part2_phi = vec2.Phi();
+    recodiobjectinfo.part2_mass = vec2.M();
+    recodiobjectinfo.part2_energy = vec2.E();
 
     recodiobjectinfo.dR = vec1.DeltaR(vec2);
   }
