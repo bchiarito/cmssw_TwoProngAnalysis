@@ -128,7 +128,7 @@ private:
   bool               fincludeAllLooseObjects;    // include all loose twoprong objects in ntuple
   bool               fincludeAllCandObjects;     // include all twoprong candidate objects (no iso req) in ntuple
   bool               fincludeOldPhotons;         // include the Photon1,Photon2,Photon3 objects in ntuple
-  bool               fincludeMCInfo;             // include MC weight in ntuple from GenEventInfo
+  bool               fincludeMCInfo;             // include MC weight in ntuple from GenEventInfo, as well as pthat
   double             fMcXS;                      // the mc cross section for scaling purposes
   double             fMcN;                       // the mc number generated for scaling purposes
   bool               fMakeTrees;                // flag to include ttrees in output
@@ -249,6 +249,7 @@ private:
   // Main Ntuple Ttree and braches
   TTree *fTree2;
   double fTauDecayType;
+  double pthat;
   vector<Double_t> fGenTau_pt;
   vector<Double_t> fGenTau_eta;
   vector<Double_t> fGenTau_phi;
@@ -722,6 +723,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2 = fs->make<TTree>("fTree2","ChargedDecayTree");
   // Generator Objects
   fTree2->Branch("tauDecayType",&fTauDecayType,"tauDecayType/D");
+  fTree2->Branch("pthat",&fpthat,"pthat/D");
   fTree2->Branch("GenTau_pt",&fGenTau_pt);
   fTree2->Branch("GenTau_eta",&fGenTau_eta);
   fTree2->Branch("GenTau_phi",&fGenTau_phi);
@@ -1809,6 +1811,20 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     // fill MC weights
     fMcW = genEventInfo->weight();
     fMcWProd = genEventInfo->weightProduct();
+  }
+
+  // pthat, pt of the leading quark (relevant for MC QCD dijet events)
+  if (fincludeMCInfo) {
+    double pthat = -100.0;
+    for (unsigned int i = 0; i < genparticles->size(); i++) {
+      const reco::GenParticle &genparticle = (*genparticles)[i];
+      id = genparticle.pdgId()
+      if (genparticle.status() == 23 && (id == 1 || id == 2 || id == 3 || id == 4 || id == 5 || id == 6 || id == 21)) {
+        if (pthat < genparticle.pt()) {
+          pthat = genparticle.pt()
+        }
+      }
+    fpthat = pthat;
   }
 
   // Signal MC Generator information
