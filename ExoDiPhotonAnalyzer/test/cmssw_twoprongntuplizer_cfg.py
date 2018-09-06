@@ -126,8 +126,15 @@ process.TFileService = cms.Service( "TFileService", fileName = cms.string( pre +
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
 if options.globalTag == 'mc2016':
   process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
+elif options.globalTag == 'mc2015':
+  process.GlobalTag.globaltag = '76X_mcRun2_asymptotic_v12'
+elif options.globalTag == 'data2015':
+  process.GlobalTag.globaltag = '74X_dataRun2_HLT_v3'
+elif options.globalTag == 'data2016':
+  process.GlobalTag.globaltag = '80X_dataRun2_2016SeptRepro_v7'
 else:
   process.GlobalTag.globaltag = options.globalTag
+print "Using GlobalTag: ", process.GlobalTag.globaltag
 
 # Allow unscheduled
 process.options.allowUnscheduled = cms.untracked.bool(True)
@@ -217,6 +224,11 @@ else:
   print "must select one twoprong version"
 # settings always overwritten by command line
 process.twoprongNtuplizer.includeMCInfo = options.mcInfo
+process.twoprongNtuplizer.includeSignalGenParticles = options.isSignal
+process.twoprongNtuplizer.runningOnTauTauMC = options.isTauTau
+process.twoprongNtuplizer.mcXS = options.mcXS
+process.twoprongNtuplizer.mcN = options.mcN
+process.twoprongNtuplizer.debug = options.debug
 
 # The path
 process.path  = cms.Path(process.egmPhotonIDSequence * process.twoprongNtuplizer)
