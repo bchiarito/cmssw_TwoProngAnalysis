@@ -1773,7 +1773,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.getByToken(pfcandsToken_, pfcands);
 
   edm::Handle<vector<reco::GenParticle>> genparticles;
-  if (fincludeSignalGenParticles || frunningOnTauTauMC) {
+  if (fincludeSignalGenParticles || frunningOnTauTauMC || fincludeMCInfo) {
     iEvent.getByToken(genToken_, genparticles);
   }
 
@@ -1815,6 +1815,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 
   // pthat, pt of the leading quark (relevant for MC QCD dijet events)
   if (fincludeMCInfo) {
+    if (fDebug) cout << "calculating pthat" << endl;
     double pthat = -100.0;
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle &genparticle = (*genparticles)[i];
