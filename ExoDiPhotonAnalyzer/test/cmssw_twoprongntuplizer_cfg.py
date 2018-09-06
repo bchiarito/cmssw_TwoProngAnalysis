@@ -4,7 +4,6 @@ options = VarParsing ("python")
 # required
 options.register("sample", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "which sample we want to run over")
 options.register("globalTag", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "global tag to use when running")
-options.register("originalGeometry", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "use the original loads for geometry, taken from original diphoton ntuplizer")
 # usually required
 options.register("isSignal", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify singal MC for looking for Phi and omega gen particles")
 options.register("isTauTau", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify Z->ll MC")
@@ -15,6 +14,7 @@ options.register("mcN", 1.0, VarParsing.multiplicity.singleton, VarParsing.varTy
 options.register("out", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "output file name")
 options.register("debug", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "True includes all output, False removes most of the per event output")
 options.register("doLumis", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "use a JSON file to specify lumis")
+options.register("originalGeometry", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "use the original loads for geometry, taken from original diphoton ntuplizer")
 # two-prong object definition
 options.register("standardTwoProng", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("tauModifiedTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
