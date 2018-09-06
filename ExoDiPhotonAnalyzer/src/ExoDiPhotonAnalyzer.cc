@@ -249,7 +249,7 @@ private:
   // Main Ntuple Ttree and braches
   TTree *fTree2;
   double fTauDecayType;
-  double pthat;
+  double fpthat;
   vector<Double_t> fGenTau_pt;
   vector<Double_t> fGenTau_eta;
   vector<Double_t> fGenTau_phi;
@@ -1818,12 +1818,13 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
     double pthat = -100.0;
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle &genparticle = (*genparticles)[i];
-      id = genparticle.pdgId()
+      int id = genparticle.pdgId();
       if (genparticle.status() == 23 && (id == 1 || id == 2 || id == 3 || id == 4 || id == 5 || id == 6 || id == 21)) {
         if (pthat < genparticle.pt()) {
-          pthat = genparticle.pt()
+          pthat = genparticle.pt();
         }
       }
+    }
     fpthat = pthat;
   }
 
