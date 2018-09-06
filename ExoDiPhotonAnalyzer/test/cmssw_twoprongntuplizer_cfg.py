@@ -4,7 +4,7 @@ options = VarParsing ("python")
 # required
 options.register("sample", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "which sample we want to run over")
 options.register("globalTag", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "global tag to use when running")
-options.register("oldGeometry", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "running on 2015 data needs different geometry include")
+options.register("originalGeometry", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "use the original loads for geometry, taken from original diphoton ntuplizer")
 # usually required
 options.register("isSignal", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify singal MC for looking for Phi and omega gen particles")
 options.register("isTauTau", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify Z->ll MC")
@@ -140,10 +140,10 @@ print "Using GlobalTag: ", process.GlobalTag.globaltag
 process.options.allowUnscheduled = cms.untracked.bool(True)
 
 # Geometry for photon saturation 
-if not options.oldGeometry:
-  process.load("Configuration.StandardSequences.GeometryDB_cff")
+if not options.originalGeometry:
+  process.load("Configuration.Geometry.GeometryECALHCAL_cff") # default
 else:
-  process.load("Configuration.Geometry.GeometryECALHCAL_cff")
+  process.load("Configuration.StandardSequences.GeometryDB_cff")
 
 # filter on vertices
 vtxCollName = 'offlineSlimmedPrimaryVertices'
