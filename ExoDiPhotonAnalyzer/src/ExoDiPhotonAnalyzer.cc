@@ -64,6 +64,9 @@
 // for gen event info
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
+// for tau preselection
+#include "MyTauHadFilters/TauHadFilters/interface/ZtoTauHadPreSelection.h"
+
 using namespace std;
 
 // forward declare photon functions
@@ -175,6 +178,7 @@ private:
   edm::EDGetTokenT<std::vector<pat::MET>> metToken_;
   edm::EDGetToken gedphotonsToken_;
   edm::EDGetToken genEventInfoToken_;
+  edm::EDGetTokenT<reco::VertexCollection> vtxToken_;
 
   // tools for rechits collection
   std::auto_ptr<noZS::EcalClusterLazyTools> lazyTools_;
@@ -640,17 +644,30 @@ private:
   ExoDiPhotons::recoDiObjectInfo_t fRecoPhiPhotonTwoProng;
   ExoDiPhotons::recoDiObjectInfo_t fRecoPhiInclusive;
 
-  bool fZvis_w2p_pass;
-  Double_t fZvis_w2p_MT;
-  Double_t fZvis_w2p_Pzeta;
+  // Z preselection tag and probe branches
+  Bool_t fpassZMuonTrigger;
+  Bool_t fpassZTnP;
+  Bool_t fpassZPre;
+  Bool_t fpassZExtraMuon;
+  Bool_t fpassZExtraElectron;
+  Bool_t fpassZDiMuon;
+  Bool_t fpassZBVeto;
+  Double_t fZBVetoVal;
+  Int_t fnTagMuons;
+  Int_t fnProbeTaus;
+  Double_t fTauPreDr;
+  Double_t fTauPreMT;
+  Double_t fTauPrePzeta;
+  vector<Double_t> fTagMuon_pt;
+  vector<Double_t> fTagMuon_eta;
+  vector<Double_t> fTagMuon_phi;
+  vector<Double_t> fTagMuon_mass;
+  vector<Double_t> fProbeTau_pt;
+  vector<Double_t> fProbeTau_eta;
+  vector<Double_t> fProbeTau_phi;
+  vector<Double_t> fProbeTau_mass;
   ExoDiPhotons::recoDiObjectInfo_t fZvisibleMuonTwoProng;
-  bool fZvis_wtau_pass;
-  Double_t fZvis_wtau_MT;
-  Double_t fZvis_wtau_Pzeta;
   ExoDiPhotons::recoDiObjectInfo_t fZvisibleMuonTau;
-  bool fZvis_wtaujet_pass;
-  Double_t fZvis_wtaujet_MT;
-  Double_t fZvis_wtaujet_Pzeta;
   ExoDiPhotons::recoDiObjectInfo_t fZvisibleMuonJet;
 };
 
@@ -710,6 +727,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   tauToken_ = consumes<std::vector<pat::Tau>>(edm::InputTag("slimmedTaus"));
   gedphotonsToken_ = consumes<edm::View<pat::Photon>>( edm::InputTag("slimmedPhotons") );
   genEventInfoToken_ = mayConsume<GenEventInfoProduct>( edm::InputTag("generator") );
+  vtxToken_ = consumes<vector<reco::Vertex>>(edm::InputTag("offlineSlimmedPrimaryVertices"));
 
   recHitsEBTag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEBTag",edm::InputTag("reducedEgamma:reducedEBRecHits"));
   recHitsEETag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEETag",edm::InputTag("reducedEgamma:reducedEERecHits"));
@@ -1117,18 +1135,30 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("RecoPhiPhotonTwoProng",&fRecoPhiPhotonTwoProng,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("RecoPhiInclusive",&fRecoPhiInclusive,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   // Tau preseletion branches
-  fTree2->Branch("Zvis_w2p_pass",&fZvis_w2p_pass,"Zvis_w2p_pass/O");
-  fTree2->Branch("Zvis_w2p_MT",&fZvis_w2p_MT,"Zvis_w2p_MT/D");
-  fTree2->Branch("Zvis_w2p_Pzeta",&fZvis_w2p_Pzeta,"Zvis_w2p_Pzeta/D");
+  fTree2->Branch("passZMuonTrigger",&fpassZMuonTrigger,"passZMuonTrigger/O");
+  fTree2->Branch("passZTnP",&fpassZTnP,"passZTnP/O");
+  fTree2->Branch("passZPre",&fpassZPre,"passZPre/O");
+  fTree2->Branch("passZExtraMuon",&fpassZExtraMuon,"passZExtraMuon/O");
+  fTree2->Branch("passZExtraElectron",&fpassZExtraElectron,"passZExtraElectron/O");
+  fTree2->Branch("passZDiMuon",&fpassZDiMuon,"passZDiMuon/O");
+  fTree2->Branch("passZBVeto",&fpassZBVeto,"passZBVeto/O");
+  fTree2->Branch("ZBVetoVal",&fZBVetoVal,"ZBVetoVal/D");
+  fTree2->Branch("nTagMuons",&fnTagMuons,"nTagMuons/I");
+  fTree2->Branch("nProbeTaus",&fnProbeTaus,"nProbeTaus/I");
+  fTree2->Branch("TauPreDr",&fTauPreDr,"TauPreDr/D");
+  fTree2->Branch("TauPreMT",&fTauPreMT,"TauPreMt/D");
+  fTree2->Branch("TauPrePzeta",&fTauPrePzeta,"TauPrePzeta/D");
+  fTree2->Branch("TagMuon_pt",&fTagMuon_pt);
+  fTree2->Branch("TagMuon_eta",&fTagMuon_eta);
+  fTree2->Branch("TagMuon_phi",&fTagMuon_phi);
+  fTree2->Branch("TagMuon_mass",&fTagMuon_mass);
+  fTree2->Branch("ProbeTau_pt",&fProbeTau_pt);
+  fTree2->Branch("ProbeTau_eta",&fProbeTau_eta);
+  fTree2->Branch("ProbeTau_phi",&fProbeTau_phi);
+  fTree2->Branch("ProbeTau_mass",&fProbeTau_mass);
+  fTree2->Branch("ZvisibleMuonPatTau",&fZvisibleMuonTau,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("ZvisibleMuonProbeTau",&fZvisibleMuonJet,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("ZvisibleMuonTwoProng",&fZvisibleMuonTwoProng,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
-  fTree2->Branch("Zvis_wtau_pass",&fZvis_wtau_pass,"Zvis_wtau_pass/O");
-  fTree2->Branch("Zvis_wtau_MT",&fZvis_wtau_MT,"Zvis_wtau_MT/D");
-  fTree2->Branch("Zvis_wtau_Pzeta",&fZvis_wtau_Pzeta,"Zvis_wtau_Pzeta/D");
-  fTree2->Branch("ZvisibleMuonTau",&fZvisibleMuonTau,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
-  fTree2->Branch("Zvis_wtaujet_pass",&fZvis_wtaujet_pass,"Zvis_wtaujet_pass/O");
-  fTree2->Branch("Zvis_wtaujet_MT",&fZvis_wtaujet_MT,"Zvis_wtaujet_MT/D");
-  fTree2->Branch("Zvis_wtaujet_Pzeta",&fZvis_wtaujet_Pzeta,"Zvis_wtaujet_Pzeta/D");
-  fTree2->Branch("ZvisibleMuonJet",&fZvisibleMuonJet,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
   }
 
   // initialize non-vector type branches
@@ -1358,6 +1388,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   using namespace reco;
 
   if (fDebug) cout << "event " << iEvent.id().event() << " lumi " <<  iEvent.id().luminosityBlock() << " run " << iEvent.id().run() << endl;
+
 
   // clear member vectors
   fTwoProngCand_pt.clear();
@@ -1635,6 +1666,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fMuon_phi.clear();
   fMuon_mass.clear();
 
+  fTau_pt.clear();
+  fTau_eta.clear();
+  fTau_phi.clear();
+  fTau_mass.clear();
+
   fPhoton_pt.clear();
   fPhoton_eta.clear();
   fPhoton_phi.clear();
@@ -1663,6 +1699,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fID2Photon_phi.clear();
   fID2Photon_mass.clear();
 
+  
+  fTauDecayType = -10;
+  fpthat = -10;
   fGenTau_pt.clear();
   fGenTau_eta.clear();
   fGenTau_phi.clear();
@@ -1701,6 +1740,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fGenOmega_objDR.clear();
   fGenOmega_candobjDR.clear();
   fGenOmega_jetDR.clear();
+
+  edm::Handle<reco::VertexCollection> vertices;
+  iEvent.getByToken(vtxToken_, vertices);
 
   // trigger 
   edm::Handle<edm::TriggerResults> triggerBits;
@@ -1964,6 +2006,9 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   for (unsigned int i = 0; i < muons->size(); i++) {
     const pat::Muon &muon = (*muons)[i];
     fMuon_pt.push_back(muon.pt());
+    if (muon.pt() > 5000) {
+      cout << "muon pt " << muon.pt() << ", event " << iEvent.id().event() << " lumi " <<  iEvent.id().luminosityBlock() << " run " << iEvent.id().run() << endl;
+    }
     fMuon_eta.push_back(muon.eta());
     fMuon_phi.push_back(muon.phi());
     fMuon_mass.push_back(muon.mass());
@@ -1985,10 +2030,10 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // Taus
   for (unsigned int i = 0; i < taus->size(); i++) {
     const pat::Tau &tau = (*taus)[i];
-    fMuon_pt.push_back(tau.pt());
-    fMuon_eta.push_back(tau.eta());
-    fMuon_phi.push_back(tau.phi());
-    fMuon_mass.push_back(tau.mass());
+    fTau_pt.push_back(tau.pt());
+    fTau_eta.push_back(tau.eta());
+    fTau_phi.push_back(tau.phi());
+    fTau_mass.push_back(tau.mass());
   }
   fNumTaus = taus->size();
 
@@ -2939,159 +2984,105 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   }
   if (fDebug) cout << ". done making reco phi inclusive" << endl;
 
-  // Make visible Z objects
+  // Z preselection tag and probe branches
+  if (fDebug) cout << ". doing z preselection branches" << endl;
+  TauHadFilters::PreSelectionResult result;
+  result = TauHadFilters::computePreSelectionResult(iEvent, triggerBits, triggerObjects, triggerPrescales, vertices, taus, muons, electrons, ak4jets, MET, rhoH);
+
+  fTagMuon_pt.clear();
+  fTagMuon_eta.clear();
+  fTagMuon_phi.clear();
+  fTagMuon_mass.clear();
+  fProbeTau_pt.clear();
+  fProbeTau_eta.clear();
+  fProbeTau_phi.clear();
+  fProbeTau_mass.clear();
+
+  fpassZMuonTrigger = result.passMuonTrigger;
+  string foundZMuonTrigger = result.foundMuonTrigger;
+  fpassZTnP = result.passTagAndProbeSelection;
+  fpassZPre = result.passPreSelection;
+  fpassZExtraMuon = result.passExtraMuonVeto;
+  fpassZExtraElectron = result.passExtraElectronVeto;
+  fpassZDiMuon = result.passDiMuonVeto;
+  fpassZBVeto = result.passBtagVeto;
+  fZBVetoVal = result.btagDiscriminant;
+  fnTagMuons = result.nTagMuons;
+  fnProbeTaus = result.nProbeTaus;
+  fTauPreDr = result.dR;
+  fTauPreMT = result.MT;
+  fTauPrePzeta = result.Pzeta;
+
+  if (result.foundTagMuon) {
+  fTagMuon_pt.push_back(result.tagMuon->pt());
+  fTagMuon_eta.push_back(result.tagMuon->eta());
+  fTagMuon_phi.push_back(result.tagMuon->phi());
+  fTagMuon_mass.push_back(result.tagMuon->mass());
+  }
+
+  if (result.foundProbeTau) {
+  fProbeTau_pt.push_back(result.probeTau->pt());
+  fProbeTau_eta.push_back(result.probeTau->eta());
+  fProbeTau_phi.push_back(result.probeTau->phi());
+  fProbeTau_mass.push_back(result.probeTau->mass());
+  }
+
   InitRecoDiObjectInfo(fZvisibleMuonTwoProng);
   InitRecoDiObjectInfo(fZvisibleMuonTau);
   InitRecoDiObjectInfo(fZvisibleMuonJet);
-  fZvis_wtaujet_pass = false;
-  fZvis_wtau_pass = false;
-  fZvis_w2p_pass = false;
-  fZvis_wtaujet_MT = -1000.0;
-  fZvis_wtaujet_Pzeta = -1000.0;
-  fZvis_wtau_MT = -1000.0;
-  fZvis_wtau_Pzeta = -1000.0;
-  fZvis_w2p_MT = -1000.0;
-  fZvis_w2p_Pzeta = -1000.0;
-  // choose single taujet-muon system
-  int muon_jet_index = -1;
-  int tau_jet_index = -1;
-  for (unsigned int i = 0; i < selected_muons.size(); i++) {
-    for (unsigned int j = 0; j < ak4jets_taucands.size(); j++) {
-      const pat::Muon & muon = *selected_muons[i];
-      const pat::Jet & tau = *ak4jets_taucands[j];
-      int tau_charge = ak4jets_taucands_charge[j];
-      double dR = reco::deltaR(muon.eta(),muon.phi(),tau.eta(),tau.phi());
-      int charge = muon.charge() * tau_charge;
-      if (dR < 0.5) continue;
-      if (charge > 0) continue;
-      if (muon_jet_index == -1) {
-        muon_jet_index = i;
-        tau_jet_index = j; }
-      else if (selected_muons[i]->pt() + ak4jets_taucands[j]->pt() > selected_muons[muon_jet_index]->pt() + ak4jets_taucands[tau_jet_index]->pt()) {
-        muon_jet_index = i;
-        tau_jet_index = j; }
+
+  if (result.passTagAndProbeSelection) {
+    if (fDebug) cout << ". doing visible Z objects" << endl;
+    // visible Z with probe tau
+    TLorentzVector z_muon;
+    z_muon.SetPtEtaPhiM(result.tagMuon->pt(), result.tagMuon->eta(), result.tagMuon->phi(), result.tagMuon->mass());
+    TLorentzVector z_probetau;
+    z_probetau.SetPtEtaPhiM(result.probeTau->pt(), result.probeTau->eta(), result.probeTau->phi(), result.probeTau->mass());
+    FillRecoDiObjectInfo(fZvisibleMuonJet, z_muon, z_probetau);
+    if (fDebug) cout << ". done z with probetau" << endl;
+
+    // visible Z with twoprong
+    double closest_dr_2prong = 100.0;
+    unsigned int index_closest_dr_2prong = -1;
+    for(unsigned int i = 0; i < fTwoProng_pt.size(); i++)
+    {
+      TLorentzVector temp_2prong;
+      temp_2prong.SetPtEtaPhiM(fTwoProng_pt[i], fTwoProng_eta[i], fTwoProng_phi[i], fTwoProng_mass[i]);
+      double temp_dr = z_probetau.DeltaR(temp_2prong);
+      if (closest_dr_2prong > temp_dr) {
+        closest_dr_2prong = temp_dr;
+        index_closest_dr_2prong = i;
+      }
     }
-  }
-  if (muon_jet_index != -1 && tau_jet_index != -1) {
-    const pat::Muon & theMuon = *selected_muons[muon_jet_index];
-    const pat::Jet & theTau = *ak4jets_taucands[tau_jet_index];
-
-    double dPhi = theMuon.phi() - met.phi();
-    double MT = sqrt(2 * theMuon.pt() * met.pt() * (1 - cos(dPhi)));
-    TVector2 pTmuon;
-    pTmuon.SetMagPhi(theMuon.pt(), theMuon.phi());
-    TVector2 pTtau;
-    pTtau.SetMagPhi(theTau.pt(), theTau.phi());
-    TVector2 pTmet;
-    pTmet.SetMagPhi(met.pt(), met.phi());
-    TVector2 zeta;
-    zeta.SetMagPhi(1.0, (theMuon.phi()-theTau.phi())/2.0 + theTau.phi());
-    double PzetaAll = zeta * (pTmuon + pTtau + pTmet);
-    double PzetaVis = zeta * (pTmuon + pTtau);
-    double Pzeta = PzetaAll - 0.85 * PzetaVis;
-
-    fZvis_wtaujet_MT = MT;
-    fZvis_wtaujet_Pzeta = Pzeta;
-
-    if (reco::deltaR(theMuon.eta(), theMuon.phi(), theTau.eta(), theTau.phi()) > 0.5 && (MT < 40) && (Pzeta > -25) ) {
-      TLorentzVector muon_p4; muon_p4.SetPtEtaPhiE(theMuon.pt(), theMuon.eta(), theMuon.phi(), theMuon.energy());
-      TLorentzVector tau_p4; tau_p4.SetPtEtaPhiE(theTau.pt(), theTau.eta(), theTau.phi(), theTau.energy());
-      fZvis_wtaujet_pass = true;
-      FillRecoDiObjectInfo(fZvisibleMuonJet, muon_p4, tau_p4);
+    int ii = index_closest_dr_2prong;
+    if (ii != -1) {
+      TLorentzVector z_2prong;
+      z_2prong.SetPtEtaPhiM(fTwoProng_pt[ii], fTwoProng_eta[ii], fTwoProng_phi[ii], fTwoProng_mass[ii]);
+      FillRecoDiObjectInfo(fZvisibleMuonTwoProng, z_muon, z_2prong);
     }
-  }
-  // choose single tau-muon system
-  int muon_index = -1;
-  int tau_index = -1;
-  for (unsigned int i = 0; i < selected_muons.size(); i++) {
-    for (unsigned int j = 0; j < selected_taus.size(); j++) {
-      const pat::Muon & muon = *selected_muons[i];
-      const pat::Tau & tau = *selected_taus[j];
-      int tau_charge = tau.charge();
-      double dR = reco::deltaR(muon.eta(),muon.phi(),tau.eta(),tau.phi());
-      int charge = muon.charge() * tau_charge;
-      if (dR < 0.5) continue;
-      if (charge > 0) continue;
-      if (muon_index == -1) {
-        muon_index = i;
-        tau_index = j; }
-      else if (selected_muons[i]->pt() + selected_taus[j]->pt() > selected_muons[muon_index]->pt() + selected_taus[tau_index]->pt()) {
-        muon_index = i;
-        tau_index = j; }
+    if (fDebug) cout << ". done z with twoprong" << endl;
+
+    double closest_dr_tau = 100.0;
+    unsigned int index_closest_dr_tau = -1;
+    for(unsigned int i = 0; i < fTau_pt.size(); i++)
+    {
+      TLorentzVector temp_tau;
+      temp_tau.SetPtEtaPhiM(fTau_pt[i], fTau_eta[i], fTau_phi[i], fTau_mass[i]);
+      double temp_dr = z_probetau.DeltaR(temp_tau);
+      if (closest_dr_tau > temp_dr) {
+        closest_dr_tau = temp_dr;
+        index_closest_dr_tau = i;
+      }
     }
-  }
-  if (muon_index != -1 && tau_index != -1) {
-    const pat::Muon & theMuon = *selected_muons[muon_index];
-    const pat::Tau & theTau = *selected_taus[tau_index];
-
-    double dPhi = theMuon.phi() - met.phi();
-    double MT = sqrt(2 * theMuon.pt() * met.pt() * (1 - cos(dPhi)));
-    TVector2 pTmuon;
-    pTmuon.SetMagPhi(theMuon.pt(), theMuon.phi());
-    TVector2 pTtau;
-    pTtau.SetMagPhi(theTau.pt(), theTau.phi());
-    TVector2 pTmet;
-    pTmet.SetMagPhi(met.pt(), met.phi());
-    TVector2 zeta;
-    zeta.SetMagPhi(1.0, (theMuon.phi()-theTau.phi())/2.0 + theTau.phi());
-    double PzetaAll = zeta * (pTmuon + pTtau + pTmet);
-    double PzetaVis = zeta * (pTmuon + pTtau);
-    double Pzeta = PzetaAll - 0.85 * PzetaVis;
-
-    fZvis_wtau_MT = MT;
-    fZvis_wtau_Pzeta = Pzeta;
-
-    if (reco::deltaR(theMuon.eta(), theMuon.phi(), theTau.eta(), theTau.phi()) > 0.5 && (MT < 40) && (Pzeta > -25) ) {
-      TLorentzVector muon_p4; muon_p4.SetPtEtaPhiE(theMuon.pt(), theMuon.eta(), theMuon.phi(), theMuon.energy());
-      TLorentzVector tau_p4; tau_p4.SetPtEtaPhiE(theTau.pt(), theTau.eta(), theTau.phi(), theTau.energy());
-      fZvis_wtau_pass = true;
-      FillRecoDiObjectInfo(fZvisibleMuonTau, muon_p4, tau_p4);
+    int jj = index_closest_dr_tau;
+    if (jj != -1) {
+      TLorentzVector z_pattau;
+      z_pattau.SetPtEtaPhiM(fTau_pt[jj], fTau_eta[jj], fTau_phi[jj], fTau_mass[jj]);
+      FillRecoDiObjectInfo(fZvisibleMuonTau, z_muon, z_pattau);
     }
+    if (fDebug) cout << ". done z with pattau" << endl;
   }
-  // choose single twoprong-muon system
-  int muon_twoprong_index = -1;
-  int twoprong_index = -1;
-  for (unsigned int i = 0; i < selected_muons.size(); i++) {
-    for (unsigned int j = 0; j < fTwoProng_pt.size(); j++) {
-      const pat::Muon & muon = *selected_muons[i];
-      double dR = reco::deltaR(muon.eta(),muon.phi(),fTwoProng_eta[j],fTwoProng_phi[j]);
-      if (dR < 0.5) continue;
-      if (muon_twoprong_index == -1) {
-        muon_twoprong_index = i;
-        twoprong_index = j; }
-      else if (muon.pt() + fTwoProng_pt[j] > selected_muons[muon_twoprong_index]->pt() + fTwoProng_pt[twoprong_index]) {
-        muon_twoprong_index = i;
-        twoprong_index = j; }
-    }
-  }
-  if (muon_twoprong_index != -1 && twoprong_index != -1) {
-    const pat::Muon & theMuon = *selected_muons[muon_twoprong_index];
-
-    double dPhi = theMuon.phi() - met.phi();
-    double MT = sqrt(2 * theMuon.pt() * met.pt() * (1 - cos(dPhi)));
-    TVector2 pTmuon;
-    pTmuon.SetMagPhi(theMuon.pt(), theMuon.phi());
-    TVector2 pTtau;
-    pTtau.SetMagPhi(fTwoProng_pt[twoprong_index], fTwoProng_eta[twoprong_index]);
-    TVector2 pTmet;
-    pTmet.SetMagPhi(met.pt(), met.phi());
-    TVector2 zeta;
-    zeta.SetMagPhi(1.0, (theMuon.phi()-fTwoProng_phi[twoprong_index])/2.0 + fTwoProng_phi[twoprong_index]);
-    double PzetaAll = zeta * (pTmuon + pTtau + pTmet);
-    double PzetaVis = zeta * (pTmuon + pTtau);
-    double Pzeta = PzetaAll - 0.85 * PzetaVis;
-
-    fZvis_w2p_MT = MT;
-    fZvis_w2p_Pzeta = Pzeta;
-
-    if (reco::deltaR(theMuon.eta(), theMuon.phi(), fTwoProng_eta[twoprong_index], fTwoProng_phi[twoprong_index]) > 0.5 && (MT < 40) && (Pzeta > -25) ) {
-      TLorentzVector muon_p4; muon_p4.SetPtEtaPhiE(theMuon.pt(), theMuon.eta(), theMuon.phi(), theMuon.energy());
-      TLorentzVector twoprong_p4; twoprong_p4.SetPtEtaPhiE(fTwoProng_pt[0],fTwoProng_eta[0],fTwoProng_phi[0],fTwoProng_energy[0]);
-      fZvis_w2p_pass = true;
-      FillRecoDiObjectInfo(fZvisibleMuonTwoProng, muon_p4, twoprong_p4);
-    }
-  }
-
+  
   // Now fill fTree2
   if (fMakeTrees) fTree2->Fill();
 
