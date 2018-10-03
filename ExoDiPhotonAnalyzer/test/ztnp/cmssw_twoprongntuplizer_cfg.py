@@ -47,6 +47,8 @@ options.register("stackedDalitzHistos", False, VarParsing.multiplicity.singleton
 # ztagandprobe options
 options.register("DYsignal", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("DYbkg", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("tagandprobeSelection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("preSelection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.setDefault("maxEvents", 10)
 options.parseArguments()
 
@@ -233,11 +235,6 @@ process.twoprongNtuplizer.mcXS = options.mcXS
 process.twoprongNtuplizer.mcN = options.mcN
 process.twoprongNtuplizer.debug = options.debug
 
-# the tau_mu tau_had preselection
-process.preselection = cms.EDFilter('ZtoTauHadRecoSelector',
-  dumpCutflow = cms.untracked.bool(True)
-  )
-
 # optional gen filters
 process.genDYsignalFilt = cms.EDFilter('ZtoTauHadTruthSelector',
   filterByTruthDecayType = cms.untracked.vdouble(5.1,5.2,5.3,5.4),
@@ -247,9 +244,31 @@ process.genDYbkgFilt = cms.EDFilter('ZtoTauHadTruthSelector',
   )
 
 # The path
-if (options.DYsignal):
-  process.path = cms.Path(process.genDYsignalFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
-elif (options.DYbkg):
-  process.path = cms.Path(process.genDYbkgFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
+if (options.tagandprobeSelection and not options.preSelection):
+  process.selection = cms.EDFilter('ZtoTauHadRecoSelector',
+    dumpCutflow = cms.untracked.bool(True),
+    tnpSelectionOnly = cms.untracked.bool(True)
+    )
+  if (options.DYsignal):
+    process.path = cms.Path(process.selection * process.genDYsignalFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
+  elif (options.DYbkg):
+    process.path = cms.Path(process.selection * process.genDYbkgFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
+  else:
+    process.path = cms.Path(process.selection * process.egmPhotonIDSequence * process.twoprongNtuplizer)
+elif (options.preSelection and not options.tagandprobeSelection):
+  process.selection = cms.EDFilter('ZtoTauHadRecoSelector',
+    dumpCutflow = cms.untracked.bool(True)
+    )
+  if (options.DYsignal):
+    process.path = cms.Path(process.selection * process.genDYsignalFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
+  elif (options.DYbkg):
+    process.path = cms.Path(process.selection * process.genDYbkgFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
+  else:
+    process.path = cms.Path(process.selection * process.egmPhotonIDSequence * process.twoprongNtuplizer)
 else:
-  process.path = cms.Path(process.egmPhotonIDSequence * process.twoprongNtuplizer)
+  if (options.DYsignal):
+    process.path = cms.Path(process.genDYsignalFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
+  elif (options.DYbkg):
+    process.path = cms.Path(process.genDYbkgFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
+  else:
+    process.path = cms.Path(process.egmPhotonIDSequence * process.twoprongNtuplizer)

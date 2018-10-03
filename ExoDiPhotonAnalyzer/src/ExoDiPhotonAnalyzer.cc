@@ -662,6 +662,8 @@ private:
   vector<Double_t> fTagMuon_eta;
   vector<Double_t> fTagMuon_phi;
   vector<Double_t> fTagMuon_mass;
+  vector<Double_t> fTagMuon_z;
+  vector<Double_t> fTagMuon_dz;
   vector<Double_t> fProbeTau_pt;
   vector<Double_t> fProbeTau_eta;
   vector<Double_t> fProbeTau_phi;
@@ -1152,6 +1154,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("TagMuon_eta",&fTagMuon_eta);
   fTree2->Branch("TagMuon_phi",&fTagMuon_phi);
   fTree2->Branch("TagMuon_mass",&fTagMuon_mass);
+  fTree2->Branch("TagMuon_z",&fTagMuon_z);
+  fTree2->Branch("TagMuon_dz",&fTagMuon_dz);
   fTree2->Branch("ProbeTau_pt",&fProbeTau_pt);
   fTree2->Branch("ProbeTau_eta",&fProbeTau_eta);
   fTree2->Branch("ProbeTau_phi",&fProbeTau_phi);
@@ -2030,6 +2034,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // Taus
   for (unsigned int i = 0; i < taus->size(); i++) {
     const pat::Tau &tau = (*taus)[i];
+    if (!tau.tauID("byTightIsolationMVArun2v1DBnewDMwLT")) continue;
     fTau_pt.push_back(tau.pt());
     fTau_eta.push_back(tau.eta());
     fTau_phi.push_back(tau.phi());
@@ -2993,6 +2998,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fTagMuon_eta.clear();
   fTagMuon_phi.clear();
   fTagMuon_mass.clear();
+  fTagMuon_z.clear();
+  fTagMuon_dz.clear();
   fProbeTau_pt.clear();
   fProbeTau_eta.clear();
   fProbeTau_phi.clear();
@@ -3009,7 +3016,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fZBVetoVal = result.btagDiscriminant;
   fnTagMuons = result.nTagMuons;
   fnProbeTaus = result.nProbeTaus;
-  fTauPreDr = result.dR;
+  fTauPreDr = result.DR;
   fTauPreMT = result.MT;
   fTauPrePzeta = result.Pzeta;
 
@@ -3018,6 +3025,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fTagMuon_eta.push_back(result.tagMuon->eta());
   fTagMuon_phi.push_back(result.tagMuon->phi());
   fTagMuon_mass.push_back(result.tagMuon->mass());
+  fTagMuon_z.push_back((result.tagMuon->muonBestTrack())->vz());
+  fTagMuon_dz.push_back((result.tagMuon->muonBestTrack())->dz());
   }
 
   if (result.foundProbeTau) {
