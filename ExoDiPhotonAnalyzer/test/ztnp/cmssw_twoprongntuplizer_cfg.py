@@ -16,9 +16,7 @@ options.register("debug", False, VarParsing.multiplicity.singleton, VarParsing.v
 options.register("doLumis", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "use a JSON file to specify lumis")
 options.register("originalGeometry", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "use the original loads for geometry, taken from original diphoton ntuplizer")
 # two-prong object definition
-options.register("standardTwoProng", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
-options.register("tauModifiedTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
-options.register("commandLineTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("twoProngDefinition", 1, VarParsing.multiplicity.singleton, VarParsing.varType.float, "1 = regular, 2 = tau-modified, 3 = command line")
 # two-prong object definition detailed
 options.register("optionalExtraTrack", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("trackDR", 0.05, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
@@ -175,7 +173,7 @@ if not options.doLumis=="":
     process.source.lumisToProcess = LumiList.LumiList(filename = goodlumis).getVLuminosityBlockRange()
 
 # the ntuplizer
-if options.commandLineTwoProng:
+if options.twoProngDefinition == 3:
   process.twoprongNtuplizer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   # two-prong object options
                                   candidateMinPt = cms.untracked.double(options.minPt),
@@ -221,9 +219,9 @@ if options.commandLineTwoProng:
                                   twoprongYieldHistos = cms.untracked.bool(options.twoprongYieldHistos),
                                   stackedDalitzHistos = cms.untracked.bool(options.stackedDalitzHistos),
                                   )
-elif options.tauModifiedTwoProng:
+elif options.twoProngDefinition == 2:
   process.load('DiPhotonAnalysis.ExoDiPhotonAnalyzer.cmssw_twoprongntuplizer_taumodified_cfi')
-elif options.standardTwoProng:
+elif options.twoProngDefinition == 1:
   process.load('DiPhotonAnalysis.ExoDiPhotonAnalyzer.cmssw_twoprongntuplizer_standard_cfi')
 else:
   print "must select one twoprong version"

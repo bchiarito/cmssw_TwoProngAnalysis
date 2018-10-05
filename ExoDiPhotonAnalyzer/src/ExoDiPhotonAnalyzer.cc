@@ -664,6 +664,7 @@ private:
   vector<Double_t> fTagMuon_mass;
   vector<Double_t> fTagMuon_z;
   vector<Double_t> fTagMuon_dz;
+  vector<Double_t> fTagMuon_iso;
   vector<Double_t> fProbeTau_pt;
   vector<Double_t> fProbeTau_eta;
   vector<Double_t> fProbeTau_phi;
@@ -716,6 +717,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fCandidateOptionalExtraTrack(iConfig.getUntrackedParameter<bool>("candidateOptionalExtraTrack")),
     rhoToken_(consumes<double> (iConfig.getParameter<edm::InputTag>("rho")))
 {
+  if (fDebug) cout << "Entering constructor... " << endl;
   // MiniAOD event content
   pfcandsToken_ = consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates"));
   genToken_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
@@ -1156,6 +1158,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("TagMuon_mass",&fTagMuon_mass);
   fTree2->Branch("TagMuon_z",&fTagMuon_z);
   fTree2->Branch("TagMuon_dz",&fTagMuon_dz);
+  fTree2->Branch("TagMuon_iso",&fTagMuon_iso);
   fTree2->Branch("ProbeTau_pt",&fProbeTau_pt);
   fTree2->Branch("ProbeTau_eta",&fProbeTau_eta);
   fTree2->Branch("ProbeTau_phi",&fProbeTau_phi);
@@ -1272,6 +1275,7 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fNegativeFraction = fs->make<TH1F>("1d_negative_frac","1d_pos_frac",40,0,1);
   fHTverify = fs->make<TH1F>("ht","ht",500,0,5000);
   }
+  if (fDebug) cout << "Exiting constructor... " << endl;
 }
 
 
@@ -1387,6 +1391,8 @@ ExoDiPhotonAnalyzer::isCharged(int one, int two, int three)
 void
 ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  if (fDebug) cout << "Entering analyze()... " << endl;
+
   using namespace edm;
   using namespace std;
   using namespace reco;
@@ -2034,7 +2040,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   // Taus
   for (unsigned int i = 0; i < taus->size(); i++) {
     const pat::Tau &tau = (*taus)[i];
-    if (!tau.tauID("byTightIsolationMVArun2v1DBnewDMwLT")) continue;
+    if (tau.pt() <= 20) continue;
+    if (fabs(tau.eta()) >= 2.3) continue;
+    if (!(tau.tauID("byTightIsolationMVArun2v1DBnewDMwLT") < 0.5)) continue;
+    if (!(tau.tauID("againstElectronVLooseMVA6") < 0.5)) continue;
+    if (!(tau.tauID("againstMuonTight3") < 0.5)) continue;
     fTau_pt.push_back(tau.pt());
     fTau_eta.push_back(tau.eta());
     fTau_phi.push_back(tau.phi());
@@ -2993,6 +3003,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   if (fDebug) cout << ". doing z preselection branches" << endl;
   TauHadFilters::PreSelectionResult result;
   result = TauHadFilters::computePreSelectionResult(iEvent, triggerBits, triggerObjects, triggerPrescales, vertices, taus, muons, electrons, ak4jets, MET, rhoH);
+  if (fDebug) cout << ". finished computing preselection result" << endl;
 
   fTagMuon_pt.clear();
   fTagMuon_eta.clear();
@@ -3000,6 +3011,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fTagMuon_mass.clear();
   fTagMuon_z.clear();
   fTagMuon_dz.clear();
+  fTagMuon_iso.clear();
   fProbeTau_pt.clear();
   fProbeTau_eta.clear();
   fProbeTau_phi.clear();
@@ -3026,7 +3038,8 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   fTagMuon_phi.push_back(result.tagMuon->phi());
   fTagMuon_mass.push_back(result.tagMuon->mass());
   fTagMuon_z.push_back((result.tagMuon->muonBestTrack())->vz());
-  fTagMuon_dz.push_back((result.tagMuon->muonBestTrack())->dz());
+  fTagMuon_dz.push_back((result.tagMuon->muonBestTrack())->dz( ((*primaryvertecies)[0]).position() ));
+  fTagMuon_iso.push_back(result.tagMuon_iso);
   }
 
   if (result.foundProbeTau) {
@@ -3058,7 +3071,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       TLorentzVector temp_2prong;
       temp_2prong.SetPtEtaPhiM(fTwoProng_pt[i], fTwoProng_eta[i], fTwoProng_phi[i], fTwoProng_mass[i]);
       double temp_dr = z_probetau.DeltaR(temp_2prong);
-      if (closest_dr_2prong > temp_dr) {
+      if (closest_dr_2prong > temp_dr && closest_dr_2prong < 0.4) {
         closest_dr_2prong = temp_dr;
         index_closest_dr_2prong = i;
       }
@@ -3078,7 +3091,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       TLorentzVector temp_tau;
       temp_tau.SetPtEtaPhiM(fTau_pt[i], fTau_eta[i], fTau_phi[i], fTau_mass[i]);
       double temp_dr = z_probetau.DeltaR(temp_tau);
-      if (closest_dr_tau > temp_dr) {
+      if (closest_dr_tau > temp_dr && closest_dr_tau < 0.4) {
         closest_dr_tau = temp_dr;
         index_closest_dr_tau = i;
       }
