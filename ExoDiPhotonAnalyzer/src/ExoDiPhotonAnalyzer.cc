@@ -3071,7 +3071,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       TLorentzVector temp_2prong;
       temp_2prong.SetPtEtaPhiM(fTwoProng_pt[i], fTwoProng_eta[i], fTwoProng_phi[i], fTwoProng_mass[i]);
       double temp_dr = z_probetau.DeltaR(temp_2prong);
-      if (closest_dr_2prong > temp_dr && closest_dr_2prong < 0.4) {
+      if (closest_dr_2prong > temp_dr && temp_dr < 0.4) {
         closest_dr_2prong = temp_dr;
         index_closest_dr_2prong = i;
       }
@@ -3091,7 +3091,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
       TLorentzVector temp_tau;
       temp_tau.SetPtEtaPhiM(fTau_pt[i], fTau_eta[i], fTau_phi[i], fTau_mass[i]);
       double temp_dr = z_probetau.DeltaR(temp_tau);
-      if (closest_dr_tau > temp_dr && closest_dr_tau < 0.4) {
+      if (closest_dr_tau > temp_dr && temp_dr < 0.4) {
         closest_dr_tau = temp_dr;
         index_closest_dr_tau = i;
       }
