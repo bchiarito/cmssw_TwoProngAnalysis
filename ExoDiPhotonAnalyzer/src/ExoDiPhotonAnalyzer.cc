@@ -65,7 +65,7 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
 // for tau preselection
-#include "MyTauHadFilters/TauHadFilters/interface/ZtoTauHadPreSelection.h"
+#include "DiPhotonAnalysis/ZTauTauFilters/interface/ZtoTauHadPreSelection.h"
 
 using namespace std;
 
