@@ -1,15 +1,16 @@
 from WMCore.Configuration import Configuration
+from CRABClient.UserUtilities import config, getUsernameFromSiteDB
 config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_QCD_twoprongntuplizer'
+config.General.workArea = 'crab_multi_QCD_2016'
 config.section_('JobType')
-config.JobType.psetName = 'cmssw_twoprongntuplizer_crab_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=80X_mcRun2_asymptotic_2016_TrancheIV_v8']
+config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
+config.JobType.pyCfgParams = ['globalTag=mc2016', 'addConeHE=True', 'includeCands=False', 'mcInfo=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/trees/qcd/'
+config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/prelim/Nov5/qcd/' % (getUsernameFromSiteDB())
 config.Data.publication = False
 config.Data.unitsPerJob = 250000
 config.Data.totalUnits =  -1

@@ -1,23 +1,24 @@
 from WMCore.Configuration import Configuration
+from CRABClient.UserUtilities import config, getUsernameFromSiteDB
 config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'photondata2016full_crab3jobs'
+config.General.workArea = 'crab_multi_SinglePhoton_2016'
 config.section_('JobType')
-config.JobType.psetName = 'exodiphotonanalyzer_minimal_cfg.py'
-config.JobType.pyCfgParams = ['local=False','globalTag=80X_dataRun2_2016SeptRepro_v7']
+config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
+config.JobType.pyCfgParams = ['globalTag=data2016', 'addConeHE=True', 'includeCands=False']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/noreplica/diphotonProject/scratch/photon_eff_calc_fulldatasets'
+config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/prelim/Nov5/photon2016/' % (getUsernameFromSiteDB())
 config.Data.publication = False
 config.Data.unitsPerJob = 100
 config.Data.totalUnits = -1
 config.Data.splitting = 'LumiBased'
-config.Data.lumiMask = 'Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt'
+config.Data.lumiMask = 'json/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt'
 config.section_('User')
 config.section_('Site')
-config.Site.storageSite = 'T3_US_FNALLPC'
+config.Site.storageSite = 'T3_US_Rutgers'
 
 
 if __name__ == '__main__':
