@@ -44,4 +44,7 @@ twoprongNtuplizer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
                                   triggerEffHistos = cms.untracked.bool(False),
                                   twoprongYieldHistos = cms.untracked.bool(False),
                                   stackedDalitzHistos = cms.untracked.bool(False),
+                                  # filters
+                                  filterOnPhoton = cms.untracked.bool(False),
+                                  filterOnTwoProng = cms.untracked.bool(False),
                                   )
