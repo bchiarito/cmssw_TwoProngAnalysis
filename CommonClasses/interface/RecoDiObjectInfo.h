@@ -16,7 +16,7 @@
 #include "DataFormats/PatCandidates/interface/Electron.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
 
-namespace ExoDiPhotons
+namespace TwoProngAnalysis
 {
   struct recoDiObjectInfo_t {
     Double_t pt;

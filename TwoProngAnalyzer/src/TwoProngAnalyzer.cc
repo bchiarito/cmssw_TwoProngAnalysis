@@ -1,9 +1,9 @@
 // -*- C++ -*-
 //
-// Package:    ExoDiPhotonAnalyzer
-// Class:      ExoDiPhotonAnalyzer
+// Package:    TwoProngAnalyzer
+// Class:      TwoProngAnalyzer
 // 
-/**\class ExoDiPhotonAnalyzer ExoDiPhotonAnalyzer.cc DiPhotonAnalysis/ExoDiPhotonAnalyzer/src/ExoDiPhotonAnalyzer.cc
+/**\class TwoProngAnalyzer TwoProngAnalyzer.cc TwoProngAnalysis/TwoProngAnalyzer/src/TwoProngAnalyzer.cc
 
    Description: [one line class summary]
 
@@ -13,7 +13,7 @@
 //
 // Original Author:  Conor Henderson,40 1-B01,+41227671674,
 //         Created:  Thu May  6 17:26:16 CEST 2010
-// $Id: ExoDiPhotonAnalyzer.cc,v 1.32 2013/02/11 15:07:42 charaf Exp $
+// $Id: TwoProngAnalyzer.cc,v 1.32 2013/02/11 15:07:42 charaf Exp $
 //
 //
 
@@ -42,9 +42,9 @@
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
-// these objects are all in the namespace 'ExoDiPhotons'
-#include "DiPhotonAnalysis/CommonClasses/interface/RecoPhotonInfo.h"
-#include "DiPhotonAnalysis/CommonClasses/interface/RecoDiObjectInfo.h"
+// these objects are all in the namespace 'TwoProngAnalsysis TwoProngAnalysis'
+#include "TwoProngAnalysis/CommonClasses/interface/RecoPhotonInfo.h"
+#include "TwoProngAnalysis/CommonClasses/interface/RecoDiObjectInfo.h"
 
 // pat objects
 #include "DataFormats/PatCandidates/interface/Photon.h"
@@ -65,7 +65,7 @@
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
 // for tau preselection
-#include "DiPhotonAnalysis/ZTauTauFilters/interface/ZtoTauHadPreSelection.h"
+#include "TwoProngAnalysis/ZTauTauFilters/interface/ZtoTauHadPreSelection.h"
 
 using namespace std;
 
@@ -97,10 +97,10 @@ bool isAncestorOfZ(const reco::Candidate * particle)
 //
 
 
-class ExoDiPhotonAnalyzer : public edm::EDAnalyzer {
+class TwoProngAnalyzer : public edm::EDAnalyzer {
 public:
-  explicit ExoDiPhotonAnalyzer(const edm::ParameterSet&);
-  ~ExoDiPhotonAnalyzer();
+  explicit TwoProngAnalyzer(const edm::ParameterSet&);
+  ~TwoProngAnalyzer();
 
 
 private:
@@ -372,9 +372,9 @@ private:
   vector<Double_t> fID2Photon_phi;
   vector<Double_t> fID2Photon_mass;
 
-  ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo1;
-  ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo2;
-  ExoDiPhotons::recoPhotonInfo_t fRecoTightPhotonInfo3;
+  TwoProngAnalysis::recoPhotonInfo_t fRecoTightPhotonInfo1;
+  TwoProngAnalysis::recoPhotonInfo_t fRecoTightPhotonInfo2;
+  TwoProngAnalysis::recoPhotonInfo_t fRecoTightPhotonInfo3;
 
   int fNumTwoProng;
   int fNumTwoProngPass;
@@ -646,9 +646,9 @@ private:
   vector<Double_t> fTwoProngLoose_genOmega_dR;
   vector<Double_t> fTwoProngLoose_genTau_dR;
 
-  ExoDiPhotons::recoDiObjectInfo_t fRecoPhiDiTwoProng;
-  ExoDiPhotons::recoDiObjectInfo_t fRecoPhiPhotonTwoProng;
-  ExoDiPhotons::recoDiObjectInfo_t fRecoPhiInclusive;
+  TwoProngAnalysis::recoDiObjectInfo_t fRecoPhiDiTwoProng;
+  TwoProngAnalysis::recoDiObjectInfo_t fRecoPhiPhotonTwoProng;
+  TwoProngAnalysis::recoDiObjectInfo_t fRecoPhiInclusive;
 
   // Z preselection tag and probe branches
   Bool_t fpassZMuonTrigger;
@@ -675,15 +675,15 @@ private:
   vector<Double_t> fProbeTau_eta;
   vector<Double_t> fProbeTau_phi;
   vector<Double_t> fProbeTau_mass;
-  ExoDiPhotons::recoDiObjectInfo_t fZvisibleMuonTwoProng;
-  ExoDiPhotons::recoDiObjectInfo_t fZvisibleMuonTau;
-  ExoDiPhotons::recoDiObjectInfo_t fZvisibleMuonJet;
+  TwoProngAnalysis::recoDiObjectInfo_t fZvisibleMuonTwoProng;
+  TwoProngAnalysis::recoDiObjectInfo_t fZvisibleMuonTau;
+  TwoProngAnalysis::recoDiObjectInfo_t fZvisibleMuonJet;
 };
 
 //
 // constructors and destructor
 //
-ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
+TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   : 
     triggerBits_(consumes<edm::TriggerResults>(iConfig.getParameter<edm::InputTag>("bits"))),
     triggerObjects_(consumes<pat::TriggerObjectStandAloneCollection>(iConfig.getParameter<edm::InputTag>("objects"))),
@@ -1143,14 +1143,14 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("TwoProng_CHneg_p3",&fTwoProng_CHneg_p3);
   fTree2->Branch("TwoProng_photon_p3",&fTwoProng_photon_p3);
   if(fincludeOldPhotons) {
-  fTree2->Branch("Photon1",&fRecoTightPhotonInfo1,ExoDiPhotons::recoPhotonBranchDefString.c_str());
-  fTree2->Branch("Photon2",&fRecoTightPhotonInfo2,ExoDiPhotons::recoPhotonBranchDefString.c_str());
-  fTree2->Branch("Photon3",&fRecoTightPhotonInfo3,ExoDiPhotons::recoPhotonBranchDefString.c_str());
+  fTree2->Branch("Photon1",&fRecoTightPhotonInfo1,TwoProngAnalysis::recoPhotonBranchDefString.c_str());
+  fTree2->Branch("Photon2",&fRecoTightPhotonInfo2,TwoProngAnalysis::recoPhotonBranchDefString.c_str());
+  fTree2->Branch("Photon3",&fRecoTightPhotonInfo3,TwoProngAnalysis::recoPhotonBranchDefString.c_str());
   }
   // Combined Objects
-  fTree2->Branch("RecoPhiDiTwoProng",&fRecoPhiDiTwoProng,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
-  fTree2->Branch("RecoPhiPhotonTwoProng",&fRecoPhiPhotonTwoProng,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
-  fTree2->Branch("RecoPhiInclusive",&fRecoPhiInclusive,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("RecoPhiDiTwoProng",&fRecoPhiDiTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("RecoPhiPhotonTwoProng",&fRecoPhiPhotonTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("RecoPhiInclusive",&fRecoPhiInclusive,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   // Tau preseletion branches
   fTree2->Branch("passZMuonTrigger",&fpassZMuonTrigger,"passZMuonTrigger/O");
   fTree2->Branch("passZTnP",&fpassZTnP,"passZTnP/O");
@@ -1176,9 +1176,9 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("ProbeTau_eta",&fProbeTau_eta);
   fTree2->Branch("ProbeTau_phi",&fProbeTau_phi);
   fTree2->Branch("ProbeTau_mass",&fProbeTau_mass);
-  fTree2->Branch("ZvisibleMuonPatTau",&fZvisibleMuonTau,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
-  fTree2->Branch("ZvisibleMuonProbeTau",&fZvisibleMuonJet,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
-  fTree2->Branch("ZvisibleMuonTwoProng",&fZvisibleMuonTwoProng,ExoDiPhotons::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("ZvisibleMuonPatTau",&fZvisibleMuonTau,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("ZvisibleMuonProbeTau",&fZvisibleMuonJet,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("ZvisibleMuonTwoProng",&fZvisibleMuonTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   }
 
   // initialize non-vector type branches
@@ -1292,14 +1292,14 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
 }
 
 
-ExoDiPhotonAnalyzer::~ExoDiPhotonAnalyzer()
+TwoProngAnalyzer::~TwoProngAnalyzer()
 {
  
 }
 
 // Helper methods
 double 
-ExoDiPhotonAnalyzer::iso_alpha(double eta, int ver)
+TwoProngAnalyzer::iso_alpha(double eta, int ver)
 {
   if (ver == 1)
   {
@@ -1323,7 +1323,7 @@ ExoDiPhotonAnalyzer::iso_alpha(double eta, int ver)
 }
 
 double 
-ExoDiPhotonAnalyzer::iso_area(double eta, int ver)
+TwoProngAnalyzer::iso_area(double eta, int ver)
 {
   if (ver == 1)
   {
@@ -1347,7 +1347,7 @@ ExoDiPhotonAnalyzer::iso_area(double eta, int ver)
 }
 
 double 
-ExoDiPhotonAnalyzer::iso_kappa(double eta, int ver)
+TwoProngAnalyzer::iso_kappa(double eta, int ver)
 {
   if (ver == 1)
   {
@@ -1371,7 +1371,7 @@ ExoDiPhotonAnalyzer::iso_kappa(double eta, int ver)
 }
 
 bool
-ExoDiPhotonAnalyzer::isNeutral(int one, int two, int three)
+TwoProngAnalyzer::isNeutral(int one, int two, int three)
 {
   if (one == 22 && two == 22) return true;
   if (two == 22 && three == 22) return true;
@@ -1382,7 +1382,7 @@ ExoDiPhotonAnalyzer::isNeutral(int one, int two, int three)
 }
 
 bool
-ExoDiPhotonAnalyzer::isCharged(int one, int two, int three)
+TwoProngAnalyzer::isCharged(int one, int two, int three)
 {
   if (one==211 && two==-211 && three==111) return true;
   if (one==-211 && two==211 && three==111) return true;
@@ -1402,7 +1402,7 @@ ExoDiPhotonAnalyzer::isCharged(int one, int two, int three)
 }
 
 void
-ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
+TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
   if (fDebug) cout << "Entering analyze()... " << endl;
 
@@ -1813,7 +1813,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.getByToken(recHitsEBToken, recHitsEB_h );
   const EcalRecHitCollection * recHitsEB = 0;
   if ( ! recHitsEB_h.isValid() ) {
-    LogError("ExoDiPhotonAnalyzer") << " ECAL Barrel RecHit Collection not available !"; return;
+    LogError("TwoProngAnalyzer") << " ECAL Barrel RecHit Collection not available !"; return;
   } else {
     recHitsEB = recHitsEB_h.product();
   }
@@ -1822,7 +1822,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   iEvent.getByToken(recHitsEEToken, recHitsEE_h );
   const EcalRecHitCollection * recHitsEE = 0;
   if ( ! recHitsEE_h.isValid() ) {
-    LogError("ExoDiPhotonAnalyzer") << " ECAL Endcap RecHit Collection not available !"; return;
+    LogError("TwoProngAnalyzer") << " ECAL Endcap RecHit Collection not available !"; return;
   } else {
     recHitsEE = recHitsEE_h.product();
   }
@@ -2960,11 +2960,11 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   InitRecoPhotonInfo(fRecoTightPhotonInfo2);
   InitRecoPhotonInfo(fRecoTightPhotonInfo3);
   if (goodPhotons.size() > 0)
-    ExoDiPhotons::FillRecoPhotonInfo(fRecoTightPhotonInfo1,&(*goodPhotons[0]),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup); 
+    TwoProngAnalysis::FillRecoPhotonInfo(fRecoTightPhotonInfo1,&(*goodPhotons[0]),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup); 
   if (goodPhotons.size() > 1)
-    ExoDiPhotons::FillRecoPhotonInfo(fRecoTightPhotonInfo2,&(*goodPhotons[1]),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup); 
+    TwoProngAnalysis::FillRecoPhotonInfo(fRecoTightPhotonInfo2,&(*goodPhotons[1]),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup); 
   if (goodPhotons.size() > 2)
-    ExoDiPhotons::FillRecoPhotonInfo(fRecoTightPhotonInfo3,&(*goodPhotons[2]),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup); 
+    TwoProngAnalysis::FillRecoPhotonInfo(fRecoTightPhotonInfo3,&(*goodPhotons[2]),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup); 
   if (fDebug) cout << ". done high-pt-id photons" << endl;
 
   // Construct Di-Objects
@@ -3198,7 +3198,7 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
 }
 
 void 
-ExoDiPhotonAnalyzer::beginJob()
+TwoProngAnalyzer::beginJob()
 {
   if (fMakeTrees) {
   cout << "\n===========================" << endl;
@@ -3244,7 +3244,7 @@ ExoDiPhotonAnalyzer::beginJob()
 }
 
 void 
-ExoDiPhotonAnalyzer::endJob()
+TwoProngAnalyzer::endJob()
 {
   // print a cutflow if using a filter 
   if ( fFilterOnPhoton || fFilterOnTwoProng || fAddDrConePhotonCut) {
@@ -3329,7 +3329,7 @@ ExoDiPhotonAnalyzer::endJob()
 // High-pt Id subroutines
 
 // determine if saturated, needed for high-pt-id
-bool ExoDiPhotonAnalyzer::photon_isSaturated(const pat::Photon *photon, const EcalRecHitCollection *recHitsEB, const EcalRecHitCollection *recHitsEE,
+bool TwoProngAnalyzer::photon_isSaturated(const pat::Photon *photon, const EcalRecHitCollection *recHitsEB, const EcalRecHitCollection *recHitsEE,
 		                                         const CaloSubdetectorTopology* subDetTopologyEB_, const CaloSubdetectorTopology* subDetTopologyEE_)
 {
   using namespace std;    
@@ -3371,7 +3371,7 @@ bool ExoDiPhotonAnalyzer::photon_isSaturated(const pat::Photon *photon, const Ec
 }
 
 // The high-pt-id
-bool ExoDiPhotonAnalyzer::photon_passHighPtID(const pat::Photon* photon, double rho, bool isSat)
+bool TwoProngAnalyzer::photon_passHighPtID(const pat::Photon* photon, double rho, bool isSat)
 {
   if (
     passHadTowerOverEmCut(photon) &&
@@ -3384,7 +3384,7 @@ bool ExoDiPhotonAnalyzer::photon_passHighPtID(const pat::Photon* photon, double 
   else return false;
 }
 // The high-pt-id without iso gamma
-bool ExoDiPhotonAnalyzer::photon_passHighPtID_loose(const pat::Photon* photon, double rho, bool isSat)
+bool TwoProngAnalyzer::photon_passHighPtID_loose(const pat::Photon* photon, double rho, bool isSat)
 {
   if (
     passHadTowerOverEmCut(photon) &&
@@ -3396,7 +3396,7 @@ bool ExoDiPhotonAnalyzer::photon_passHighPtID_loose(const pat::Photon* photon, d
   else return false;
 }
 // The minimal high-pt-id
-bool ExoDiPhotonAnalyzer::photon_passHighPtID_base(const pat::Photon* photon, double rho, bool isSat)
+bool TwoProngAnalyzer::photon_passHighPtID_base(const pat::Photon* photon, double rho, bool isSat)
 {
   if (
     photon->passElectronVeto()
@@ -3405,7 +3405,7 @@ bool ExoDiPhotonAnalyzer::photon_passHighPtID_base(const pat::Photon* photon, do
   else return false;
 }
 // The modified high-pt-id
-bool ExoDiPhotonAnalyzer::photon_passHighPtID_DrCone(const pat::Photon* photon, double rho, bool isSat)
+bool TwoProngAnalyzer::photon_passHighPtID_DrCone(const pat::Photon* photon, double rho, bool isSat)
 {
   if (
     passHadTowerOverEmCut(photon) &&
@@ -3565,7 +3565,7 @@ double phoKappaHighPtID(const pat::Photon *photon)
 
 // function for finding Ztoll decay type
 vector<string>
-ExoDiPhotonAnalyzer::getDecay(const reco::Candidate & genparticle, int flag)
+TwoProngAnalyzer::getDecay(const reco::Candidate & genparticle, int flag)
 {
   vector<string> products;
 
@@ -3666,4 +3666,4 @@ bool compareCandsByPt(const edm::Ptr<const reco::Candidate> cand1, const edm::Pt
 }
 
 //define this as a plug-in
-DEFINE_FWK_MODULE(ExoDiPhotonAnalyzer);
+DEFINE_FWK_MODULE(TwoProngAnalyzer);

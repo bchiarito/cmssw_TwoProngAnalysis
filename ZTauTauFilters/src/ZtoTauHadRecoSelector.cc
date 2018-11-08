@@ -53,7 +53,7 @@
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 // edm utilities includes
 #include "DataFormats/Math/interface/deltaR.h"
-#include "DiPhotonAnalysis/ZTauTauFilters/interface/ZtoTauHadPreSelection.h"
+#include "TwoProngAnalysis/ZTauTauFilters/interface/ZtoTauHadPreSelection.h"
 
 // namesspace defaults
 using std::vector;

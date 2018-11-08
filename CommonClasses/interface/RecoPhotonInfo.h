@@ -54,7 +54,7 @@
 #include "DataFormats/EgammaCandidates/interface/PhotonFwd.h"
 
 
-namespace ExoDiPhotons
+namespace TwoProngAnalysis
 {
 
   struct recoPhotonInfo_t {

@@ -1,17 +1,17 @@
 import FWCore.ParameterSet.Config as cms
 
-twoprongNtuplizer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
+twoprongNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
                                   # two-prong object options
                                   candidateMinPt = cms.untracked.double(20.0),
                                   candidateAbsMaxEta = cms.untracked.double(2.5),
                                   candidateTrackAsymmetryCut = cms.untracked.double(0.2),
                                   candidatePhotonAsymmetryCut = cms.untracked.double(0.15),
-                                  candidateOptionalExtraTrack = cms.untracked.bool(True), # from False
-                                  chargedHadronPairMinDR = cms.untracked.double(0.1), # from 0.05
+                                  candidateOptionalExtraTrack = cms.untracked.bool(False),
+                                  chargedHadronPairMinDR = cms.untracked.double(0.05),
                                   chargedHadronMinPt = cms.untracked.double(3.0),
                                   photonPtCut = cms.untracked.double(3.0),
-                                  photonPhiBoxSize = cms.untracked.double(0.4), # from 0.2
-                                  photonEtaBoxSize = cms.untracked.double(0.1), # from 0.05
+                                  photonPhiBoxSize = cms.untracked.double(0.2),
+                                  photonEtaBoxSize = cms.untracked.double(0.05),
                                   isolationConeR = cms.untracked.double(0.3),
                                   chargedIsoCut = cms.untracked.double(0.1),
                                   neutralIsoCut = cms.untracked.double(0.1),

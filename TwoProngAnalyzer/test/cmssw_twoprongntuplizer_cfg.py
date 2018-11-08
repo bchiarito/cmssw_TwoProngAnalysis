@@ -1,3 +1,4 @@
+import sys
 # Command line options
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ("python")
@@ -15,8 +16,16 @@ options.register("out", "", VarParsing.multiplicity.singleton, VarParsing.varTyp
 options.register("debug", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "True includes all output, False removes most of the per event output")
 options.register("doLumis", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "use a JSON file to specify lumis")
 options.register("originalGeometry", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "use the original loads for geometry, taken from original diphoton ntuplizer")
+# filters
+options.register("filterOnPhoton", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 Photon")
+options.register("filterOnTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 TwoProng")
+options.register("DYsignal", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("DYbkg", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("tauPreselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 # two-prong object definition
-options.register("twoProngDefinition", 1, VarParsing.multiplicity.singleton, VarParsing.varType.float, "1 = regular, 2 = tau-modified, 3 = command line")
+options.register("standardTwoProng", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("tauModifiedTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("commandLineTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 # two-prong object definition detailed
 options.register("optionalExtraTrack", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("trackDR", 0.05, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
@@ -42,11 +51,6 @@ options.register("fakeRateHistos", False, VarParsing.multiplicity.singleton, Var
 options.register("triggerEffHistos", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("twoprongYieldHistos", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("stackedDalitzHistos", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
-# ztagandprobe options
-options.register("DYsignal", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
-options.register("DYbkg", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
-options.register("tagandprobeSelection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
-options.register("preSelection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.setDefault("maxEvents", 10)
 options.parseArguments()
 
@@ -104,7 +108,7 @@ if options.sample == 'etaprime1000':
 
 # Begin configuration
 import FWCore.ParameterSet.Config as cms
-process = cms.Process("TwoProngNtuplizer")
+process = cms.Process("TwoProngAnalysis")
 
 # Log messages
 process.load("FWCore.MessageService.MessageLogger_cfi")
@@ -137,6 +141,9 @@ elif options.globalTag == 'data2016':
   process.GlobalTag.globaltag = '80X_dataRun2_2016SeptRepro_v7'
 else:
   process.GlobalTag.globaltag = options.globalTag
+if process.GlobalTag.globaltag == "":
+  print "Must choose a GlobalTag, GlobalTag left blank... exiting"
+  sys.exit()
 print "Using GlobalTag: ", process.GlobalTag.globaltag
 
 # Allow unscheduled
@@ -173,100 +180,64 @@ if not options.doLumis=="":
     process.source.lumisToProcess = LumiList.LumiList(filename = goodlumis).getVLuminosityBlockRange()
 
 # the ntuplizer
-if options.twoProngDefinition == 3:
-  process.twoprongNtuplizer = cms.EDAnalyzer('ExoDiPhotonAnalyzer',
-                                  # two-prong object options
-                                  candidateMinPt = cms.untracked.double(options.minPt),
-                                  candidateAbsMaxEta = cms.untracked.double(options.maxEta),
-                                  candidateTrackAsymmetryCut = cms.untracked.double(options.trackAsym),
-                                  candidatePhotonAsymmetryCut = cms.untracked.double(options.photonAsym),
-                                  candidateOptionalExtraTrack = cms.untracked.bool(options.optionalExtraTrack),
-                                  chargedHadronPairMinDR = cms.untracked.double(options.trackDR),
-                                  chargedHadronMinPt = cms.untracked.double(options.constituentMinPt),
-                                  photonPtCut = cms.untracked.double(options.constituentMinPt),
-                                  photonPhiBoxSize = cms.untracked.double(options.photonBoxPhi),
-                                  photonEtaBoxSize = cms.untracked.double(options.photonBoxEta),
-                                  isolationConeR = cms.untracked.double(0.3),
-                                  chargedIsoCut = cms.untracked.double(options.chargedIsoCut),
-                                  neutralIsoCut = cms.untracked.double(options.neutralIsoCut),
-                                  egammaIsoCut = cms.untracked.double(options.egammaIsoCut),
-                                  chargedIsoLooseMax = cms.untracked.double(0.3),
-                                  neutralIsoLooseMax = cms.untracked.double(0.3),
-                                  egammaIsoLooseMax = cms.untracked.double(0.3),
-                                  generatorMatchDR = cms.untracked.double(0.1),
-                                  # high-pt-photon-id options
-                                  rho = cms.InputTag("fixedGridRhoFastjetAll"),
-                                  addPhotonCutDrConeHE = cms.untracked.bool(options.addConeHE),
-                                  includeOldPhotons = cms.untracked.bool(True),
-                                  # HLT paths
-                                  bits = cms.InputTag("TriggerResults","","HLT"),
-                                  prescales = cms.InputTag("patTrigger"),
-                                  objects = cms.InputTag("selectedPatTrigger"),
-                                  # MC options
-                                  includeSignalGenParticles = cms.untracked.bool(options.isSignal),
-                                  includeMCInfo = cms.untracked.bool(options.mcInfo),
-                                  mcXS = cms.untracked.double(options.mcXS),
-                                  mcN = cms.untracked.double(options.mcN),
-                                  runningOnTauTauMC = cms.untracked.bool(options.isTauTau),
-                                  # control output
-                                  makeTrees = cms.untracked.bool(options.ntuples),
-                                  includeAllCandObjects = cms.untracked.bool(options.includeCands),
-                                  includeAllLooseObjects = cms.untracked.bool(options.includeLoose),
-                                  debug = cms.untracked.bool(options.debug),
-                                  # histos
-                                  fakeRateHistos = cms.untracked.bool(options.fakeRateHistos),
-                                  triggerEffHistos = cms.untracked.bool(options.triggerEffHistos),
-                                  twoprongYieldHistos = cms.untracked.bool(options.twoprongYieldHistos),
-                                  stackedDalitzHistos = cms.untracked.bool(options.stackedDalitzHistos),
-                                  )
-elif options.twoProngDefinition == 2:
-  process.load('DiPhotonAnalysis.ExoDiPhotonAnalyzer.cmssw_twoprongntuplizer_taumodified_cfi')
-elif options.twoProngDefinition == 1:
-  process.load('DiPhotonAnalysis.ExoDiPhotonAnalyzer.cmssw_twoprongntuplizer_standard_cfi')
+if options.tauModifiedTwoProng:
+  process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_taumodified_cfi')
+elif options.commandLineTwoProng or options.standardTwoProng:
+  process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_standard_cfi')
 else:
   print "must select one twoprong version"
+# override if using command line
+if options.commandLineTwoProng:
+    process.twoprongNtuplizer.candidateMinPt = options.minPt
+    process.twoprongNtuplizer.candidateAbsMaxEta = options.maxEta
+    process.twoprongNtuplizer.candidateTrackAsymmetryCut = options.trackAsym
+    process.twoprongNtuplizer.candidatePhotonAsymmetryCut = options.photonAsym
+    process.twoprongNtuplizer.candidateOptionalExtraTrack = options.optionalExtraTrack
+    process.twoprongNtuplizer.chargedHadronPairMinDR = options.trackDR
+    process.twoprongNtuplizer.chargedHadronMinPt = options.constituentMinPt
+    process.twoprongNtuplizer.photonPtCut = options.constituentMinPt
+    process.twoprongNtuplizer.photonPhiBoxSize = options.photonBoxPhi
+    process.twoprongNtuplizer.photonEtaBoxSize = options.photonBoxEta
+    process.twoprongNtuplizer.chargedIsoCut = options.chargedIsoCut
+    process.twoprongNtuplizer.neutralIsoCut = options.neutralIsoCut
+    process.twoprongNtuplizer.egammaIsoCut = options.egammaIsoCut
 # settings always overwritten by command line
-process.twoprongNtuplizer.includeMCInfo = options.mcInfo
 process.twoprongNtuplizer.includeSignalGenParticles = options.isSignal
 process.twoprongNtuplizer.runningOnTauTauMC = options.isTauTau
 process.twoprongNtuplizer.mcXS = options.mcXS
 process.twoprongNtuplizer.mcN = options.mcN
+process.twoprongNtuplizer.includeMCInfo = options.mcInfo
 process.twoprongNtuplizer.debug = options.debug
+# filters
+process.twoprongNtuplizer.filterOnPhoton = options.filterOnPhoton;
+process.twoprongNtuplizer.filterOnTwoProng = options.filterOnTwoProng;
+# Cone HE Photon
+process.twoprongNtuplizer.addPhotonCutDrConeHE = options.addConeHE;
+# object includes
+process.twoprongNtuplizer.includeAllCandObjects = options.includeCands;
+process.twoprongNtuplizer.includeAllLooseObjects = options.includeLoose;
+# histo includes
+process.twoprongNtuplizer.fakeRateHistos = options.fakeRateHistos;
+process.twoprongNtuplizer.triggerEffHistos = options.triggerEffHistos;
+process.twoprongNtuplizer.twoprongYieldHistos = options.twoprongYieldHistos;
+process.twoprongNtuplizer.stackedDalitzHistos = options.stackedDalitzHistos;
 
-# optional gen filters
-process.genDYsignalFilt = cms.EDFilter('ZtoTauHadTruthSelector',
-  filterByTruthDecayType = cms.untracked.vdouble(5.1,5.2,5.3,5.4),
+# options filters
+process.tauFilters = cms.Sequence()
+if options.DYsignal:
+  process.genDYsignalFilt = cms.EDFilter('ZtoTauHadTruthSelector',
+    filterByTruthDecayType = cms.untracked.vdouble(5.1,5.2,5.3,5.4),
   )
-process.genDYbkgFilt = cms.EDFilter('ZtoTauHadTruthSelector',
-  filterByTruthDecayType = cms.untracked.vdouble(1,2,3,4,6,7,8,9,0,10,-1),
+  process.tauFilters *= process.genDYsignalFilt
+if options.DYsignal:
+  process.genDYbkgFilt = cms.EDFilter('ZtoTauHadTruthSelector',
+    filterByTruthDecayType = cms.untracked.vdouble(1,2,3,4,6,7,8,9,0,10,-1),
   )
+  process.tauFilters *= process.genDYbkgFilt
+if options.tauPreselection:
+  process.preselection = cms.EDFilter('ZtoTauHadRecoSelector',
+    dumpCutflow = cms.untracked.bool(options.DYsignal or options.DYbkg)
+  )
+  process.tauFilters *= process.preselection
 
-# The path
-if (options.tagandprobeSelection and not options.preSelection):
-  process.selection = cms.EDFilter('ZtoTauHadRecoSelector',
-    dumpCutflow = cms.untracked.bool(True),
-    tnpSelectionOnly = cms.untracked.bool(True)
-    )
-  if (options.DYsignal):
-    process.path = cms.Path(process.selection * process.genDYsignalFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
-  elif (options.DYbkg):
-    process.path = cms.Path(process.selection * process.genDYbkgFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
-  else:
-    process.path = cms.Path(process.selection * process.egmPhotonIDSequence * process.twoprongNtuplizer)
-elif (options.preSelection and not options.tagandprobeSelection):
-  process.selection = cms.EDFilter('ZtoTauHadRecoSelector',
-    dumpCutflow = cms.untracked.bool(True)
-    )
-  if (options.DYsignal):
-    process.path = cms.Path(process.selection * process.genDYsignalFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
-  elif (options.DYbkg):
-    process.path = cms.Path(process.selection * process.genDYbkgFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
-  else:
-    process.path = cms.Path(process.selection * process.egmPhotonIDSequence * process.twoprongNtuplizer)
-else:
-  if (options.DYsignal):
-    process.path = cms.Path(process.genDYsignalFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
-  elif (options.DYbkg):
-    process.path = cms.Path(process.genDYbkgFilt * process.egmPhotonIDSequence * process.twoprongNtuplizer)
-  else:
-    process.path = cms.Path(process.egmPhotonIDSequence * process.twoprongNtuplizer)
+process.path = cms.Path(process.tauFilters * process.egmPhotonIDSequence * process.twoprongNtuplizer)
