@@ -7,7 +7,7 @@ config.General.transferLogs = True
 config.General.workArea = 'crab_multi_SinglePhoton_2015_25ns'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=data2015', 'addConeHE=True', 'includeCands=False']
+config.JobType.pyCfgParams = ['globalTag=data2015', 'addConeHE=True', 'includeCands=False', 'filterOnPhoton=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
 config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/prelim/Nov5/photon2015_25ns/' % (getUsernameFromSiteDB())

@@ -7,7 +7,7 @@ config.General.transferOutputs = True
 config.General.transferLogs = True
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=mc2015', 'addConeHE=True', 'includeCands=False', 'mcInfo=True']
+config.JobType.pyCfgParams = ['globalTag=mc2015', 'addConeHE=True', 'includeCands=False', 'mcInfo=True', 'filterOnPhoton=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
 config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/prelim/Nov5/qcd2015/' % (getUsernameFromSiteDB())

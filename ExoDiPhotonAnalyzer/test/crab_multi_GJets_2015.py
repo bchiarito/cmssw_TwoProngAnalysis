@@ -7,7 +7,7 @@ config.General.transferLogs = True
 config.General.workArea = 'crab_multi_GJets_2015'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=mc2015', 'addConeHE=True', 'includeCands=False', 'mcInfo=True']
+config.JobType.pyCfgParams = ['globalTag=mc2015', 'addConeHE=True', 'includeCands=False', 'mcInfo=True', 'filterOnPhoton=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
 config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/prelim/Nov5/gjets2015/' % (getUsernameFromSiteDB())
