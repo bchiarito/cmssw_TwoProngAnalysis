@@ -139,6 +139,8 @@ private:
   bool               fTriggerEffHistos;     // flag to include histograms in output
   bool               fTwoProngYieldHistos;  // flag to include histograms in output
   bool               fStackedDalitzHistos;  // flag to include stacked dalitz plots
+  bool               fFilterOnPhoton;  // flag to save only events with one or more photons
+  bool               fFilterOnTwoProng;  // flag to save only events with one or more twoprongs
 
   // ntuplizer config file options
   double fCandidatePairDR;
@@ -163,6 +165,10 @@ private:
   // constants
   double PI0_MASS = 0.135;
   double ETA_MASS = 0.548;
+
+  // counters for cutflow
+  int cutflow_total;
+  int cutflow_passFilter;
 
   // EDM Handles
   edm::EDGetTokenT<double> rhoToken_; 
@@ -697,6 +703,8 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     fTriggerEffHistos(iConfig.getUntrackedParameter<bool>("triggerEffHistos")),
     fTwoProngYieldHistos(iConfig.getUntrackedParameter<bool>("twoprongYieldHistos")),
     fStackedDalitzHistos(iConfig.getUntrackedParameter<bool>("stackedDalitzHistos")),
+    fFilterOnPhoton(iConfig.getUntrackedParameter<bool>("filterOnPhoton")),
+    fFilterOnTwoProng(iConfig.getUntrackedParameter<bool>("filterOnTwoProng")),
     fCandidatePairDR(iConfig.getUntrackedParameter<double>("chargedHadronPairMinDR")),
     fCandidatePairMinPt(iConfig.getUntrackedParameter<double>("chargedHadronMinPt")),
     fCandidatePairIsolationDR(iConfig.getUntrackedParameter<double>("isolationConeR")),
@@ -718,6 +726,11 @@ ExoDiPhotonAnalyzer::ExoDiPhotonAnalyzer(const edm::ParameterSet& iConfig)
     rhoToken_(consumes<double> (iConfig.getParameter<edm::InputTag>("rho")))
 {
   if (fDebug) cout << "Entering constructor... " << endl;
+
+  // start cutflow counters
+  cutflow_total = 0;
+  cutflow_passFilter = 0;
+
   // MiniAOD event content
   pfcandsToken_ = consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates"));
   genToken_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
@@ -3106,7 +3119,15 @@ ExoDiPhotonAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iS
   }
   
   // Now fill fTree2
-  if (fMakeTrees) fTree2->Fill();
+  cutflow_total++;
+  if (fMakeTrees) {
+    if ( fFilterOnPhoton &&  fFilterOnTwoProng &&  fAddDrConePhotonCut && fNumIDPhotons>=1 && fNumIDPhotons_ConeHE>=1 && fNumTwoProngPass>=1) { fTree2->Fill(); cutflow_passFilter++; }
+    if ( fFilterOnPhoton &&  fFilterOnTwoProng && !fAddDrConePhotonCut && fNumIDPhotons>=1 && fNumTwoProngPass>=1) { fTree2->Fill(); cutflow_passFilter++; }
+    if ( fFilterOnPhoton && !fFilterOnTwoProng &&  fAddDrConePhotonCut && fNumIDPhotons>=1 && fNumIDPhotons_ConeHE>=1) { fTree2->Fill(); cutflow_passFilter++; }
+    if ( fFilterOnPhoton && !fFilterOnTwoProng && !fAddDrConePhotonCut && fNumIDPhotons>=1) { fTree2->Fill(); cutflow_passFilter++; }
+    if (!fFilterOnPhoton &&  fFilterOnTwoProng && fNumTwoProngPass>=1) { fTree2->Fill(); cutflow_passFilter++; }
+    if (!fFilterOnPhoton && !fFilterOnTwoProng) { fTree2->Fill(); cutflow_passFilter++; }
+  }
 
   /* Histogram making */
 
@@ -3180,23 +3201,25 @@ void
 ExoDiPhotonAnalyzer::beginJob()
 {
   if (fMakeTrees) {
-  cout << "===========================" << endl;
+  cout << "\n===========================" << endl;
   cout << "= Ntuplizer Configuration =" << endl;
   cout << "===========================" << endl;
-  cout << "Debug " << fDebug << endl;
-  cout << "AddDrConePhotonCut " << fAddDrConePhotonCut << endl;
+  cout << "debug " << fDebug << endl;
+  cout << "addDrConePhotonCut " << fAddDrConePhotonCut << endl;
   cout << "includeSignalGenParticles " << fincludeSignalGenParticles << endl;
   cout << "includeAllLooseObjects " << fincludeAllLooseObjects << endl;
   cout << "includeAllCandObjects " << fincludeAllCandObjects << endl;
   cout << "includeOldPhotons " << fincludeOldPhotons << endl;
   cout << "includeMCInfo " << fincludeMCInfo << endl;
-  cout << "McXS " << fMcXS << endl;
-  cout << "McN " << fMcN << endl;
-  cout << "MakeTrees " << fMakeTrees << endl;
-  cout << "FakeRateHistos " << fFakeRateHistos << endl;
-  cout << "TriggerEffHistos " << fTriggerEffHistos << endl;
-  cout << "TwoProngYieldHistos " << fTwoProngYieldHistos << endl;
-  cout << "StackedDalitzHistos " << fStackedDalitzHistos << endl;
+  cout << "mcXS " << fMcXS << endl;
+  cout << "mcN " << fMcN << endl;
+  cout << "makeTrees " << fMakeTrees << endl;
+  cout << "fakeRateHistos " << fFakeRateHistos << endl;
+  cout << "triggerEffHistos " << fTriggerEffHistos << endl;
+  cout << "twoProngYieldHistos " << fTwoProngYieldHistos << endl;
+  cout << "stackedDalitzHistos " << fStackedDalitzHistos << endl;
+  cout << "filterOnPhoton " << fFilterOnPhoton << endl;
+  cout << "filterOnTwoProng " << fFilterOnTwoProng << endl;
   cout << "===========================" << endl;
   cout << "CandidatePairDR " << fCandidatePairDR << endl;
   cout << "CandidatePairMinPt " << fCandidatePairMinPt << endl;
@@ -3223,6 +3246,15 @@ ExoDiPhotonAnalyzer::beginJob()
 void 
 ExoDiPhotonAnalyzer::endJob()
 {
+  // print a cutflow if using a filter 
+  if ( fFilterOnPhoton || fFilterOnTwoProng || fAddDrConePhotonCut) {
+    cout << "\nCutflow report" << endl;
+    cout << "==============" << endl;
+    cout << "Total_Events " << cutflow_total << endl;
+    cout << "Passed_Filter " << cutflow_passFilter << endl;
+    cout << "==============" << endl;
+  }
+
   // fake rate histograms
   if (fFakeRateHistos) {
   fTwoProngFakeNume_even_pt->Sumw2();

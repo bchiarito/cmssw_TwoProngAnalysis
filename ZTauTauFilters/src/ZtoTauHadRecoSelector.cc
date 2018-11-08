@@ -268,9 +268,9 @@ void
 ZtoTauHadRecoSelector::endJob()
 {
   if (!cfg_tnpSelectionOnly)
-    cout << "ran filter selecting muon and tau events only" << endl;
+    cout << "\nran filter selecting muon and tau events only" << endl;
   else
-    cout << "ran filter selecting full preselection" << endl;
+    cout << "\nran filter selecting full preselection" << endl;
   if (cfg_dumpCutflow) {
     // cutflow print
     cout << "total " << cutflow_total << endl;
