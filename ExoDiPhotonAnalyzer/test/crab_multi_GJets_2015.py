@@ -1,15 +1,16 @@
 from WMCore.Configuration import Configuration
+from CRABClient.UserUtilities import config, getUsernameFromSiteDB
 config = Configuration()
 config.section_('General')
-config.General.workArea = 'crab_multi_gjets2015'
 config.General.transferOutputs = True
 config.General.transferLogs = True
+config.General.workArea = 'crab_multi_GJets_2015'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=mc2015', 'mcInfo=True']
+config.JobType.pyCfgParams = ['globalTag=mc2015', 'addConeHE=True', 'includeCands=False', 'mcInfo=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/ntuplizer_testruns/gjets2015/'
+config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/prelim/Nov5/gjets2015/' % (getUsernameFromSiteDB())
 config.Data.publication = False
 config.Data.unitsPerJob = 100000
 config.Data.totalUnits = -1

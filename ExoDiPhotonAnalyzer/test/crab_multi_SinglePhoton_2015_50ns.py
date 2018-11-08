@@ -6,16 +6,16 @@ config.General.transferOutputs = True
 config.General.transferLogs = True
 config.General.workArea = 'crab_multi_SinglePhoton_2015_50ns'
 config.section_('JobType')
-config.JobType.psetName = 'cmssw_twoprongntuplizer_crab_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=GR_H_V58C', 'data2015=True']
+config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
+config.JobType.pyCfgParams = ['globalTag=data2015', 'addConeHE=True', 'includeCands=False']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/photon2015_50ns/' % (getUsernameFromSiteDB())
+config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/prelim/Nov5/photon2015_50ns/' % (getUsernameFromSiteDB())
 config.Data.publication = False
 config.Data.unitsPerJob = 100
 config.Data.totalUnits = -1
 config.Data.splitting = 'LumiBased'
-config.Data.lumiMask = 'Cert_13TeV_16Dec2015ReReco_Collisions15_50ns_JSON_v2.txt'
+config.Data.lumiMask = 'json/Cert_13TeV_16Dec2015ReReco_Collisions15_50ns_JSON_v2.txt'
 config.section_('User')
 config.section_('Site')
 config.Site.storageSite = 'T3_US_Rutgers'
