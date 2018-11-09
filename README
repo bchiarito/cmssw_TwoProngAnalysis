@@ -3,7 +3,7 @@ To run on 2016 data/mc:
 cmsrel CMSSW_8_0_28
 cd CMSSW_8_0_28/src
 cmsenv
-git clone git@github.com:bchiarito/TwoProngNtuplizer.git TwoProngAnalysis
+git clone https://github.com/bchiarito/cmssw_TwoProngAnalysis.git TwoProngAnalysis
 scram b -j 4
 
 To run on 2015 data/mc:
@@ -11,5 +11,5 @@ To run on 2015 data/mc:
 cmsrel CMSSW_7_6_4
 cd CMSSW_7_6_4/src
 cmsenv
-git clone git@github.com:bchiarito/TwoProngNtuplizer.git TwoProngAnalysis
+git clone https://github.com/bchiarito/cmssw_TwoProngAnalysis.git TwoProngAnalysis
 scram b -j 4
