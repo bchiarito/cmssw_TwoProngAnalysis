@@ -127,7 +127,8 @@ private:
   bool               fDebug;                       // if set to False, mean to limit per event stdout output
   bool               fAddDrConePhotonCut;          // option needed for studying the Trigger ID, no longer needd
   bool               fincludeSignalGenParticles; // includes the GenPhi and other gen particles in ntuple
-  bool               frunningOnTauTauMC;           // running on Z->tau tau MC, will do gen particle matching to hadronic taus
+  bool               fRunningOnTauTauMC;           // running on Z->tau tau MC, will do gen particle matching to hadronic taus
+  bool               fincludeTauTauBranches;           // include reco level tau branches (for object eff study)
   bool               fincludeAllLooseObjects;    // include all loose twoprong objects in ntuple
   bool               fincludeAllCandObjects;     // include all twoprong candidate objects (no iso req) in ntuple
   bool               fincludeOldPhotons;         // include the Photon1,Photon2,Photon3 objects in ntuple
@@ -691,7 +692,8 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
     fDebug(iConfig.getUntrackedParameter<bool>("debug")),
     fAddDrConePhotonCut(iConfig.getUntrackedParameter<bool>("addPhotonCutDrConeHE")),
     fincludeSignalGenParticles(iConfig.getUntrackedParameter<bool>("includeSignalGenParticles")),
-    frunningOnTauTauMC(iConfig.getUntrackedParameter<bool>("runningOnTauTauMC")),
+    fRunningOnTauTauMC(iConfig.getUntrackedParameter<bool>("runningOnTauTauMC")),
+    fincludeTauTauBranches(iConfig.getUntrackedParameter<bool>("includeTauTauBranches")),
     fincludeAllLooseObjects(iConfig.getUntrackedParameter<bool>("includeAllLooseObjects")),
     fincludeAllCandObjects(iConfig.getUntrackedParameter<bool>("includeAllCandObjects")),
     fincludeOldPhotons(iConfig.getUntrackedParameter<bool>("includeOldPhotons")),
@@ -756,15 +758,22 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   // Branches for charged decay analysis
   if (fMakeTrees) {
   fTree2 = fs->make<TTree>("fTree2","ChargedDecayTree");
-  // Generator Objects
-  fTree2->Branch("tauDecayType",&fTauDecayType,"tauDecayType/D");
+  // Generator level
+  if (fincludeMCInfo) {
   fTree2->Branch("pthat",&fpthat,"pthat/D");
+  fTree2->Branch("mcW",&fMcW,"mcW/D");
+  fTree2->Branch("mcWProd",&fMcWProd,"mcWProd/D");
+  }
+  if (fRunningOnTauTauMC) {
+  fTree2->Branch("tauDecayType",&fTauDecayType,"tauDecayType/D");
   fTree2->Branch("GenTau_pt",&fGenTau_pt);
   fTree2->Branch("GenTau_eta",&fGenTau_eta);
   fTree2->Branch("GenTau_phi",&fGenTau_phi);
   fTree2->Branch("GenTau_mass",&fGenTau_mass);
   fTree2->Branch("GenTau_objDR",&fGenTau_objDR);
   fTree2->Branch("GenTau_candobjDR",&fGenTau_candobjDR);
+  }
+  if (fincludeSignalGenParticles) {
   fTree2->Branch("GenPhi_pt",&fGenPhi_pt);
   fTree2->Branch("GenPhi_eta",&fGenPhi_eta);
   fTree2->Branch("GenPhi_phi",&fGenPhi_phi);
@@ -797,6 +806,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("GenOmega_objDR",&fGenOmega_objDR); 
   fTree2->Branch("GenOmega_candobjDR",&fGenOmega_candobjDR); 
   fTree2->Branch("GenOmega_jetDR",&fGenOmega_jetDR); 
+  }
   // Trigger
   fTree2->Branch("HLT_Photon175",&fHLT_Photon175,"HLT_Photon175/I");
   fTree2->Branch("HLT_Photon22_Iso",&fHLT_Photon22_Iso,"HLT_Photon22_Iso/I");
@@ -804,15 +814,13 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("eventNum",&fEventNum,"eventNum/I");
   fTree2->Branch("runNum",&fRunNum,"runNum/I");
   fTree2->Branch("lumiNum",&fLumiNum,"lumiNum/I");
-  fTree2->Branch("mcW",&fMcW,"mcW/D");
-  fTree2->Branch("mcWProd",&fMcWProd,"mcWProd/D");
   fTree2->Branch("mcXS",&fMcXS,"mcXS/D");
   fTree2->Branch("mcN",&fMcN,"mcN/D");
   fTree2->Branch("nPV",&fNumPVs,"nPV/I");
   fTree2->Branch("rho",&fRho,"rho/D");
   fTree2->Branch("nPF",&fNumPF,"nPF/I");
   fTree2->Branch("nPrunedPF",&fNumPrunedPF,"numPrunedPF/I");
-  fTree2->Branch("HT_jets",&fHT_ak4jets,"HT_ak4jets/D");
+  fTree2->Branch("HT",&fHT_ak4jets,"HT/D");
   fTree2->Branch("HT_pf",&fHT_pf,"HT_pf/D");
   fTree2->Branch("MET",&fMET,"MET/D");
   fTree2->Branch("MET_phi",&fMET_phi,"MET_phi/D");
@@ -868,7 +876,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("IDPhoton_phi",&fIDPhoton_phi);
   fTree2->Branch("IDPhoton_mass",&fIDPhoton_mass);
   if (fAddDrConePhotonCut) {
-  fTree2->Branch("nTightPhotons_ConeHE",&fNumIDPhotons_ConeHE,"nTightPhotons_ConeHE/I");
+  fTree2->Branch("nPhotons_ConeHE",&fNumIDPhotons_ConeHE,"nPhotons_ConeHE/I");
   fTree2->Branch("IDPhoton_ConeHE_pt",&fID2Photon_pt);
   fTree2->Branch("IDPhoton_ConeHE_eta",&fID2Photon_eta);
   fTree2->Branch("IDPhoton_ConeHE_phi",&fID2Photon_phi);
@@ -1152,6 +1160,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("RecoPhiPhotonTwoProng",&fRecoPhiPhotonTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("RecoPhiInclusive",&fRecoPhiInclusive,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   // Tau preseletion branches
+  if (fincludeTauTauBranches) {
   fTree2->Branch("passZMuonTrigger",&fpassZMuonTrigger,"passZMuonTrigger/O");
   fTree2->Branch("passZTnP",&fpassZTnP,"passZTnP/O");
   fTree2->Branch("passZPre",&fpassZPre,"passZPre/O");
@@ -1179,6 +1188,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("ZvisibleMuonPatTau",&fZvisibleMuonTau,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("ZvisibleMuonProbeTau",&fZvisibleMuonJet,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("ZvisibleMuonTwoProng",&fZvisibleMuonTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  }
   }
 
   // initialize non-vector type branches
@@ -1838,7 +1848,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   iEvent.getByToken(pfcandsToken_, pfcands);
 
   edm::Handle<vector<reco::GenParticle>> genparticles;
-  if (fincludeSignalGenParticles || frunningOnTauTauMC || fincludeMCInfo) {
+  if (fincludeSignalGenParticles || fRunningOnTauTauMC || fincludeMCInfo) {
     iEvent.getByToken(genToken_, genparticles);
   }
 
@@ -2480,7 +2490,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
           if (fDebug) cout << ". finished gen omega matching" << endl;
           // Generator matching to tau
           double genTau_dR = 99.9;
-	        if (frunningOnTauTauMC) {
+	        if (fRunningOnTauTauMC) {
 	          for (unsigned int i = 0; i < genparticles->size(); i++) {
 	            const reco::GenParticle &genparticle = (*genparticles)[i];
 	            if (abs(genparticle.pdgId()) == 15) {
@@ -2702,7 +2712,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   if (fDebug) cout << ". finished passed collections" << endl;
 
   // tau decay type
-  if (frunningOnTauTauMC) {
+  if (fRunningOnTauTauMC) {
     vector<string> leptons;
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle & genparticle = (*genparticles)[i];
@@ -2796,7 +2806,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   }
 
   // More matching, by gen tau perspective now
-  if (frunningOnTauTauMC) {
+  if (fRunningOnTauTauMC) {
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle & genparticle = (*genparticles)[i];
       if (abs(genparticle.pdgId()) != 15) continue;
@@ -3208,6 +3218,8 @@ TwoProngAnalyzer::beginJob()
   cout << "addDrConePhotonCut " << fAddDrConePhotonCut << endl;
   cout << "includeSignalGenParticles " << fincludeSignalGenParticles << endl;
   cout << "includeAllLooseObjects " << fincludeAllLooseObjects << endl;
+  cout << "runningOnTauTauMC " << fRunningOnTauTauMC << endl;
+  cout << "includeTauTauBranches " << fincludeTauTauBranches << endl;
   cout << "includeAllCandObjects " << fincludeAllCandObjects << endl;
   cout << "includeOldPhotons " << fincludeOldPhotons << endl;
   cout << "includeMCInfo " << fincludeMCInfo << endl;

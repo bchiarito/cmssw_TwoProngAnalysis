@@ -47,6 +47,7 @@ options.register("addConeHE", False, VarParsing.multiplicity.singleton, VarParsi
 options.register("ntuples", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Add ntuples (Ttrees) to output")
 options.register("includeCands", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include all cand twoprongs in ntuple")
 options.register("includeLoose", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include Loose twoprongs in ntuple")
+options.register("includeTauTau", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include tau tau eff study branches")
 options.register("fakeRateHistos", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("triggerEffHistos", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("twoprongYieldHistos", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
@@ -204,6 +205,7 @@ if options.commandLineTwoProng:
 # settings always overwritten by command line
 process.twoprongNtuplizer.includeSignalGenParticles = options.isSignal
 process.twoprongNtuplizer.runningOnTauTauMC = options.isTauTau
+process.twoprongNtuplizer.includeTauTauBranches = options.includeTauTau
 process.twoprongNtuplizer.mcXS = options.mcXS
 process.twoprongNtuplizer.mcN = options.mcN
 process.twoprongNtuplizer.includeMCInfo = options.mcInfo

@@ -38,6 +38,7 @@ twoprongNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
                                   makeTrees = cms.untracked.bool(True),
                                   includeAllCandObjects = cms.untracked.bool(True),
                                   includeAllLooseObjects = cms.untracked.bool(False),
+                                  includeTauTauBranches = cms.untracked.bool(False),
                                   debug = cms.untracked.bool(False),
                                   # histos
                                   fakeRateHistos = cms.untracked.bool(False),
