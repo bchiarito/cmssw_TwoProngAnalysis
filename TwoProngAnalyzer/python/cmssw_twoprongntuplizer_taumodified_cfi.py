@@ -1,6 +1,6 @@
 import FWCore.ParameterSet.Config as cms
 
-twoprongNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
+twoprongModNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
                                   # two-prong object options
                                   candidateMinPt = cms.untracked.double(20.0),
                                   candidateAbsMaxEta = cms.untracked.double(2.5),

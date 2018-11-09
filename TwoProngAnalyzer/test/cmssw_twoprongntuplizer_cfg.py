@@ -181,12 +181,10 @@ if not options.doLumis=="":
     process.source.lumisToProcess = LumiList.LumiList(filename = goodlumis).getVLuminosityBlockRange()
 
 # the ntuplizer
+if options.commandLineTwoProng or options.standardTwoProng:
+  process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_standard_cfi')
 if options.tauModifiedTwoProng:
   process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_taumodified_cfi')
-elif options.commandLineTwoProng or options.standardTwoProng:
-  process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_standard_cfi')
-else:
-  print "must select one twoprong version"
 # override if using command line
 if options.commandLineTwoProng:
     process.twoprongNtuplizer.candidateMinPt = options.minPt
@@ -242,4 +240,7 @@ if options.tauPreselection:
   )
   process.tauFilters *= process.preselection
 
-process.path = cms.Path(process.tauFilters * process.egmPhotonIDSequence * process.twoprongNtuplizer)
+# the path
+process.path = cms.Path(process.tauFilters * process.egmPhotonIDSequence)
+if options.commandLineTwoProng or options.standardTwoProng: process.path *= process.twoprongNtuplizer
+if options.tauModifiedTwoProng: process.path *= process.twoprongModNtuplizer
