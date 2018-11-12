@@ -882,6 +882,11 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("IDPhoton_ConeHE_phi",&fID2Photon_phi);
   fTree2->Branch("IDPhoton_ConeHE_mass",&fID2Photon_mass);
   }
+  if(fincludeOldPhotons) {
+  fTree2->Branch("Photon1",&fRecoTightPhotonInfo1,TwoProngAnalysis::recoPhotonBranchDefString.c_str());
+  fTree2->Branch("Photon2",&fRecoTightPhotonInfo2,TwoProngAnalysis::recoPhotonBranchDefString.c_str());
+  fTree2->Branch("Photon3",&fRecoTightPhotonInfo3,TwoProngAnalysis::recoPhotonBranchDefString.c_str());
+  }
   // TwoProngs
   fTree2->Branch("nTwoProngCands",&fNumTwoProng,"nTwoProngCands/I");
   fTree2->Branch("nTwoProngs",&fNumTwoProngPass,"nTwoProngs/I");
@@ -1150,11 +1155,6 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("TwoProng_CHpos_p3",&fTwoProng_CHpos_p3);
   fTree2->Branch("TwoProng_CHneg_p3",&fTwoProng_CHneg_p3);
   fTree2->Branch("TwoProng_photon_p3",&fTwoProng_photon_p3);
-  if(fincludeOldPhotons) {
-  fTree2->Branch("Photon1",&fRecoTightPhotonInfo1,TwoProngAnalysis::recoPhotonBranchDefString.c_str());
-  fTree2->Branch("Photon2",&fRecoTightPhotonInfo2,TwoProngAnalysis::recoPhotonBranchDefString.c_str());
-  fTree2->Branch("Photon3",&fRecoTightPhotonInfo3,TwoProngAnalysis::recoPhotonBranchDefString.c_str());
-  }
   // Combined Objects
   fTree2->Branch("RecoPhiDiTwoProng",&fRecoPhiDiTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("RecoPhiPhotonTwoProng",&fRecoPhiPhotonTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
@@ -1185,8 +1185,8 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("ProbeTau_eta",&fProbeTau_eta);
   fTree2->Branch("ProbeTau_phi",&fProbeTau_phi);
   fTree2->Branch("ProbeTau_mass",&fProbeTau_mass);
-  fTree2->Branch("ZvisibleMuonPatTau",&fZvisibleMuonTau,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("ZvisibleMuonProbeTau",&fZvisibleMuonJet,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("ZvisibleMuonPatTau",&fZvisibleMuonTau,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("ZvisibleMuonTwoProng",&fZvisibleMuonTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   }
   }
@@ -2039,9 +2039,6 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   for (unsigned int i = 0; i < muons->size(); i++) {
     const pat::Muon &muon = (*muons)[i];
     fMuon_pt.push_back(muon.pt());
-    if (muon.pt() > 5000) {
-      cout << "muon pt " << muon.pt() << ", event " << iEvent.id().event() << " lumi " <<  iEvent.id().luminosityBlock() << " run " << iEvent.id().run() << endl;
-    }
     fMuon_eta.push_back(muon.eta());
     fMuon_phi.push_back(muon.phi());
     fMuon_mass.push_back(muon.mass());
@@ -2065,15 +2062,15 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     const pat::Tau &tau = (*taus)[i];
     if (tau.pt() <= 20) continue;
     if (fabs(tau.eta()) >= 2.3) continue;
-    if (!(tau.tauID("byTightIsolationMVArun2v1DBnewDMwLT") < 0.5)) continue;
-    if (!(tau.tauID("againstElectronVLooseMVA6") < 0.5)) continue;
-    if (!(tau.tauID("againstMuonTight3") < 0.5)) continue;
+    if (tau.tauID("againstElectronVLooseMVA6") < 0.5) continue;
+    if (tau.tauID("againstMuonTight3") < 0.5) continue;
+    if (tau.tauID("byTightIsolationMVArun2v1DBnewDMwLT") < 0.5) continue;
     fTau_pt.push_back(tau.pt());
     fTau_eta.push_back(tau.eta());
     fTau_phi.push_back(tau.phi());
     fTau_mass.push_back(tau.mass());
   }
-  fNumTaus = taus->size();
+  fNumTaus = fTau_pt.size(); 
 
   // Selected Taus
   vector<const pat::Tau *> selected_taus;
@@ -3106,7 +3103,8 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       FillRecoDiObjectInfo(fZvisibleMuonTwoProng, z_muon, z_2prong);
     }
     if (fDebug) cout << ". done z with twoprong" << endl;
-
+    
+    // visible Z with pattau
     double closest_dr_tau = 100.0;
     unsigned int index_closest_dr_tau = -1;
     for(unsigned int i = 0; i < fTau_pt.size(); i++)
