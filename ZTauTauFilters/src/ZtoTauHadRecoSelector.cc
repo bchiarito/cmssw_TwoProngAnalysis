@@ -207,8 +207,8 @@ ZtoTauHadRecoSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   cutflow_total += 1;
   if (result.foundMuonTrigger != "") cutflow_foundTrigger += 1;
   if (result.passMuonTrigger) cutflow_passTrigger += 1;
-  if (result.foundTagMuon) cutflow_passMuon += 1;
-  if (result.foundProbeTau) cutflow_passTau += 1;
+  if (result.nTagMuons > 0) cutflow_passMuon += 1;
+  if (result.nProbeTaus > 0) cutflow_passTau += 1;
   if (result.foundTagMuon && result.passMuonTrigger) cutflow_passMuonAndTrigger += 1;
   if (result.foundTagMuon && result.foundProbeTau) cutflow_passMuonAndTau += 1;
   if (result.passPreSelection) cutflow_passPreSelection += 1;
