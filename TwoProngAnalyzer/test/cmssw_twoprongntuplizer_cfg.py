@@ -56,6 +56,11 @@ options.setDefault("maxEvents", 10)
 options.parseArguments()
 
 # shortcut settings
+if options.sample == 'dy':
+  options.sample = 'file:/cms/chiarito/samples/miniaod/dysig/rootfile_DYJetsToLL_M-50_80k.root'
+  options.globalTag = 'mc2016'
+  options.isSignal = True
+  options.out = 'eta125'
 if options.sample == 'eta125':
   options.sample = 'file:/cms/jrj90/eos/twoprong_generation/etaetaprime_run/july132018/Phi125_Eta/76X_mcRun2_asymptotic_v12_Run2_25ns_MINIAOD/180713_185319/0000/MINIAOD_1.root'
   options.globalTag = 'mc2016'
@@ -221,6 +226,12 @@ process.twoprongNtuplizer.fakeRateHistos = options.fakeRateHistos;
 process.twoprongNtuplizer.triggerEffHistos = options.triggerEffHistos;
 process.twoprongNtuplizer.twoprongYieldHistos = options.twoprongYieldHistos;
 process.twoprongNtuplizer.stackedDalitzHistos = options.stackedDalitzHistos;
+# making the twoprong ntuplizer sequence
+process.ntuplizer = cms.Sequence()
+if options.commandLineTwoProng or options.standardTwoProng:
+  process.ntuplizer *= process.twoprongNtuplizer
+if options.tauModifiedTwoProng:
+  process.path *= ntuplizer.twoprongModNtuplizer
 
 # options filters
 process.tauFilters = cms.Sequence()
@@ -229,7 +240,7 @@ if options.DYsig:
     filterByTruthDecayType = cms.untracked.vdouble(5.1,5.2,5.3,5.4),
   )
   process.tauFilters *= process.genDYsignalFilt
-if options.DYsig:
+if options.DYbkg:
   process.genDYbkgFilt = cms.EDFilter('ZtoTauHadTruthSelector',
     filterByTruthDecayType = cms.untracked.vdouble(1,2,3,4,6,7,8,9,0,10,-1),
   )
@@ -241,6 +252,4 @@ if options.tauPreselection:
   process.tauFilters *= process.preselection
 
 # the path
-process.path = cms.Path(process.tauFilters * process.egmPhotonIDSequence)
-if options.commandLineTwoProng or options.standardTwoProng: process.path *= process.twoprongNtuplizer
-if options.tauModifiedTwoProng: process.path *= process.twoprongModNtuplizer
+process.path = cms.Path(process.tauFilters * process.egmPhotonIDSequence * process.ntuplizer)
