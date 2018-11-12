@@ -19,7 +19,7 @@ options.register("originalGeometry", False, VarParsing.multiplicity.singleton, V
 # filters
 options.register("filterOnPhoton", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 Photon")
 options.register("filterOnTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 TwoProng")
-options.register("DYsignal", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("DYsig", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("DYbkg", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("tauPreselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 # two-prong object definition
@@ -224,19 +224,19 @@ process.twoprongNtuplizer.stackedDalitzHistos = options.stackedDalitzHistos;
 
 # options filters
 process.tauFilters = cms.Sequence()
-if options.DYsignal:
+if options.DYsig:
   process.genDYsignalFilt = cms.EDFilter('ZtoTauHadTruthSelector',
     filterByTruthDecayType = cms.untracked.vdouble(5.1,5.2,5.3,5.4),
   )
   process.tauFilters *= process.genDYsignalFilt
-if options.DYsignal:
+if options.DYsig:
   process.genDYbkgFilt = cms.EDFilter('ZtoTauHadTruthSelector',
     filterByTruthDecayType = cms.untracked.vdouble(1,2,3,4,6,7,8,9,0,10,-1),
   )
   process.tauFilters *= process.genDYbkgFilt
 if options.tauPreselection:
   process.preselection = cms.EDFilter('ZtoTauHadRecoSelector',
-    dumpCutflow = cms.untracked.bool(options.DYsignal or options.DYbkg)
+    dumpCutflow = cms.untracked.bool(True)
   )
   process.tauFilters *= process.preselection
 
