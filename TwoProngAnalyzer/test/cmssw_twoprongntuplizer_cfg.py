@@ -7,7 +7,7 @@ options.register("sample", "", VarParsing.multiplicity.singleton, VarParsing.var
 options.register("globalTag", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "global tag to use when running")
 # usually required
 options.register("isSignal", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify singal MC for looking for Phi and omega gen particles")
-options.register("isTauTau", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify Z->ll MC")
+options.register("isDYll", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify Z->ll MC")
 options.register("mcInfo", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "include mc weight in Ttree")
 # other
 options.register("mcXS", 1.0, VarParsing.multiplicity.singleton, VarParsing.varType.float, "mc cross section, if desired to be filled in trees")
@@ -59,8 +59,9 @@ options.parseArguments()
 if options.sample == 'dy':
   options.sample = 'file:/cms/chiarito/samples/miniaod/dysig/rootfile_DYJetsToLL_M-50_80k.root'
   options.globalTag = 'mc2016'
-  options.isSignal = True
-  options.out = 'eta125'
+  options.includeTauTau = True
+  options.isDYll = True
+  options.out = 'dy'
 if options.sample == 'eta125':
   options.sample = 'file:/cms/jrj90/eos/twoprong_generation/etaetaprime_run/july132018/Phi125_Eta/76X_mcRun2_asymptotic_v12_Run2_25ns_MINIAOD/180713_185319/0000/MINIAOD_1.root'
   options.globalTag = 'mc2016'
@@ -207,7 +208,7 @@ if options.commandLineTwoProng:
     process.twoprongNtuplizer.egammaIsoCut = options.egammaIsoCut
 # settings always overwritten by command line
 process.twoprongNtuplizer.includeSignalGenParticles = options.isSignal
-process.twoprongNtuplizer.runningOnTauTauMC = options.isTauTau
+process.twoprongNtuplizer.runningOnTauTauMC = options.isDYll
 process.twoprongNtuplizer.includeTauTauBranches = options.includeTauTau
 process.twoprongNtuplizer.mcXS = options.mcXS
 process.twoprongNtuplizer.mcN = options.mcN
