@@ -281,13 +281,13 @@ ZtoTauHadRecoSelector::endJob()
     cout << "passMuonAndTrigger " << cutflow_passMuonAndTrigger << endl;
     cout << "passMuonAndTau " << cutflow_passMuonAndTau << endl;
     cout << "passPreSelection " << cutflow_passPreSelection << endl;
-    cout << "N-1 DR " << cutflow_N1_DR << endl;
-    cout << "N-1 MT " << cutflow_N1_MT << endl;
-    cout << "N-1 Pzeta " << cutflow_N1_Pzeta << endl;
-    cout << "N-1 DiMuonVeto " << cutflow_N1_DiMuonVeto << endl;
-    cout << "N-1 ExtraMuonVeto " << cutflow_N1_ExtraMuonVeto << endl;
-    cout << "N-1 ExtraElectronVeto " << cutflow_N1_ExtraElectronVeto << endl;
-    cout << "N-1 BtagVeto " << cutflow_N1_BtagVeto << endl;
+    cout << "N-1_DR " << cutflow_N1_DR << endl;
+    cout << "N-1_MT " << cutflow_N1_MT << endl;
+    cout << "N-1_Pzeta " << cutflow_N1_Pzeta << endl;
+    cout << "N-1_DiMuonVeto " << cutflow_N1_DiMuonVeto << endl;
+    cout << "N-1_ExtraMuonVeto " << cutflow_N1_ExtraMuonVeto << endl;
+    cout << "N-1_ExtraElectronVeto " << cutflow_N1_ExtraElectronVeto << endl;
+    cout << "N-1_BtagVeto " << cutflow_N1_BtagVeto << endl;
   }
 }
 
