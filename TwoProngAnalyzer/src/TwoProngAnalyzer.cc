@@ -676,6 +676,7 @@ private:
   vector<Double_t> fProbeTau_eta;
   vector<Double_t> fProbeTau_phi;
   vector<Double_t> fProbeTau_mass;
+  vector<Double_t> fProbeTau_genDR;
   TwoProngAnalysis::recoDiObjectInfo_t fZvisibleMuonTwoProng;
   TwoProngAnalysis::recoDiObjectInfo_t fZvisibleMuonTau;
   TwoProngAnalysis::recoDiObjectInfo_t fZvisibleMuonJet;
@@ -1185,6 +1186,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("ProbeTau_eta",&fProbeTau_eta);
   fTree2->Branch("ProbeTau_phi",&fProbeTau_phi);
   fTree2->Branch("ProbeTau_mass",&fProbeTau_mass);
+  fTree2->Branch("ProbeTau_genDR",&fProbeTau_genDR);
   fTree2->Branch("ZvisibleMuonProbeTau",&fZvisibleMuonJet,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("ZvisibleMuonPatTau",&fZvisibleMuonTau,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("ZvisibleMuonTwoProng",&fZvisibleMuonTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
@@ -3036,6 +3038,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fProbeTau_eta.clear();
   fProbeTau_phi.clear();
   fProbeTau_mass.clear();
+  fProbeTau_genDR.clear();
 
   fpassZMuonTrigger = result.passMuonTrigger;
   string foundZMuonTrigger = result.foundMuonTrigger;
@@ -3053,20 +3056,34 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fTauPrePzeta = result.Pzeta;
 
   if (result.foundTagMuon) {
-  fTagMuon_pt.push_back(result.tagMuon->pt());
-  fTagMuon_eta.push_back(result.tagMuon->eta());
-  fTagMuon_phi.push_back(result.tagMuon->phi());
-  fTagMuon_mass.push_back(result.tagMuon->mass());
-  fTagMuon_z.push_back((result.tagMuon->muonBestTrack())->vz());
-  fTagMuon_dz.push_back((result.tagMuon->muonBestTrack())->dz( ((*primaryvertecies)[0]).position() ));
-  fTagMuon_iso.push_back(result.tagMuon_iso);
+    fTagMuon_pt.push_back(result.tagMuon->pt());
+    fTagMuon_eta.push_back(result.tagMuon->eta());
+    fTagMuon_phi.push_back(result.tagMuon->phi());
+    fTagMuon_mass.push_back(result.tagMuon->mass());
+    fTagMuon_z.push_back((result.tagMuon->muonBestTrack())->vz());
+    fTagMuon_dz.push_back((result.tagMuon->muonBestTrack())->dz( ((*primaryvertecies)[0]).position() ));
+    fTagMuon_iso.push_back(result.tagMuon_iso);
   }
 
   if (result.foundProbeTau) {
-  fProbeTau_pt.push_back(result.probeTau->pt());
-  fProbeTau_eta.push_back(result.probeTau->eta());
-  fProbeTau_phi.push_back(result.probeTau->phi());
-  fProbeTau_mass.push_back(result.probeTau->mass());
+    fProbeTau_pt.push_back(result.probeTau->pt());
+    fProbeTau_eta.push_back(result.probeTau->eta());
+    fProbeTau_phi.push_back(result.probeTau->phi());
+    fProbeTau_mass.push_back(result.probeTau->mass());
+    if (fRunningOnTauTauMC) {
+      TLorentzVector ProbeTau_p4;
+      ProbeTau_p4.SetPtEtaPhiM(fProbeTau_pt[0], fProbeTau_eta[0], fProbeTau_phi[0], fProbeTau_mass[0]);
+      double dr_to_gen = 99999;
+      for (unsigned int i = 0; i < fGenTau_pt.size(); i++) {
+        TLorentzVector GenTau_p4;
+        GenTau_p4.SetPtEtaPhiM(fGenTau_pt[i], fGenTau_eta[i], fGenTau_phi[i], fGenTau_mass[i]);
+        double dr_to_gen_i = ProbeTau_p4.DeltaR(GenTau_p4);
+        if (dr_to_gen_i < 0.4 && dr_to_gen_i < dr_to_gen) {
+          dr_to_gen = dr_to_gen_i;
+        } 
+      }
+      fProbeTau_genDR.push_back(dr_to_gen);
+    }
   }
 
   InitRecoDiObjectInfo(fZvisibleMuonTwoProng);
