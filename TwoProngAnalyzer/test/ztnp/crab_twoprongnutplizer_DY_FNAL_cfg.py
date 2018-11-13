@@ -3,13 +3,13 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_twoprongntuplizer_DY_mod2prong'
+config.General.workArea = 'crab_multi_twoprongntuplizer_DY_FNAL'
 config.section_('JobType')
-config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['isTauTau=True', 'globalTag=mc2016', 'twoProngDefinition=2']
+config.JobType.psetName = '../cmssw_twoprongntuplizer_cfg.py'
+config.JobType.pyCfgParams = ['globalTag=mc2016', 'isDYll=True', 'mcInfo=True', 'tauTnPselection=True', 'standardTwoProng=True', 'tauModifiedTwoProng=True', 'includeCands=False', 'includeTauTau=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/ztagandprobe/nofiltering/trees/mod2prong/DY/'
+config.Data.outLFNDirBase = '/store/user/bchiari1/noreplica/twoprong/ztagandprobe/Nov12_trees/DY/'
 config.Data.outputDatasetTag = ""
 config.Data.splitting = 'EventAwareLumiBased'
 config.Data.unitsPerJob = 200000
@@ -17,7 +17,7 @@ config.Data.totalUnits =  -1
 config.Data.publication = False
 config.section_('User')
 config.section_('Site')
-config.Site.storageSite = 'T3_US_Rutgers'
+config.Site.storageSite = 'T3_US_FNALLPC'
 
 if __name__ == '__main__':
 
@@ -50,7 +50,7 @@ if __name__ == '__main__':
     config.General.requestName = 'DY_10to50_signal'
     config.Data.outputDatasetTag = "DY_10to50_signal_MuonHadronicFilter"
     config.Data.inputDataset = '/DYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['DYsignal=True'])
+    config.JobType.pyCfgParams.extend(['DYsig=True'])
     config.JobType.pyCfgParams.extend(['mcN=35291566','mcXS=16260'])
     submit(config)
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-3]
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     config.General.requestName = 'DY_50_ext1_signal'
     config.Data.outputDatasetTag = "DY_50_ext1_signal_MuonHadronicFilter"
     config.Data.inputDataset = '/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v2/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['DYsignal=True'])
+    config.JobType.pyCfgParams.extend(['DYsig=True'])
     config.JobType.pyCfgParams.extend(['mcN=49144274','mcXS=4956'])
     submit(config)
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-3]
@@ -96,7 +96,7 @@ if __name__ == '__main__':
     config.General.requestName = 'DY_50_ext2_signal'
     config.Data.outputDatasetTag = "DY_50_ext2_signal_MuonHadronicFilter"
     config.Data.inputDataset = '/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['DYsignal=True'])
+    config.JobType.pyCfgParams.extend(['DYsig=True'])
     config.JobType.pyCfgParams.extend(['mcN=96658943','mcXS=4956'])
     submit(config)
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-3]

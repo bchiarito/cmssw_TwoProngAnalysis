@@ -3,13 +3,13 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_twoprongntuplizer_DATA_reg2prong'
+config.General.workArea = 'crab_multi_twoprongntuplizer_DATA_FNAL'
 config.section_('JobType')
-config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=data2016', 'tagandprobeSelection=True']
+config.JobType.psetName = '../cmssw_twoprongntuplizer_cfg.py'
+config.JobType.pyCfgParams = ['globalTag=data2016', 'tauTnPselection=True', 'standardTwoProng=True', 'tauModifiedTwoProng=True', 'includeCands=False', 'includeTauTau=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/ztagandprobe/nofiltering/trees/reg2prong/SingleMuon/'
+config.Data.outLFNDirBase = '/store/user/bchiari1/noreplica/twoprong/ztagandprobe/Nov12_trees/DATA/'
 config.Data.splitting = 'LumiBased'
 config.Data.unitsPerJob = 100
 config.Data.totalUnits = -1
@@ -17,7 +17,7 @@ config.Data.lumiMask = 'Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JS
 config.Data.publication = False
 config.section_('User')
 config.section_('Site')
-config.Site.storageSite = 'T3_US_Rutgers'
+config.Site.storageSite = 'T3_US_FNALLPC'
 
 
 if __name__ == '__main__':

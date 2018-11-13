@@ -3,17 +3,17 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_twoprongntuplizer_WJets_mod2prong'
+config.General.workArea = 'crab_DATA_test'
 config.section_('JobType')
-config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=mc2016', 'twoProngDefinition=2']
+config.JobType.psetName = '../cmssw_twoprongntuplizer_cfg.py'
+config.JobType.pyCfgParams = ['globalTag=data2016', 'tauTnPselection=True', 'standardTwoProng=True', 'tauModifiedTwoProng=True', 'includeCands=False', 'includeTauTau=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/ztagandprobe/nofiltering/trees/mod2prong/BKG/'
-config.Data.outputDatasetTag = "twoprongntuplizer"
-config.Data.splitting = 'EventAwareLumiBased'
-config.Data.unitsPerJob = 200000
-config.Data.totalUnits =  -1
+config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/ztagandprobe/scratch/DATA/'
+config.Data.splitting = 'LumiBased'
+config.Data.unitsPerJob = 100
+config.Data.totalUnits = 100
+config.Data.lumiMask = 'Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON_MuonPhys.txt'
 config.Data.publication = False
 config.section_('User')
 config.section_('Site')
@@ -41,16 +41,7 @@ if __name__ == '__main__':
     ## From now on that's what users should modify: this is the a-la-CRAB2 configuration part. ##
     #############################################################################################
 
-    config.General.requestName = 'WJets'
-    config.Data.outputDatasetTag = "twoprongntuplizer"
-    config.Data.inputDataset = '/WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['mcN=29705748','mcXS=50320'])
+    config.General.requestName = 'SingleMuon_Run2016H'
+    config.Data.outputDatasetTag = 'RunH'
+    config.Data.inputDataset = '/SingleMuon/Run2016H-07Aug17-v1/MINIAOD'
     submit(config)
-    config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
-
-    config.General.requestName = 'WJets_ext2'
-    config.Data.outputDatasetTag = "twoprongntuplizer_ext2"
-    config.Data.inputDataset = '/WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['mcN=57026058','mcXS=50320'])
-    submit(config)
-    config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]

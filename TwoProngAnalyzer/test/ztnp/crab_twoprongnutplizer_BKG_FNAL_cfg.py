@@ -3,13 +3,13 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_twoprongntuplizer_BKG_mod2prong'
+config.General.workArea = 'crab_multi_twoprongntuplizer_BKG_FNAL'
 config.section_('JobType')
-config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=mc2016', 'tagandprobeSelection=True', 'twoProngDefinition=2']
+config.JobType.psetName = '../cmssw_twoprongntuplizer_cfg.py'
+config.JobType.pyCfgParams = ['globalTag=mc2016', 'mcInfo=True', 'tauTnPselection=True', 'standardTwoProng=True', 'tauModifiedTwoProng=True', 'includeCands=False', 'includeTauTau=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/ztagandprobe/nofiltering/trees/mod2prong/BKG/'
+config.Data.outLFNDirBase = '/store/user/bchiari1/noreplica/twoprong/ztagandprobe/Nov12_trees/BKG/'
 config.Data.outputDatasetTag = "twoprongntuplizer"
 config.Data.splitting = 'EventAwareLumiBased'
 config.Data.unitsPerJob = 200000
@@ -17,7 +17,7 @@ config.Data.totalUnits =  -1
 config.Data.publication = False
 config.section_('User')
 config.section_('Site')
-config.Site.storageSite = 'T3_US_Rutgers'
+config.Site.storageSite = 'T3_US_FNALLPC'
 
 
 if __name__ == '__main__':
