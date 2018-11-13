@@ -22,6 +22,7 @@ options.register("filterOnTwoProng", False, VarParsing.multiplicity.singleton, V
 options.register("DYsig", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("DYbkg", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("tauPreselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("tauTnPselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 # two-prong object definition
 options.register("standardTwoProng", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("tauModifiedTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
@@ -206,33 +207,56 @@ if options.commandLineTwoProng:
     process.twoprongNtuplizer.chargedIsoCut = options.chargedIsoCut
     process.twoprongNtuplizer.neutralIsoCut = options.neutralIsoCut
     process.twoprongNtuplizer.egammaIsoCut = options.egammaIsoCut
-# settings always overwritten by command line
-process.twoprongNtuplizer.includeSignalGenParticles = options.isSignal
-process.twoprongNtuplizer.runningOnTauTauMC = options.isDYll
-process.twoprongNtuplizer.includeTauTauBranches = options.includeTauTau
-process.twoprongNtuplizer.mcXS = options.mcXS
-process.twoprongNtuplizer.mcN = options.mcN
-process.twoprongNtuplizer.includeMCInfo = options.mcInfo
-process.twoprongNtuplizer.debug = options.debug
-# filters
-process.twoprongNtuplizer.filterOnPhoton = options.filterOnPhoton;
-process.twoprongNtuplizer.filterOnTwoProng = options.filterOnTwoProng;
-# Cone HE Photon
-process.twoprongNtuplizer.addPhotonCutDrConeHE = options.addConeHE;
-# object includes
-process.twoprongNtuplizer.includeAllCandObjects = options.includeCands;
-process.twoprongNtuplizer.includeAllLooseObjects = options.includeLoose;
-# histo includes
-process.twoprongNtuplizer.fakeRateHistos = options.fakeRateHistos;
-process.twoprongNtuplizer.triggerEffHistos = options.triggerEffHistos;
-process.twoprongNtuplizer.twoprongYieldHistos = options.twoprongYieldHistos;
-process.twoprongNtuplizer.stackedDalitzHistos = options.stackedDalitzHistos;
+if options.commandLineTwoProng or options.standardTwoProng:
+  # settings always overwritten by command line
+  process.twoprongNtuplizer.includeSignalGenParticles = options.isSignal
+  process.twoprongNtuplizer.runningOnTauTauMC = options.isDYll
+  process.twoprongNtuplizer.includeTauTauBranches = options.includeTauTau
+  process.twoprongNtuplizer.mcXS = options.mcXS
+  process.twoprongNtuplizer.mcN = options.mcN
+  process.twoprongNtuplizer.includeMCInfo = options.mcInfo
+  process.twoprongNtuplizer.debug = options.debug
+  # filters
+  process.twoprongNtuplizer.filterOnPhoton = options.filterOnPhoton;
+  process.twoprongNtuplizer.filterOnTwoProng = options.filterOnTwoProng;
+  # Cone HE Photon
+  process.twoprongNtuplizer.addPhotonCutDrConeHE = options.addConeHE;
+  # object includes
+  process.twoprongNtuplizer.includeAllCandObjects = options.includeCands;
+  process.twoprongNtuplizer.includeAllLooseObjects = options.includeLoose;
+  # histo includes
+  process.twoprongNtuplizer.fakeRateHistos = options.fakeRateHistos;
+  process.twoprongNtuplizer.triggerEffHistos = options.triggerEffHistos;
+  process.twoprongNtuplizer.twoprongYieldHistos = options.twoprongYieldHistos;
+  process.twoprongNtuplizer.stackedDalitzHistos = options.stackedDalitzHistos;
+if options.commandLineTwoProng or options.standardTwoProng:
+  # settings always overwritten by command line
+  process.twoprongModNtuplizer.includeSignalGenParticles = options.isSignal
+  process.twoprongModNtuplizer.runningOnTauTauMC = options.isDYll
+  process.twoprongModNtuplizer.includeTauTauBranches = options.includeTauTau
+  process.twoprongModNtuplizer.mcXS = options.mcXS
+  process.twoprongModNtuplizer.mcN = options.mcN
+  process.twoprongModNtuplizer.includeMCInfo = options.mcInfo
+  process.twoprongModNtuplizer.debug = options.debug
+  # filters
+  process.twoprongModNtuplizer.filterOnPhoton = options.filterOnPhoton;
+  process.twoprongModNtuplizer.filterOnTwoProng = options.filterOnTwoProng;
+  # Cone HE Photon
+  process.twoprongModNtuplizer.addPhotonCutDrConeHE = options.addConeHE;
+  # object includes
+  process.twoprongModNtuplizer.includeAllCandObjects = options.includeCands;
+  process.twoprongModNtuplizer.includeAllLooseObjects = options.includeLoose;
+  # histo includes
+  process.twoprongModNtuplizer.fakeRateHistos = options.fakeRateHistos;
+  process.twoprongModNtuplizer.triggerEffHistos = options.triggerEffHistos;
+  process.twoprongModNtuplizer.twoprongYieldHistos = options.twoprongYieldHistos;
+  process.twoprongModNtuplizer.stackedDalitzHistos = options.stackedDalitzHistos;
 # making the twoprong ntuplizer sequence
 process.ntuplizer = cms.Sequence()
 if options.commandLineTwoProng or options.standardTwoProng:
   process.ntuplizer *= process.twoprongNtuplizer
 if options.tauModifiedTwoProng:
-  process.path *= ntuplizer.twoprongModNtuplizer
+  process.ntuplizer *= process.twoprongModNtuplizer
 
 # options filters
 process.tauFilters = cms.Sequence()
@@ -249,6 +273,12 @@ if options.DYbkg:
 if options.tauPreselection:
   process.preselection = cms.EDFilter('ZtoTauHadRecoSelector',
     dumpCutflow = cms.untracked.bool(True)
+  )
+  process.tauFilters *= process.preselection
+if options.tauTnPselection:
+  process.preselection = cms.EDFilter('ZtoTauHadRecoSelector',
+    dumpCutflow = cms.untracked.bool(True),
+    tnpSelectionOnly = cms.untracked.bool(True)
   )
   process.tauFilters *= process.preselection
 
