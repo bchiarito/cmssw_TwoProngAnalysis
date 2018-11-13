@@ -29,7 +29,7 @@ twoprongModNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
                                   prescales = cms.InputTag("patTrigger"),
                                   objects = cms.InputTag("selectedPatTrigger"),
                                   # MC options
-                                  includeSignalGenParticles = cms.untracked.bool(True),
+                                  includeSignalGenParticles = cms.untracked.bool(False),
                                   includeMCInfo = cms.untracked.bool(False),
                                   mcXS = cms.untracked.double(1.0),
                                   mcN = cms.untracked.double(1.0),
