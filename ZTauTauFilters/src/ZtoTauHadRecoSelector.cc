@@ -82,7 +82,8 @@ class ZtoTauHadRecoSelector : public edm::EDFilter {
 
       // Configuration Parameters
       bool cfg_dumpCutflow;
-      bool cfg_tnpSelectionOnly;
+      bool cfg_reducedSelection; // does not include MT or Pzeta cuts, or trigger requirement
+      bool cfg_usePatTau; // use pat::tau object instead of jet for the preselection
 
       // EDM Collection lables
       edm::EDGetTokenT<edm::TriggerResults> triggerBits_;
@@ -106,16 +107,22 @@ class ZtoTauHadRecoSelector : public edm::EDFilter {
       int cutflow_passTrigger;
       int cutflow_passMuon;
       int cutflow_passTau;
-      int cutflow_passMuonAndTrigger;
-      int cutflow_passMuonAndTau;
+      int cutflow_passMuonTauPair;
+      int cutflow_passExtraLeptonVeto;
+      int cutflow_passBtagVeto;
+      int cutflow_passReducedSelection;
       int cutflow_passPreSelection;
-      int cutflow_N1_DR;
+      // n-1
       int cutflow_N1_MT;
       int cutflow_N1_Pzeta;
-      int cutflow_N1_DiMuonVeto;
+      int cutflow_N1_BTagVeto;
       int cutflow_N1_ExtraMuonVeto;
+      int cutflow_N1_DiMuonVeto;
       int cutflow_N1_ExtraElectronVeto;
       int cutflow_N1_BtagVeto; 
+      int cutflow_N1_Trigger; 
+      // trig eff
+      int cutflow_passMuonAndTrigger;
 };
 
 //
@@ -123,7 +130,8 @@ class ZtoTauHadRecoSelector : public edm::EDFilter {
 //
 ZtoTauHadRecoSelector::ZtoTauHadRecoSelector(const edm::ParameterSet& iConfig) :
   cfg_dumpCutflow(iConfig.getUntrackedParameter<bool>("dumpCutflow")),
-  cfg_tnpSelectionOnly(iConfig.getUntrackedParameter<bool>("tnpSelectionOnly"))
+  cfg_reducedSelection(iConfig.getUntrackedParameter<bool>("tnpSelectionOnly")),
+  cfg_usePatTau(iConfig.getUntrackedParameter<bool>("usePatTau"))
 {
   triggerBits_ = consumes<edm::TriggerResults>( edm::InputTag("TriggerResults","","HLT") );
   triggerObjects_ = consumes<pat::TriggerObjectStandAloneCollection>( edm::InputTag("selectedPatTrigger") );
@@ -140,21 +148,28 @@ ZtoTauHadRecoSelector::ZtoTauHadRecoSelector(const edm::ParameterSet& iConfig) :
   beamToken_ = consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
   rhoToken_ = consumes<double>(edm::InputTag("fixedGridRhoFastjetCentralChargedPileUp"));
 
+  // cutflow counts
   cutflow_total = 0;
   cutflow_foundTrigger = 0;
   cutflow_passTrigger = 0;
   cutflow_passMuon = 0;
   cutflow_passTau = 0;
-  cutflow_passMuonAndTrigger = 0;
-  cutflow_passMuonAndTau = 0;
+  cutflow_passMuonTauPair = 0;
+  cutflow_passExtraLeptonVeto = 0;
+  cutflow_passBtagVeto = 0;
+  cutflow_passReducedSelection = 0;
   cutflow_passPreSelection = 0;
-  cutflow_N1_DR = 0;
+  // n-1
   cutflow_N1_MT = 0;
   cutflow_N1_Pzeta = 0;
-  cutflow_N1_DiMuonVeto = 0;
+  cutflow_N1_BTagVeto = 0;
   cutflow_N1_ExtraMuonVeto = 0;
+  cutflow_N1_DiMuonVeto = 0;
   cutflow_N1_ExtraElectronVeto = 0;
-  cutflow_N1_BtagVeto = 0;
+  cutflow_N1_BtagVeto = 0; 
+  cutflow_N1_Trigger = 0; 
+  // trig eff
+  cutflow_passMuonAndTrigger = 0;
 }
 
 //
@@ -200,63 +215,47 @@ ZtoTauHadRecoSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<double> rho;
   iEvent.getByToken(rhoToken_, rho);
 
-  // use preselection function
+  // get preselection result
   TauHadFilters::PreSelectionResult result;
-  result = TauHadFilters::computePreSelectionResult(iEvent, triggerBits, triggerObjects, triggerPrescales, vertices, taus, muons, electrons, jets, mets, rho);
+  result = TauHadFilters::computePreSelectionResult(iEvent, triggerBits, triggerObjects, triggerPrescales, vertices, taus, muons, electrons, jets, mets, rho, cfg_usePatTau);
 
+  // count
   cutflow_total += 1;
-  if (result.foundMuonTrigger != "") cutflow_foundTrigger += 1;
-  if (result.passMuonTrigger) cutflow_passTrigger += 1;
+  if (result.foundTrigger != "") cutflow_foundTrigger += 1;
+  if (result.passTrigger) cutflow_passTrigger += 1;
   if (result.nTagMuons > 0) cutflow_passMuon += 1;
   if (result.nProbeTaus > 0) cutflow_passTau += 1;
-  if (result.foundTagMuon && result.passMuonTrigger) cutflow_passMuonAndTrigger += 1;
-  if (result.foundTagMuon && result.foundProbeTau) cutflow_passMuonAndTau += 1;
+  if (result.passMuonTauPair) cutflow_passMuonTauPair += 1;
+  if (result.passDiMuonVeto && result.passExtraElectronVeto && result.passExtraMuonVeto) cutflow_passExtraLeptonVeto += 1;
+  if (result.passBtagVeto) cutflow_passBtagVeto += 1;
+  if (result.passTrigger && result.nTagMuons > 0) cutflow_passMuonAndTrigger += 1;
+  if (true                  && result.passMuonTauPair && result.pairAndPassMT && result.pairAndPassPzeta &&
+      result.passDiMuonVeto && result.passExtraElectronVeto && result.passExtraMuonVeto && result.passBtagVeto)
+     cutflow_N1_Trigger += 1;
+  if (result.passTrigger && result.passMuonTauPair && true                    && result.pairAndPassPzeta &&
+      result.passDiMuonVeto && result.passExtraElectronVeto && result.passExtraMuonVeto && result.passBtagVeto)
+     cutflow_N1_MT += 1;
+  if (result.passTrigger && result.passMuonTauPair && result.pairAndPassMT && true                       &&
+      result.passDiMuonVeto && result.passExtraElectronVeto && result.passExtraMuonVeto && result.passBtagVeto)
+     cutflow_N1_Pzeta += 1;
+  if (result.passTrigger && result.passMuonTauPair && result.pairAndPassMT && result.pairAndPassPzeta &&
+      result.passDiMuonVeto && result.passExtraElectronVeto && true                     && result.passBtagVeto)
+     cutflow_N1_ExtraMuonVeto += 1;
+  if (result.passTrigger && result.passMuonTauPair && result.pairAndPassMT && result.pairAndPassPzeta &&
+      true                  && result.passExtraElectronVeto && result.passExtraMuonVeto && result.passBtagVeto)
+     cutflow_N1_DiMuonVeto += 1;
+  if (result.passTrigger && result.passMuonTauPair && result.pairAndPassMT && result.pairAndPassPzeta &&
+      result.passDiMuonVeto && true                         && result.passExtraMuonVeto && result.passBtagVeto)
+     cutflow_N1_ExtraElectronVeto += 1;
+  if (result.passTrigger && result.passMuonTauPair && result.pairAndPassMT && result.pairAndPassPzeta &&
+      result.passDiMuonVeto && result.passExtraElectronVeto && result.passExtraMuonVeto && true)
+     cutflow_N1_BtagVeto += 1;
+  if (result.passMuonTauPair && result.passDiMuonVeto && result.passExtraElectronVeto && result.passExtraMuonVeto && result.passBtagVeto) cutflow_passReducedSelection += 1;
   if (result.passPreSelection) cutflow_passPreSelection += 1;
-  if (result.passMuonTrigger &&
-      result.foundTagMuon && result.foundProbeTau && 
-                      result.passMT && result.passPzeta && 
-      result.passDiMuonVeto && result.passExtraElectronVeto && result.passExtraMuonVeto && 
-      result.passBtagVeto)
-      cutflow_N1_DR += 1;
-  if (result.passMuonTrigger &&
-      result.foundTagMuon && result.foundProbeTau && 
-      result.passDR &&                 result.passPzeta && 
-      result.passDiMuonVeto && result.passExtraElectronVeto && result.passExtraMuonVeto && 
-      result.passBtagVeto)
-      cutflow_N1_MT += 1;
-  if (result.passMuonTrigger &&
-      result.foundTagMuon && result.foundProbeTau && 
-      result.passDR && result.passMT &&                 
-      result.passDiMuonVeto && result.passExtraElectronVeto && result.passExtraMuonVeto && 
-      result.passBtagVeto)
-      cutflow_N1_Pzeta += 1;
-  if (result.passMuonTrigger &&
-      result.foundTagMuon && result.foundProbeTau && 
-      result.passDR && result.passMT && result.passPzeta && 
-                               result.passExtraElectronVeto && result.passExtraMuonVeto && 
-      result.passBtagVeto)
-      cutflow_N1_DiMuonVeto += 1;
-  if (result.passMuonTrigger &&
-      result.foundTagMuon && result.foundProbeTau && 
-      result.passDR && result.passMT && result.passPzeta && 
-      result.passDiMuonVeto && result.passExtraElectronVeto &&
-      result.passBtagVeto)
-      cutflow_N1_ExtraMuonVeto += 1;
-  if (result.passMuonTrigger &&
-      result.foundTagMuon && result.foundProbeTau && 
-      result.passDR && result.passMT && result.passPzeta && 
-      result.passDiMuonVeto &&                                 result.passExtraMuonVeto && 
-      result.passBtagVeto)
-      cutflow_N1_ExtraElectronVeto += 1;
-  if (result.passMuonTrigger &&
-      result.foundTagMuon && result.foundProbeTau && 
-      result.passDR && result.passMT && result.passPzeta && 
-      result.passDiMuonVeto && result.passExtraElectronVeto && result.passExtraMuonVeto
-      )
-      cutflow_N1_BtagVeto += 1;
 
-  if (!cfg_tnpSelectionOnly) return result.passPreSelection;
-  else return result.passTagAndProbeSelection;
+  // return
+  if (!cfg_reducedSelection) return result.passPreSelection;
+  else return result.passMuonTauPair && result.passDiMuonVeto && result.passExtraElectronVeto && result.passExtraMuonVeto && result.passBtagVeto;
 }
 
 void
@@ -267,10 +266,10 @@ ZtoTauHadRecoSelector::beginJob()
 void
 ZtoTauHadRecoSelector::endJob()
 {
-  if (!cfg_tnpSelectionOnly)
-    cout << "\nran filter selecting muon and tau events only" << endl;
+  if (!cfg_reducedSelection)
+    cout << "\nran filter in reduced mode" << endl;
   else
-    cout << "\nran filter selecting full preselection" << endl;
+    cout << "\nran filter in full preselection mode" << endl;
   if (cfg_dumpCutflow) {
     // cutflow print
     cout << "total " << cutflow_total << endl;
@@ -278,16 +277,19 @@ ZtoTauHadRecoSelector::endJob()
     cout << "passTrigger " << cutflow_passTrigger << endl;
     cout << "passMuon " << cutflow_passMuon << endl;
     cout << "passTau " << cutflow_passTau << endl;
-    cout << "passMuonAndTrigger " << cutflow_passMuonAndTrigger << endl;
-    cout << "passMuonAndTau " << cutflow_passMuonAndTau << endl;
+    cout << "passMuonTauPair " << cutflow_passMuonTauPair << endl;
+    cout << "passExtraLeptonVeto " << cutflow_passExtraLeptonVeto << endl;
+    cout << "passBtagVeto " << cutflow_passBtagVeto << endl;
+    cout << "passReducedSelection " << cutflow_passReducedSelection << endl;
     cout << "passPreSelection " << cutflow_passPreSelection << endl;
-    cout << "N-1_DR " << cutflow_N1_DR << endl;
     cout << "N-1_MT " << cutflow_N1_MT << endl;
     cout << "N-1_Pzeta " << cutflow_N1_Pzeta << endl;
-    cout << "N-1_DiMuonVeto " << cutflow_N1_DiMuonVeto << endl;
-    cout << "N-1_ExtraMuonVeto " << cutflow_N1_ExtraMuonVeto << endl;
-    cout << "N-1_ExtraElectronVeto " << cutflow_N1_ExtraElectronVeto << endl;
     cout << "N-1_BtagVeto " << cutflow_N1_BtagVeto << endl;
+    cout << "N-1_ExtraMuonVeto " << cutflow_N1_ExtraMuonVeto << endl;
+    cout << "N-1_DiMuonVeto " << cutflow_N1_DiMuonVeto << endl;
+    cout << "N-1_ExtraElectronVeto " << cutflow_N1_ExtraElectronVeto << endl;
+    cout << "N-1_Trigger " << cutflow_N1_Trigger << endl;
+    cout << "passMuonAndTrigger " << cutflow_passMuonAndTrigger << endl;
   }
 }
 
@@ -316,6 +318,7 @@ ZtoTauHadRecoSelector::fillDescriptions(edm::ConfigurationDescriptions& descript
   edm::ParameterSetDescription desc;
   desc.addUntracked<bool>("dumpCutflow", true);
   desc.addUntracked<bool>("tnpSelectionOnly", false);
+  desc.addUntracked<bool>("usePatTau", false);
   descriptions.add("ZtoTauHadRecoSelectorFilter", desc);
 }
 

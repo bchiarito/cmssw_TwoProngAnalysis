@@ -5,15 +5,16 @@ process.load("SimGeneral.HepPDTESSource.pythiapdt_cfi")
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(False) )
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(300) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring(
-  "file:/cms/chiarito/samples/miniaod/rootfile_DYtoLL_mc2016_numEvent1000.root"
+  "file:/cms/chiarito/samples/miniaod/dysig/rootfile_DYJetsToLL_M-50_80k.root"
   ))
 
 process.filt = cms.EDFilter('ZtoTauHadRecoSelector',
-  dumpCutflow = cms.untracked.bool(True)
+  dumpCutflow = cms.untracked.bool(True),
+  usePatTau = cms.untracked.bool(False)
   )
 
 process.p = cms.Path(process.filt)

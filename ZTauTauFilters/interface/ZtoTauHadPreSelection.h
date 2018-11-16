@@ -6,6 +6,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <algorithm>
 // ROOT includes
 #include "TVector2.h"
 #include "TLorentzVector.h"
@@ -33,44 +34,128 @@
 
 using std::string;
 using std::vector;
+using std::max;
+using std::string;
 
 namespace TauHadFilters
 {
+  const string MUON_TRIGGER = "HLT_IsoMu24";
+
+  const double MUON_MIN_PT = 25;
+  const double MUON_MAX_ETA = 2.1;
+  const double MUON_MAX_RELISO = 0.15;
+  const double MUON_MAX_DZ = 0.2;
+  const double MUON_MAX_DXY = 0.045;
+
+  const double EXTRAMUON_MIN_PT = 10.0;
+  const double EXTRAMUON_MAX_ETA = 2.4;
+  const double EXTRAMUON_MAX_RELISO = 0.3;
+  const double EXTRAMUON_MAX_DZ = 0.2;
+  const double EXTRAMUON_MAX_DXY = 0.045;
+
+  const double EXTRAELECTRON_MIN_PT = 10.0;
+  const double EXTRAELECTRON_MAX_ETA = 2.5;
+  const double EXTRAELECTRON_MAX_RELISO = 0.3;
+  const double EXTRAELECTRON_MAX_DZ = 0.2;
+  const double EXTRAELECTRON_MAX_DXY = 0.045;
+  const int    EXTRAELECTRON_MAX_LOSTTRACKS = 1;
+  // mva 90 wp
+
+  const double DIMUON_MAX_DR = 0.15;
+  const double DIMUON_MIN_PT = 15;
+  const double DIMUON_MAX_ETA = 2.4;
+  const double DIMUON_MAX_RELISO = 0.3;
+  const double DIMUON_MAX_DZ = 0.2;
+  const double DIMUON_MAX_DXY = 0.045;
+
+  const double TAUJET_MIN_LEADINGTRACKPT = 3;
+  const double TAUJET_NEARBYGLOBALMUON_DR = 0.4;
+  const double TAUJET_NEARBYGLOBALMUON_MIN_PT = 5;
+  const double TAUJET_MIN_PT = 20;
+  const double TAUJET_MAX_ETA = 2.4;
+
+  const string BTAG_DISCRIMINATOR = "pfCombinedInclusiveSecondaryVertexV2BJetTags";
+  const double JET_BTAG_WP = 0.890;
+  const double MUONTAUPAIR_MIN_DR = 0.5;
+  const double MAX_MT = 40;
+  const double MIN_PZETA = -25;
+
   struct PreSelectionResult
   {
-    // objects
-    bool foundTagMuon;
-    int nTagMuons;
-    const pat::Muon * tagMuon;
-    double tagMuon_iso;
-    bool foundProbeTau;
-    int nProbeTaus;
-    const pat::Jet * probeTau;
+    // setting
+    bool usePatTau;
     // trigger
-    string foundMuonTrigger;
-    bool passMuonTrigger;
-    // cut variables on pair
-    double DR;
-    double MT;
-    double Pzeta;
-    // descision on cut variables
-    bool passDR;
-    bool passMT;
-    bool passPzeta;
+    bool passTrigger;
+    string foundTrigger;
+    // object counts
+    int nTagMuons;
+    int nProbeTaus;
     // event wide vetos
     bool passExtraMuonVeto;
     bool passDiMuonVeto;
     bool passExtraElectronVeto;
     bool passBtagVeto;
-    double btagDiscriminant;
-    // summary bools
-    bool passTagAndProbeSelection;
+    double highestBtagDiscriminant;
+    // muon-tau pair
+    bool passMuonTauPair;
+    const pat::Muon * tagMuon;
+    const pat::Jet * probeTauJet;
+    const pat::Tau * probeTau;
+    bool pairAndPassMT;
+    bool pairAndPassPzeta;
+    double MT;
+    double Pzeta;
+    // full selection
     bool passPreSelection;
   };
 
   typedef struct PreSelectionResult PreSelectionResult;
 
-  struct PreSelectionResult computePreSelectionResult(const edm::Event& iEvent, edm::Handle<edm::TriggerResults>& triggerBits, edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects, edm::Handle<pat::PackedTriggerPrescales> triggerPrescales, edm::Handle<reco::VertexCollection> vertices, edm::Handle<pat::TauCollection> taus, edm::Handle<pat::MuonCollection> muons, edm::Handle<pat::ElectronCollection> electrons, edm::Handle<pat::JetCollection> jets, edm::Handle<pat::METCollection> mets, edm::Handle<double> rho)
+  double computeMuonIsolation(const pat::Muon * mu)
+  {
+    return (mu->pfIsolationR04().sumChargedHadronPt + max(0., mu->pfIsolationR04().sumNeutralHadronEt + mu->pfIsolationR04().sumPhotonEt - 0.5*mu->pfIsolationR04().sumPUPt))/mu->pt();
+    // return (mu->chargedHadronIso() + mu->neutralHadronIso() + mu->photonIso())/mu->pt() - 0.5 * (*rho); // old incorrect
+  }
+
+  double computeElectronIsolation(const pat::Electron * el)
+  {
+    return (el->pfIsolationVariables().sumChargedHadronPt + max(0., el->pfIsolationVariables().sumNeutralHadronEt + el->pfIsolationVariables().sumPhotonEt - 0.5*el->pfIsolationVariables().sumPUPt))/el->pt();
+  }
+      
+  double computeMT(const pat::Muon * mu, const pat::MET * met)
+  {
+    double dPhi = mu->phi() - met->phi();
+    return sqrt(2 * mu->pt() * met->pt() * (1 - cos(dPhi)));    
+  }
+
+  double computePzeta(const pat::Muon * mu, const reco::Candidate * tau, const pat::MET * met)
+  {
+    TVector2 pTmuon;
+    TVector2 pTtau;
+    TVector2 pTmet;
+    TVector2 zeta;
+    pTmuon.SetMagPhi(mu->pt(), mu->phi());  
+    pTtau.SetMagPhi(tau->pt(), tau->phi());  
+    pTmet.SetMagPhi(met->pt(), met->phi());  
+    zeta.SetMagPhi(1.0, (mu->phi()+tau->phi())/2.0);
+    double PzetaAll = zeta * (pTmuon + pTtau + pTmet);
+    double PzetaVis = zeta * (pTmuon + pTtau);
+    return PzetaAll - 0.85 * PzetaVis;
+  }
+
+  bool betterPair(const pat::Muon * mu, const pat::Jet * tau, const pat::Muon * mu_old, const pat::Jet * tau_old)
+  {
+    if (mu->pt() + tau->pt() > mu_old->pt() + tau_old->pt()) return true;
+    else return false; 
+  }
+
+  bool betterPair(const pat::Muon * mu, const pat::Tau * tau, const pat::Muon * mu_old, const pat::Tau * tau_old)
+  {
+    if (mu->pt() + tau->pt() > mu_old->pt() + tau_old->pt()) return true;
+    else return false; 
+  }
+
+  struct PreSelectionResult computePreSelectionResult(const edm::Event& iEvent, edm::Handle<edm::TriggerResults>& triggerBits, edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects, edm::Handle<pat::PackedTriggerPrescales> triggerPrescales, edm::Handle<reco::VertexCollection> vertices, edm::Handle<pat::TauCollection> taus, edm::Handle<pat::MuonCollection> muons, edm::Handle<pat::ElectronCollection> electrons, edm::Handle<pat::JetCollection> jets, edm::Handle<pat::METCollection> mets, edm::Handle<double> rho, bool usePatTau = false)
   {
     struct PreSelectionResult result;
 
@@ -79,7 +164,7 @@ namespace TauHadFilters
 
     // trigger 
     const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
-    string trigger_muon = "HLT_IsoMu24";
+    string trigger_muon = MUON_TRIGGER;
     bool bit_muon = false;
     string name_muon_trigger = "";
     for (unsigned int i = 0, n = triggerBits->size(); i < n; i++)
@@ -92,16 +177,15 @@ namespace TauHadFilters
          name_muon_trigger = triggerName;
        }
     }
-    bool passMuonTrigger = bit_muon;
 
     // muons
     vector<const pat::Muon *> passedMuons;
     for (const pat::Muon &muon : *muons) {
-      if (muon.pt() > 25.0 &&
-          fabs(muon.eta()) < 2.1 &&
-          (muon.chargedHadronIso() + muon.neutralHadronIso() + muon.photonIso())/muon.pt() - 0.5 * (*rho) < 0.1 &&
-          muon.muonBestTrack()->dz(PV.position()) < 0.2 &&
-          abs(muon.muonBestTrack()->dxy(PV.position())) < 0.045 &&
+      if (muon.pt() > MUON_MIN_PT &&
+          fabs(muon.eta()) < MUON_MAX_ETA &&
+          computeMuonIsolation(&muon) < MUON_MAX_RELISO &&
+          muon.muonBestTrack()->dz(PV.position()) < MUON_MAX_DZ &&
+          abs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
           muon.isMediumMuon() )
         passedMuons.push_back(&muon);
     }
@@ -110,17 +194,17 @@ namespace TauHadFilters
     bool skipped_one_passing_muon = false;
     bool extraMuon = false;
     for (const pat::Muon &muon : *muons) {
-      if (muon.pt() > 10.0 &&
-          fabs(muon.eta()) < 2.4 &&
-          (muon.chargedHadronIso() + muon.neutralHadronIso() + muon.photonIso())/muon.pt() - 0.5 * (*rho) < 0.3 &&
-          muon.muonBestTrack()->dz(PV.position()) < 0.2 &&
-          abs(muon.muonBestTrack()->dxy(PV.position())) < 0.045 &&
+      if (muon.pt() > EXTRAMUON_MIN_PT && 
+          fabs(muon.eta()) < EXTRAMUON_MAX_ETA &&
+          computeMuonIsolation(&muon) < EXTRAMUON_MAX_RELISO &&
+          muon.muonBestTrack()->dz(PV.position()) < EXTRAMUON_MAX_DZ &&
+          abs(muon.muonBestTrack()->dxy(PV.position())) < EXTRAMUON_MAX_DXY &&
           muon.isMediumMuon() ) {
-        if (muon.pt() > 19.0 &&
-            fabs(muon.eta()) < 2.1 &&
-            (muon.chargedHadronIso() + muon.neutralHadronIso() + muon.photonIso())/muon.pt() - 0.5 * (*rho) < 0.1 &&
-            muon.muonBestTrack()->dz(PV.position()) < 0.2 &&
-            abs(muon.muonBestTrack()->dxy(PV.position())) < 0.045 &&
+        if (muon.pt() > MUON_MIN_PT &&
+            fabs(muon.eta()) < MUON_MAX_ETA &&
+            computeMuonIsolation(&muon) < MUON_MAX_RELISO &&
+            muon.muonBestTrack()->dz(PV.position()) < MUON_MAX_DZ &&
+            abs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
             muon.isMediumMuon() ) {
           if (skipped_one_passing_muon) extraMuon = true;
           if (!skipped_one_passing_muon) skipped_one_passing_muon = true;
@@ -131,32 +215,33 @@ namespace TauHadFilters
     }
     bool extraElectron = false;
     for (const pat::Electron &electron : *electrons) {
-      if (electron.pt() > 10.0 &&
-          fabs(electron.eta()) < 2.5 &&
-          electron.gsfTrack()->dz(PV.position()) < 0.2 &&
-          abs(electron.gsfTrack()->dxy(PV.position())) < 0.045 &&
+      if (electron.pt() > EXTRAELECTRON_MIN_PT &&
+          fabs(electron.eta()) < EXTRAELECTRON_MAX_ETA &&
+          electron.gsfTrack()->dz(PV.position()) < EXTRAELECTRON_MAX_DZ &&
+          abs(electron.gsfTrack()->dxy(PV.position())) < EXTRAELECTRON_MAX_DXY &&
           electron.passConversionVeto() &&
-          electron.gsfTrack()->lost() <= 1)
+          computeElectronIsolation(&electron) < EXTRAELECTRON_MAX_RELISO &&
+          electron.gsfTrack()->lost() <= EXTRAELECTRON_MAX_LOSTTRACKS)
         extraElectron = true;
     }
     bool diMuon = false;
     for (const pat::Muon &muon1 : *muons) {
       for (const pat::Muon &muon2 : *muons) {
         double DR = deltaR(muon1.eta(), muon1.phi(), muon2.eta(), muon2.phi());
-        if (DR <= 0.15) continue;
-        if (muon1.pt() > 15 &&
-            fabs(muon1.eta()) < 2.4 &&
-            (muon1.chargedHadronIso() + muon1.neutralHadronIso() + muon1.photonIso())/muon1.pt() - 0.5 * (*rho) < 0.3 &&
-            muon1.muonBestTrack()->dz(PV.position()) < 0.2 &&
-            abs(muon1.muonBestTrack()->dxy(PV.position())) < 0.045 &&
+        if (DR <= DIMUON_MAX_DR) continue;
+        if (muon1.pt() > DIMUON_MIN_PT &&
+            fabs(muon1.eta()) < DIMUON_MAX_ETA &&
+            computeMuonIsolation(&muon1) < DIMUON_MAX_RELISO &&
+            muon1.muonBestTrack()->dz(PV.position()) < DIMUON_MAX_DZ &&
+            abs(muon1.muonBestTrack()->dxy(PV.position())) < DIMUON_MAX_DXY &&
             muon1.isPFMuon() &&
             muon1.isGlobalMuon() &&
             muon1.isTrackerMuon() &&
-            muon2.pt() > 15 &&
-            fabs(muon2.eta()) < 2.4 &&
-            (muon2.chargedHadronIso() + muon2.neutralHadronIso() + muon2.photonIso())/muon2.pt() - 0.5 * (*rho) < 0.3 &&
-            muon2.muonBestTrack()->dz(PV.position()) < 0.2 &&
-            abs(muon2.muonBestTrack()->dxy(PV.position())) < 0.045 &&
+            muon2.pt() > DIMUON_MIN_PT &&
+            fabs(muon2.eta()) < DIMUON_MAX_ETA &&
+            computeMuonIsolation(&muon2) < DIMUON_MAX_RELISO &&
+            muon2.muonBestTrack()->dz(PV.position()) < DIMUON_MAX_DZ &&
+            abs(muon2.muonBestTrack()->dxy(PV.position())) < DIMUON_MAX_DXY &&
             muon2.isPFMuon() &&
             muon2.isGlobalMuon() &&
             muon2.isTrackerMuon() &&
@@ -165,28 +250,26 @@ namespace TauHadFilters
       }
     }  
 
-    // tau cands from jets and btag veto
+    // tau from jets and btag veto
     bool atLeastOneBTag = false;
     double highestBTagDiscriminant = -1.0;
     vector<const pat::Jet *> tauJetCands;
     vector<int> tauJetCandsCharge;
     for (const pat::Jet &jet : *jets) {
-      if (jet.pt() > 20 && fabs(jet.eta()) < 2.4) {
-        double btagdiscriminant = jet.bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags");
+      if (jet.pt() > TAUJET_MIN_PT && fabs(jet.eta()) < TAUJET_MAX_ETA) {
+        double btagdiscriminant = jet.bDiscriminator(BTAG_DISCRIMINATOR);
         if (btagdiscriminant > highestBTagDiscriminant) highestBTagDiscriminant = btagdiscriminant;
       }
-      if (jet.pt() > 20 && fabs(jet.eta()) < 2.4 && jet.bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags") > 0.890)
+      if (jet.pt() > TAUJET_MIN_PT && fabs(jet.eta()) < TAUJET_MAX_ETA && jet.bDiscriminator(BTAG_DISCRIMINATOR) > JET_BTAG_WP)
         atLeastOneBTag = true;
       bool noNearbyGlobalMuon = true;
       for (const pat::Muon &muon : *muons) {
-        if (muon.pt() < 5) continue; 
         if (!muon.isGlobalMuon()) continue;
+        if (muon.pt() < TAUJET_NEARBYGLOBALMUON_MIN_PT) continue;
         double deltaR = reco::deltaR(muon.eta(),muon.phi(),jet.eta(),jet.phi());
-        if (deltaR < 0.4) noNearbyGlobalMuon = false;
+        if (deltaR < TAUJET_NEARBYGLOBALMUON_DR) noNearbyGlobalMuon = false;
       }
-      if (jet.pt() > 20.0 &&
-          fabs(jet.eta()) < 2.3 &&
-          noNearbyGlobalMuon) {
+      if (jet.pt() > TAUJET_MIN_PT && fabs(jet.eta()) < TAUJET_MAX_ETA && noNearbyGlobalMuon) {
         double leading_track_pt = 0;
         int leading_track_charge = 0;
         for (unsigned int i = 0; i < jet.numberOfDaughters(); i++) {
@@ -196,118 +279,111 @@ namespace TauHadFilters
             leading_track_charge = jet.daughter(i)->charge();
           }
         }
-        if (leading_track_pt > 5.0)
+        if (leading_track_pt > TAUJET_MIN_LEADINGTRACKPT)
           tauJetCands.push_back(&jet);
           tauJetCandsCharge.push_back(leading_track_charge);
       }
     }
 
-    // choose single taujet-muon system
-    int muon_jet_index = -1;
-    int tau_jet_index = -1;
-    for (unsigned int i = 0; i < passedMuons.size(); i++) {
-      for (unsigned int j = 0; j < tauJetCands.size(); j++) {
+    // tau from pat::tau objects
+    vector<const pat::Tau *> tauCands;
+    for (const pat::Tau &tau : *taus) {
+      bool noNearbyGlobalMuon = true;
+      for (const pat::Muon &muon : *muons) {
+        if (!muon.isGlobalMuon()) continue;
+        if (muon.pt() < TAUJET_NEARBYGLOBALMUON_MIN_PT) continue;
+        double deltaR = reco::deltaR(muon.eta(),muon.phi(),tau.eta(),tau.phi());
+        if (deltaR < TAUJET_NEARBYGLOBALMUON_DR) noNearbyGlobalMuon = false;
+      }
+      if (!(tau.pt() > TAUJET_MIN_PT && fabs(tau.eta()) < TAUJET_MAX_ETA)) continue;
+      if (!noNearbyGlobalMuon) continue;
+      if (!(tau.leadChargedHadrCand()->pt() > TAUJET_MIN_LEADINGTRACKPT)) continue;
+      if (!(tau.tauID("againstMuonTight3") > 0.5 && tau.tauID("againstElectronVLooseMVA6") > 0.5)) continue;
+      if (tau.isTauIDAvailable("decayModeFindingOldDMs") && tau.tauID("decayModeFindingOldDMs") < 0.5) continue;
+      tauCands.push_back(&tau);
+    }
+
+    // choose a muon-tau pair that passes DR and opp sign
+    int muon_index = -1;
+    int tau_index = -1;
+    if (!usePatTau)
+    { 
+      for (unsigned int i = 0; i < passedMuons.size(); i++) {
         const pat::Muon & muon = *passedMuons[i];
-        const pat::Jet & tau = *tauJetCands[j];
-        int tau_charge = tauJetCandsCharge[j];
-        double DR = reco::deltaR(muon.eta(),muon.phi(),tau.eta(),tau.phi());
-        int charge = muon.charge() * tau_charge;
-        if (DR < 0.5) continue;
-        if (charge > 0) continue;
-        if (muon_jet_index == -1) {
-          muon_jet_index = i;
-          tau_jet_index = j; }
-        else if (passedMuons[i]->pt() + tauJetCands[j]->pt() > passedMuons[muon_jet_index]->pt() + tauJetCands[tau_jet_index]->pt()) {
-          muon_jet_index = i;
-          tau_jet_index = j; }
+        for (unsigned int j = 0; j < tauJetCands.size(); j++) {
+          const pat::Jet & tau = *tauJetCands[j];
+          int tau_charge = tauJetCandsCharge[j];
+          double DR = reco::deltaR(muon.eta(),muon.phi(),tau.eta(),tau.phi());
+          int charge_product = muon.charge() * tau_charge;
+          if (DR < MUONTAUPAIR_MIN_DR || charge_product > 0) continue;
+          if (muon_index == -1) { muon_index = i; tau_index = j; }
+          else if ( betterPair(&muon, &tau, passedMuons[muon_index], tauJetCands[tau_index]) ) { muon_index = i; tau_index = j; }
+        }
+      }
+      if (muon_index != -1) {
+        result.tagMuon = passedMuons[muon_index];
+        result.probeTauJet = tauJetCands[tau_index];
+        result.probeTau = NULL;
+        result.Pzeta = computePzeta(result.tagMuon, result.probeTauJet, &MET);
+        result.MT = computeMT(result.tagMuon, &MET);
+      }
+    }
+    else // usePatTau = true
+    { 
+      for (unsigned int i = 0; i < passedMuons.size(); i++) {
+        const pat::Muon & muon = *passedMuons[i];
+        for (unsigned int j = 0; j < tauCands.size(); j++) {
+          const pat::Tau & tau = *tauCands[j];
+          double DR = reco::deltaR(muon.eta(),muon.phi(),tau.eta(),tau.phi());
+          int charge_product = muon.charge() * tau.charge();
+          if (DR < MUONTAUPAIR_MIN_DR || charge_product > 0) continue;
+          if (muon_index == -1) { muon_index = i; tau_index = j; }
+          else if ( betterPair(&muon, &tau, passedMuons[muon_index], tauCands[tau_index]) ) { muon_index = i; tau_index = j; }
+        }
+      }
+      if (muon_index != -1) {
+        result.tagMuon = passedMuons[muon_index];
+        result.probeTauJet = NULL;
+        result.probeTau = tauCands[tau_index];
+        result.Pzeta = computePzeta(result.tagMuon, result.probeTau, &MET);
+        result.MT = computeMT(result.tagMuon, &MET);
       }
     }
 
-    // filter decision
-    bool passTauMuonPair = false;
-    bool passDR = false;
-    bool passMT = false;
-    bool passPzeta = false;
-    bool passExtraLep = false;
-    bool passBTag = false;
-
-    // at least one muon and one tau cand
-    if (muon_jet_index != -1 && tau_jet_index != -1) passTauMuonPair = true;
-
-    double MT = -100;
-    double Pzeta = -100;
-    double cut_DR = -1;
-    // tau-muon system: DR, opp sign, MT, Pzeta
-    if (passTauMuonPair) {
-      const pat::Muon & theMuon = *passedMuons[muon_jet_index];
-      const pat::Jet & theTau = *tauJetCands[tau_jet_index];
-
-      double dPhi = theMuon.phi() - MET.phi();
-      MT = sqrt(2 * theMuon.pt() * MET.pt() * (1 - cos(dPhi)));    
-      TVector2 pTmuon;
-      pTmuon.SetMagPhi(theMuon.pt(), theMuon.phi());  
-      TVector2 pTtau;
-      pTtau.SetMagPhi(theTau.pt(), theTau.phi());  
-      TVector2 pTmet;
-      pTmet.SetMagPhi(MET.pt(), MET.phi());  
-      TVector2 zeta;
-      zeta.SetMagPhi(1.0, (theMuon.phi()-theTau.phi())/2.0 + theTau.phi());
-      double PzetaAll = zeta * (pTmuon + pTtau + pTmet);
-      double PzetaVis = zeta * (pTmuon + pTtau);
-      Pzeta = PzetaAll - 0.85 * PzetaVis;
-      cut_DR = reco::deltaR(theMuon.eta(), theMuon.phi(), theTau.eta(), theTau.phi());
-
-      if (cut_DR > 0.5) passDR = true;
-      if (MT < 40) passMT = true;
-      if (Pzeta > -25) passPzeta = true;
-    }
-
-    // extra lepton veto
-    if (!extraMuon && !extraElectron && !diMuon) passExtraLep = true;
-
-    // btag veto
-    if (!atLeastOneBTag) passBTag = true;
-
-    // final filter decision
-    bool passAll = passMuonTrigger && passTauMuonPair && passDR && passMT && passPzeta && passExtraLep && passBTag;
-
-    // fill return struct
-    result.nTagMuons = passedMuons.size();
-    result.nProbeTaus = tauJetCands.size();
-    result.foundTagMuon = (muon_jet_index != -1);
-    result.foundProbeTau = (tau_jet_index != -1);
-    result.tagMuon = NULL;
-    result.probeTau = NULL;
-    if (result.foundTagMuon) result.tagMuon = &(*passedMuons[muon_jet_index]);
-    if (result.foundTagMuon) result.tagMuon_iso = (result.tagMuon->chargedHadronIso() + result.tagMuon->neutralHadronIso() + result.tagMuon->photonIso())/result.tagMuon->pt() - 0.5 * (*rho);
-    if (result.foundProbeTau) result.probeTau = &(*tauJetCands[tau_jet_index]);
+    /// determine selection decisions
+    result.usePatTau = usePatTau;
     // trigger
-    result.foundMuonTrigger = name_muon_trigger;
-    result.passMuonTrigger = passMuonTrigger;
-    // cut variables on pair
-    result.DR = 0;
-    result.MT = 0;
-    result.Pzeta = 0;
-    result.passDR = false;
-    result.passMT = false;
-    result.passPzeta = false;
-    if (result.foundTagMuon && result.foundProbeTau) {
-      result.DR = cut_DR;
-      result.MT = MT;
-      result.Pzeta = Pzeta;
-      result.passDR = passDR;
-      result.passMT = passMT;
-      result.passPzeta = passPzeta;
-    }
+    result.passTrigger = bit_muon;
+    result.foundTrigger = name_muon_trigger;
+    // object counts
+    result.nTagMuons = passedMuons.size();
+    if (!usePatTau) result.nProbeTaus = tauJetCands.size();
+    if (usePatTau)  result.nProbeTaus = tauCands.size();
     // event wide vetos
     result.passExtraMuonVeto = !extraMuon;
     result.passDiMuonVeto = !diMuon;
     result.passExtraElectronVeto = !extraElectron;
     result.passBtagVeto = !atLeastOneBTag;
-    result.btagDiscriminant = highestBTagDiscriminant;
-    // summary bools
-    result.passTagAndProbeSelection = passTauMuonPair;
-    result.passPreSelection = passAll;
+    result.highestBtagDiscriminant = highestBTagDiscriminant;
+    // muon tau pair
+    result.passMuonTauPair = muon_index != -1;
+    if (result.passMuonTauPair) {
+      result.pairAndPassMT = result.MT < MAX_MT;
+      result.pairAndPassPzeta = result.Pzeta > MIN_PZETA;
+    } else {
+      result.pairAndPassMT = false;
+      result.pairAndPassPzeta = false;
+      result.MT = -999.9;
+      result.Pzeta = -999.9;
+      result.tagMuon = NULL;
+      result.probeTauJet = NULL;
+      result.probeTau = NULL;
+    }
+    // full preselection
+    result.passPreSelection = result.passTrigger && 
+                              result.passMuonTauPair && result.pairAndPassMT && result.pairAndPassPzeta && 
+                              result.passExtraMuonVeto && result.passDiMuonVeto && result.passExtraElectronVeto && 
+                              result.passBtagVeto;
 
     return result;
   }
