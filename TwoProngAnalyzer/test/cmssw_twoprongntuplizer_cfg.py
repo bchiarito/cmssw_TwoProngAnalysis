@@ -229,7 +229,7 @@ if options.commandLineTwoProng or options.standardTwoProng:
   process.twoprongNtuplizer.triggerEffHistos = options.triggerEffHistos;
   process.twoprongNtuplizer.twoprongYieldHistos = options.twoprongYieldHistos;
   process.twoprongNtuplizer.stackedDalitzHistos = options.stackedDalitzHistos;
-if options.commandLineTwoProng or options.standardTwoProng:
+if options.tauModifiedTwoProng:
   # settings always overwritten by command line
   process.twoprongModNtuplizer.includeSignalGenParticles = options.isSignal
   process.twoprongModNtuplizer.runningOnTauTauMC = options.isDYll
