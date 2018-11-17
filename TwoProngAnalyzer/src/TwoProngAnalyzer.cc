@@ -1981,6 +1981,8 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   // Jets
   for (unsigned int i = 0; i < ak4jets->size(); i++) {
     const pat::Jet &jet = (*ak4jets)[i];
+    if (jet.pt() < 30) continue;
+    if (fabs(jet.eta()) > 2.5) continue;
     fAK4jet_pt.push_back(jet.pt());
     fAK4jet_eta.push_back(jet.eta());
     fAK4jet_phi.push_back(jet.phi());
@@ -3040,32 +3042,31 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fProbeTau_mass.clear();
   fProbeTau_genDR.clear();
 
-  fpassZMuonTrigger = result.passMuonTrigger;
-  string foundZMuonTrigger = result.foundMuonTrigger;
-  fpassZTnP = result.passTagAndProbeSelection;
+  fpassZMuonTrigger = result.passTrigger;
+  string foundZMuonTrigger = result.foundTrigger;
+  fpassZTnP = result.passMuonTauPair;
   fpassZPre = result.passPreSelection;
   fpassZExtraMuon = result.passExtraMuonVeto;
   fpassZExtraElectron = result.passExtraElectronVeto;
   fpassZDiMuon = result.passDiMuonVeto;
   fpassZBVeto = result.passBtagVeto;
-  fZBVetoVal = result.btagDiscriminant;
+  fZBVetoVal = result.highestBtagDiscriminant;
   fnTagMuons = result.nTagMuons;
   fnProbeTaus = result.nProbeTaus;
-  fTauPreDr = result.DR;
   fTauPreMT = result.MT;
   fTauPrePzeta = result.Pzeta;
 
-  if (result.foundTagMuon) {
+  if (result.passMuonTauPair) {
     fTagMuon_pt.push_back(result.tagMuon->pt());
     fTagMuon_eta.push_back(result.tagMuon->eta());
     fTagMuon_phi.push_back(result.tagMuon->phi());
     fTagMuon_mass.push_back(result.tagMuon->mass());
     fTagMuon_z.push_back((result.tagMuon->muonBestTrack())->vz());
     fTagMuon_dz.push_back((result.tagMuon->muonBestTrack())->dz( ((*primaryvertecies)[0]).position() ));
-    fTagMuon_iso.push_back(result.tagMuon_iso);
+    fTagMuon_iso.push_back(TauHadFilters::computeMuonIsolation(result.tagMuon));
   }
 
-  if (result.foundProbeTau) {
+  if (result.passMuonTauPair) {
     fProbeTau_pt.push_back(result.probeTau->pt());
     fProbeTau_eta.push_back(result.probeTau->eta());
     fProbeTau_phi.push_back(result.probeTau->phi());
@@ -3090,7 +3091,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   InitRecoDiObjectInfo(fZvisibleMuonTau);
   InitRecoDiObjectInfo(fZvisibleMuonJet);
 
-  if (result.passTagAndProbeSelection) {
+  if (result.passMuonTauPair) {
     if (fDebug) cout << ". doing visible Z objects" << endl;
     // visible Z with probe tau
     TLorentzVector z_muon;
