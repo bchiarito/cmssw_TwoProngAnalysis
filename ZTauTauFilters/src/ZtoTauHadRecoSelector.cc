@@ -266,10 +266,8 @@ ZtoTauHadRecoSelector::beginJob()
 void
 ZtoTauHadRecoSelector::endJob()
 {
-  if (!cfg_reducedSelection)
-    cout << "\nran filter in reduced mode" << endl;
-  else
-    cout << "\nran filter in full preselection mode" << endl;
+  if (cfg_reducedSelection) cout << "\nran filter in reduced mode" << endl;
+  else cout << "\nran filter in full preselection mode" << endl;
   if (cfg_dumpCutflow) {
     // cutflow print
     cout << "total " << cutflow_total << endl;
