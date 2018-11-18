@@ -23,6 +23,7 @@ options.register("DYsig", False, VarParsing.multiplicity.singleton, VarParsing.v
 options.register("DYbkg", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("tauPreselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("tauTnPselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("usePatTauInPreselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 # two-prong object definition
 options.register("standardTwoProng", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("tauModifiedTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
@@ -272,13 +273,15 @@ if options.DYbkg:
   process.tauFilters *= process.genDYbkgFilt
 if options.tauPreselection:
   process.preselection = cms.EDFilter('ZtoTauHadRecoSelector',
-    dumpCutflow = cms.untracked.bool(True)
+    dumpCutflow = cms.untracked.bool(True),
+    usePatTau = cms.untracked.bool(options.usePatTauInPreselection)
   )
   process.tauFilters *= process.preselection
 if options.tauTnPselection:
   process.preselection = cms.EDFilter('ZtoTauHadRecoSelector',
     dumpCutflow = cms.untracked.bool(True),
-    tnpSelectionOnly = cms.untracked.bool(True)
+    tnpSelectionOnly = cms.untracked.bool(True),
+    usePatTau = cms.untracked.bool(options.usePatTauInPreselection)
   )
   process.tauFilters *= process.preselection
 

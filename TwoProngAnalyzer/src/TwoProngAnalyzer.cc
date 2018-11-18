@@ -66,6 +66,7 @@
 
 // for tau preselection
 #include "TwoProngAnalysis/ZTauTauFilters/interface/ZtoTauHadPreSelection.h"
+#include "TwoProngAnalysis/ZTauTauFilters/interface/ZtoTauHadTruthAlgorithms.h"
 
 using std::cout;
 using std::endl;
@@ -2753,114 +2754,14 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
   // tau decay type
   if (fRunningOnTauTauMC) {
-    vector<string> leptons;
-    for (unsigned int i = 0; i < genparticles->size(); i++) {
-      const reco::GenParticle & genparticle = (*genparticles)[i];
-      if (genparticle.status() != 22) continue;
-      leptons = getDecay(genparticle);
-    }
-    if (leptons.size() == 0) fTauDecayType = 0;
-    if (leptons.size() == 1) fTauDecayType = -1;
-    if (leptons.size() == 2) 
-    {
-      if (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end()) fTauDecayType = 3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-e") != leptons.end()) fTauDecayType = 4;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-e") != leptons.end()) fTauDecayType = 4;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-e") != leptons.end()) fTauDecayType = 4;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-e") != leptons.end()) fTauDecayType = 4;
-      else if (std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau+e") != leptons.end()) fTauDecayType = 4;
-      else if (std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau+e") != leptons.end()) fTauDecayType = 4;
-      else if (std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau+e") != leptons.end()) fTauDecayType = 4;
-      else if (std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau+e") != leptons.end()) fTauDecayType = 4;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-mu") != leptons.end()) fTauDecayType = 5.2;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-mu") != leptons.end()) fTauDecayType = 5.1;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-mu") != leptons.end()) fTauDecayType = 5.4;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-mu") != leptons.end()) fTauDecayType = 5.3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau+mu") != leptons.end()) fTauDecayType = 5.2;
-      else if (std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau+mu") != leptons.end()) fTauDecayType = 5.1;
-      else if (std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau+mu") != leptons.end()) fTauDecayType = 5.4;
-      else if (std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau+mu") != leptons.end()) fTauDecayType = 5.3;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+e") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-e") != leptons.end()) fTauDecayType = 6;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+mu") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-mu") != leptons.end()) fTauDecayType = 7;
-      else if (std::find(leptons.begin(), leptons.end(), "tau+e") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau-mu") != leptons.end()) fTauDecayType = 8;
-      else if (std::find(leptons.begin(), leptons.end(), "tau-e") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "tau+mu") != leptons.end()) fTauDecayType = 8;
-      else if (std::find(leptons.begin(), leptons.end(), "e+") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "e-") != leptons.end()) fTauDecayType = 1;
-      else if (std::find(leptons.begin(), leptons.end(), "mu+") != leptons.end() &&
-          std::find(leptons.begin(), leptons.end(), "mu-") != leptons.end()) fTauDecayType = 2;
-      else
-        fTauDecayType = 9;
-    }
-    if (leptons.size() > 2) fTauDecayType = 10;
+    fTauDecayType = TauHadFilters::ZDecayType(genparticles);
   }
 
   // More matching, by gen tau perspective now
   if (fRunningOnTauTauMC) {
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle & genparticle = (*genparticles)[i];
-      if (abs(genparticle.pdgId()) != 15) continue;
-      if (!isAncestorOfZ(&genparticle)) continue;
-      vector<string> leptons = getDecay(genparticle);
-      if (! (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() ||
-          std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() ||
-          std::find(leptons.begin(), leptons.end(), "tau+had30") != leptons.end() ||
-          std::find(leptons.begin(), leptons.end(), "tau+had3") != leptons.end() ||
-          std::find(leptons.begin(), leptons.end(), "tau-had10") != leptons.end() ||
-          std::find(leptons.begin(), leptons.end(), "tau-had1") != leptons.end() ||
-          std::find(leptons.begin(), leptons.end(), "tau-had30") != leptons.end() ||
-          std::find(leptons.begin(), leptons.end(), "tau-had3") != leptons.end() )
-        ) continue; // only including hadronically decaying taus in gen tau collection
+      if (!TauHadFilters::isHadronicTau(&genparticle)) continue; // only including hadronically decaying taus in gen tau collection
       TLorentzVector GenParticle;
       GenParticle.SetPtEtaPhiM(genparticle.pt(), genparticle.eta(), genparticle.phi(), genparticle.mass());
       fGenTau_pt.push_back(genparticle.pt());
