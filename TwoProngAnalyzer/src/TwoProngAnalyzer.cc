@@ -681,6 +681,8 @@ private:
   Double_t fTagMuon_mass;
   Double_t fTagMuon_z;
   Double_t fTagMuon_dz;
+  Double_t fTagMuon_dB;
+  Double_t fTagMuon_dxy;
   Double_t fTagMuon_iso;
 
   Double_t fProbeTau_pt;
@@ -1212,6 +1214,8 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("TagMuon_mass",&fTagMuon_mass,"TagMuon_mass/D");
   fTree2->Branch("TagMuon_z",&fTagMuon_z,"TagMuon_z/D");
   fTree2->Branch("TagMuon_dz",&fTagMuon_dz,"TagMuon_dz/D");
+  fTree2->Branch("TagMuon_dB",&fTagMuon_dB,"TagMuon_dB/D");
+  fTree2->Branch("TagMuon_dxy",&fTagMuon_dxy,"TagMuon_dxy/D");
   fTree2->Branch("TagMuon_iso",&fTagMuon_iso,"TagMuon_iso/D");
   fTree2->Branch("ProbeTau_pt",&fProbeTau_pt,"ProbeTau_pt/D");
   fTree2->Branch("ProbeTau_eta",&fProbeTau_eta,"ProbeTau_eta/D");
@@ -1900,6 +1904,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
   edm::Handle<vector<reco::Vertex>> primaryvertecies;
   iEvent.getByToken(pvToken_, primaryvertecies);
+  const reco::Vertex & PV = (*primaryvertecies)[0];
 
   edm::Handle<reco::BeamSpot> beamspot;
   iEvent.getByToken(beamToken_, beamspot);
@@ -2032,7 +2037,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     fAK4jet_phi.push_back(jet.phi());
     fAK4jet_mass.push_back(jet.mass());
   }
-  fNumAK4jets = fAK4jet_pt->size();
+  fNumAK4jets = fAK4jet_pt.size();
 
   // Tau-jet Candidates
   vector<const pat::Jet *> ak4jets_taucands;
@@ -2999,7 +3004,9 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     fTagMuon_phi = result.tagMuon->phi();
     fTagMuon_mass = result.tagMuon->mass();
     fTagMuon_z = (result.tagMuon->muonBestTrack())->vz();
-    fTagMuon_dz = (result.tagMuon->muonBestTrack())->dz( ((*primaryvertecies)[0]).position() );
+    fTagMuon_dz = fabs( (result.tagMuon->muonBestTrack())->dz( ((*primaryvertecies)[0]).position() ) );
+    fTagMuon_dB = fabs( result.tagMuon->dB() );
+    fTagMuon_dxy = fabs( (result.tagMuon->muonBestTrack())->dxy( ((*primaryvertecies)[0]).position() ) );
     fTagMuon_iso = TauHadFilters::computeMuonIsolation(result.tagMuon);
     fProbeTau_pt = result.usePatTau ? result.probeTau->pt() : result.probeTauJet->pt();
     fProbeTau_eta = result.usePatTau ? result.probeTau->eta() : result.probeTauJet->eta();
@@ -3026,6 +3033,8 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     fTagMuon_mass = -999.9;
     fTagMuon_z = -999.9;
     fTagMuon_dz = -999.9;
+    fTagMuon_dB = -999.9;
+    fTagMuon_dxy = -999.9;
     fTagMuon_iso = -999.9;
     fProbeTau_pt = -999.9;
     fProbeTau_eta = -999.9;
