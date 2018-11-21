@@ -662,6 +662,8 @@ private:
   Int_t fnTagMuons;
   Int_t fnProbeTaus;
   Bool_t fpassMuonTauPair;
+  Bool_t fpassPreselection;
+  Bool_t fpassReducedSelection;
   Bool_t fpassPzeta;
   Bool_t fpassMT;
   Bool_t fpassExtraElectronVeto;
@@ -1202,6 +1204,8 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Pzeta",&fPzeta,"Pzeta/D");
   fTree2->Branch("highestBtag",&fhighestBtag,"highestBtag/D");
   fTree2->Branch("passMuonTauPair",&fpassMuonTauPair,"passMuonTauPair/O");
+  fTree2->Branch("passPreselection",&fpassPreselection,"passPreselection/O");
+  fTree2->Branch("passReducedSelection",&fpassReducedSelection,"passReducedSelection/O");
   fTree2->Branch("TagMuon_pt",&fTagMuon_pt,"TagMuon_pt/D");
   fTree2->Branch("TagMuon_eta",&fTagMuon_eta,"TagMuon_eta/D");
   fTree2->Branch("TagMuon_phi",&fTagMuon_phi,"TagMuon_phi/D");
@@ -2028,7 +2032,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     fAK4jet_phi.push_back(jet.phi());
     fAK4jet_mass.push_back(jet.mass());
   }
-  fNumAK4jets = ak4jets->size();
+  fNumAK4jets = fAK4jet_pt->size();
 
   // Tau-jet Candidates
   vector<const pat::Jet *> ak4jets_taucands;
@@ -2984,6 +2988,10 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fMT = result.MT;
   fPzeta = result.Pzeta;
   fhighestBtag = result.highestBtagDiscriminant;
+  fpassPreselection = result.passTrigger && result.passMuonTauPair && result.pairAndPassPzeta && result.pairAndPassMT && 
+                      result.passExtraElectronVeto && result.passExtraMuonVeto && result.passDiMuonVeto && result.passBtagVeto;
+  fpassReducedSelection = result.passTrigger && result.passMuonTauPair && 
+                          result.passExtraElectronVeto && result.passExtraMuonVeto && result.passDiMuonVeto && result.passBtagVeto;
 
   if (fpassMuonTauPair) {
     fTagMuon_pt = result.tagMuon->pt();
@@ -3093,9 +3101,9 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (jj != -1) {
       fprobePassTauID = true;
       fProbeTau_tauID_pt = fTau_pt[jj];
-      fProbeTau_tauID_eta = fTau_pt[jj];
-      fProbeTau_tauID_phi = fTau_pt[jj];
-      fProbeTau_tauID_mass = fTau_pt[jj];
+      fProbeTau_tauID_eta = fTau_eta[jj];
+      fProbeTau_tauID_phi = fTau_phi[jj];
+      fProbeTau_tauID_mass = fTau_mass[jj];
       fProbeTau_tauID_probeDR = closest_dr_tau;
       TLorentzVector z_pattau;
       z_pattau.SetPtEtaPhiM(fTau_pt[jj], fTau_eta[jj], fTau_phi[jj], fTau_mass[jj]);
