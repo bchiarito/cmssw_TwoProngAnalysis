@@ -184,8 +184,8 @@ namespace TauHadFilters
       if (muon.pt() > MUON_MIN_PT &&
           fabs(muon.eta()) < MUON_MAX_ETA &&
           computeMuonIsolation(&muon) < MUON_MAX_RELISO &&
-          muon.muonBestTrack()->dz(PV.position()) < MUON_MAX_DZ &&
-          abs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
+          fabs(muon.muonBestTrack()->dz(PV.position())) < MUON_MAX_DZ &&
+          fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
           muon.isMediumMuon() )
         passedMuons.push_back(&muon);
     }
@@ -197,14 +197,14 @@ namespace TauHadFilters
       if (muon.pt() > EXTRAMUON_MIN_PT && 
           fabs(muon.eta()) < EXTRAMUON_MAX_ETA &&
           computeMuonIsolation(&muon) < EXTRAMUON_MAX_RELISO &&
-          muon.muonBestTrack()->dz(PV.position()) < EXTRAMUON_MAX_DZ &&
-          abs(muon.muonBestTrack()->dxy(PV.position())) < EXTRAMUON_MAX_DXY &&
+          fabs(muon.muonBestTrack()->dz(PV.position())) < EXTRAMUON_MAX_DZ &&
+          fabs(muon.muonBestTrack()->dxy(PV.position())) < EXTRAMUON_MAX_DXY &&
           muon.isMediumMuon() ) {
         if (muon.pt() > MUON_MIN_PT &&
             fabs(muon.eta()) < MUON_MAX_ETA &&
             computeMuonIsolation(&muon) < MUON_MAX_RELISO &&
-            muon.muonBestTrack()->dz(PV.position()) < MUON_MAX_DZ &&
-            abs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
+            fabs(muon.muonBestTrack()->dz(PV.position())) < MUON_MAX_DZ &&
+            fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
             muon.isMediumMuon() ) {
           if (skipped_one_passing_muon) extraMuon = true;
           if (!skipped_one_passing_muon) skipped_one_passing_muon = true;
@@ -217,8 +217,8 @@ namespace TauHadFilters
     for (const pat::Electron &electron : *electrons) {
       if (electron.pt() > EXTRAELECTRON_MIN_PT &&
           fabs(electron.eta()) < EXTRAELECTRON_MAX_ETA &&
-          electron.gsfTrack()->dz(PV.position()) < EXTRAELECTRON_MAX_DZ &&
-          abs(electron.gsfTrack()->dxy(PV.position())) < EXTRAELECTRON_MAX_DXY &&
+          fabs(electron.gsfTrack()->dz(PV.position())) < EXTRAELECTRON_MAX_DZ &&
+          fabs(electron.gsfTrack()->dxy(PV.position())) < EXTRAELECTRON_MAX_DXY &&
           electron.passConversionVeto() &&
           computeElectronIsolation(&electron) < EXTRAELECTRON_MAX_RELISO &&
           electron.gsfTrack()->lost() <= EXTRAELECTRON_MAX_LOSTTRACKS)
@@ -232,16 +232,16 @@ namespace TauHadFilters
         if (muon1.pt() > DIMUON_MIN_PT &&
             fabs(muon1.eta()) < DIMUON_MAX_ETA &&
             computeMuonIsolation(&muon1) < DIMUON_MAX_RELISO &&
-            muon1.muonBestTrack()->dz(PV.position()) < DIMUON_MAX_DZ &&
-            abs(muon1.muonBestTrack()->dxy(PV.position())) < DIMUON_MAX_DXY &&
+            fabs(muon1.muonBestTrack()->dz(PV.position())) < DIMUON_MAX_DZ &&
+            fabs(muon1.muonBestTrack()->dxy(PV.position())) < DIMUON_MAX_DXY &&
             muon1.isPFMuon() &&
             muon1.isGlobalMuon() &&
             muon1.isTrackerMuon() &&
             muon2.pt() > DIMUON_MIN_PT &&
             fabs(muon2.eta()) < DIMUON_MAX_ETA &&
             computeMuonIsolation(&muon2) < DIMUON_MAX_RELISO &&
-            muon2.muonBestTrack()->dz(PV.position()) < DIMUON_MAX_DZ &&
-            abs(muon2.muonBestTrack()->dxy(PV.position())) < DIMUON_MAX_DXY &&
+            fabs(muon2.muonBestTrack()->dz(PV.position())) < DIMUON_MAX_DZ &&
+            fabs(muon2.muonBestTrack()->dxy(PV.position())) < DIMUON_MAX_DXY &&
             muon2.isPFMuon() &&
             muon2.isGlobalMuon() &&
             muon2.isTrackerMuon() &&
