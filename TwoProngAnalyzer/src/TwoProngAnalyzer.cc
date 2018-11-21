@@ -2104,8 +2104,8 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (muon.pt() > 19.0 &&
         fabs(muon.eta()) < 2.1 &&
         (muon.chargedHadronIso() + muon.neutralHadronIso() + muon.photonIso())/muon.pt() < 0.1 &&
-        muon.muonBestTrack()->dz((*primaryvertecies)[0].position()) < 0.2 &&
-        abs(muon.muonBestTrack()->dxy((*primaryvertecies)[0].position())) < 0.045 &&
+        muon.muonBestTrack()->dz(PV.position()) < 0.2 &&
+        abs(muon.muonBestTrack()->dxy(PV.position())) < 0.045 &&
         muon.isMediumMuon() )
       selected_muons.push_back(&muon);
   }
@@ -2312,19 +2312,19 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
             fTwoProngCand_CHpos_vx.push_back( pf1.vx() );
             fTwoProngCand_CHpos_vy.push_back( pf1.vy() );
             fTwoProngCand_CHpos_dz.push_back(          pf1.dzAssociatedPV() );
-            fTwoProngCand_CHpos_dz_PV.push_back(       pf1.dz(((*primaryvertecies)[0]).position()) );
+            fTwoProngCand_CHpos_dz_PV.push_back(       pf1.dz(PV.position()) );
             fTwoProngCand_CHpos_dz_beamspot.push_back( pf1.dz(beamspot->position()));
             fTwoProngCand_CHpos_dxy.push_back(          pf1.dxy() );
-            fTwoProngCand_CHpos_dxy_PV.push_back(       pf1.dxy(((*primaryvertecies)[0]).position()) );
+            fTwoProngCand_CHpos_dxy_PV.push_back(       pf1.dxy(PV.position()));
             fTwoProngCand_CHpos_dxy_beamspot.push_back( pf1.dxy(beamspot->position()));
             fTwoProngCand_CHneg_vz.push_back( pf2.vz() );
             fTwoProngCand_CHneg_vx.push_back( pf2.vx() );
             fTwoProngCand_CHneg_vy.push_back( pf2.vy() );
             fTwoProngCand_CHneg_dz.push_back(          pf2.dzAssociatedPV() );
-            fTwoProngCand_CHneg_dz_PV.push_back(       pf2.dz(((*primaryvertecies)[0]).position()) );
+            fTwoProngCand_CHneg_dz_PV.push_back(       pf2.dz( PV.position()) );
             fTwoProngCand_CHneg_dz_beamspot.push_back( pf2.dz(beamspot->position()));
             fTwoProngCand_CHneg_dxy.push_back(          pf2.dxy() );
-            fTwoProngCand_CHneg_dxy_PV.push_back(       pf2.dxy(((*primaryvertecies)[0]).position()) );
+            fTwoProngCand_CHneg_dxy_PV.push_back(       pf2.dxy( PV.position()) );
             fTwoProngCand_CHneg_dxy_beamspot.push_back( pf2.dxy(beamspot->position()));
           } else {
             poscand = pfcand2;
@@ -2342,19 +2342,19 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
             fTwoProngCand_CHneg_vx.push_back( pf1.vx() );
             fTwoProngCand_CHneg_vy.push_back( pf1.vy() );
             fTwoProngCand_CHneg_dz.push_back(          pf1.dzAssociatedPV() );
-            fTwoProngCand_CHneg_dz_PV.push_back(       pf1.dz(((*primaryvertecies)[0]).position()) );
+            fTwoProngCand_CHneg_dz_PV.push_back(       pf1.dz( PV.position()) );
             fTwoProngCand_CHneg_dz_beamspot.push_back( pf1.dz(beamspot->position()));
             fTwoProngCand_CHneg_dxy.push_back(          pf1.dxy() );
-            fTwoProngCand_CHneg_dxy_PV.push_back(       pf1.dxy(((*primaryvertecies)[0]).position()) );
+            fTwoProngCand_CHneg_dxy_PV.push_back(       pf1.dxy( PV.position()) );
             fTwoProngCand_CHneg_dxy_beamspot.push_back( pf1.dxy(beamspot->position()));
             fTwoProngCand_CHpos_vz.push_back( pf2.vz() );
             fTwoProngCand_CHpos_vx.push_back( pf2.vx() );
             fTwoProngCand_CHpos_vy.push_back( pf2.vy() );
             fTwoProngCand_CHpos_dz.push_back(          pf2.dzAssociatedPV() );
-            fTwoProngCand_CHpos_dz_PV.push_back(       pf2.dz(((*primaryvertecies)[0]).position()) );
+            fTwoProngCand_CHpos_dz_PV.push_back(       pf2.dz( PV.position()) );
             fTwoProngCand_CHpos_dz_beamspot.push_back( pf2.dz(beamspot->position()));
             fTwoProngCand_CHpos_dxy.push_back(          pf2.dxy() );
-            fTwoProngCand_CHpos_dxy_PV.push_back(       pf2.dxy(((*primaryvertecies)[0]).position()) );
+            fTwoProngCand_CHpos_dxy_PV.push_back(       pf2.dxy( PV.position()) );
             fTwoProngCand_CHpos_dxy_beamspot.push_back( pf2.dxy(beamspot->position()));
           }
           fTwoProngCand_photon_pt.push_back(photon.Pt());
@@ -2421,10 +2421,10 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
                   fTwoProngCand_isoPF_vx.push_back( pf4.vx() );
                   fTwoProngCand_isoPF_vy.push_back( pf4.vy() );
                   fTwoProngCand_isoPF_dz.push_back(          pf4.dzAssociatedPV() );
-                  fTwoProngCand_isoPF_dz_PV.push_back(       pf4.dz(((*primaryvertecies)[0]).position()) );
+                  fTwoProngCand_isoPF_dz_PV.push_back(       pf4.dz( PV.position()) );
                   fTwoProngCand_isoPF_dz_beamspot.push_back( pf4.dz(beamspot->position()));
                   fTwoProngCand_isoPF_dxy.push_back(          pf4.dxy() );
-                  fTwoProngCand_isoPF_dxy_PV.push_back(       pf4.dxy(((*primaryvertecies)[0]).position()) );
+                  fTwoProngCand_isoPF_dxy_PV.push_back(       pf4.dxy( PV.position()) );
                   fTwoProngCand_isoPF_dxy_beamspot.push_back( pf4.dxy(beamspot->position()));
                 }
               }
@@ -3004,9 +3004,9 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     fTagMuon_phi = result.tagMuon->phi();
     fTagMuon_mass = result.tagMuon->mass();
     fTagMuon_z = (result.tagMuon->muonBestTrack())->vz();
-    fTagMuon_dz = fabs( (result.tagMuon->muonBestTrack())->dz( ((*primaryvertecies)[0]).position() ) );
+    fTagMuon_dz = fabs( (result.tagMuon->muonBestTrack())->dz( PV.position() ) );
     fTagMuon_dB = fabs( result.tagMuon->dB() );
-    fTagMuon_dxy = fabs( (result.tagMuon->muonBestTrack())->dxy( ((*primaryvertecies)[0]).position() ) );
+    fTagMuon_dxy = fabs( (result.tagMuon->muonBestTrack())->dxy( PV.position() ) );
     fTagMuon_iso = TauHadFilters::computeMuonIsolation(result.tagMuon);
     fProbeTau_pt = result.usePatTau ? result.probeTau->pt() : result.probeTauJet->pt();
     fProbeTau_eta = result.usePatTau ? result.probeTau->eta() : result.probeTauJet->eta();
