@@ -3,13 +3,13 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_twoprongntuplizer_nov27_BKG'
+config.General.workArea = 'crab_multi_twoprongntuplizer_nov27_patpre_BKG'
 config.section_('JobType')
 config.JobType.psetName = '../cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=mc2016', 'mcInfo=True', 'tauTnPselection=True', 'standardTwoProng=True', 'tauModifiedTwoProng=True', 'includeCands=False', 'includeTauTau=True']
+config.JobType.pyCfgParams = ['globalTag=mc2016', 'mcInfo=True', 'tauTnPselection=True', 'standardTwoProng=True', 'tauModifiedTwoProng=True', 'includeCands=False', 'includeTauTau=True', 'usePatTauInPreselection=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/ztagandprobe/Nov27_trees/regpre/BKG/'
+config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/ztagandprobe/Nov27_trees/patpre/BKG/'
 config.Data.outputDatasetTag = "twoprongntuplizer"
 config.Data.splitting = 'EventAwareLumiBased'
 config.Data.unitsPerJob = 200000

@@ -3,13 +3,13 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_twoprongntuplizer_DATA'
+config.General.workArea = 'crab_multi_twoprongntuplizer_patpre_DATA'
 config.section_('JobType')
 config.JobType.psetName = '../cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=data2016', 'tauTnPselection=True', 'standardTwoProng=True', 'tauModifiedTwoProng=True', 'includeCands=False', 'includeTauTau=True']
+config.JobType.pyCfgParams = ['globalTag=data2016', 'tauTnPselection=True', 'standardTwoProng=True', 'tauModifiedTwoProng=True', 'includeCands=False', 'includeTauTau=True', 'usePatTauInPreselection=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/ztagandprobe/Nov26_trees/DATA/'
+config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/ztagandprobe/Nov26_trees/patpre/DATA/'
 config.Data.splitting = 'LumiBased'
 config.Data.unitsPerJob = 100
 config.Data.totalUnits = -1
