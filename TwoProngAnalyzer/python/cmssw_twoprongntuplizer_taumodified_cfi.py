@@ -2,6 +2,7 @@ import FWCore.ParameterSet.Config as cms
 
 twoprongModNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
                                   # two-prong object options
+                                  noTwoProng = cms.untracked.bool(False),
                                   candidateMinPt = cms.untracked.double(20.0),
                                   candidateAbsMaxEta = cms.untracked.double(2.5),
                                   candidateTrackAsymmetryCut = cms.untracked.double(0.2),
@@ -48,4 +49,5 @@ twoprongModNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
                                   # filters
                                   filterOnPhoton = cms.untracked.bool(False),
                                   filterOnTwoProng = cms.untracked.bool(False),
+                                  usePatTauInPreselection = cms.untracked.bool(False),
                                   )

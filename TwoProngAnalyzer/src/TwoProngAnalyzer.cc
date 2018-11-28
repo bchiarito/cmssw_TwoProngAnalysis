@@ -96,6 +96,9 @@ bool isAncestorOfZ(const reco::Candidate * particle)
   return false;
 }
 
+// other global constants
+const double Z_MASS = 91.18;
+
 //
 // class declaration
 //
@@ -146,6 +149,8 @@ private:
   bool               fStackedDalitzHistos;  // flag to include stacked dalitz plots
   bool               fFilterOnPhoton;  // flag to save only events with one or more photons
   bool               fFilterOnTwoProng;  // flag to save only events with one or more twoprongs
+  bool               fusePatTau;   // use pat::tau instead of tau jet in preselection
+  bool               fNoTwoProng;  // turn off all twoprong branches
 
   // ntuplizer config file options
   double fCandidatePairDR;
@@ -340,6 +345,8 @@ private:
   vector<Double_t> fMuon_eta;
   vector<Double_t> fMuon_phi;
   vector<Double_t> fMuon_mass;
+
+  Double_t fTightMuon_dzdB;
 
   int fNumTaus;
   vector<Double_t> fTau_pt;
@@ -708,6 +715,11 @@ private:
   TwoProngAnalysis::recoDiObjectInfo_t fMuonTwoProng;
   TwoProngAnalysis::recoDiObjectInfo_t fMuonTauID;
   TwoProngAnalysis::recoDiObjectInfo_t fMuonProbe;
+
+  TwoProngAnalysis::recoDiObjectInfo_t fMuonTauID_pt;
+  TwoProngAnalysis::recoDiObjectInfo_t fMuonTauID_zmass;
+  TwoProngAnalysis::recoDiObjectInfo_t fMuonTwoProng_pt;
+  TwoProngAnalysis::recoDiObjectInfo_t fMuonTwoProng_zmass;
 };
 
 //
@@ -736,6 +748,8 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
     fStackedDalitzHistos(iConfig.getUntrackedParameter<bool>("stackedDalitzHistos")),
     fFilterOnPhoton(iConfig.getUntrackedParameter<bool>("filterOnPhoton")),
     fFilterOnTwoProng(iConfig.getUntrackedParameter<bool>("filterOnTwoProng")),
+    fusePatTau(iConfig.getUntrackedParameter<bool>("usePatTauInPreselection")),
+    fNoTwoProng(iConfig.getUntrackedParameter<bool>("noTwoProng")),
     fCandidatePairDR(iConfig.getUntrackedParameter<double>("chargedHadronPairMinDR")),
     fCandidatePairMinPt(iConfig.getUntrackedParameter<double>("chargedHadronMinPt")),
     fCandidatePairIsolationDR(iConfig.getUntrackedParameter<double>("isolationConeR")),
@@ -866,6 +880,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Muon_eta",&fMuon_eta);
   fTree2->Branch("Muon_phi",&fMuon_phi);
   fTree2->Branch("Muon_mass",&fMuon_mass);
+  fTree2->Branch("TightMuon_dzdB",&fTightMuon_dzdB,"TightMuon_dzdB/D");
   // Taus
   fTree2->Branch("nTaus",&fNumTaus,"nTaus/I");
   fTree2->Branch("Tau_pt",&fTau_pt);
@@ -917,6 +932,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("Photon2",&fRecoTightPhotonInfo2,TwoProngAnalysis::recoPhotonBranchDefString.c_str());
   fTree2->Branch("Photon3",&fRecoTightPhotonInfo3,TwoProngAnalysis::recoPhotonBranchDefString.c_str());
   }
+  if (!fNoTwoProng) {
   // TwoProngs
   fTree2->Branch("nTwoProngCands",&fNumTwoProng,"nTwoProngCands/I");
   fTree2->Branch("nTwoProngs",&fNumTwoProngPass,"nTwoProngs/I");
@@ -1189,6 +1205,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("RecoPhiDiTwoProng",&fRecoPhiDiTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("RecoPhiPhotonTwoProng",&fRecoPhiPhotonTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("RecoPhiInclusive",&fRecoPhiInclusive,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  }
   // Tau preseletion branches
   if (fincludeTauTauBranches) {
   fTree2->Branch("passMuonTrigger",&fpassMuonTrigger,"passMuonTrigger/O");
@@ -1237,6 +1254,10 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("MuonProbe",&fMuonProbe,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("MuonTauID",&fMuonTauID,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree2->Branch("MuonTwoProng",&fMuonTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("MuonTauID_pt",&fMuonTauID_pt,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("MuonTauID_zmass",&fMuonTauID_zmass,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("MuonTwoProng_pt",&fMuonTwoProng_pt,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  fTree2->Branch("MuonTwoProng_zmass",&fMuonTwoProng_zmass,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   }
   }
 
@@ -2097,6 +2118,20 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     fMuon_mass.push_back(muon.mass());
   }
   fNumMuons = muons->size();
+
+  fTightMuon_dzdB = -999.9;
+  double highest_pt = 0;
+  for (const pat::Muon &muon : *muons) {
+    if (muon.pt() > 25 &&
+        fabs(muon.eta()) < 2.1 &&
+        TauHadFilters::computeMuonIsolation(&muon) < 0.15 &&
+        fabs(muon.muonBestTrack()->dxy(PV.position())) < 0.045 &&
+        muon.isMediumMuon() )
+      if (muon.pt() > highest_pt) {
+        highest_pt = muon.pt();
+        fTightMuon_dzdB = muon.muonBestTrack()->dz(PV.position()) - muon.dB();
+      }
+  }
 
   // Selected Muons
   vector<const pat::Muon *> selected_muons;
@@ -2975,7 +3010,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   // Z preselection tag and probe branches
   if (fDebug) cout << ". doing z preselection branches" << endl;
   TauHadFilters::PreSelectionResult result;
-  result = TauHadFilters::computePreSelectionResult(iEvent, triggerBits, triggerObjects, triggerPrescales, vertices, taus, muons, electrons, ak4jets, MET, rhoH);
+  result = TauHadFilters::computePreSelectionResult(iEvent, triggerBits, triggerObjects, triggerPrescales, vertices, taus, muons, electrons, ak4jets, MET, rhoH, fusePatTau);
   if (fDebug) cout << ". finished computing preselection result" << endl;
 
   fpassMuonTrigger = result.passTrigger;
@@ -2993,10 +3028,11 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fMT = result.MT;
   fPzeta = result.Pzeta;
   fhighestBtag = result.highestBtagDiscriminant;
-  fpassPreselection = result.passTrigger && result.passMuonTauPair && result.pairAndPassPzeta && result.pairAndPassMT && 
-                      result.passExtraElectronVeto && result.passExtraMuonVeto && result.passDiMuonVeto && result.passBtagVeto;
-  fpassReducedSelection = result.passTrigger && result.passMuonTauPair && 
-                          result.passExtraElectronVeto && result.passExtraMuonVeto && result.passDiMuonVeto && result.passBtagVeto;
+  //fpassPreselection = result.passTrigger && result.passMuonTauPair && result.pairAndPassPzeta && result.pairAndPassMT && 
+  //                    result.passExtraElectronVeto && result.passExtraMuonVeto && result.passDiMuonVeto && result.passBtagVeto;
+  fpassPreselection = result.passPreSelection;
+  
+  fpassReducedSelection = result.passMuonTauPair && result.passExtraElectronVeto && result.passExtraMuonVeto && result.passDiMuonVeto && result.passBtagVeto;
 
   if (fpassMuonTauPair) {
     fTagMuon_pt = result.tagMuon->pt();
@@ -3046,8 +3082,6 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   InitRecoDiObjectInfo(fMuonTwoProng);
   InitRecoDiObjectInfo(fMuonTauID);
   InitRecoDiObjectInfo(fMuonProbe);
-
-
   if (result.passMuonTauPair) {
     if (fDebug) cout << ". doing tau id and visible Z objects" << endl;
     // visible Z with probe tau
@@ -3127,7 +3161,95 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     }
     if (fDebug) cout << ". done z with pattau" << endl;
   }
-  
+
+  if (fDebug) cout << ". doing de novo reconstruction of Z with tau ids" << endl;
+  InitRecoDiObjectInfo(fMuonTwoProng_pt);
+  InitRecoDiObjectInfo(fMuonTwoProng_zmass);
+  InitRecoDiObjectInfo(fMuonTauID_pt);
+  InitRecoDiObjectInfo(fMuonTauID_zmass);
+  if (result.passMuonTauPair) {
+    TLorentzVector the_muon;
+    the_muon.SetPtEtaPhiM(result.tagMuon->pt(), result.tagMuon->eta(), result.tagMuon->phi(), result.tagMuon->mass());
+    // form Z with pat::tau
+    int best_tau_pt_i = -1;
+    int best_tau_mass_i = -1;
+    for(unsigned int i = 0; i < fTau_pt.size(); i++)
+    {
+      TLorentzVector temp_tau;
+      temp_tau.SetPtEtaPhiM(fTau_pt[i], fTau_eta[i], fTau_phi[i], fTau_mass[i]);
+      if (best_tau_pt_i == -1 || fTau_pt[i] > fTau_pt[best_tau_pt_i]) {
+        best_tau_pt_i = i;
+      }
+      TLorentzVector temp_z;
+      temp_z = temp_tau;
+      temp_z += the_muon;
+      if (best_tau_mass_i != -1) { 
+        TLorentzVector other_tau;
+        other_tau.SetPtEtaPhiM(fTau_pt[best_tau_mass_i], fTau_eta[best_tau_mass_i], fTau_phi[best_tau_mass_i], fTau_mass[best_tau_mass_i]);
+        TLorentzVector other_z;
+        other_z = other_tau;
+        other_z += the_muon;
+        if( fabs(temp_z.M()-Z_MASS) < fabs(other_z.M()-Z_MASS) ) {
+          best_tau_mass_i = i;
+        }
+      }
+      if (best_tau_mass_i == -1) { 
+        best_tau_mass_i = i;
+      }
+    }
+    // form Z with twoprong
+    int best_2p_pt_i = -1;
+    int best_2p_mass_i = -1;
+    for(unsigned int i = 0; i < fTwoProng_pt.size(); i++)
+    {
+      TLorentzVector temp_2p;
+      temp_2p.SetPtEtaPhiM(fTwoProng_pt[i], fTwoProng_eta[i], fTwoProng_phi[i], fTwoProng_mass[i]);
+      if (best_2p_pt_i == -1 || fTwoProng_pt[i] > fTwoProng_pt[best_2p_pt_i]) {
+        best_2p_pt_i = i;
+      }
+      TLorentzVector temp_z;
+      temp_z = temp_2p;
+      temp_z += the_muon;
+      if (best_2p_mass_i != -1) { 
+        TLorentzVector other_2p;
+        other_2p.SetPtEtaPhiM(fTwoProng_pt[best_2p_mass_i], fTwoProng_eta[best_2p_mass_i], fTwoProng_phi[best_2p_mass_i], fTwoProng_mass[best_2p_mass_i]);
+        TLorentzVector other_z;
+        other_z = other_2p;
+        other_z += the_muon;
+        if( fabs(temp_z.M()-Z_MASS) < fabs(other_z.M()-Z_MASS) ) {
+          best_2p_mass_i = i;
+        }
+      }
+      if (best_2p_mass_i == -1) { 
+        best_2p_mass_i = i;
+      }
+    }
+    if (best_tau_pt_i != -1) {
+      int t = best_tau_pt_i;
+      TLorentzVector the_tau;
+      the_tau.SetPtEtaPhiM(fTau_pt[t], fTau_eta[t], fTau_phi[t], fTau_mass[t]);
+      FillRecoDiObjectInfo(fMuonTauID_pt, the_muon, the_tau);
+    }
+    if (best_tau_mass_i != -1) {
+      int t = best_tau_mass_i;
+      TLorentzVector the_tau;
+      the_tau.SetPtEtaPhiM(fTau_pt[t], fTau_eta[t], fTau_phi[t], fTau_mass[t]);
+      FillRecoDiObjectInfo(fMuonTauID_zmass, the_muon, the_tau);
+    }
+    if (best_2p_pt_i != -1) {
+      int t = best_2p_pt_i;
+      TLorentzVector the_tau;
+      the_tau.SetPtEtaPhiM(fTwoProng_pt[t], fTwoProng_eta[t], fTwoProng_phi[t], fTwoProng_mass[t]);
+      FillRecoDiObjectInfo(fMuonTwoProng_pt, the_muon, the_tau);
+    }
+    if (best_2p_mass_i != -1) {
+      int t = best_2p_mass_i;
+      TLorentzVector the_tau;
+      the_tau.SetPtEtaPhiM(fTwoProng_pt[t], fTwoProng_eta[t], fTwoProng_phi[t], fTwoProng_mass[t]);
+      FillRecoDiObjectInfo(fMuonTwoProng_zmass, the_muon, the_tau);
+    }
+  }
+
   // Now fill fTree2
   cutflow_total++;
   if (fMakeTrees) {
@@ -3232,6 +3354,8 @@ TwoProngAnalyzer::beginJob()
   cout << "stackedDalitzHistos " << fStackedDalitzHistos << endl;
   cout << "filterOnPhoton " << fFilterOnPhoton << endl;
   cout << "filterOnTwoProng " << fFilterOnTwoProng << endl;
+  cout << "usePatTauInPreselection " << fusePatTau << endl;
+  cout << "noTwoProng " << fNoTwoProng << endl;
   cout << "===========================" << endl;
   cout << "CandidatePairDR " << fCandidatePairDR << endl;
   cout << "CandidatePairMinPt " << fCandidatePairMinPt << endl;
