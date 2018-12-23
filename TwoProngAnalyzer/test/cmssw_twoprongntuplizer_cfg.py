@@ -23,6 +23,8 @@ options.register("DYsig", False, VarParsing.multiplicity.singleton, VarParsing.v
 options.register("DYbkg", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("tauPreselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("tauTnPselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("mumuPreselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("mumuReducedSelection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("usePatTauInPreselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 # two-prong object definition
 options.register("standardTwoProng", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
@@ -50,6 +52,7 @@ options.register("ntuples", True, VarParsing.multiplicity.singleton, VarParsing.
 options.register("includeCands", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include all cand twoprongs in ntuple")
 options.register("includeLoose", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include Loose twoprongs in ntuple")
 options.register("includeTauTau", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include tau tau eff study branches")
+options.register("includeMuMu", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include mu mu reco branches")
 options.register("fakeRateHistos", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("triggerEffHistos", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("twoprongYieldHistos", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
@@ -59,11 +62,17 @@ options.parseArguments()
 
 # shortcut settings
 if options.sample == 'dy':
-  options.sample = 'file:/cms/chiarito/samples/miniaod/dysig/rootfile_DYJetsToLL_M-50_80k.root'
+  options.sample = 'file:/cms/chiarito/samples/miniaod/dysig/rootfile_DYJetsToLL_M-50_80k_events.root'
   options.globalTag = 'mc2016'
   options.includeTauTau = True
   options.isDYll = True
   options.out = 'dy'
+if options.sample == 'dy10':
+  options.sample = 'file:/cms/chiarito/samples/miniaod/dysig/rootfile_DYJetsToLL_M-10to50_105k_events.root'
+  options.globalTag = 'mc2016'
+  options.includeTauTau = True
+  options.isDYll = True
+  options.out = 'dy10'
 if options.sample == 'eta125':
   options.sample = 'file:/cms/jrj90/eos/twoprong_generation/etaetaprime_run/july132018/Phi125_Eta/76X_mcRun2_asymptotic_v12_Run2_25ns_MINIAOD/180713_185319/0000/MINIAOD_1.root'
   options.globalTag = 'mc2016'
@@ -121,7 +130,7 @@ process = cms.Process("TwoProngAnalysis")
 
 # Log messages
 process.load("FWCore.MessageService.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(options.debug) )
 
 # Source
@@ -194,6 +203,7 @@ process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_standard
 process.twoprongNtuplizer.includeSignalGenParticles = options.isSignal
 process.twoprongNtuplizer.runningOnTauTauMC = options.isDYll
 process.twoprongNtuplizer.includeTauTauBranches = options.includeTauTau
+process.twoprongNtuplizer.includeMuMuBranches = options.includeMuMu
 process.twoprongNtuplizer.mcXS = options.mcXS
 process.twoprongNtuplizer.mcN = options.mcN
 process.twoprongNtuplizer.includeMCInfo = options.mcInfo
@@ -234,6 +244,7 @@ if options.tauModifiedTwoProng:
   process.twoprongModNtuplizer.includeSignalGenParticles = options.isSignal
   process.twoprongModNtuplizer.runningOnTauTauMC = options.isDYll
   process.twoprongModNtuplizer.includeTauTauBranches = options.includeTauTau
+  process.twoprongModNtuplizer.includeMuMuBranches = options.includeMuMu
   process.twoprongModNtuplizer.mcXS = options.mcXS
   process.twoprongModNtuplizer.mcN = options.mcN
   process.twoprongModNtuplizer.includeMCInfo = options.mcInfo
@@ -260,30 +271,41 @@ if options.standardTwoProng or options.commandLineTwoProng or not options.tauMod
   process.ntuplizer *= process.twoprongNtuplizer
 
 # options filters
-process.tauFilters = cms.Sequence()
+process.ZFilters = cms.Sequence()
 if options.DYsig:
   process.genDYsignalFilt = cms.EDFilter('ZtoTauHadTruthSelector',
     filterByTruthDecayType = cms.untracked.vdouble(5.1,5.2,5.3,5.4),
   )
-  process.tauFilters *= process.genDYsignalFilt
+  process.ZFilters *= process.genDYsignalFilt
 if options.DYbkg:
   process.genDYbkgFilt = cms.EDFilter('ZtoTauHadTruthSelector',
     filterByTruthDecayType = cms.untracked.vdouble(1,2,3,4,6,7,8,9,0,10,-1),
   )
-  process.tauFilters *= process.genDYbkgFilt
+  process.ZFilters *= process.genDYbkgFilt
 if options.tauPreselection:
-  process.preselection = cms.EDFilter('ZtoTauHadRecoSelector',
+  process.tauPreselection = cms.EDFilter('ZtoTauHadRecoSelector',
     dumpCutflow = cms.untracked.bool(True),
     usePatTau = cms.untracked.bool(options.usePatTauInPreselection)
   )
-  process.tauFilters *= process.preselection
+  process.ZFilters *= process.tauPreselection
 if options.tauTnPselection:
-  process.preselection = cms.EDFilter('ZtoTauHadRecoSelector',
+  process.tauReducedSelection = cms.EDFilter('ZtoTauHadRecoSelector',
     dumpCutflow = cms.untracked.bool(True),
     tnpSelectionOnly = cms.untracked.bool(True),
     usePatTau = cms.untracked.bool(options.usePatTauInPreselection)
   )
-  process.tauFilters *= process.preselection
+  process.ZFilters *= process.tauReducedSelection
+if options.mumuPreselection:
+  process.mumuPreselection = cms.EDFilter('ZtoMuMuRecoSelector',
+    dumpCutflow = cms.untracked.bool(True),
+  )
+  process.ZFilters *= process.mumuPreselection
+if options.mumuReducedSelection:
+  process.mumuReducedSelection = cms.EDFilter('ZtoMuMuRecoSelector',
+    dumpCutflow = cms.untracked.bool(True),
+    reducedSelection = cms.untracked.bool(True),
+  )
+  process.ZFilters *= process.mumuReducedSelection
 
 # the path
-process.path = cms.Path(process.tauFilters * process.egmPhotonIDSequence * process.ntuplizer)
+process.path = cms.Path(process.ZFilters * process.egmPhotonIDSequence * process.ntuplizer)

@@ -24,7 +24,7 @@ twoprongModNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
                                   # high-pt-photon-id options
                                   rho = cms.InputTag("fixedGridRhoFastjetAll"),
                                   addPhotonCutDrConeHE = cms.untracked.bool(False),
-                                  includeOldPhotons = cms.untracked.bool(True),
+                                  includeOldPhotons = cms.untracked.bool(False),
                                   # HLT paths
                                   bits = cms.InputTag("TriggerResults","","HLT"),
                                   prescales = cms.InputTag("patTrigger"),
@@ -40,6 +40,7 @@ twoprongModNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
                                   includeAllCandObjects = cms.untracked.bool(True),
                                   includeAllLooseObjects = cms.untracked.bool(False),
                                   includeTauTauBranches = cms.untracked.bool(False),
+                                  includeMuMuBranches = cms.untracked.bool(False),
                                   debug = cms.untracked.bool(False),
                                   # histos
                                   fakeRateHistos = cms.untracked.bool(False),

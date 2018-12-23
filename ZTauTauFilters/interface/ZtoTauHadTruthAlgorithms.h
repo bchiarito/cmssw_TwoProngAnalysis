@@ -42,16 +42,22 @@ namespace TauHadFilters
   // forward declare all functions
   bool isHadronicTau(const reco::GenParticle *);
   bool isAncestorOfZ(const reco::Candidate *);
+  bool isAncestorOfTau(const reco::Candidate *);
   bool notTerminalTau(const reco::Candidate *);
   const reco::Candidate * tauDaughter(const reco::Candidate *);
   double ZDecayType(edm::Handle<vector<reco::GenParticle>>&);
   vector<string> getDecay(const reco::Candidate &, int flag=0);
+  vector<const reco::Candidate *> getLeptonObjects(const reco::Candidate &);
 
   bool isHadronicTau(const reco::GenParticle * genparticle)
   {
     vector<string> leptons;
     if (abs(genparticle->pdgId()) != 15) return false;
-    if (!isAncestorOfZ(genparticle)) return false;
+    //for(size_t i=0; i<genparticle->numberOfMothers(); i++)
+    //{
+    //  if(isAncestorOfTau(genparticle->mother(i))) return false;
+    //}
+    if (notTerminalTau(genparticle)) return false;
     leptons = getDecay(*genparticle);
     if (std::find(leptons.begin(), leptons.end(), "tau+had10") != leptons.end() ||
         std::find(leptons.begin(), leptons.end(), "tau+had1") != leptons.end() ||
@@ -70,6 +76,16 @@ namespace TauHadFilters
     for(size_t i=0; i<particle->numberOfMothers(); i++)
     {
       if(isAncestorOfZ(particle->mother(i))) return true;
+    }
+    return false;
+  }
+
+  bool isAncestorOfTau(const reco::Candidate * particle)
+  {
+    if(abs(particle->pdgId()) == 15) return true;
+    for(size_t i=0; i<particle->numberOfMothers(); i++)
+    {
+      if(isAncestorOfTau(particle->mother(i))) return true;
     }
     return false;
   }
@@ -293,6 +309,28 @@ namespace TauHadFilters
       products.insert(products.end(), daughter_products.begin(), daughter_products.end());
     }
     
+    return products;
+  }
+
+  vector<const reco::Candidate *> getLeptonObjects(const reco::Candidate & genparticle)
+  {
+    vector<const reco::Candidate *> products;
+
+    // ignore quarks and gluons and their daughters, unless status 21
+    if (genparticle.status() != 21 && genparticle.pdgId() >= 1 && genparticle.pdgId() <= 8) { return products; }
+    if (genparticle.status() != 21 && genparticle.pdgId() == 21) { return products; }
+
+    // if a lepton, return this lepton
+    if (abs(genparticle.pdgId()) == 11) { products.push_back(&genparticle); return products; }
+    if (abs(genparticle.pdgId()) == 13) { products.push_back(&genparticle); return products; }
+    if (abs(genparticle.pdgId()) == 15) { products.push_back(&genparticle); return products; }
+
+    // otherwise, look for leptons in daughters and return those
+    for (unsigned int j = 0; j < genparticle.numberOfDaughters(); j++) {
+      const reco::Candidate* daughter = genparticle.daughter(j);
+      vector<const reco::Candidate *> daughter_products = getLeptonObjects(*daughter);
+      products.insert(products.end(), daughter_products.begin(), daughter_products.end());
+    }
     return products;
   }
 }

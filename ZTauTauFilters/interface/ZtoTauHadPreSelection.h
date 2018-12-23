@@ -39,6 +39,8 @@ using std::string;
 
 namespace TauHadFilters
 {
+  const double Z_MASS = 91.1876;
+
   const string MUON_TRIGGER = "HLT_IsoMu24";
 
   const double MUON_MIN_PT = 25;
@@ -46,6 +48,8 @@ namespace TauHadFilters
   const double MUON_MAX_RELISO = 0.15;
   const double MUON_MAX_DZ = 0.2;
   const double MUON_MAX_DXY = 0.045;
+
+  const double LOOSEMUON_MAX_ETA = 2.4;
 
   const double EXTRAMUON_MIN_PT = 10.0;
   const double EXTRAMUON_MAX_ETA = 2.4;
@@ -99,6 +103,7 @@ namespace TauHadFilters
     // muon-tau pair
     bool passMuonTauPair;
     const pat::Muon * tagMuon;
+    const pat::Muon * tagMuon2;
     const pat::Jet * probeTauJet;
     const pat::Tau * probeTau;
     bool pairAndPassMT;
@@ -384,6 +389,140 @@ namespace TauHadFilters
                               result.passMuonTauPair && result.pairAndPassMT && result.pairAndPassPzeta && 
                               result.passExtraMuonVeto && result.passDiMuonVeto && result.passExtraElectronVeto && 
                               result.passBtagVeto;
+
+    result.tagMuon2 = NULL;
+    return result;
+  }
+  struct PreSelectionResult computeDiMuonPreSelectionResult(const edm::Event& iEvent, edm::Handle<edm::TriggerResults>& triggerBits, edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects, edm::Handle<pat::PackedTriggerPrescales> triggerPrescales, edm::Handle<reco::VertexCollection> vertices, edm::Handle<pat::TauCollection> taus, edm::Handle<pat::MuonCollection> muons, edm::Handle<pat::ElectronCollection> electrons, edm::Handle<pat::JetCollection> jets, edm::Handle<pat::METCollection> mets, edm::Handle<double> rho)
+  {
+    struct PreSelectionResult result;
+
+    const reco::Vertex &PV = vertices->front();
+    pat::MET MET = (*mets)[0];
+
+    // trigger 
+    const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
+    string trigger_muon = MUON_TRIGGER;
+    bool bit_muon = false;
+    string name_muon_trigger = "";
+    for (unsigned int i = 0, n = triggerBits->size(); i < n; i++)
+    {
+       string triggerName = names.triggerName(i);
+
+       std::size_t pos = triggerName.find(trigger_muon);
+       if ( pos != std::string::npos ) {
+         bit_muon = triggerBits->accept(i);
+         name_muon_trigger = triggerName;
+       }
+    }
+
+    // muons
+    vector<const pat::Muon *> passedMuons;
+    for (const pat::Muon &muon : *muons) {
+      if (muon.pt() > MUON_MIN_PT &&
+          fabs(muon.eta()) < MUON_MAX_ETA &&
+          computeMuonIsolation(&muon) < MUON_MAX_RELISO &&
+          fabs(muon.muonBestTrack()->dz(PV.position())) < MUON_MAX_DZ &&
+          fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
+          muon.isMediumMuon() )
+        passedMuons.push_back(&muon);
+    }
+    // muons
+    vector<const pat::Muon *> passedLooseMuons;
+    for (const pat::Muon &muon : *muons) {
+      if (muon.pt() > MUON_MIN_PT &&
+          fabs(muon.eta()) < LOOSEMUON_MAX_ETA &&
+          computeMuonIsolation(&muon) < MUON_MAX_RELISO &&
+          fabs(muon.muonBestTrack()->dz(PV.position())) < MUON_MAX_DZ &&
+          fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
+          muon.isMediumMuon() )
+        passedLooseMuons.push_back(&muon);
+    }
+
+    // extra lepton veto
+    int skipped_muons = 0;
+    bool extraMuon = false;
+    for (const pat::Muon &muon : *muons) {
+      if (!(muon.pt() > EXTRAMUON_MIN_PT && 
+          fabs(muon.eta()) < EXTRAMUON_MAX_ETA &&
+          computeMuonIsolation(&muon) < EXTRAMUON_MAX_RELISO &&
+          fabs(muon.muonBestTrack()->dz(PV.position())) < EXTRAMUON_MAX_DZ &&
+          fabs(muon.muonBestTrack()->dxy(PV.position())) < EXTRAMUON_MAX_DXY &&
+          muon.isMediumMuon() ) )
+        continue;
+      if (skipped_muons < 2) {
+        skipped_muons += 1;
+        continue;
+      } else {
+        extraMuon = true;
+      }
+    }
+    bool extraElectron = false;
+    for (const pat::Electron &electron : *electrons) {
+      if (electron.pt() > EXTRAELECTRON_MIN_PT &&
+          fabs(electron.eta()) < EXTRAELECTRON_MAX_ETA &&
+          fabs(electron.gsfTrack()->dz(PV.position())) < EXTRAELECTRON_MAX_DZ &&
+          fabs(electron.gsfTrack()->dxy(PV.position())) < EXTRAELECTRON_MAX_DXY &&
+          electron.passConversionVeto() &&
+          computeElectronIsolation(&electron) < EXTRAELECTRON_MAX_RELISO &&
+          electron.gsfTrack()->lost() <= EXTRAELECTRON_MAX_LOSTTRACKS)
+        extraElectron = true;
+    }
+
+    bool passDiMuon = false;
+    result.tagMuon = NULL;
+    result.tagMuon2 = NULL;
+    double best_mmumu = -1;
+    if (passedMuons.size() >= 1) { // >=1 leading mu
+      for (unsigned int i = 0; i < passedLooseMuons.size(); i++) {
+        const pat::Muon & muon1 = *passedLooseMuons[i];
+        for (unsigned int j = 0; j < passedLooseMuons.size(); j++) {
+          const pat::Muon & muon2 = *passedLooseMuons[j];
+          if (muon1.charge() * muon2.charge() >= 1) continue; // OS
+          if (reco::deltaR(muon1.eta(), muon1.phi(), muon2.eta(), muon2.phi()) <= 0.5) continue; // dR > 0.5
+          TLorentzVector mu1; mu1.SetPtEtaPhiM(muon1.pt(), muon1.eta(), muon1.phi(), muon1.mass());
+          TLorentzVector mu2; mu2.SetPtEtaPhiM(muon2.pt(), muon2.eta(), muon2.phi(), muon2.mass());
+          double mmumu = (mu1+mu2).M();
+          if (mmumu < 60 || mmumu > 120) continue; // m_mumu in (60, 120)
+          passDiMuon = true;
+          if ( fabs(mmumu - Z_MASS) < fabs(best_mmumu - Z_MASS) ) {
+            if (muon1.pt() > muon2.pt()) {
+              result.tagMuon = &muon1;
+              result.tagMuon2 = &muon2;
+            } else {
+              result.tagMuon = &muon2;
+              result.tagMuon2 = &muon1;
+            }
+            best_mmumu = mmumu;            
+          }   
+        }
+      } 
+    }
+
+    /// determine selection decisions
+    result.usePatTau = false;
+    // trigger
+    result.passTrigger = bit_muon;
+    result.foundTrigger = name_muon_trigger;
+    // object counts
+    result.nTagMuons = passedMuons.size();
+    result.nProbeTaus = 0;
+    // event wide vetos
+    result.passExtraMuonVeto = !extraMuon;
+    result.passDiMuonVeto = true;
+    result.passExtraElectronVeto = !extraElectron;
+    result.passBtagVeto = true;
+    result.highestBtagDiscriminant = 0;
+    // muon tau pair
+    result.passMuonTauPair = false;
+    result.pairAndPassMT = false;
+    result.pairAndPassPzeta = false;
+    result.MT = -999.9;
+    result.Pzeta = -999.9;
+    result.probeTauJet = NULL;
+    result.probeTau = NULL;
+    // full preselection
+    result.passPreSelection = result.passTrigger && result.passExtraMuonVeto && result.passExtraElectronVeto && passDiMuon;
 
     return result;
   }
