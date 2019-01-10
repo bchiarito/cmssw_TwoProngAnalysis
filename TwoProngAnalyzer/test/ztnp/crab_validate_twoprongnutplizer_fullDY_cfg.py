@@ -3,7 +3,7 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_twoprongntuplizer_fullDY'
+config.General.workArea = 'crab_multi_validate_twoprongntuplizer_fullDY'
 config.section_('JobType')
 config.JobType.psetName = '../cmssw_twoprongntuplizer_cfg.py'
 config.JobType.pyCfgParams = ['globalTag=mc2016', 'isDYll=True', 'mcInfo=True', 'standardTwoProng=True', 'tauModifiedTwoProng=True', 'includeCands=False', 'includeTauTau=True']
