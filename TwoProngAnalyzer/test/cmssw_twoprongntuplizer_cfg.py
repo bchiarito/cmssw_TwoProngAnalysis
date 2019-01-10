@@ -49,7 +49,7 @@ options.register("egammaIsoCut", 0.1, VarParsing.multiplicity.singleton, VarPars
 options.register("addConeHE", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Add cut to high-pt-photon-id: Cone based HE < 0.05")
 # output specification
 options.register("ntuples", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Add ntuples (Ttrees) to output")
-options.register("includeCands", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include all cand twoprongs in ntuple")
+options.register("includeCands", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include all cand twoprongs in ntuple")
 options.register("includeLoose", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include Loose twoprongs in ntuple")
 options.register("includeTauTau", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include tau tau eff study branches")
 options.register("includeMuMu", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include mu mu reco branches")
@@ -64,13 +64,11 @@ options.parseArguments()
 if options.sample == 'dy':
   options.sample = 'file:/cms/chiarito/samples/miniaod/dysig/rootfile_DYJetsToLL_M-50_80k_events.root'
   options.globalTag = 'mc2016'
-  options.includeTauTau = True
   options.isDYll = True
   options.out = 'dy'
 if options.sample == 'dy10':
   options.sample = 'file:/cms/chiarito/samples/miniaod/dysig/rootfile_DYJetsToLL_M-10to50_105k_events.root'
   options.globalTag = 'mc2016'
-  options.includeTauTau = True
   options.isDYll = True
   options.out = 'dy10'
 if options.sample == 'eta125':

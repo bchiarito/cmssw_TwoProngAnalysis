@@ -42,6 +42,7 @@ namespace TauHadFilters
   const double Z_MASS = 91.1876;
 
   const string MUON_TRIGGER = "HLT_IsoMu24";
+  const string MUON_TRIGGER_Tk = "HLT_IsoTkMu24";
 
   const double MUON_MIN_PT = 25;
   const double MUON_MAX_ETA = 2.1;
@@ -63,14 +64,13 @@ namespace TauHadFilters
   const double EXTRAELECTRON_MAX_DZ = 0.2;
   const double EXTRAELECTRON_MAX_DXY = 0.045;
   const int    EXTRAELECTRON_MAX_LOSTTRACKS = 1;
-  // mva 90 wp
 
-  const double DIMUON_MAX_DR = 0.15;
-  const double DIMUON_MIN_PT = 15;
-  const double DIMUON_MAX_ETA = 2.4;
-  const double DIMUON_MAX_RELISO = 0.3;
-  const double DIMUON_MAX_DZ = 0.2;
-  const double DIMUON_MAX_DXY = 0.045;
+  const double EXTRADIMUON_MAX_DR = 0.15;
+  const double EXTRADIMUON_MIN_PT = 15;
+  const double EXTRADIMUON_MAX_ETA = 2.4;
+  const double EXTRADIMUON_MAX_RELISO = 0.3;
+  const double EXTRADIMUON_MAX_DZ = 0.2;
+  const double EXTRADIMUON_MAX_DXY = 0.045;
 
   const double TAUJET_MIN_LEADINGTRACKPT = 3;
   const double TAUJET_NEARBYGLOBALMUON_DR = 0.4;
@@ -84,6 +84,10 @@ namespace TauHadFilters
   const double MAX_MT = 40;
   const double MIN_PZETA = -25;
 
+  const double DIMUON_MIN_DR = 0.05;
+  const double DIMUON_Z_MASS_MIN = 60.0;
+  const double DIMUON_Z_MASS_MAX = 120.0;
+
   struct PreSelectionResult
   {
     // setting
@@ -91,6 +95,7 @@ namespace TauHadFilters
     // trigger
     bool passTrigger;
     string foundTrigger;
+    string foundTriggerTk;
     // object counts
     int nTagMuons;
     int nProbeTaus;
@@ -169,17 +174,24 @@ namespace TauHadFilters
 
     // trigger 
     const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
-    string trigger_muon = MUON_TRIGGER;
-    bool bit_muon = false;
-    string name_muon_trigger = "";
+    string trigger_name = MUON_TRIGGER;
+    bool trigger_bit = false;
+    string trigger_found = "";
+    string trigger_name_tk = MUON_TRIGGER_Tk;
+    bool trigger_bit_tk = false;
+    string trigger_found_tk = "";
     for (unsigned int i = 0, n = triggerBits->size(); i < n; i++)
     {
        string triggerName = names.triggerName(i);
-
-       std::size_t pos = triggerName.find(trigger_muon);
+       std::size_t pos = triggerName.find(trigger_name);
        if ( pos != std::string::npos ) {
-         bit_muon = triggerBits->accept(i);
-         name_muon_trigger = triggerName;
+         trigger_bit = triggerBits->accept(i);
+         trigger_found = triggerName;
+       }
+       pos = triggerName.find(trigger_name_tk);
+       if ( pos != std::string::npos ) {
+         trigger_bit_tk = triggerBits->accept(i);
+         trigger_found_tk = triggerName;
        }
     }
 
@@ -233,20 +245,20 @@ namespace TauHadFilters
     for (const pat::Muon &muon1 : *muons) {
       for (const pat::Muon &muon2 : *muons) {
         double DR = deltaR(muon1.eta(), muon1.phi(), muon2.eta(), muon2.phi());
-        if (DR <= DIMUON_MAX_DR) continue;
-        if (muon1.pt() > DIMUON_MIN_PT &&
-            fabs(muon1.eta()) < DIMUON_MAX_ETA &&
-            computeMuonIsolation(&muon1) < DIMUON_MAX_RELISO &&
-            fabs(muon1.muonBestTrack()->dz(PV.position())) < DIMUON_MAX_DZ &&
-            fabs(muon1.muonBestTrack()->dxy(PV.position())) < DIMUON_MAX_DXY &&
+        if (DR <= EXTRADIMUON_MAX_DR) continue;
+        if (muon1.pt() > EXTRADIMUON_MIN_PT &&
+            fabs(muon1.eta()) < EXTRADIMUON_MAX_ETA &&
+            computeMuonIsolation(&muon1) < EXTRADIMUON_MAX_RELISO &&
+            fabs(muon1.muonBestTrack()->dz(PV.position())) < EXTRADIMUON_MAX_DZ &&
+            fabs(muon1.muonBestTrack()->dxy(PV.position())) < EXTRADIMUON_MAX_DXY &&
             muon1.isPFMuon() &&
             muon1.isGlobalMuon() &&
             muon1.isTrackerMuon() &&
-            muon2.pt() > DIMUON_MIN_PT &&
-            fabs(muon2.eta()) < DIMUON_MAX_ETA &&
-            computeMuonIsolation(&muon2) < DIMUON_MAX_RELISO &&
-            fabs(muon2.muonBestTrack()->dz(PV.position())) < DIMUON_MAX_DZ &&
-            fabs(muon2.muonBestTrack()->dxy(PV.position())) < DIMUON_MAX_DXY &&
+            muon2.pt() > EXTRADIMUON_MIN_PT &&
+            fabs(muon2.eta()) < EXTRADIMUON_MAX_ETA &&
+            computeMuonIsolation(&muon2) < EXTRADIMUON_MAX_RELISO &&
+            fabs(muon2.muonBestTrack()->dz(PV.position())) < EXTRADIMUON_MAX_DZ &&
+            fabs(muon2.muonBestTrack()->dxy(PV.position())) < EXTRADIMUON_MAX_DXY &&
             muon2.isPFMuon() &&
             muon2.isGlobalMuon() &&
             muon2.isTrackerMuon() &&
@@ -358,8 +370,9 @@ namespace TauHadFilters
     /// determine selection decisions
     result.usePatTau = usePatTau;
     // trigger
-    result.passTrigger = bit_muon;
-    result.foundTrigger = name_muon_trigger;
+    result.passTrigger = trigger_bit || trigger_bit_tk;
+    result.foundTrigger = trigger_found;
+    result.foundTriggerTk = trigger_found_tk;
     // object counts
     result.nTagMuons = passedMuons.size();
     if (!usePatTau) result.nProbeTaus = tauJetCands.size();
@@ -402,17 +415,24 @@ namespace TauHadFilters
 
     // trigger 
     const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
-    string trigger_muon = MUON_TRIGGER;
-    bool bit_muon = false;
-    string name_muon_trigger = "";
+    string trigger_name = MUON_TRIGGER;
+    bool trigger_bit = false;
+    string trigger_found = "";
+    string trigger_name_tk = MUON_TRIGGER_Tk;
+    bool trigger_bit_tk = false;
+    string trigger_found_tk = "";
     for (unsigned int i = 0, n = triggerBits->size(); i < n; i++)
     {
        string triggerName = names.triggerName(i);
-
-       std::size_t pos = triggerName.find(trigger_muon);
+       std::size_t pos = triggerName.find(trigger_name);
        if ( pos != std::string::npos ) {
-         bit_muon = triggerBits->accept(i);
-         name_muon_trigger = triggerName;
+         trigger_bit = triggerBits->accept(i);
+         trigger_found = triggerName;
+       }
+       pos = triggerName.find(trigger_name_tk);
+       if ( pos != std::string::npos ) {
+         trigger_bit_tk = triggerBits->accept(i);
+         trigger_found_tk = triggerName;
        }
     }
 
@@ -479,11 +499,11 @@ namespace TauHadFilters
         for (unsigned int j = 0; j < passedLooseMuons.size(); j++) {
           const pat::Muon & muon2 = *passedLooseMuons[j];
           if (muon1.charge() * muon2.charge() >= 1) continue; // OS
-          if (reco::deltaR(muon1.eta(), muon1.phi(), muon2.eta(), muon2.phi()) <= 0.5) continue; // dR > 0.5
+          if (reco::deltaR(muon1.eta(), muon1.phi(), muon2.eta(), muon2.phi()) <= DIMUON_MIN_DR) continue; // dR > 0.5
           TLorentzVector mu1; mu1.SetPtEtaPhiM(muon1.pt(), muon1.eta(), muon1.phi(), muon1.mass());
           TLorentzVector mu2; mu2.SetPtEtaPhiM(muon2.pt(), muon2.eta(), muon2.phi(), muon2.mass());
           double mmumu = (mu1+mu2).M();
-          if (mmumu < 60 || mmumu > 120) continue; // m_mumu in (60, 120)
+          if (mmumu < DIMUON_Z_MASS_MIN || mmumu > DIMUON_Z_MASS_MAX) continue; // m_mumu in (60, 120)
           passDiMuon = true;
           if ( fabs(mmumu - Z_MASS) < fabs(best_mmumu - Z_MASS) ) {
             if (muon1.pt() > muon2.pt()) {
@@ -502,8 +522,9 @@ namespace TauHadFilters
     /// determine selection decisions
     result.usePatTau = false;
     // trigger
-    result.passTrigger = bit_muon;
-    result.foundTrigger = name_muon_trigger;
+    result.passTrigger = trigger_bit || trigger_bit_tk;
+    result.foundTrigger = trigger_found;
+    result.foundTriggerTk = trigger_found_tk;
     // object counts
     result.nTagMuons = passedMuons.size();
     result.nProbeTaus = 0;

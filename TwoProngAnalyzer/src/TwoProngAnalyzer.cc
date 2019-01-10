@@ -131,7 +131,7 @@ private:
   bool               fDebug;                       // if set to False, mean to limit per event stdout output
   bool               fAddDrConePhotonCut;          // option needed for studying the Trigger ID, no longer needd
   bool               fincludeSignalGenParticles; // includes the GenPhi and other gen particles in ntuple
-  bool               fRunningOnTauTauMC;           // running on Z->tau tau MC, will do gen particle matching to hadronic taus
+  bool               fRunningOnTauTauMC;           // running on Z->tau tau MC, will add gen info branches
   bool               fincludeTauTauBranches;           // include reco level tau branches
   bool               fincludeMuMuBranches;           // include reco level mumu branches
   bool               fincludeAllLooseObjects;    // include all loose twoprong objects in ntuple
@@ -310,6 +310,10 @@ private:
   vector<Double_t> fGenOmega_objDR;
   vector<Double_t> fGenOmega_candobjDR;
   vector<Double_t> fGenOmega_jetDR;
+  vector<Double_t> fGenOmega_pattauDR;
+  vector<Double_t> fGenOmega_pattau1DR;
+  vector<Double_t> fGenOmega_pattau2DR;
+  vector<Double_t> fGenOmega_pattau3DR;
 
   int fHLT_Photon175;
   int fHLT_Photon22_Iso;
@@ -666,6 +670,7 @@ private:
   // Z preselection tag and probe branches
   Bool_t fpassMuonTrigger;
   string fMuonTrigger;
+  string fMuonTriggerTk;
   Int_t fnTagMuons;
   Int_t fnProbeTaus;
   Bool_t fpassMuonTauPair;
@@ -874,6 +879,10 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("GenOmega_objDR",&fGenOmega_objDR); 
   fTree2->Branch("GenOmega_candobjDR",&fGenOmega_candobjDR); 
   fTree2->Branch("GenOmega_jetDR",&fGenOmega_jetDR); 
+  fTree2->Branch("GenOmega_pattauDR",&fGenOmega_pattauDR); 
+  fTree2->Branch("GenOmega_pattau1DR",&fGenOmega_pattau1DR); 
+  fTree2->Branch("GenOmega_pattau2DR",&fGenOmega_pattau2DR); 
+  fTree2->Branch("GenOmega_pattau3DR",&fGenOmega_pattau3DR); 
   }
   // Trigger
   fTree2->Branch("HLT_Photon175",&fHLT_Photon175,"HLT_Photon175/I");
@@ -1235,6 +1244,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   if (fincludeTauTauBranches) {
   fTree2->Branch("passMuonTrigger",&fpassMuonTrigger,"passMuonTrigger/O");
   fTree2->Branch("muonTrigger",&fMuonTrigger);
+  fTree2->Branch("muonTriggerTk",&fMuonTriggerTk);
   fTree2->Branch("nTagMuons",&fnTagMuons,"nTagMuons/I");
   fTree2->Branch("nProbeTaus",&fnProbeTaus,"nProbeTaus/I");
   fTree2->Branch("passPzeta",&fpassPzeta,"passPzeta/O");
@@ -1287,6 +1297,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   if (fincludeMuMuBranches) {
   fTree2->Branch("passMuonTrigger",&fpassMuonTrigger,"passMuonTrigger/O");
   fTree2->Branch("muonTrigger",&fMuonTrigger);
+  fTree2->Branch("muonTriggerTk",&fMuonTriggerTk);
   fTree2->Branch("nTagMuons",&fnTagMuons,"nTagMuons/I");
   fTree2->Branch("passExtraElectronVeto",&fpassExtraElectronVeto,"passExtraElectronVeto/O");
   fTree2->Branch("passExtraMuonVeto",&fpassExtraMuonVeto,"passExtraMuonVeto/O");
@@ -1891,6 +1902,10 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fGenOmega_objDR.clear();
   fGenOmega_candobjDR.clear();
   fGenOmega_jetDR.clear();
+  fGenOmega_pattauDR.clear();
+  fGenOmega_pattau1DR.clear();
+  fGenOmega_pattau2DR.clear();
+  fGenOmega_pattau3DR.clear();
 
   edm::Handle<reco::VertexCollection> vertices;
   iEvent.getByToken(vtxToken_, vertices);
@@ -2222,8 +2237,8 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (tau.pt() > 20.0 &&
         fabs(tau.eta()) < 2.3 &&
         noNearbyGlobalMuon &&
-        tau.tauID("againstMuonTight3") == 1 &&
-        tau.tauID("againstElectronVLooseMVA6") == 1 &&
+        tau.tauID("againstMuonTight3") >= 0.5 &&
+        tau.tauID("againstElectronVLooseMVA6") >= 0.5 &&
         leading_track_pt > 5.0)
           selected_taus.push_back(&tau);
   }
@@ -2907,6 +2922,10 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
           double candDR = 99.9;
           double passedCandDR = 99.9;
           double jetDR = 99.9;
+          double pattauDR = 99.9;
+          double pattau1DR = 99.9;
+          double pattau2DR = 99.9;
+          double pattau3DR = 99.9;
           for (unsigned int j = 0; j < fTwoProngCand_pt.size(); j++) {
             TLorentzVector Candidate;
             Candidate.SetPtEtaPhiM(fTwoProngCand_pt[j], fTwoProngCand_eta[j], fTwoProngCand_phi[j], fTwoProngCand_mass[j]);
@@ -2927,9 +2946,26 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
             double dr = Jet.DeltaR(GenParticle);
             if (dr < jetDR) jetDR = dr;
           }
+          for (unsigned int i = 0; i < taus->size(); i++) {
+            const pat::Tau &tau = (*taus)[i];
+            TLorentzVector Pattau;
+            Pattau.SetPtEtaPhiM(tau.pt(), tau.eta(), tau.phi(), tau.mass());
+            if (tau.pt() <= 20) continue;
+            if (fabs(tau.eta()) >= 2.3) continue;
+            if (tau.tauID("byMediumIsolationMVArun2v1DBoldDMwLT") >= 0.5) {
+              if (Pattau.DeltaR(GenParticle) < pattauDR) pattauDR = Pattau.DeltaR(GenParticle);
+              if ((tau.decayMode() == 0 || tau.decayMode() == 1 || tau.decayMode() == 2) && Pattau.DeltaR(GenParticle) < pattau1DR) pattau1DR = Pattau.DeltaR(GenParticle);
+              if ((tau.decayMode() == 5 || tau.decayMode() == 6 || tau.decayMode() == 7) && Pattau.DeltaR(GenParticle) < pattau2DR) pattau2DR = Pattau.DeltaR(GenParticle);
+              if ((tau.decayMode() == 10 || tau.decayMode() == 11) && Pattau.DeltaR(GenParticle) < pattau3DR) pattau3DR = Pattau.DeltaR(GenParticle);
+            }
+          }
           fGenOmega_objDR.push_back(passedCandDR);
           fGenOmega_candobjDR.push_back(candDR);
           fGenOmega_jetDR.push_back(jetDR);
+          fGenOmega_pattauDR.push_back(pattauDR);
+          fGenOmega_pattau1DR.push_back(pattau1DR);
+          fGenOmega_pattau2DR.push_back(pattau2DR);
+          fGenOmega_pattau3DR.push_back(pattau3DR);
         }
       }
     }
@@ -3077,6 +3113,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
   fpassMuonTrigger = result.passTrigger;
   fMuonTrigger = result.foundTrigger;
+  fMuonTriggerTk = result.foundTriggerTk;
   fnTagMuons = result.nTagMuons;
   fnProbeTaus = result.nProbeTaus;
   fpassMuonTauPair = result.passMuonTauPair;
@@ -3317,6 +3354,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
   fpassMuonTrigger = result.passTrigger;
   fMuonTrigger = result.foundTrigger;
+  fMuonTriggerTk = result.foundTriggerTk;
   fnTagMuons = result.nTagMuons;
   fpassExtraElectronVeto = result.passExtraElectronVeto;
   fpassExtraMuonVeto = result.passExtraMuonVeto;
