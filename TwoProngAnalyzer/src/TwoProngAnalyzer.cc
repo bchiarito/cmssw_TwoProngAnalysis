@@ -672,6 +672,7 @@ private:
   string fMuonTrigger;
   string fMuonTriggerTk;
   Int_t fnTagMuons;
+  Int_t ftriggerMatchCase;
   Int_t fnProbeTaus;
   Bool_t fpassMuonTauPair;
   Bool_t fpassPreselection;
@@ -1298,6 +1299,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("passMuonTrigger",&fpassMuonTrigger,"passMuonTrigger/O");
   fTree2->Branch("muonTrigger",&fMuonTrigger);
   fTree2->Branch("muonTriggerTk",&fMuonTriggerTk);
+  fTree2->Branch("triggerMatchCase",&ftriggerMatchCase,"triggerMatchCase/I");
   fTree2->Branch("nTagMuons",&fnTagMuons,"nTagMuons/I");
   fTree2->Branch("passExtraElectronVeto",&fpassExtraElectronVeto,"passExtraElectronVeto/O");
   fTree2->Branch("passExtraMuonVeto",&fpassExtraMuonVeto,"passExtraMuonVeto/O");
@@ -3356,6 +3358,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fMuonTrigger = result.foundTrigger;
   fMuonTriggerTk = result.foundTriggerTk;
   fnTagMuons = result.nTagMuons;
+  ftriggerMatchCase = result.triggerMatchCase;
   fpassExtraElectronVeto = result.passExtraElectronVeto;
   fpassExtraMuonVeto = result.passExtraMuonVeto;
   fpassPreselection = result.passPreSelection;

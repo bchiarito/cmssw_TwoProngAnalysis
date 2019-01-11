@@ -113,6 +113,9 @@ class ZtoMuMuRecoSelector : public edm::EDFilter {
       int cutflow_N1_ExtraMuonVeto;
       int cutflow_N1_ExtraElectronVeto;
       int cutflow_N1_Trigger; 
+      int cutflow_N1_DR;
+      int cutflow_N1_OS;
+      int cutflow_N1_MassWindow; 
       // trig eff
       int cutflow_passMuonAndTrigger;
 };
@@ -152,6 +155,9 @@ ZtoMuMuRecoSelector::ZtoMuMuRecoSelector(const edm::ParameterSet& iConfig) :
   cutflow_N1_ExtraMuonVeto = 0;
   cutflow_N1_ExtraElectronVeto = 0;
   cutflow_N1_Trigger = 0;
+  cutflow_N1_DR = 0;
+  cutflow_N1_OS = 0;
+  cutflow_N1_MassWindow = 0;
   // trig eff
   cutflow_passMuonAndTrigger = 0;
 }
@@ -209,7 +215,7 @@ ZtoMuMuRecoSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (result.foundTrigger != "") cutflow_foundTrigger += 1;
   if (result.passTrigger) cutflow_passTrigger += 1;
   if (result.nTagMuons > 0) cutflow_passMuon += 1;
-  if (passDiMuon) cutflow_passDiMuon += 1;
+  if (result.passDiMuon) cutflow_passDiMuon += 1;
   if (result.passExtraElectronVeto && result.passExtraMuonVeto) cutflow_passExtraLeptonVeto += 1;
 
   if (passDiMuon) cutflow_passReducedSelection += 1;
@@ -218,6 +224,10 @@ ZtoMuMuRecoSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (passDiMuon && result.passTrigger && result.passExtraElectronVeto && true)                     cutflow_N1_ExtraMuonVeto += 1;
   if (passDiMuon && result.passTrigger && true                         && result.passExtraMuonVeto) cutflow_N1_ExtraElectronVeto += 1;
   if (passDiMuon && true               && result.passExtraElectronVeto && result.passExtraMuonVeto) cutflow_N1_Trigger += 1;
+
+  if (result.passDiMuonDRN1) cutflow_N1_DR += 1;
+  if (result.passDiMuonOSN1) cutflow_N1_OS += 1;
+  if (result.passDiMuonMassWindowN1) cutflow_N1_MassWindow += 1;
 
   if (result.passTrigger && result.nTagMuons > 0) cutflow_passMuonAndTrigger += 1;
 
@@ -249,6 +259,9 @@ ZtoMuMuRecoSelector::endJob()
     cout << "cutflow_N1_ExtraMuonVeto " << cutflow_N1_ExtraMuonVeto << endl;
     cout << "cutflow_N1_ExtraElectronVeto " << cutflow_N1_ExtraElectronVeto << endl;
     cout << "cutflow_N1_Trigger " << cutflow_N1_Trigger << endl; 
+    cout << "cutflow_N1_DR " << cutflow_N1_DR << endl; 
+    cout << "cutflow_N1_OS " << cutflow_N1_OS << endl; 
+    cout << "cutflow_N1_MassWindow " << cutflow_N1_MassWindow << endl; 
     cout << "cutflow_passMuonAndTrigger " << cutflow_passMuonAndTrigger << endl;
   }
 }

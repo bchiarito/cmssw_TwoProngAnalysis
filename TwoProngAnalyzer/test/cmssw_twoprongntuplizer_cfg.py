@@ -21,6 +21,8 @@ options.register("filterOnPhoton", False, VarParsing.multiplicity.singleton, Var
 options.register("filterOnTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 TwoProng")
 options.register("DYsig", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("DYbkg", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("DYbkgMuMu", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("DYbkgNonMuMu", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("tauPreselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("tauTnPselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("mumuPreselection", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
@@ -280,6 +282,16 @@ if options.DYbkg:
     filterByTruthDecayType = cms.untracked.vdouble(1,2,3,4,6,7,8,9,0,10,-1),
   )
   process.ZFilters *= process.genDYbkgFilt
+if options.DYbkgMuMu:
+  process.genDYbkgMuMuFilt = cms.EDFilter('ZtoTauHadTruthSelector',
+    filterByTruthDecayType = cms.untracked.vdouble(2),
+  )
+  process.ZFilters *= process.genDYbkgMuMuFilt
+if options.DYbkgNonMuMu:
+  process.genDYbkgNonMuMuFilt = cms.EDFilter('ZtoTauHadTruthSelector',
+    filterByTruthDecayType = cms.untracked.vdouble(1,3,4,6,7,8,9,0,10,-1),
+  )
+  process.ZFilters *= process.genDYbkgNonMuMuFilt
 if options.tauPreselection:
   process.tauPreselection = cms.EDFilter('ZtoTauHadRecoSelector',
     dumpCutflow = cms.untracked.bool(True),

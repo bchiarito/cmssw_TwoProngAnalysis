@@ -88,6 +88,8 @@ namespace TauHadFilters
   const double DIMUON_Z_MASS_MIN = 60.0;
   const double DIMUON_Z_MASS_MAX = 120.0;
 
+  const double TRIGGEROBJ_MATCH_DR = 0.04;
+
   struct PreSelectionResult
   {
     // setting
@@ -96,6 +98,7 @@ namespace TauHadFilters
     bool passTrigger;
     string foundTrigger;
     string foundTriggerTk;
+    int triggerMatchCase;
     // object counts
     int nTagMuons;
     int nProbeTaus;
@@ -115,6 +118,11 @@ namespace TauHadFilters
     bool pairAndPassPzeta;
     double MT;
     double Pzeta;
+    // muon-muon pair
+    bool passDiMuon;
+    bool passDiMuonOSN1;
+    bool passDiMuonDRN1;
+    bool passDiMuonMassWindowN1;
     // full selection
     bool passPreSelection;
   };
@@ -436,6 +444,29 @@ namespace TauHadFilters
        }
     }
 
+    vector<TLorentzVector> trigger_objects;
+    for (pat::TriggerObjectStandAlone obj : *triggerObjects) {
+       obj.unpackPathNames(names);
+       TLorentzVector triggerobj;
+       triggerobj.SetPtEtaPhiE(obj.pt(), obj.eta(), obj.phi(), obj.energy());
+       std::vector<std::string> pathNamesAll = obj.pathNames(false);
+       std::vector<std::string> pathNamesLast = obj.pathNames(true);
+       for (unsigned h = 0, n = pathNamesAll.size(); h < n; ++h) {
+           bool isBoth = obj.hasPathName( pathNamesAll[h], true, true );
+           //bool isL3   = obj.hasPathName( pathNamesAll[h], false, true );
+           if (!isBoth) continue;
+           string pathName = pathNamesAll[h];
+           std::size_t pos = pathName.find(trigger_name);
+           if ( pos != std::string::npos ) {
+             trigger_objects.push_back(triggerobj);
+           }
+           pos = pathName.find(trigger_name_tk);
+           if ( pos != std::string::npos ) {
+             trigger_objects.push_back(triggerobj);
+           }
+       }
+    }
+
     // muons
     vector<const pat::Muon *> passedMuons;
     for (const pat::Muon &muon : *muons) {
@@ -447,6 +478,7 @@ namespace TauHadFilters
           muon.isMediumMuon() )
         passedMuons.push_back(&muon);
     }
+
     // muons
     vector<const pat::Muon *> passedLooseMuons;
     for (const pat::Muon &muon : *muons) {
@@ -493,17 +525,28 @@ namespace TauHadFilters
     result.tagMuon = NULL;
     result.tagMuon2 = NULL;
     double best_mmumu = -1;
+    bool passDiMuonOS = false;
+    bool passDiMuonDR = false;
+    bool passDiMuonMassWindow = false;
+    bool passDiMuonOSN1 = false;
+    bool passDiMuonDRN1 = false;
+    bool passDiMuonMassWindowN1 = false;
     if (passedMuons.size() >= 1) { // >=1 leading mu
       for (unsigned int i = 0; i < passedLooseMuons.size(); i++) {
         const pat::Muon & muon1 = *passedLooseMuons[i];
         for (unsigned int j = 0; j < passedLooseMuons.size(); j++) {
           const pat::Muon & muon2 = *passedLooseMuons[j];
-          if (muon1.charge() * muon2.charge() >= 1) continue; // OS
-          if (reco::deltaR(muon1.eta(), muon1.phi(), muon2.eta(), muon2.phi()) <= DIMUON_MIN_DR) continue; // dR > 0.5
           TLorentzVector mu1; mu1.SetPtEtaPhiM(muon1.pt(), muon1.eta(), muon1.phi(), muon1.mass());
           TLorentzVector mu2; mu2.SetPtEtaPhiM(muon2.pt(), muon2.eta(), muon2.phi(), muon2.mass());
           double mmumu = (mu1+mu2).M();
-          if (mmumu < DIMUON_Z_MASS_MIN || mmumu > DIMUON_Z_MASS_MAX) continue; // m_mumu in (60, 120)
+          if (reco::deltaR(muon1.eta(), muon1.phi(), muon2.eta(), muon2.phi()) > DIMUON_MIN_DR) passDiMuonDR = true; // dR > 0.5
+          if (muon1.charge() * muon2.charge() < 0) passDiMuonOS = true; // OS
+          if (mmumu >= DIMUON_Z_MASS_MIN && mmumu <= DIMUON_Z_MASS_MAX) passDiMuonMassWindow = true; // m_mumu in (60, 120)
+          if (passDiMuonDR && passDiMuonOS && !passDiMuonMassWindow) passDiMuonMassWindowN1 = true;
+          if (passDiMuonDR && !passDiMuonOS && passDiMuonMassWindow) passDiMuonOSN1 = true;
+          if (!passDiMuonDR && passDiMuonOS && passDiMuonMassWindow) passDiMuonDRN1 = true;
+          if (passDiMuonDR && passDiMuonOS && passDiMuonMassWindow) { passDiMuonDRN1 = true; passDiMuonOSN1 = true; passDiMuonMassWindowN1 = true; }
+          if (!passDiMuonDR || !passDiMuonOS || !passDiMuonMassWindow) continue;
           passDiMuon = true;
           if ( fabs(mmumu - Z_MASS) < fabs(best_mmumu - Z_MASS) ) {
             if (muon1.pt() > muon2.pt()) {
@@ -519,12 +562,62 @@ namespace TauHadFilters
       } 
     }
 
+    // reco to trigger obj matching
+    int match_case = -1;
+    if (passDiMuon)
+    {
+      TLorentzVector mu1; mu1.SetPtEtaPhiM(result.tagMuon->pt(), result.tagMuon->eta(), result.tagMuon->phi(), result.tagMuon->mass());
+      TLorentzVector mu2; mu2.SetPtEtaPhiM(result.tagMuon2->pt(), result.tagMuon2->eta(), result.tagMuon2->phi(), result.tagMuon2->mass());
+      double nTriggerMuons = trigger_objects.size();
+      vector<int> trigger_matching;
+      for (TLorentzVector trigobj : trigger_objects) {
+        if (trigobj.DeltaR(mu1) < TRIGGEROBJ_MATCH_DR) trigger_matching.push_back(1);
+        else if (trigobj.DeltaR(mu2) < TRIGGEROBJ_MATCH_DR) trigger_matching.push_back(2);
+        else trigger_matching.push_back(0);
+      }
+      bool unmatched = false;
+      bool none = false;
+      bool split = false;
+      int match = -1;
+      bool running_or = false;
+      bool running_and = true;
+      int running_sum = 0;
+      for (int ma : trigger_matching) {
+        if (ma == 0) unmatched = true;
+        if (ma == 1) running_or = running_or || false;
+        if (ma == 2) running_or = running_or || true;
+        if (ma == 1) running_and = running_and && false;
+        if (ma == 2) running_and = running_and && true;
+        running_sum += ma;
+      }
+      if (nTriggerMuons == 0) none = true;
+      if (running_and == true) match = 2; // all matched 2
+      else if (running_or == false) match = 1; // all matched 1
+      else split = true;
+ 
+      if (!none && !split && !unmatched && running_sum != 0) // case SUCCESS
+      {
+        if (match == 2) {
+          const pat::Muon * tempMuon = result.tagMuon;
+          result.tagMuon = result.tagMuon2;
+          result.tagMuon2 = tempMuon;
+        }
+        match_case = 1;
+      }
+      else if (!none && split && !unmatched) match_case = 2; // case SPLIT
+      else if (!none && !split && unmatched) match_case = 3; // case SOME_UNMATCHED
+      else if (!none && split && unmatched) match_case = 4; // case UNMATCHED_SPLIT
+      else if (!none && running_sum == 0) match_case = 5; // case FAILED
+      else if (none) match_case = 6; // case NO_OBJECTS 
+    }
+
     /// determine selection decisions
     result.usePatTau = false;
     // trigger
     result.passTrigger = trigger_bit || trigger_bit_tk;
     result.foundTrigger = trigger_found;
     result.foundTriggerTk = trigger_found_tk;
+    result.triggerMatchCase = match_case;
     // object counts
     result.nTagMuons = passedMuons.size();
     result.nProbeTaus = 0;
@@ -542,6 +635,11 @@ namespace TauHadFilters
     result.Pzeta = -999.9;
     result.probeTauJet = NULL;
     result.probeTau = NULL;
+    // muon muon pair
+    result.passDiMuon = passedMuons.size() >= 1 && passedLooseMuons.size() >= 2;
+    result.passDiMuonOSN1 = passDiMuonOSN1;
+    result.passDiMuonDRN1 = passDiMuonDRN1;
+    result.passDiMuonMassWindowN1 = passDiMuonMassWindowN1;
     // full preselection
     result.passPreSelection = result.passTrigger && result.passExtraMuonVeto && result.passExtraElectronVeto && passDiMuon;
 
