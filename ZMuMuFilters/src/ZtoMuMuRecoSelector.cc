@@ -206,14 +206,14 @@ ZtoMuMuRecoSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByToken(rhoToken_, rho);
 
   // get preselection result
-  TauHadFilters::PreSelectionResult result;
+  TauHadFilters::DiMuonPreSelectionResult result;
   result = TauHadFilters::computeDiMuonPreSelectionResult(iEvent, triggerBits, triggerObjects, triggerPrescales, vertices, taus, muons, electrons, jets, mets, rho);
   bool passDiMuon = (result.tagMuon != NULL && result.tagMuon2 != NULL);
 
   // count
   cutflow_total += 1;
   if (result.foundTrigger != "") cutflow_foundTrigger += 1;
-  if (result.passTrigger) cutflow_passTrigger += 1;
+  if (result.passTrigger || result.passTriggerTk) cutflow_passTrigger += 1;
   if (result.nTagMuons > 0) cutflow_passMuon += 1;
   if (result.passDiMuon) cutflow_passDiMuon += 1;
   if (result.passExtraElectronVeto && result.passExtraMuonVeto) cutflow_passExtraLeptonVeto += 1;
@@ -221,15 +221,15 @@ ZtoMuMuRecoSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
   if (passDiMuon) cutflow_passReducedSelection += 1;
   if (result.passPreSelection) cutflow_passPreSelection += 1;
 
-  if (passDiMuon && result.passTrigger && result.passExtraElectronVeto && true)                     cutflow_N1_ExtraMuonVeto += 1;
-  if (passDiMuon && result.passTrigger && true                         && result.passExtraMuonVeto) cutflow_N1_ExtraElectronVeto += 1;
+  if (passDiMuon && ( result.passTrigger || result.passTriggerTk ) && result.passExtraElectronVeto && true)                     cutflow_N1_ExtraMuonVeto += 1;
+  if (passDiMuon && ( result.passTrigger || result.passTriggerTk ) && true                         && result.passExtraMuonVeto) cutflow_N1_ExtraElectronVeto += 1;
   if (passDiMuon && true               && result.passExtraElectronVeto && result.passExtraMuonVeto) cutflow_N1_Trigger += 1;
 
   if (result.passDiMuonDRN1) cutflow_N1_DR += 1;
   if (result.passDiMuonOSN1) cutflow_N1_OS += 1;
   if (result.passDiMuonMassWindowN1) cutflow_N1_MassWindow += 1;
 
-  if (result.passTrigger && result.nTagMuons > 0) cutflow_passMuonAndTrigger += 1;
+  if ((result.passTrigger || result.passTriggerTk) && result.nTagMuons > 0) cutflow_passMuonAndTrigger += 1;
 
   // return
   if (!cfg_reducedSelection) return result.passPreSelection;

@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cmath>
 
+// ROOT includes
 #include "TVector3.h"
 #include "TLorentzVector.h"
 #include "TH1.h"
@@ -36,17 +37,13 @@
 #include "FWCore/Framework/interface/EventSetup.h"
 #include "DataFormats/EcalDetId/interface/EBDetId.h"
 #include "DataFormats/EcalDetId/interface/EEDetId.h"
-//#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
+  //#include "RecoEcal/EgammaCoreTools/interface/EcalClusterLazyTools.h"
 
 // fileservice
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
-// these objects are all in the namespace 'TwoProngAnalsysis TwoProngAnalysis'
-#include "TwoProngAnalysis/CommonClasses/interface/RecoPhotonInfo.h"
-#include "TwoProngAnalysis/CommonClasses/interface/RecoDiObjectInfo.h"
-
-// pat objects
+// PAT objects
 #include "DataFormats/PatCandidates/interface/Photon.h"
 #include "DataFormats/PatCandidates/interface/MET.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
@@ -61,12 +58,21 @@
 #include "DataFormats/PatCandidates/interface/TriggerObjectStandAlone.h"
 #include "DataFormats/PatCandidates/interface/PackedTriggerPrescales.h"
 
-// for gen event info
+// Gen Event Info
 #include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 
-// for tau preselection
+// Pileup calculation
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
+
+// TwoProngAnalsysis namespace
+#include "TwoProngAnalysis/CommonClasses/interface/RecoPhotonInfo.h"
+#include "TwoProngAnalysis/CommonClasses/interface/RecoDiObjectInfo.h"
+
+// TauPreselection namespace
 #include "TwoProngAnalysis/ZTauTauFilters/interface/ZtoTauHadPreSelection.h"
 #include "TwoProngAnalysis/ZTauTauFilters/interface/ZtoTauHadTruthAlgorithms.h"
+
 
 using std::cout;
 using std::endl;
@@ -193,6 +199,7 @@ private:
   edm::EDGetToken gedphotonsToken_;
   edm::EDGetToken genEventInfoToken_;
   edm::EDGetTokenT<reco::VertexCollection> vtxToken_;
+  edm::EDGetTokenT<std::vector<PileupSummaryInfo>> pileupInfoToken_;
 
   // tools for rechits collection
   std::auto_ptr<noZS::EcalClusterLazyTools> lazyTools_;
@@ -331,6 +338,8 @@ private:
   double fMET_phi;
   double fMcW;
   double fMcWProd;
+  double ftrueNpu;
+  int fobsNpu;
 
   int fNumAK4jets;
   vector<Double_t> fAK4jet_pt;
@@ -668,7 +677,15 @@ private:
   TwoProngAnalysis::recoDiObjectInfo_t fRecoPhiInclusive;
 
   // Z preselection tag and probe branches
+  Bool_t ftrig1fired;
+  Bool_t ftrig2fired;
+  Int_t fntrig1objs;
+  Int_t fntrig2objs;
+  Bool_t falltrig1dr;
+  Bool_t falltrig2dr;
+
   Bool_t fpassMuonTrigger;
+  Bool_t fpassMuonTriggerTk;
   string fMuonTrigger;
   string fMuonTriggerTk;
   Int_t fnTagMuons;
@@ -728,13 +745,6 @@ private:
   TwoProngAnalysis::recoDiObjectInfo_t fMuonTwoProng_zmass;
 
   // mumu branches
-//  Bool_t fpassMuonTrigger;
-//  string fMuonTrigger;
-//  Int_t fnTagMuons;
-//  Bool_t fpassExtraElectronVeto;
-//  Bool_t fpassExtraMuonVeto;
-//  Bool_t fpassPreselection;
-//  Bool_t fpassReducedSelection;
   Double_t fTagMuon1_pt;
   Double_t fTagMuon1_eta;
   Double_t fTagMuon1_phi;
@@ -819,6 +829,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   gedphotonsToken_ = consumes<edm::View<pat::Photon>>( edm::InputTag("slimmedPhotons") );
   genEventInfoToken_ = mayConsume<GenEventInfoProduct>( edm::InputTag("generator") );
   vtxToken_ = consumes<vector<reco::Vertex>>(edm::InputTag("offlineSlimmedPrimaryVertices"));
+  pileupInfoToken_ = consumes<vector<PileupSummaryInfo>>(edm::InputTag("slimmedAddPileupInfo"));
 
   recHitsEBTag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEBTag",edm::InputTag("reducedEgamma:reducedEBRecHits"));
   recHitsEETag_ = iConfig.getUntrackedParameter<edm::InputTag>("RecHitsEETag",edm::InputTag("reducedEgamma:reducedEERecHits"));
@@ -835,6 +846,8 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("pthat",&fpthat,"pthat/D");
   fTree2->Branch("mcW",&fMcW,"mcW/D");
   fTree2->Branch("mcWProd",&fMcWProd,"mcWProd/D");
+  fTree2->Branch("nPU_true",&ftrueNpu,"nPU_true/D");
+  fTree2->Branch("nPU_obs",&fobsNpu,"nPU_obs/I");
   }
   if (fRunningOnTauTauMC) {
   fTree2->Branch("tauDecayType",&fTauDecayType,"tauDecayType/D");
@@ -1244,6 +1257,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   // Tau preseletion branches
   if (fincludeTauTauBranches) {
   fTree2->Branch("passMuonTrigger",&fpassMuonTrigger,"passMuonTrigger/O");
+  fTree2->Branch("passMuonTriggerTk",&fpassMuonTriggerTk,"passMuonTriggerTk/O");
   fTree2->Branch("muonTrigger",&fMuonTrigger);
   fTree2->Branch("muonTriggerTk",&fMuonTriggerTk);
   fTree2->Branch("nTagMuons",&fnTagMuons,"nTagMuons/I");
@@ -1296,7 +1310,14 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree2->Branch("MuonTwoProng_zmass",&fMuonTwoProng_zmass,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   }
   if (fincludeMuMuBranches) {
+  fTree2->Branch("trig1fired",&ftrig1fired,"trig1fired/O");
+  fTree2->Branch("trig2fired",&ftrig2fired,"trig2fired/O");
+  fTree2->Branch("ntrig1objs",&fntrig1objs,"ntrig1objs/I");
+  fTree2->Branch("ntrig2objs",&fntrig2objs,"ntrig2objs/I");
+  fTree2->Branch("alltrig1dr",&falltrig1dr,"alltrig1dr/O");
+  fTree2->Branch("alltrig2dr",&falltrig2dr,"alltrig2dr/O");
   fTree2->Branch("passMuonTrigger",&fpassMuonTrigger,"passMuonTrigger/O");
+  fTree2->Branch("passMuonTriggerTk",&fpassMuonTriggerTk,"passMuonTriggerTk/O");
   fTree2->Branch("muonTrigger",&fMuonTrigger);
   fTree2->Branch("muonTriggerTk",&fMuonTriggerTk);
   fTree2->Branch("triggerMatchCase",&ftriggerMatchCase,"triggerMatchCase/I");
@@ -1988,6 +2009,11 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     iEvent.getByToken(genToken_, genparticles);
   }
 
+  edm::Handle<GenEventInfoProduct> genEventInfo;
+  if (fincludeMCInfo) {
+    iEvent.getByToken(genEventInfoToken_, genEventInfo);
+  }
+
   edm::Handle<vector<reco::Vertex>> primaryvertecies;
   iEvent.getByToken(pvToken_, primaryvertecies);
   const reco::Vertex & PV = (*primaryvertecies)[0];
@@ -2017,16 +2043,15 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   edm::Handle<std::vector<pat::Tau>> taus;
   iEvent.getByToken(tauToken_, taus);
 
-  edm::Handle<GenEventInfoProduct> genEventInfo;
+  edm::Handle<vector<PileupSummaryInfo>> pileupInfo;
+  iEvent.getByToken(pileupInfoToken_, pileupInfo);
+
   if (fincludeMCInfo) {
-    iEvent.getByToken(genEventInfoToken_, genEventInfo);
-    // fill MC weights
+    // MC weights
     fMcW = genEventInfo->weight();
     fMcWProd = genEventInfo->weightProduct();
-  }
 
-  // pthat, pt of the leading quark (relevant for MC QCD dijet events)
-  if (fincludeMCInfo) {
+    // pthat, pt of the leading quark (relevant for MC QCD dijet events)
     if (fDebug) cout << "calculating pthat" << endl;
     double pthat = -100.0;
     for (unsigned int i = 0; i < genparticles->size(); i++) {
@@ -2039,6 +2064,21 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       }
     }
     fpthat = pthat;
+
+    // MC PU info
+    float true_npu = -1;
+    int obs_npu = -1;
+    for (std::vector<PileupSummaryInfo>::const_iterator pvi = pileupInfo->begin(); pvi != pileupInfo->end(); ++pvi)
+    {
+      int bx = pvi->getBunchCrossing();
+      if (bx == 0) {
+        true_npu = pvi->getTrueNumInteractions();
+        obs_npu = pvi->getPU_NumInteractions();
+        break;
+      }
+    }
+    ftrueNpu = true_npu;
+    fobsNpu = obs_npu;
   }
 
   // Signal MC Generator information
@@ -3109,11 +3149,12 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
   // Z preselection tag and probe branches
   if (fDebug) cout << ". doing z preselection branches" << endl;
-  TauHadFilters::PreSelectionResult result;
+  TauHadFilters::TauHadPreSelectionResult result;
   result = TauHadFilters::computePreSelectionResult(iEvent, triggerBits, triggerObjects, triggerPrescales, vertices, taus, muons, electrons, ak4jets, MET, rhoH, fusePatTau);
   if (fDebug) cout << ". finished computing preselection result" << endl;
 
   fpassMuonTrigger = result.passTrigger;
+  fpassMuonTriggerTk = result.passTriggerTk;
   fMuonTrigger = result.foundTrigger;
   fMuonTriggerTk = result.foundTriggerTk;
   fnTagMuons = result.nTagMuons;
@@ -3350,38 +3391,39 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   }
 
   if (fDebug) cout << ". doing mumu preselection branches" << endl;
-  result = TauHadFilters::computeDiMuonPreSelectionResult(iEvent, triggerBits, triggerObjects, triggerPrescales, vertices, taus, muons, electrons, ak4jets, MET, rhoH);
-  bool passDiMuon = (result.tagMuon != NULL && result.tagMuon2 != NULL);
-  if (fDebug) cout << ". done getting mumu preselection result" << endl;
+  TauHadFilters::DiMuonPreSelectionResult dimuon_result;
+  dimuon_result = TauHadFilters::computeDiMuonPreSelectionResult(iEvent, triggerBits, triggerObjects, triggerPrescales, vertices, taus, muons, electrons, ak4jets, MET, rhoH);
+  bool passDiMuon = (dimuon_result.tagMuon != NULL && dimuon_result.tagMuon2 != NULL);
+  if (fDebug) cout << ". done getting mumu preselection dimuon_result" << endl;
 
-  fpassMuonTrigger = result.passTrigger;
-  fMuonTrigger = result.foundTrigger;
-  fMuonTriggerTk = result.foundTriggerTk;
-  fnTagMuons = result.nTagMuons;
-  ftriggerMatchCase = result.triggerMatchCase;
-  fpassExtraElectronVeto = result.passExtraElectronVeto;
-  fpassExtraMuonVeto = result.passExtraMuonVeto;
-  fpassPreselection = result.passPreSelection;
+  fpassMuonTrigger = dimuon_result.passTrigger;
+  fpassMuonTriggerTk = dimuon_result.passTriggerTk;
+  fMuonTrigger = dimuon_result.foundTrigger;
+  fMuonTriggerTk = dimuon_result.foundTriggerTk;
+  fnTagMuons = dimuon_result.nTagMuons;
+  fpassExtraElectronVeto = dimuon_result.passExtraElectronVeto;
+  fpassExtraMuonVeto = dimuon_result.passExtraMuonVeto;
+  fpassPreselection = dimuon_result.passPreSelection;
   fpassReducedSelection = passDiMuon;
 
   InitRecoDiObjectInfo(fMuonMuon);
   if (passDiMuon) {
-    fTagMuon1_pt = result.tagMuon->pt();
-    fTagMuon1_eta = result.tagMuon->eta();
-    fTagMuon1_phi = result.tagMuon->phi();
-    fTagMuon1_mass = result.tagMuon->mass();
-    fTagMuon1_dz =  fabs( (result.tagMuon->muonBestTrack())->dz( PV.position() ) );
-    fTagMuon1_iso = TauHadFilters::computeMuonIsolation(result.tagMuon);
+    fTagMuon1_pt = dimuon_result.tagMuon->pt();
+    fTagMuon1_eta = dimuon_result.tagMuon->eta();
+    fTagMuon1_phi = dimuon_result.tagMuon->phi();
+    fTagMuon1_mass = dimuon_result.tagMuon->mass();
+    fTagMuon1_dz =  fabs( (dimuon_result.tagMuon->muonBestTrack())->dz( PV.position() ) );
+    fTagMuon1_iso = TauHadFilters::computeMuonIsolation(dimuon_result.tagMuon);
 
-    fTagMuon2_pt = result.tagMuon2->pt();
-    fTagMuon2_eta = result.tagMuon2->eta();
-    fTagMuon2_phi = result.tagMuon2->phi();
-    fTagMuon2_mass = result.tagMuon2->mass();
-    fTagMuon2_dz =  fabs( (result.tagMuon2->muonBestTrack())->dz( PV.position() ) );
-    fTagMuon2_iso = TauHadFilters::computeMuonIsolation(result.tagMuon2);
+    fTagMuon2_pt = dimuon_result.tagMuon2->pt();
+    fTagMuon2_eta = dimuon_result.tagMuon2->eta();
+    fTagMuon2_phi = dimuon_result.tagMuon2->phi();
+    fTagMuon2_mass = dimuon_result.tagMuon2->mass();
+    fTagMuon2_dz =  fabs( (dimuon_result.tagMuon2->muonBestTrack())->dz( PV.position() ) );
+    fTagMuon2_iso = TauHadFilters::computeMuonIsolation(dimuon_result.tagMuon2);
 
-    TLorentzVector muon1; muon1.SetPtEtaPhiM(result.tagMuon->pt(), result.tagMuon->eta(), result.tagMuon->phi(), result.tagMuon->mass());
-    TLorentzVector muon2; muon2.SetPtEtaPhiM(result.tagMuon2->pt(), result.tagMuon2->eta(), result.tagMuon2->phi(), result.tagMuon2->mass());
+    TLorentzVector muon1; muon1.SetPtEtaPhiM(dimuon_result.tagMuon->pt(), dimuon_result.tagMuon->eta(), dimuon_result.tagMuon->phi(), dimuon_result.tagMuon->mass());
+    TLorentzVector muon2; muon2.SetPtEtaPhiM(dimuon_result.tagMuon2->pt(), dimuon_result.tagMuon2->eta(), dimuon_result.tagMuon2->phi(), dimuon_result.tagMuon2->mass());
     FillRecoDiObjectInfo(fMuonMuon, muon1, muon2);
   } else {
     fTagMuon1_pt = -999.9;
