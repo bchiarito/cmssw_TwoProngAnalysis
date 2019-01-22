@@ -202,7 +202,7 @@ process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_standard
 # settings always overwritten by command line
 process.twoprongNtuplizer.includeSignalGenParticles = options.isSignal
 process.twoprongNtuplizer.includeZDecayGenParticles = options.isDYll
-process.twoprongNtuplizer.inclueZTauHadBranches = cms.untracked.bool(options.includeTauTau)
+process.twoprongNtuplizer.includeZTauHadBranches = cms.untracked.bool(options.includeTauTau)
 process.twoprongNtuplizer.includeZMuMuBranches = cms.untracked.bool(options.includeMuMu)
 process.twoprongNtuplizer.mcXS = options.mcXS
 process.twoprongNtuplizer.mcN = options.mcN
@@ -238,7 +238,7 @@ if options.tauModifiedTwoProng:
   # settings always overwritten by command line
   process.twoprongModNtuplizer.includeSignalGenParticles = options.isSignal
   process.twoprongModNtuplizer.includeZDecayGenParticles = options.isDYll
-  process.twoprongModNtuplizer.inclueZTauHadBranches = options.includeTauTau
+  process.twoprongModNtuplizer.includeZTauHadBranches = options.includeTauTau
   process.twoprongModNtuplizer.includeZMuMuBranches = options.includeMuMu
   process.twoprongModNtuplizer.mcXS = options.mcXS
   process.twoprongModNtuplizer.mcN = options.mcN

@@ -817,7 +817,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("LooseIDPhoton_coneHE",&fLooseIDPhoton_coneHE);
   fTree->Branch("LooseIDPhoton_sigmaIetaIeta",&fLooseIDPhoton_sigmaIetaIeta);
   // High-pt-id Photons
-  fTree->Branch("nIDPhotons",&fNumIDPhotons,"nTightPhotons/I");
+  fTree->Branch("nIDPhotons",&fNumIDPhotons,"nIDPhotons/I");
   fTree->Branch("IDPhoton_pt",&fIDPhoton_pt);
   fTree->Branch("IDPhoton_eta",&fIDPhoton_eta);
   fTree->Branch("IDPhoton_scEta",&fIDPhoton_scEta);
