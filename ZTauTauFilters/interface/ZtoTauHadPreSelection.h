@@ -264,7 +264,7 @@ namespace TauHadFilters
           computeMuonIsolation(&muon) < MUON_MAX_RELISO &&
           fabs(muon.muonBestTrack()->dz(PV.position())) < MUON_MAX_DZ &&
           fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
-          muon.isMediumMuon() ) {
+          muon.isTightMuon(PV) ) {
         TLorentzVector mu; mu.SetPtEtaPhiM(muon.pt(), muon.eta(), muon.phi(), muon.mass());
         bool matched_to_trigger_obj = false;
         for (TLorentzVector trigobj : trigger_objects) {
@@ -540,7 +540,7 @@ namespace TauHadFilters
           computeMuonIsolation(&muon) < MUON_MAX_RELISO &&
           fabs(muon.muonBestTrack()->dz(PV.position())) < MUON_MAX_DZ &&
           fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
-          muon.isMediumMuon() ) {
+          muon.isTightMuon(PV) ) {
         TLorentzVector mu; mu.SetPtEtaPhiM(muon.pt(), muon.eta(), muon.phi(), muon.mass());
         bool matched_to_trigger_obj = false;
         for (TLorentzVector trigobj : trigger_objects) {
@@ -557,7 +557,7 @@ namespace TauHadFilters
           computeMuonIsolation(&muon) < MUON_MAX_RELISO &&
           fabs(muon.muonBestTrack()->dz(PV.position())) < MUON_MAX_DZ &&
           fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
-          muon.isMediumMuon() ) {
+          muon.isTightMuon(PV) ) {
         TLorentzVector mu; mu.SetPtEtaPhiM(muon.pt(), muon.eta(), muon.phi(), muon.mass());
         bool matched_to_trigger_obj = false;
         for (TLorentzVector trigobj : trigger_objects) {
