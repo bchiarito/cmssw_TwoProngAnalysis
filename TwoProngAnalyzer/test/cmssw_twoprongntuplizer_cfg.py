@@ -19,6 +19,7 @@ options.register("originalGeometry", False, VarParsing.multiplicity.singleton, V
 # filters
 options.register("filterOnPhoton", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 Photon")
 options.register("filterOnTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 TwoProng")
+options.register("filterForABCDStudy", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 tight/loose twoprong or tight/loose photon")
 options.register("DYsig", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("DYbkg", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("DYbkgMuMu", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
@@ -211,6 +212,7 @@ process.twoprongNtuplizer.debug = options.debug
 # filters
 process.twoprongNtuplizer.filterOnPhoton = options.filterOnPhoton
 process.twoprongNtuplizer.filterOnTwoProng = options.filterOnTwoProng
+process.twoprongNtuplizer.filterForABCDStudy = options.filterForABCDStudy
 process.twoprongNtuplizer.usePatTauForZPreBranches = options.usePatTauInPreselection
 # object includes
 process.twoprongNtuplizer.dontIncludeTwoProngs = not (options.commandLineTwoProng or options.tauModifiedTwoProng or options.standardTwoProng)

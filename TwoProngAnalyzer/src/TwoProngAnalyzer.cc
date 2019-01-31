@@ -138,6 +138,7 @@ private:
   double             fMcN;                         // set the value of the mc number generated branch
   bool               fFilterOnPhoton;              // save only events with one or more photons
   bool               fFilterOnTwoProng;            // save only events with one or more twoprongs
+  bool               fFilterForABCDStudy;          // save only events with at least one of: tight/loose twoprong, tight/loose photon
   bool               fincludeDalitzHistos;         // include dalitz plot histograms
   
   // cmssw config file options, optional branches
@@ -624,6 +625,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
     fMcN(iConfig.getUntrackedParameter<double>("mcN")),
     fFilterOnPhoton(iConfig.getUntrackedParameter<bool>("filterOnPhoton")),
     fFilterOnTwoProng(iConfig.getUntrackedParameter<bool>("filterOnTwoProng")),
+    fFilterForABCDStudy(iConfig.getUntrackedParameter<bool>("filterForABCDStudy")),
     fincludeDalitzHistos(iConfig.getUntrackedParameter<bool>("includeDalitzHistos")),
     fdontIncludeTwoProngs(iConfig.getUntrackedParameter<bool>("dontIncludeTwoProngs")),
     fincludeLooseTwoProngs(iConfig.getUntrackedParameter<bool>("includeLooseTwoProngs")),
@@ -693,13 +695,11 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   if (fMakeTrees) {
   fTree = fs->make<TTree>("fTree","fTree");
   // Generator level
-  if (fincludeMCInfo) {
   fTree->Branch("pthat",&fpthat,"pthat/D");
   fTree->Branch("mcW",&fMcW,"mcW/D");
   fTree->Branch("mcWProd",&fMcWProd,"mcWProd/D");
   fTree->Branch("nPU_true",&ftrueNpu,"nPU_true/D");
   fTree->Branch("nPU_obs",&fobsNpu,"nPU_obs/I");
-  }
   if (fincludeZDecayGenParticles) {
   fTree->Branch("zDecayType",&fzDecayType,"zDecayType/D");
   fTree->Branch("GenZ_pt",&fGenZ_pt,"GenZ_pt/D");
@@ -1134,7 +1134,6 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("Obj_MuonMuon",&fMuonMuon,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   }
   }
-
 
   if(fincludeDalitzHistos) {
   fHighvsMid = fs->make<TH2D>("highvsmid","highvsmid",40,0,1,40,0,1);
@@ -1600,6 +1599,13 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     }
     ftrueNpu = true_npu;
     fobsNpu = obs_npu;
+  } else {
+    // use escape values for MC branches
+    fMcW = -100.0;
+    fMcWProd = -100.0;
+    fpthat = -100.0;
+    ftrueNpu = -100.0;
+    fobsNpu = -100.0;
   }
 
   // Signal MC Generator information
@@ -1612,6 +1618,8 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       resonance.SetPtEtaPhiM(genparticle.pt(),genparticle.eta(),genparticle.phi(),genparticle.mass());
       fGenPhi_pt.push_back(resonance.Pt());
       fGenPhi_eta.push_back(resonance.Eta());
+      if (fabs((resonance).CosTheta()) == 1) fGenPhi_eta.push_back(1000.0);
+      else fGenPhi_eta.push_back(resonance.Eta());
       fGenPhi_phi.push_back(resonance.Phi());
       fGenPhi_mass.push_back(resonance.M());
       fGenPhi_px.push_back(resonance.Px());
@@ -2179,6 +2187,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
   // Z decay type
   if (fincludeZDecayGenParticles) {
+    if (fDebug) cout << ". doing z decay gen particles" << endl;
     fzDecayType = TauHadFilters::ZDecayType(genparticles);
 
     vector<const reco::Candidate *> leptons;
@@ -2190,18 +2199,22 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     }
     if (leptons.size() == 2)
     {
+      if (fDebug) cout << ". . found both Z daughters" << endl;
       TLorentzVector lepton1;
       lepton1.SetPtEtaPhiM(leptons[0]->pt(), leptons[0]->eta(), leptons[0]->phi(), leptons[0]->mass());
       TLorentzVector lepton2;
       lepton2.SetPtEtaPhiM(leptons[1]->pt(), leptons[1]->eta(), leptons[1]->phi(), leptons[1]->mass());
       fGenZ_pt = (lepton1+lepton2).Pt();
-      fGenZ_eta = (lepton1+lepton2).Eta();
       fGenZ_phi = (lepton1+lepton2).Phi();
       fGenZ_mass = (lepton1+lepton2).M();
+      if (fabs((lepton1+lepton2).CosTheta()) == 1) fGenZ_eta = 1000.0;
+      else fGenZ_eta = (lepton1+lepton2).Eta();
+      if (fDebug) cout << ". . done with Z daughters" << endl;
     }
 
     // matching, by gen tau perspective now
     for (unsigned int i = 0; i < genparticles->size(); i++) {
+      if (fDebug) cout << ". . now matching hadronic taus" << endl;
       const reco::GenParticle & genparticle = (*genparticles)[i];
       if (!TauHadFilters::isHadronicTau(&genparticle)) continue; // only including hadronically decaying taus in gen tau collection
       TLorentzVector GenParticle;
@@ -2228,10 +2241,12 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       fGenTau_candobjDR.push_back(candDR);
     }
     fnGenTaus = fGenTau_pt.size();
+    if (fDebug) cout << ". done z decay gen particles" << endl;
   }
 
   // matching, by gen omega perspective now
   if (fincludeSignalGenParticles) {
+    if (fDebug) cout << ". doing phi signal gen particles" << endl;
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle &genparticle = (*genparticles)[i];
       if (genparticle.pdgId() != 9000006 || genparticle.status() != 62) continue;
@@ -2290,6 +2305,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         }
       }
     }
+    if (fDebug) cout << ". done phi signal gen particles" << endl;
   }
 
   // High-pT Photon id  
@@ -2729,10 +2745,14 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   // Now fill fTree
   cutflow_total++;
   if (fMakeTrees) {
-    if ( fFilterOnPhoton &&  fFilterOnTwoProng && fNumIDPhotons>=1 && fnTwoProngs>=1) { fTree->Fill(); cutflow_passFilter++; }
-    if ( fFilterOnPhoton && !fFilterOnTwoProng && fNumIDPhotons>=1) { fTree->Fill(); cutflow_passFilter++; }
-    if (!fFilterOnPhoton &&  fFilterOnTwoProng && fnTwoProngs>=1) { fTree->Fill(); cutflow_passFilter++; }
-    if (!fFilterOnPhoton && !fFilterOnTwoProng) { fTree->Fill(); cutflow_passFilter++; }
+    if (!fFilterForABCDStudy) {
+      if ( fFilterOnPhoton &&  fFilterOnTwoProng && fNumIDPhotons>=1 && fnTwoProngs>=1) { fTree->Fill(); cutflow_passFilter++; }
+      if ( fFilterOnPhoton && !fFilterOnTwoProng && fNumIDPhotons>=1) { fTree->Fill(); cutflow_passFilter++; }
+      if (!fFilterOnPhoton &&  fFilterOnTwoProng && fnTwoProngs>=1) { fTree->Fill(); cutflow_passFilter++; }
+      if (!fFilterOnPhoton && !fFilterOnTwoProng) { fTree->Fill(); cutflow_passFilter++; }
+    } else {
+      if (fNumIDPhotons + fNumLooseIDPhotons + fnTwoProngs + fnTwoProngsLoose >= 1) { fTree->Fill(); cutflow_passFilter++; }
+    }
   }
 
   /* Histogram making */
@@ -2784,6 +2804,7 @@ TwoProngAnalyzer::beginJob()
   cout << "mcN " << fMcN << endl;
   cout << "filterOnPhoton " << fFilterOnPhoton << endl;
   cout << "filterOnTwoProng " << fFilterOnTwoProng << endl;
+  cout << "filterForABCDStudy " << fFilterForABCDStudy << endl;
   cout << "stackedDalitzHistos " << fincludeDalitzHistos << endl;
   cout << "===========================" << endl;
   cout << "noTwoProng " << fdontIncludeTwoProngs << endl;
@@ -2825,7 +2846,7 @@ void
 TwoProngAnalyzer::endJob()
 {
   // print a cutflow if using a filter 
-  if ( fFilterOnPhoton || fFilterOnTwoProng ) {
+  if ( fFilterOnPhoton || fFilterOnTwoProng || fFilterForABCDStudy) {
     cout << "\nCutflow report" << endl;
     cout << "==============" << endl;
     cout << "Total_Events " << cutflow_total << endl;
