@@ -26,18 +26,23 @@ twoprongModNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
                                   rho = cms.InputTag("fixedGridRhoFastjetAll"),
                                   includeOldPhotons = cms.untracked.bool(False),
                                   includeBasePhotons = cms.untracked.bool(False),
+                                  includeConeHEPhotons = cms.untracked.bool(False),
+                                  includeLoosePhotons = cms.untracked.bool(False),
                                   # MC options
                                   includeSignalGenParticles = cms.untracked.bool(False),
-                                  includeZDecayGenParticles = cms.untracked.bool(False),
                                   includeMCInfo = cms.untracked.bool(False),
                                   mcXS = cms.untracked.double(1.0),
                                   mcN = cms.untracked.double(1.0),
                                   # optional branches
-                                  includeCandTwoProngs = cms.untracked.bool(True),
+                                  includeCandTwoProngs = cms.untracked.bool(False),
                                   includeLooseTwoProngs = cms.untracked.bool(False),
+                                  # z study related
+                                  includeZDecayGenParticles = cms.untracked.bool(False),
                                   includeZTauHadBranches = cms.untracked.bool(False),
                                   includeZMuMuBranches = cms.untracked.bool(False),
                                   usePatTauForZPreBranches = cms.untracked.bool(False),
+                                  muonIDtype = cms.untracked.int32(2), # 0, 1, 2 = loose, medium, tight
+                                  muonISOtype = cms.untracked.int32(3), # 0, 1, 2, 3, 4, 5, = vloose, loose, medium, tight, vtight, vvtight
                                   # filters
                                   filterOnPhoton = cms.untracked.bool(False),
                                   filterOnTwoProng = cms.untracked.bool(False),

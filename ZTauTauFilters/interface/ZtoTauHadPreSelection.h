@@ -39,6 +39,9 @@ using std::string;
 
 namespace TauHadFilters
 {
+  enum muonIDtype {looseID, mediumID, tightID};
+  enum muonISOtype {vlooseISO, looseISO, mediumISO, tightISO, vtightISO, vvtightISO};
+
   const double Z_MASS = 91.1876;
 
   const string MUON_TRIGGER = "HLT_IsoMu24";
@@ -47,9 +50,15 @@ namespace TauHadFilters
 
   const double MUON_MIN_PT = 26;
   const double MUON_MAX_ETA = 2.1;
-  const double MUON_MAX_RELISO = 0.15;
   const double MUON_MAX_DZ = 0.2;
   const double MUON_MAX_DXY = 0.045;
+
+  const double MUON_VLOOSE_RELISO = 0.4;
+  const double MUON_LOOSE_RELISO = 0.25;
+  const double MUON_MEDIUM_RELISO = 0.20;
+  const double MUON_TIGHT_RELISO = 0.15;
+  const double MUON_VTIGHT_RELISO = 0.10;
+  const double MUON_VVTIGHT_RELISO = 0.05;
 
   const double DIMUON_MIN_DR = 0.05;
   const double DIMUON_Z_MASS_MIN = 60.0;
@@ -150,9 +159,9 @@ namespace TauHadFilters
   typedef struct DiMuonPreSelectionResult DiMuonPreSelectionResult;
 
   // forward declare the preselection functions
-  struct TauHadPreSelectionResult computePreSelectionResult(const edm::Event&, edm::Handle<edm::TriggerResults>&, edm::Handle<pat::TriggerObjectStandAloneCollection>, edm::Handle<pat::PackedTriggerPrescales>, edm::Handle<reco::VertexCollection>, edm::Handle<pat::TauCollection>, edm::Handle<pat::MuonCollection>, edm::Handle<pat::ElectronCollection>, edm::Handle<pat::JetCollection>, edm::Handle<pat::METCollection>, edm::Handle<double> , bool);
+  struct TauHadPreSelectionResult computePreSelectionResult(const edm::Event&, edm::Handle<edm::TriggerResults>&, edm::Handle<pat::TriggerObjectStandAloneCollection>, edm::Handle<pat::PackedTriggerPrescales>, edm::Handle<reco::VertexCollection>, edm::Handle<pat::TauCollection>, edm::Handle<pat::MuonCollection>, edm::Handle<pat::ElectronCollection>, edm::Handle<pat::JetCollection>, edm::Handle<pat::METCollection>, edm::Handle<double> , bool, muonIDtype, muonISOtype);
 
-  struct DiMuonPreSelectionResult computeDiMuonPreSelectionResult(const edm::Event&, edm::Handle<edm::TriggerResults>&, edm::Handle<pat::TriggerObjectStandAloneCollection>, edm::Handle<pat::PackedTriggerPrescales>, edm::Handle<reco::VertexCollection>, edm::Handle<pat::TauCollection>, edm::Handle<pat::MuonCollection>, edm::Handle<pat::ElectronCollection>, edm::Handle<pat::JetCollection>, edm::Handle<pat::METCollection>, edm::Handle<double>);
+  struct DiMuonPreSelectionResult computeDiMuonPreSelectionResult(const edm::Event&, edm::Handle<edm::TriggerResults>&, edm::Handle<pat::TriggerObjectStandAloneCollection>, edm::Handle<pat::PackedTriggerPrescales>, edm::Handle<reco::VertexCollection>, edm::Handle<pat::TauCollection>, edm::Handle<pat::MuonCollection>, edm::Handle<pat::ElectronCollection>, edm::Handle<pat::JetCollection>, edm::Handle<pat::METCollection>, edm::Handle<double>, muonIDtype, muonISOtype);
 
   // helper functions
   double computeMuonIsolation(const pat::Muon * mu)
@@ -199,8 +208,18 @@ namespace TauHadFilters
   }
 
   // the tau_had tau_mu preselection
-  struct TauHadPreSelectionResult computePreSelectionResult(const edm::Event& iEvent, edm::Handle<edm::TriggerResults>& triggerBits, edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects, edm::Handle<pat::PackedTriggerPrescales> triggerPrescales, edm::Handle<reco::VertexCollection> vertices, edm::Handle<pat::TauCollection> taus, edm::Handle<pat::MuonCollection> muons, edm::Handle<pat::ElectronCollection> electrons, edm::Handle<pat::JetCollection> jets, edm::Handle<pat::METCollection> mets, edm::Handle<double> rho, bool usePatTau = false)
+  struct TauHadPreSelectionResult computePreSelectionResult(const edm::Event& iEvent, edm::Handle<edm::TriggerResults>& triggerBits, edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects, edm::Handle<pat::PackedTriggerPrescales> triggerPrescales, edm::Handle<reco::VertexCollection> vertices, edm::Handle<pat::TauCollection> taus, edm::Handle<pat::MuonCollection> muons, edm::Handle<pat::ElectronCollection> electrons, edm::Handle<pat::JetCollection> jets, edm::Handle<pat::METCollection> mets, edm::Handle<double> rho, bool usePatTau = false, muonIDtype muid = mediumID, muonISOtype muiso = mediumISO)
   {
+    double muon_max_reliso;
+    switch(muiso) {
+      case vlooseISO:  muon_max_reliso = MUON_VLOOSE_RELISO;
+      case looseISO:   muon_max_reliso = MUON_LOOSE_RELISO;
+      case mediumISO:  muon_max_reliso = MUON_MEDIUM_RELISO;
+      case tightISO:   muon_max_reliso = MUON_TIGHT_RELISO;
+      case vtightISO:  muon_max_reliso = MUON_VTIGHT_RELISO;
+      case vvtightISO: muon_max_reliso = MUON_VVTIGHT_RELISO;
+    }
+
     struct TauHadPreSelectionResult result;
 
     const reco::Vertex &PV = vertices->front();
@@ -261,10 +280,13 @@ namespace TauHadFilters
     for (const pat::Muon &muon : *muons) {
       if (muon.pt() > MUON_MIN_PT &&
           fabs(muon.eta()) < MUON_MAX_ETA &&
-          computeMuonIsolation(&muon) < MUON_MAX_RELISO &&
+          computeMuonIsolation(&muon) < muon_max_reliso &&
           fabs(muon.muonBestTrack()->dz(PV.position())) < MUON_MAX_DZ &&
-          fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
-          muon.isTightMuon(PV) ) {
+          fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY)
+        {
+        if (muid == looseID && !muon.isLooseMuon()) continue;
+        if (muid == mediumID && !muon.isMediumMuon()) continue;
+        if (muid == tightID && !muon.isTightMuon(PV)) continue;
         TLorentzVector mu; mu.SetPtEtaPhiM(muon.pt(), muon.eta(), muon.phi(), muon.mass());
         bool matched_to_trigger_obj = false;
         for (TLorentzVector trigobj : trigger_objects) {
@@ -285,7 +307,7 @@ namespace TauHadFilters
           muon.isMediumMuon() ) {
         if (muon.pt() > MUON_MIN_PT &&
             fabs(muon.eta()) < MUON_MAX_ETA &&
-            computeMuonIsolation(&muon) < MUON_MAX_RELISO &&
+            computeMuonIsolation(&muon) < muon_max_reliso &&
             fabs(muon.muonBestTrack()->dz(PV.position())) < MUON_MAX_DZ &&
             fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
             muon.isMediumMuon() ) {
@@ -475,8 +497,18 @@ namespace TauHadFilters
 
 
   // the dimuon preselection
-  struct DiMuonPreSelectionResult computeDiMuonPreSelectionResult(const edm::Event& iEvent, edm::Handle<edm::TriggerResults>& triggerBits, edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects, edm::Handle<pat::PackedTriggerPrescales> triggerPrescales, edm::Handle<reco::VertexCollection> vertices, edm::Handle<pat::TauCollection> taus, edm::Handle<pat::MuonCollection> muons, edm::Handle<pat::ElectronCollection> electrons, edm::Handle<pat::JetCollection> jets, edm::Handle<pat::METCollection> mets, edm::Handle<double> rho)
+  struct DiMuonPreSelectionResult computeDiMuonPreSelectionResult(const edm::Event& iEvent, edm::Handle<edm::TriggerResults>& triggerBits, edm::Handle<pat::TriggerObjectStandAloneCollection> triggerObjects, edm::Handle<pat::PackedTriggerPrescales> triggerPrescales, edm::Handle<reco::VertexCollection> vertices, edm::Handle<pat::TauCollection> taus, edm::Handle<pat::MuonCollection> muons, edm::Handle<pat::ElectronCollection> electrons, edm::Handle<pat::JetCollection> jets, edm::Handle<pat::METCollection> mets, edm::Handle<double> rho, muonIDtype muid = mediumID, muonISOtype muiso = mediumISO)
   {
+    double muon_max_reliso;
+    switch(muiso) {
+      case vlooseISO:  muon_max_reliso = MUON_VLOOSE_RELISO;
+      case looseISO:   muon_max_reliso = MUON_LOOSE_RELISO;
+      case mediumISO:  muon_max_reliso = MUON_MEDIUM_RELISO;
+      case tightISO:   muon_max_reliso = MUON_TIGHT_RELISO;
+      case vtightISO:  muon_max_reliso = MUON_VTIGHT_RELISO;
+      case vvtightISO: muon_max_reliso = MUON_VVTIGHT_RELISO;
+    }
+
     struct DiMuonPreSelectionResult result;
 
     const reco::Vertex &PV = vertices->front();
@@ -537,10 +569,13 @@ namespace TauHadFilters
     for (const pat::Muon &muon : *muons) {
       if (muon.pt() > MUON_MIN_PT &&
           fabs(muon.eta()) < MUON_MAX_ETA &&
-          computeMuonIsolation(&muon) < MUON_MAX_RELISO &&
+          computeMuonIsolation(&muon) < muon_max_reliso &&
           fabs(muon.muonBestTrack()->dz(PV.position())) < MUON_MAX_DZ &&
-          fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
-          muon.isTightMuon(PV) ) {
+          fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY)
+         {
+         if (muid == looseID && !muon.isLooseMuon()) continue;
+         if (muid == mediumID && !muon.isMediumMuon()) continue;
+         if (muid == tightID && !muon.isTightMuon(PV)) continue;
         TLorentzVector mu; mu.SetPtEtaPhiM(muon.pt(), muon.eta(), muon.phi(), muon.mass());
         bool matched_to_trigger_obj = false;
         for (TLorentzVector trigobj : trigger_objects) {
@@ -554,10 +589,13 @@ namespace TauHadFilters
     for (const pat::Muon &muon : *muons) {
       if (muon.pt() > MUON_MIN_PT &&
           fabs(muon.eta()) < LOOSEMUON_MAX_ETA &&
-          computeMuonIsolation(&muon) < MUON_MAX_RELISO &&
+          computeMuonIsolation(&muon) < muon_max_reliso &&
           fabs(muon.muonBestTrack()->dz(PV.position())) < MUON_MAX_DZ &&
-          fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY &&
-          muon.isTightMuon(PV) ) {
+          fabs(muon.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY)
+        {
+         if (muid == looseID && !muon.isLooseMuon()) continue;
+         if (muid == mediumID && !muon.isMediumMuon()) continue;
+         if (muid == tightID && !muon.isTightMuon(PV)) continue;
         TLorentzVector mu; mu.SetPtEtaPhiM(muon.pt(), muon.eta(), muon.phi(), muon.mass());
         bool matched_to_trigger_obj = false;
         for (TLorentzVector trigobj : trigger_objects) {

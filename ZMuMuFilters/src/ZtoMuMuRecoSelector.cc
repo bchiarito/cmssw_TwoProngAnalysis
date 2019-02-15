@@ -207,7 +207,7 @@ ZtoMuMuRecoSelector::filter(edm::Event& iEvent, const edm::EventSetup& iSetup)
 
   // get preselection result
   TauHadFilters::DiMuonPreSelectionResult result;
-  result = TauHadFilters::computeDiMuonPreSelectionResult(iEvent, triggerBits, triggerObjects, triggerPrescales, vertices, taus, muons, electrons, jets, mets, rho);
+  result = TauHadFilters::computeDiMuonPreSelectionResult(iEvent, triggerBits, triggerObjects, triggerPrescales, vertices, taus, muons, electrons, jets, mets, rho, TauHadFilters::mediumID, TauHadFilters::vvtightISO);
   bool passDiMuon = (result.tagMuon != NULL && result.tagMuon2 != NULL);
 
   // count
