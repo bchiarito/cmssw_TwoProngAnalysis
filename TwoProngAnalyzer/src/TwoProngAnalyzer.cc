@@ -281,7 +281,16 @@ private:
   vector<Double_t> fGenOmega_pattau3DR;
 
   int fHLT_Photon175;
+  int fHLT_Photon200;
   int fHLT_Photon22_Iso;
+  int fHLT_Photon165_Iso;
+  int fHLT_Photon110_Iso;
+  int fHLT_Photon75_VBF;
+  int fHLT_DoublePhoton60;
+  int fHLT_DoublePhoton70;
+  int fHLT_DoublePhoton85;
+  int fHLT_Tau120;
+  int fHLT_DoubleTau32;
   string fPhotonFoundTrigger;
   int fEventNum;
   int fRunNum;
@@ -860,7 +869,16 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   }
   // Trigger
   fTree->Branch("HLT_Photon175",&fHLT_Photon175,"HLT_Photon175/I");
+  fTree->Branch("HLT_Photon200",&fHLT_Photon200,"HLT_Photon200/I");
   fTree->Branch("HLT_Photon22_Iso",&fHLT_Photon22_Iso,"HLT_Photon22_Iso/I");
+  fTree->Branch("HLT_Photon165_Iso",&fHLT_Photon165_Iso,"HLT_Photon165_Iso/I");
+  fTree->Branch("HLT_Photon110_Iso",&fHLT_Photon110_Iso,"HLT_Photon110_Iso/I");
+  fTree->Branch("HLT_Photon75_VBF",&fHLT_Photon75_VBF,"HLT_Photon75_VBF/I");
+  fTree->Branch("HLT_DoublePhoton60",&fHLT_DoublePhoton60,"HLT_DoublePhoton60/I");
+  fTree->Branch("HLT_DoublePhoton70",&fHLT_DoublePhoton70,"HLT_DoublePhoton70/I");
+  fTree->Branch("HLT_DoublePhoton75",&fHLT_DoublePhoton85,"HLT_DoublePhoton85/I");
+  fTree->Branch("HLT_Tau120",&fHLT_Tau120,"HLT_Tau120/I");
+  fTree->Branch("HLT_DoubleTau32",&fHLT_DoubleTau32,"HLT_DoubleTau32/I");
   fTree->Branch("photonFoundTrigger",&fPhotonFoundTrigger);
   // Event wide
   fTree->Branch("eventNum",&fEventNum,"eventNum/I");
@@ -1779,10 +1797,28 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   iEvent.getByToken(triggerPrescales_, triggerPrescales);
 
   const edm::TriggerNames &names = iEvent.triggerNames(*triggerBits);
-  string trigger_photon175  = "HLT_Photon175_v";
+  string trigger_photon175  = "HLT_Photon175_v"; // 2016
+  string trigger_photon200  = "HLT_Photon200_v"; // 2017, 2018
   string trigger_photon22_iso  = "HLT_Photon22_R9Id90_HE10_IsoM_v";
+  string trigger_photon165_iso  = "HLT_Photon165_R9Id90_HE10_IsoM_v"; // 2016, 2017
+  string trigger_photon110_iso  = "HLT_Photon110EB_TightID_TightIso_v"; // 2018
+  string trigger_photon75_vbf  = "HLT_Photon75_R9Id90_HE10_Iso40_EBOnly_VBF_v"; // 2016
+  string trigger_doublephoton60 = "HLT_DoublePhoton60_v"; // 2016, 2017
+  string trigger_doublephoton70 = "HLT_DoublePhoton70_v"; // 2018
+  string trigger_doublephoton85 = "HLT_DoublePhoton85_v"; // 2016, 2017, 2018
+  string trigger_tau120 = "HLT_VLooseIsoPFTau120_Trk50_eta2p1_v"; // 2016
+  string trigger_doubletau32 = "HLT_DoubleMediumIsoPFTau32_Trk1_eta2p1_Reg_v"; // 2016
   bool bit_photon175 = false;
+  bool bit_photon200 = false;
   bool bit_photon22_iso = false;
+  bool bit_photon165_iso = false;
+  bool bit_photon110_iso = false;
+  bool bit_photon75_vbf = false;
+  bool bit_doublephoton60 = false;
+  bool bit_doublephoton70 = false;
+  bool bit_doublephoton85 = false;
+  bool bit_tau120 = false;
+  bool bit_doubletau32 = false;
   for (unsigned int i = 0, n = triggerBits->size(); i < n; ++i)
   {
      string triggerName = names.triggerName(i);
@@ -1793,13 +1829,48 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
        fPhotonFoundTrigger = triggerName;
      }
 
-     std::size_t pos_22_iso = triggerName.find(trigger_photon22_iso);
-     if ( pos_22_iso != std::string::npos ) {
-       bit_photon22_iso = triggerBits->accept(i);
-     }
+     std::size_t pos_photon200 = triggerName.find(trigger_photon200);
+     if ( pos_photon200 != std::string::npos ) { bit_photon200 = triggerBits->accept(i); }
+
+     std::size_t pos_photon22_iso = triggerName.find(trigger_photon22_iso);
+     if ( pos_photon22_iso != std::string::npos ) { bit_photon22_iso = triggerBits->accept(i); }
+
+     std::size_t pos_photon165_iso = triggerName.find(trigger_photon165_iso);
+     if ( pos_photon165_iso != std::string::npos ) { bit_photon165_iso = triggerBits->accept(i); }
+
+     std::size_t pos_photon110_iso = triggerName.find(trigger_photon110_iso);
+     if ( pos_photon110_iso != std::string::npos ) { bit_photon110_iso = triggerBits->accept(i); }
+
+     std::size_t pos_photon75_vbf = triggerName.find(trigger_photon75_vbf);
+     if ( pos_photon75_vbf != std::string::npos ) { bit_photon75_vbf = triggerBits->accept(i); }
+
+     std::size_t pos_doublephoton60 = triggerName.find(trigger_doublephoton60);
+     if ( pos_doublephoton60 != std::string::npos ) { bit_doublephoton60 = triggerBits->accept(i); }
+
+     std::size_t pos_doublephoton70 = triggerName.find(trigger_doublephoton70);
+     if ( pos_doublephoton70 != std::string::npos ) { bit_doublephoton70 = triggerBits->accept(i); }
+
+     std::size_t pos_doublephoton85 = triggerName.find(trigger_doublephoton85);
+     if ( pos_doublephoton85 != std::string::npos ) { bit_doublephoton85 = triggerBits->accept(i); }
+
+     std::size_t pos_tau120 = triggerName.find(trigger_tau120);
+     if ( pos_tau120 != std::string::npos ) { bit_tau120 = triggerBits->accept(i); }
+
+     std::size_t pos_doubletau32 = triggerName.find(trigger_doubletau32);
+     if ( pos_doubletau32 != std::string::npos ) { bit_doubletau32 = triggerBits->accept(i); }
+
   }
   fHLT_Photon175 = bit_photon175;
+  fHLT_Photon200 = bit_photon200;
   fHLT_Photon22_Iso = bit_photon22_iso;
+  fHLT_Photon165_Iso = bit_photon165_iso;
+  fHLT_Photon110_Iso = bit_photon110_iso;
+  fHLT_Photon75_VBF = bit_photon75_vbf;
+  fHLT_DoublePhoton60 = bit_doublephoton60;
+  fHLT_DoublePhoton70 = bit_doublephoton70;
+  fHLT_DoublePhoton85 = bit_doublephoton85;
+  fHLT_Tau120 = bit_tau120;
+  fHLT_DoubleTau32 = bit_doubletau32;
 
   // ecal tool
   lazyTools_ = std::auto_ptr<noZS::EcalClusterLazyTools>( new noZS::EcalClusterLazyTools(iEvent, iSetup, recHitsEBToken, recHitsEEToken));   
