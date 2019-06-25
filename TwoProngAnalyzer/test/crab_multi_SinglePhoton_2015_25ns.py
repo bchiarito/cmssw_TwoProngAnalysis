@@ -4,13 +4,13 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_SinglePhoton_2015_25ns'
+config.General.workArea = 'crab_multi_SinglePhoton_2015_25ns_feb15'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=data2015', 'addConeHE=True', 'includeCands=False', 'filterOnPhoton=True']
+config.JobType.pyCfgParams = ['globalTag=data2015', 'includeLooseTwoProngs=True', 'includeLoosePhotons=True', 'filterForABCDStudy=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/prelim/Nov5/photon2015_25ns/' % (getUsernameFromSiteDB())
+config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/ABCD_filter/photon2015_25ns/Feb15/' % (getUsernameFromSiteDB())
 config.Data.publication = False
 config.Data.unitsPerJob = 100
 config.Data.totalUnits = -1

@@ -4,18 +4,18 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_SinglePhoton_2015_50ns_jan30'
+config.General.workArea = 'crab_multi_JetHT_2015_25ns_feb22'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=data2015', 'includeLoose=True', 'filterForABCDStudy=True']
+config.JobType.pyCfgParams = ['globalTag=data2015', 'includeLooseTwoProngs=True', 'includeLoosePhotons=True', 'filterForABCDStudy=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/ABCD_filter/Jan30/photon2015_50ns/' % (getUsernameFromSiteDB())
+config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/ABCD_filter/jet2015_25ns/Feb22/' % (getUsernameFromSiteDB())
 config.Data.publication = False
 config.Data.unitsPerJob = 100
 config.Data.totalUnits = -1
 config.Data.splitting = 'LumiBased'
-config.Data.lumiMask = 'json/Cert_13TeV_16Dec2015ReReco_Collisions15_50ns_JSON_v2.txt'
+config.Data.lumiMask = 'json/Cert_13TeV_16Dec2015ReReco_Collisions15_25ns_JSON_v2.txt'
 config.section_('User')
 config.section_('Site')
 config.Site.storageSite = 'T3_US_Rutgers'
@@ -42,10 +42,10 @@ if __name__ == '__main__':
     ## From now on that's what users should modify: this is the a-la-CRAB2 configuration part. ##
     #############################################################################################
 
-    config.General.requestName = 'SinglePhoton_Run2015B'
-    config.Data.inputDataset = '/SinglePhoton/Run2015B-16Dec2015-v1/MINIAOD'
+    config.General.requestName = 'JetHT_Run2015C'
+    config.Data.inputDataset = '/JetHT/Run2015C_25ns-16Dec2015-v1/MINIAOD'
     submit(config)
 
-    config.General.requestName = 'SinglePhoton_Run2015C'
-    config.Data.inputDataset = '/SinglePhoton/Run2015C_50ns-16Dec2015-v1/MINIAOD'
+    config.General.requestName = 'JetHT_Run2015D'
+    config.Data.inputDataset = '/JetHT/Run2015D-16Dec2015-v1/MINIAOD'
     submit(config)

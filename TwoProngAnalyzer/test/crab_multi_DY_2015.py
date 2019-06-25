@@ -4,13 +4,13 @@ config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_GJets_2015_feb15'
+config.General.workArea = 'crab_multi_DY_2015_feb15'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=mc2015', 'includeMCInfoBranches=True', 'includeLooseTwoProngs=True', 'filterForABCDStudy=True', 'includeLoosePhotons=True']
+config.JobType.pyCfgParams = ['globalTag=mc2015', 'includeMCInfoBranches=True', 'includeLooseTwoProngs=True', 'filterForABCDStudy=True', 'includeLoosePhotons=True', 'includeDYMCBranches=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/ABCD_filter/gjets2015/Feb15/' % (getUsernameFromSiteDB())
+config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/ABCD_filter/dy2015/Feb15/' % (getUsernameFromSiteDB())
 config.Data.publication = False
 config.Data.unitsPerJob = 100000
 config.Data.totalUnits = -1
@@ -47,26 +47,3 @@ if __name__ == '__main__':
     submit(config)
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
-    config.General.requestName = 'GJets_100to200'
-    config.Data.inputDataset = '/GJets_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['mcXS=9249','mcN=5116711'])
-    submit(config)
-    config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
-
-    config.General.requestName = 'GJets_200to400'
-    config.Data.inputDataset = '/GJets_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['mcXS=2304','mcN=10467654'])
-    submit(config)
-    config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
-
-    config.General.requestName = 'GJets_400to600'
-    config.Data.inputDataset = '/GJets_HT-400To600_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['mcXS=274.9','mcN=2406285'])
-    submit(config)
-    config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
-
-    config.General.requestName = 'GJets_600toInf'
-    config.Data.inputDataset = '/GJets_HT-600ToInf_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIIFall15MiniAODv2-PU25nsData2015v1_76X_mcRun2_asymptotic_v12-v1/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['mcXS=93.65','mcN=2456253'])
-    submit(config)
-    config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]

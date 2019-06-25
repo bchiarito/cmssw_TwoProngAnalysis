@@ -35,8 +35,6 @@ options.register("trackDR", 0.05, VarParsing.multiplicity.singleton, VarParsing.
 options.register("minPt", 20.0, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
 options.register("maxEta", 2.5, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
 options.register("constituentMinPt", 3.0, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
-options.register("trackMinPt", 3.0, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
-options.register("photonMinPt", 3.0, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
 options.register("trackAsym", 0.2, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
 options.register("photonAsym", 0.15, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
 options.register("photonBoxPhi", 0.2, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
@@ -44,6 +42,9 @@ options.register("photonBoxEta", 0.05, VarParsing.multiplicity.singleton, VarPar
 options.register("chargedIsoCut", 0.1, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
 options.register("neutralIsoCut", 0.1, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
 options.register("egammaIsoCut", 0.1, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
+options.register("chargedIsoCutLoose", 0.3, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
+options.register("neutralIsoCutLoose", 0.3, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
+options.register("egammaIsoCutLoose", 0.3, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
 # photon related
 options.register("includeConeHEPhotons", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Add cut to high-pt-photon-id: Cone based HE < 0.05")
 options.register("includeLoosePhotons", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
@@ -64,6 +65,10 @@ options.parseArguments()
 
 
 # shortcut sample settings
+if options.sample == 'photon2015':
+  options.sample = 'file:/cms/chiarito/samples/miniaod/data/photon/rootfile_photondata2015_numEvent100.root'
+  options.globalTag = 'data2015'
+  options.out = 'photon2015'
 if options.sample == 'dy':
   options.sample = 'file:/cms/chiarito/samples/miniaod/dysig/rootfile_DYJetsToLL_M-50_80k_events.root'
   options.globalTag = 'mc2016'
@@ -240,6 +245,9 @@ if options.commandLineTwoProng:
     process.twoprongNtuplizer.twoprong_chargedIsoCut = options.chargedIsoCut
     process.twoprongNtuplizer.twoprong_neutralIsoCut = options.neutralIsoCut
     process.twoprongNtuplizer.twoprong_egammaIsoCut = options.egammaIsoCut
+    process.twoprongNtuplizer.twoprong_chargedIsoLooseMax = options.chargedIsoCutLoose
+    process.twoprongNtuplizer.twoprong_neutralIsoLooseMax = options.neutralIsoCutLoose
+    process.twoprongNtuplizer.twoprong_egammaIsoLooseMax = options.egammaIsoCutLoose
 if options.tauModifiedTwoProng:
   process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_taumodified_cfi')
   # settings always overwritten by command line
