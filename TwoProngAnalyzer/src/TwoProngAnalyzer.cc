@@ -301,6 +301,7 @@ private:
   double fHT;         // rejects jets from muon/electron/photon
   double fHT_bare;    // naive, includes all jets
   double fHT_pf;
+  double fST;         // HT + leading lepton pt
   double fMET;
   double fMET_phi;
   double fMcW;
@@ -890,6 +891,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("rho",&fRho,"rho/D");
   fTree->Branch("nPF",&fNumPF,"nPF/I");
   fTree->Branch("HT",&fHT,"HT/D");
+  fTree->Branch("ST",&fST,"ST/D");
   fTree->Branch("HT_bare",&fHT_bare,"HT_bare/D");
   fTree->Branch("HT_pf",&fHT_pf,"HT_pf/D");
   fTree->Branch("MET",&fMET,"MET/D");
@@ -2183,6 +2185,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fRunNum = iEvent.id().run();
   fLumiNum = iEvent.id().luminosityBlock();
   fHT = 0.0;
+  fST = 0.0;
   fHT_bare = 0.0;
   for (unsigned int i = 0; i < ak4jets->size(); i++) {
     const pat::Jet &jet = (*ak4jets)[i];
@@ -2202,6 +2205,8 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fNumPVs = primaryvertecies->size();
   fRho = *rhoH;
   fNumPF = pfcands->size();
+  if (fNumMuons >= 1) fST = fHT + fMuon_pt[0];
+  else fST = fHT;
 
   // Two prongs
   if (fDebug) cout << ". starting two prong code" << endl;
