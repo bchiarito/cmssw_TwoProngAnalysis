@@ -5,8 +5,8 @@ config.General.transferOutputs = True
 config.General.transferLogs = True
 config.General.workArea = 'crab_multi_twoprongntuplizer_DY'
 config.section_('JobType')
-config.JobType.psetName = '../cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=mc2016', 'isDYll=True', 'mcInfo=True', 'standardTwoProng=True', 'includeCands=False']
+config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
+config.JobType.pyCfgParams = ['globalTag=mc2016', 'includeMCInfoBranches=True', 'includeBaseTwoProngs=False', 'includeLooseTwoProngs=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
 config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/trees/DY/date/'

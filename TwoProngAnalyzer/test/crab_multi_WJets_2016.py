@@ -7,7 +7,7 @@ config.General.transferLogs = True
 config.General.workArea = 'crab_multi_twoprongntuplizer_WJets_2016'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=mc2016']
+config.JobType.pyCfgParams = ['globalTag=mc2016', 'includeMCInfoBranches=True', 'includeBaseTwoProngs=False', 'includeLooseTwoProngs=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
 config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/wjets/date/' % (getUsernameFromSiteDB())
@@ -45,11 +45,5 @@ if __name__ == '__main__':
     config.General.requestName = 'WJetsToLNu'
     config.Data.inputDataset = '/WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcXS=61526.7','mcN=57026058'])
-    submit(config)
-    config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
-
-    config.General.requestName = 'W1JetsToLNu'
-    config.Data.inputDataset = '/WJetsToLNu_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['mcXS=','mcN='])
     submit(config)
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]

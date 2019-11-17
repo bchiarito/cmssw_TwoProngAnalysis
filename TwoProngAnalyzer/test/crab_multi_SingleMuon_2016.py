@@ -7,7 +7,7 @@ config.General.transferLogs = True
 config.General.workArea = 'crab_multi_SingleMuon'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=data2016']
+config.JobType.pyCfgParams = ['globalTag=data2016', 'includeBaseTwoProngs=False', 'includeLooseTwoProngs=True']
 config.JobType.pluginName = 'Analysis'
 config.section_('Data')
 config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/muondata/date/' % (getUsernameFromSiteDB())
