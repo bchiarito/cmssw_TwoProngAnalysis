@@ -2208,6 +2208,13 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   if (fNumMuons >= 1) fST = fHT + fMuon_pt[0];
   else fST = fHT;
 
+  if (fNumMuons >= 1) {
+	fST = fHT + fMuon_pt[0];
+  } else {
+	
+	fST = fHT;
+  } 
+
   // Two prongs
   if (fDebug) cout << ". starting two prong code" << endl;
   // Find all pairs of one CH pos and one CH neg within specified DR of each other
