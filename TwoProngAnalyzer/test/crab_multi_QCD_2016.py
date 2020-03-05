@@ -1,24 +1,40 @@
 from WMCore.Configuration import Configuration
 from CRABClient.UserUtilities import config, getUsernameFromSiteDB
+from multiprocessing import Process
+###############
+import crab_helper
+import sys
+testfile = "/cms/chiarito/samples/miniaod/mc/QCD_15to30_RunIISummer16_10k_events_MINIAOD_numEvent10000.root"
+###############
+
 config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_QCD_2016'
+config.General.workArea = 'crab_multi_QCD_2016'+crab_helper.tag
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=mc2016', 'includeMCInfoBranches=True', 'includeBaseTwoProngs=False', 'includeLooseTwoProngs=True']
+config.JobType.pyCfgParams = ['globalTag=mc2016', 'includeMCInfoBranches=True', 'includeLooseTwoProngs=True']
 config.JobType.pluginName = 'Analysis'
+config.JobType.allowUndistributedCMSSW = True
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/prelim/Nov5/qcd2016/' % (getUsernameFromSiteDB())
+config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/photon_filter/qcd2016/Feb6/' % (getUsernameFromSiteDB()) + crab_helper.path
 config.Data.publication = False
 config.Data.unitsPerJob = 250000
-config.Data.totalUnits =  -1
+config.Data.totalUnits = -1
 config.Data.splitting = 'EventAwareLumiBased'
 config.Data.lumiMask = ''
 config.section_('User')
 config.section_('Site')
 config.Site.storageSite = 'T3_US_Rutgers'
+
+###############
+if crab_helper.options.test:
+  config.Data.totalUnits = 1
+if crab_helper.options.command:
+  crab_helper.print_command(config.JobType.psetName, config.JobType.pyCfgParams, testfile)
+  sys.exit()
+###############
 
 
 if __name__ == '__main__':
@@ -42,141 +58,220 @@ if __name__ == '__main__':
     ## From now on that's what users should modify: this is the a-la-CRAB2 configuration part. ##
     #############################################################################################
 
+    print 'now i can submit'
+
     config.General.requestName = 'QCD_Pt_15to30'
+    print '1'
     config.Data.inputDataset = '/QCD_Pt_15to30_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
+    print '2'
     config.JobType.pyCfgParams.extend(['mcXS=1820000000','mcN=39898460'])
-    submit(config)
+    print '3'
+    #submit(config)
+    print '4'
+    p = Process(target=submit, args=(config,))
+    print '5'
+    p.start()
+    print '6'
+    p.join()
+    print '7'
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
+    print '8!'
 
     config.General.requestName = 'QCD_Pt_30to50'
     config.Data.inputDataset = '/QCD_Pt_30to50_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcXS=138700000','mcN=9980050'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_50to80'
     config.Data.inputDataset = '/QCD_Pt_50to80_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcXS=19120000','mcN=9954370'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_80to120'
     config.Data.inputDataset = '/QCD_Pt_80to120_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=6986740','mcXS=2735000'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_120to170'
     config.Data.inputDataset = '/QCD_Pt_120to170_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=6708572','mcXS=466200'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_170to300'
     config.Data.inputDataset = '/QCD_Pt_170to300_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=6958708','mcXS=117200'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_300to470'
     config.Data.inputDataset = '/QCD_Pt_300to470_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=4150588','mcXS=7760'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_470to600'
     config.Data.inputDataset = '/QCD_Pt_470to600_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=3959986','mcXS=640.9'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_600to800'
     config.Data.inputDataset = '/QCD_Pt_600to800_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=3896412','mcXS=185.9'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_800to1000'
     config.Data.inputDataset = '/QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=3992112','mcXS=32.04'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_1000to1400'
     config.Data.inputDataset = '/QCD_Pt_1000to1400_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=2999069','mcXS=9.372'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_1400to1800'
     config.Data.inputDataset = '/QCD_Pt_1400to1800_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=396409','mcXS=0.8376'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_1800to2400'
     config.Data.inputDataset = '/QCD_Pt_1800to2400_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=397660','mcXS=0.1123'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_2400to3200'
     config.Data.inputDataset = '/QCD_Pt_2400to3200_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=399226','mcXS=0.006742'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     
     config.General.requestName = 'QCD_Pt_120to170_ext1'
     config.Data.inputDataset = '/QCD_Pt_120to170_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=5748736','mcXS=489200'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_170to300_ext1'
     config.Data.inputDataset = '/QCD_Pt_170to300_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=7838066','mcXS=117200'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_300to470_ext1'
     config.Data.inputDataset = '/QCD_Pt_300to470_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=18253032','mcXS=7758'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_600to800_ext1'
     config.Data.inputDataset = '/QCD_Pt_600to800_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=9622896','mcXS=185.6'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_800to1000_ext1'
     config.Data.inputDataset = '/QCD_Pt_800to1000_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=15704980','mcXS=32.05'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_1000to1400_ext1'
     config.Data.inputDataset = '/QCD_Pt_1000to1400_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=6982586','mcXS=9.374'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_1400to1800_ext1'
     config.Data.inputDataset = '/QCD_Pt_1400to1800_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=2477018','mcXS=0.8385'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_1800to2400_ext1'
     config.Data.inputDataset = '/QCD_Pt_1800to2400_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=1552064','mcXS=0.114'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'QCD_Pt_2400to3200_ext1'
     config.Data.inputDataset = '/QCD_Pt_2400to3200_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=596904','mcXS=0.006744'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
