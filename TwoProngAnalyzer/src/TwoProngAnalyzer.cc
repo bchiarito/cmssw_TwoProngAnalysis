@@ -790,6 +790,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   // MiniAOD event content
   triggerBits_ = consumes<edm::TriggerResults>(edm::InputTag("TriggerResults","","HLT"));
   triggerObjects_ = consumes<pat::TriggerObjectStandAloneCollection>(edm::InputTag("selectedPatTrigger"));
+  //triggerObjects_ = consumes<pat::TriggerObjectStandAloneCollection>(edm::InputTag("slimmedPatTrigger"));
   triggerPrescales_ = consumes<pat::PackedTriggerPrescales>(edm::InputTag("patTrigger"));
   pfcandsToken_ = consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates"));
   genToken_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
@@ -818,12 +819,14 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   if (fMakeTrees) {
   fTree = fs->make<TTree>("fTree","fTree");
   // Generator level
+  if (fincludeMCInfo) {
   fTree->Branch("pthat",&fpthat,"pthat/D");
   fTree->Branch("HT_gen",&fHT_gen,"HT_gen/D");
   fTree->Branch("mcW",&fMcW,"mcW/D");
   fTree->Branch("mcWProd",&fMcWProd,"mcWProd/D");
   fTree->Branch("nPU_true",&ftrueNpu,"nPU_true/D");
   fTree->Branch("nPU_obs",&fobsNpu,"nPU_obs/I");
+  }
   if (fincludeZDecayGenParticles) {
   fTree->Branch("zDecayType",&fzDecayType,"zDecayType/D");
   fTree->Branch("GenZ_pt",&fGenZ_pt,"GenZ_pt/D");
@@ -2008,7 +2011,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (fDebug) cout << ". doing signal gen particles" << endl; 
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle &genparticle = (*genparticles)[i];
-      if (genparticle.pdgId() != 9000006 || genparticle.status() != 62) continue;
+      if ((genparticle.pdgId() != 54 && genparticle.pdgId() != 9000006) || genparticle.status() != 62) continue;
       TLorentzVector resonance;
       resonance.SetPtEtaPhiM(genparticle.pt(),genparticle.eta(),genparticle.phi(),genparticle.mass());
       fGenPhi_pt.push_back(resonance.Pt());
@@ -2019,6 +2022,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       fGenPhi_mass.push_back(resonance.M());
       for (unsigned int j = 0; j < genparticle.numberOfDaughters(); j++) {
         const reco::Candidate* genparticle2 = genparticle.daughter(j);
+//        if (genparticle2->pdgId() != 90000054 && genparticle2->pdgId() != 90000055) continue;
         TLorentzVector pseudoscalar;
         pseudoscalar.SetPtEtaPhiE(genparticle2->pt(),genparticle2->eta(),genparticle2->phi(),genparticle2->energy());
         TLorentzVector positivePion;
@@ -2040,8 +2044,10 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         int n2_ome = 0;
         int n2_eta = 0;
         int decayMode = -1;
+        if (fDebug) cout << ".. now looping on daughters of pomega, looking at daughter # " << j+1 << endl; 
         for (unsigned int jj = 0; jj < genparticle2->numberOfDaughters(); jj++) {
           const reco::Candidate* genparticle3 = genparticle2->daughter(jj);
+          if (fDebug) cout << ".. got pdgId " << genparticle3->pdgId() << endl; 
           TLorentzVector genparticle3Vect;
           genparticle3Vect.SetPtEtaPhiE(genparticle3->pt(), genparticle3->eta(), genparticle3->phi(), genparticle3->energy());
           // count for decay mode
@@ -2074,26 +2080,24 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
             if(genparticle4->pdgId()==211) positivePion.SetPtEtaPhiE(genparticle4->pt(),genparticle4->eta(),genparticle4->phi(),genparticle4->energy());
             if(genparticle4->pdgId()==-211) negativePion.SetPtEtaPhiE(genparticle4->pt(),genparticle4->eta(),genparticle4->phi(),genparticle4->energy());
           }
-          if (genparticle2->pdgId() == 221) {
-            if (n_gam==2) decayMode = 1;
-            if (n_pi0==3) decayMode = 2;
-            if (n_pos==1 && n_neg==1 && n_pi0==1) decayMode = 3;
-            if (n_pos==1 && n_neg==1 && n_gam==1) decayMode = 4;
-          } if (genparticle2->pdgId() == 331) {
-            if (n_pi0==2 && n_eta==1 && n2_gam==2) decayMode = 5;
-            if (n_pi0==2 && n_eta==1 && n2_pi0==3) decayMode = 6;
-            if (n_pi0==2 && n_eta==1 && n2_gam==2) decayMode = 7;
-            if (n_gam==2) decayMode = 8;
-            if (n_pos==1 && n_neg==1 && n_eta==1 && n2_gam==2) decayMode = 9;
-            if (n_pos==1 && n_neg==1 && n_eta==1 && n2_pi0==3) decayMode = 10;
-            if (n_pi0==2 && n_eta==1 && n2_pos==1 && n2_neg==1 && n2_pi0==1) decayMode = 11;
-            if (n_pi0==2 && n_eta==1 && n2_pos==1 && n2_neg==1 && n2_gam==1) decayMode = 12;
-            if (n_rho==1 && n_gam==1 && n2_pos==1 && n2_neg==1) decayMode = 13;
-            if (n_ome==1 && n_gam==1 && n2_pos==1 && n2_neg==1 && n2_pi0==1) decayMode = 14;
-            if (n_pos==1 && n_neg==1 && n_eta==1 && n2_pos==1 && n2_neg==1 && n2_pi0==1) decayMode = 15;
-            if (n_pos==1 && n_neg==1 && n_eta==1 && n2_pos==1 && n2_neg==1 && n2_gam==1) decayMode = 16;
-          }
         }
+        if (n_gam==2) decayMode = 1;
+        if (n_pi0==3) decayMode = 2;
+        if (n_pos==1 && n_neg==1 && n_pi0==1) decayMode = 3;
+        if (n_pos==1 && n_neg==1 && n_gam==1) decayMode = 4;
+        if (n_pi0==2 && n_eta==1 && n2_gam==2) decayMode = 5;
+        if (n_pi0==2 && n_eta==1 && n2_pi0==3) decayMode = 6;
+        if (n_pi0==2 && n_eta==1 && n2_gam==2) decayMode = 7;
+        //if (n_gam==2) decayMode = 8; // will get folded away to 1
+        if (n_pos==1 && n_neg==1 && n_eta==1 && n2_gam==2) decayMode = 9;
+        if (n_pos==1 && n_neg==1 && n_eta==1 && n2_pi0==3) decayMode = 10;
+        if (n_pi0==2 && n_eta==1 && n2_pos==1 && n2_neg==1 && n2_pi0==1) decayMode = 11;
+        if (n_pi0==2 && n_eta==1 && n2_pos==1 && n2_neg==1 && n2_gam==1) decayMode = 12;
+        if (n_rho==1 && n_gam==1 && n2_pos==1 && n2_neg==1) decayMode = 13;
+        if (n_ome==1 && n_gam==1 && n2_pos==1 && n2_neg==1 && n2_pi0==1) decayMode = 14;
+        if (n_pos==1 && n_neg==1 && n_eta==1 && n2_pos==1 && n2_neg==1 && n2_pi0==1) decayMode = 15;
+        if (n_pos==1 && n_neg==1 && n_eta==1 && n2_pos==1 && n2_neg==1 && n2_gam==1) decayMode = 16;
+        if (decayMode==-1 && fDebug) cout << ".. decay mode finding failed!:" << " " << n_pos << " " << n_neg << " " << n_pi0 << " " << n_gam << " " << n_rho << " " << n_ome << " " << n_eta << endl;
         fGenOmega_pt.push_back(pseudoscalar.Pt());
         fGenOmega_eta.push_back(pseudoscalar.Eta());
         fGenOmega_phi.push_back(pseudoscalar.Phi());
@@ -2709,12 +2713,13 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     if (fDebug) cout << ". doing phi signal gen particles" << endl;
     for (unsigned int i = 0; i < genparticles->size(); i++) {
       const reco::GenParticle &genparticle = (*genparticles)[i];
-      if (genparticle.pdgId() != 9000006 || genparticle.status() != 62) continue;
+      if ((genparticle.pdgId() != 54 && genparticle.pdgId() != 9000006) || genparticle.status() != 62) continue;
       for (unsigned int j = 0; j < genparticle.numberOfDaughters(); j++) {
         const reco::Candidate* genparticle2 = genparticle.daughter(j);
         TLorentzVector GenParticle;
         GenParticle.SetPtEtaPhiM(genparticle2->pt(), genparticle2->eta(), genparticle2->phi(), genparticle2->mass());
         if (genparticle2->pdgId() == 221 || genparticle2->pdgId() == 331) {
+ //       if (genparticle2->pdgId() == 90000054 || genparticle2->pdgId() == 90000055) {
           double candDR = 99.9;
           double passedCandDR = 99.9;
           double jetDR = 99.9;

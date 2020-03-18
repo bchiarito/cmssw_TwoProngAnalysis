@@ -136,7 +136,7 @@ process = cms.Process("TwoProngAnalysis")
 
 # Log messages
 process.load("FWCore.MessageService.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+process.MessageLogger.cerr.FwkReport.reportEvery = 1
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(options.debug) )
 
 # Source
@@ -155,7 +155,9 @@ process.TFileService = cms.Service( "TFileService", fileName = cms.string( pre +
 
 # Global Tag
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
-if options.globalTag == 'mc2016':
+if options.globalTag == 'mc2017':
+  process.GlobalTag.globaltag = '94X_mc2017_realistic_v14'
+elif options.globalTag == 'mc2016':
   process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
 elif options.globalTag == 'mc2015':
   process.GlobalTag.globaltag = '76X_mcRun2_asymptotic_v12'
