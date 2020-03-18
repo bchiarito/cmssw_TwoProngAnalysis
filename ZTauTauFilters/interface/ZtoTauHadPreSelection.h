@@ -384,9 +384,10 @@ namespace TauHadFilters
             leading_track_charge = jet.daughter(i)->charge();
           }
         }
-        if (leading_track_pt > TAUJET_MIN_LEADINGTRACKPT)
+        if (leading_track_pt > TAUJET_MIN_LEADINGTRACKPT) {
           tauJetCands.push_back(&jet);
           tauJetCandsCharge.push_back(leading_track_charge);
+        }
       }
     }
 
