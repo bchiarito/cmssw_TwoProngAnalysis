@@ -144,6 +144,7 @@ private:
   bool               fFilterOnTwoProng;            // save only events with one or more twoprongs
   bool               fFilterForABCDStudy;          // save only events with at least one of: tight/loose twoprong, tight/loose photon
   bool               fincludeDalitzHistos;         // include dalitz plot histograms
+  bool               foldSignal;                    // running on old style signal
   
   // cmssw config file options, optional branches
   bool               fdontIncludeTwoProngs;        // don't include twoprong object branches
@@ -254,10 +255,16 @@ private:
   vector<Double_t> fGenPhi_eta;
   vector<Double_t> fGenPhi_phi;
   vector<Double_t> fGenPhi_mass;
+  vector<Double_t> fGenPhi_vx;
+  vector<Double_t> fGenPhi_vy;
+  vector<Double_t> fGenPhi_vz;
   vector<Double_t> fGenOmega_pt;
   vector<Double_t> fGenOmega_eta;
   vector<Double_t> fGenOmega_phi;
   vector<Double_t> fGenOmega_mass;
+  vector<Double_t> fGenOmega_vx;
+  vector<Double_t> fGenOmega_vy;
+  vector<Double_t> fGenOmega_vz;
   vector<Double_t> fGenOmega_decayMode;
   vector<Double_t> fGenOmega_neutral_pt;
   vector<Double_t> fGenOmega_neutral_eta;
@@ -279,6 +286,7 @@ private:
   vector<Double_t> fGenOmega_pattau1DR;
   vector<Double_t> fGenOmega_pattau2DR;
   vector<Double_t> fGenOmega_pattau3DR;
+  vector<Double_t> fGenOmega_vdiff_PV;
 
   int fHLT_Photon175;
   int fHLT_Photon200;
@@ -745,6 +753,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
     fFilterOnTwoProng(iConfig.getUntrackedParameter<bool>("filterOnTwoProng")),
     fFilterForABCDStudy(iConfig.getUntrackedParameter<bool>("filterForABCDStudy")),
     fincludeDalitzHistos(iConfig.getUntrackedParameter<bool>("includeDalitzHistos")),
+    foldSignal(iConfig.getUntrackedParameter<bool>("oldSignal")),
     fdontIncludeTwoProngs(iConfig.getUntrackedParameter<bool>("dontIncludeTwoProngs")),
     fincludeLooseTwoProngs(iConfig.getUntrackedParameter<bool>("includeLooseTwoProngs")),
     fincludeCandTwoProngs(iConfig.getUntrackedParameter<bool>("includeCandTwoProngs")),
@@ -789,8 +798,11 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
 
   // MiniAOD event content
   triggerBits_ = consumes<edm::TriggerResults>(edm::InputTag("TriggerResults","","HLT"));
-  triggerObjects_ = consumes<pat::TriggerObjectStandAloneCollection>(edm::InputTag("selectedPatTrigger"));
-  //triggerObjects_ = consumes<pat::TriggerObjectStandAloneCollection>(edm::InputTag("slimmedPatTrigger"));
+  if (foldSignal) {
+    triggerObjects_ = consumes<pat::TriggerObjectStandAloneCollection>(edm::InputTag("selectedPatTrigger"));
+  } else {
+    triggerObjects_ = consumes<pat::TriggerObjectStandAloneCollection>(edm::InputTag("slimmedPatTrigger"));
+  }
   triggerPrescales_ = consumes<pat::PackedTriggerPrescales>(edm::InputTag("patTrigger"));
   pfcandsToken_ = consumes<pat::PackedCandidateCollection>(edm::InputTag("packedPFCandidates"));
   genToken_ = consumes<vector<reco::GenParticle>>(edm::InputTag("prunedGenParticles"));
@@ -846,10 +858,16 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("GenPhi_eta",&fGenPhi_eta);
   fTree->Branch("GenPhi_phi",&fGenPhi_phi);
   fTree->Branch("GenPhi_mass",&fGenPhi_mass);
+  fTree->Branch("GenPhi_vx",&fGenPhi_vx);
+  fTree->Branch("GenPhi_vy",&fGenPhi_vy);
+  fTree->Branch("GenPhi_vz",&fGenPhi_vz);
   fTree->Branch("GenOmega_pt",&fGenOmega_pt);
   fTree->Branch("GenOmega_eta",&fGenOmega_eta);
   fTree->Branch("GenOmega_phi",&fGenOmega_phi);
   fTree->Branch("GenOmega_mass",&fGenOmega_mass);
+  fTree->Branch("GenOmega_vx",&fGenOmega_vx);
+  fTree->Branch("GenOmega_vy",&fGenOmega_vy);
+  fTree->Branch("GenOmega_vz",&fGenOmega_vz);
   fTree->Branch("GenOmega_decayMode",&fGenOmega_decayMode);
   fTree->Branch("GenOmega_neutral_pt",&fGenOmega_neutral_pt); 
   fTree->Branch("GenOmega_neutral_eta",&fGenOmega_neutral_eta); 
@@ -870,6 +888,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("GenOmega_pattau1DR",&fGenOmega_pattau1DR); 
   fTree->Branch("GenOmega_pattau2DR",&fGenOmega_pattau2DR); 
   fTree->Branch("GenOmega_pattau3DR",&fGenOmega_pattau3DR); 
+  fTree->Branch("GenOmega_vdiff_PV",&fGenOmega_vdiff_PV);
   }
   // Trigger
   fTree->Branch("HLT_Photon175",&fHLT_Photon175,"HLT_Photon175/I");
@@ -1764,10 +1783,17 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fGenPhi_eta.clear();
   fGenPhi_phi.clear();
   fGenPhi_mass.clear();
+  fGenPhi_vx.clear();
+  fGenPhi_vy.clear();
+  fGenPhi_vz.clear();
   fGenOmega_pt.clear();
   fGenOmega_eta.clear();
   fGenOmega_phi.clear();
   fGenOmega_mass.clear();
+  fGenOmega_vx.clear();
+  fGenOmega_vy.clear();
+  fGenOmega_vz.clear();
+  fGenOmega_vdiff_PV.clear();
   fGenOmega_decayMode.clear();
   fGenOmega_neutral_pt.clear();
   fGenOmega_neutral_eta.clear();
@@ -2020,9 +2046,12 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       else fGenPhi_eta.push_back(resonance.Eta());
       fGenPhi_phi.push_back(resonance.Phi());
       fGenPhi_mass.push_back(resonance.M());
+      fGenPhi_vx.push_back(genparticle.vx());
+      fGenPhi_vy.push_back(genparticle.vy());
+      fGenPhi_vz.push_back(genparticle.vz());
       for (unsigned int j = 0; j < genparticle.numberOfDaughters(); j++) {
-        const reco::Candidate* genparticle2 = genparticle.daughter(j);
-//        if (genparticle2->pdgId() != 90000054 && genparticle2->pdgId() != 90000055) continue;
+        const reco::GenParticle* genparticle2 = (const reco::GenParticle*) genparticle.daughter(j);
+        if (!foldSignal && genparticle2->pdgId() != 90000054 && genparticle2->pdgId() != 90000055) continue;
         TLorentzVector pseudoscalar;
         pseudoscalar.SetPtEtaPhiE(genparticle2->pt(),genparticle2->eta(),genparticle2->phi(),genparticle2->energy());
         TLorentzVector positivePion;
@@ -2088,7 +2117,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         if (n_pi0==2 && n_eta==1 && n2_gam==2) decayMode = 5;
         if (n_pi0==2 && n_eta==1 && n2_pi0==3) decayMode = 6;
         if (n_pi0==2 && n_eta==1 && n2_gam==2) decayMode = 7;
-        //if (n_gam==2) decayMode = 8; // will get folded away to 1
+        //if (n_gam==2) decayMode = 8; // will get folded away into 1
         if (n_pos==1 && n_neg==1 && n_eta==1 && n2_gam==2) decayMode = 9;
         if (n_pos==1 && n_neg==1 && n_eta==1 && n2_pi0==3) decayMode = 10;
         if (n_pi0==2 && n_eta==1 && n2_pos==1 && n2_neg==1 && n2_pi0==1) decayMode = 11;
@@ -2102,6 +2131,17 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         fGenOmega_eta.push_back(pseudoscalar.Eta());
         fGenOmega_phi.push_back(pseudoscalar.Phi());
         fGenOmega_mass.push_back(pseudoscalar.M());
+        double vx = genparticle2->vx();
+        double vy = genparticle2->vy();
+        double vz = genparticle2->vz();
+        double pvx = PV.position().X();
+        double pvy = PV.position().Y();
+        double pvz = PV.position().Z();
+        double vdiff_PV = std::sqrt((vx-pvx)*(vx-pvx) + (vy-pvy)*(vy-pvy) + (vz-pvz)*(vz-pvz));
+        fGenOmega_vx.push_back(genparticle2->vx());
+        fGenOmega_vy.push_back(genparticle2->vy());
+        fGenOmega_vz.push_back(genparticle2->vz());
+        fGenOmega_vdiff_PV.push_back(vdiff_PV);
         fGenOmega_decayMode.push_back(decayMode);
         fGenOmega_neutral_pt.push_back(neutralContent.Pt());
         fGenOmega_neutral_eta.push_back(neutralContent.Eta());
@@ -2718,60 +2758,59 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         const reco::Candidate* genparticle2 = genparticle.daughter(j);
         TLorentzVector GenParticle;
         GenParticle.SetPtEtaPhiM(genparticle2->pt(), genparticle2->eta(), genparticle2->phi(), genparticle2->mass());
-        if (genparticle2->pdgId() == 221 || genparticle2->pdgId() == 331) {
- //       if (genparticle2->pdgId() == 90000054 || genparticle2->pdgId() == 90000055) {
-          double candDR = 99.9;
-          double passedCandDR = 99.9;
-          double jetDR = 99.9;
-          double pattauDR = 99.9;
-          double pattau1DR = 99.9;
-          double pattau2DR = 99.9;
-          double pattau3DR = 99.9;
-          for (unsigned int j = 0; j < fTwoProngCand_pt.size(); j++) {
-            TLorentzVector Candidate;
-            Candidate.SetPtEtaPhiM(fTwoProngCand_pt[j], fTwoProngCand_eta[j], fTwoProngCand_phi[j], fTwoProngCand_mass[j]);
-            double dr = Candidate.DeltaR(GenParticle);
-            if (dr < candDR) candDR = dr;
-          }
-          for (unsigned int j = 0; j < fTwoProng_pt.size(); j++) {
-            if (!fTwoProngCand_tight[j]) continue;
-            TLorentzVector PassedCandidate;
-            PassedCandidate.SetPtEtaPhiM(fTwoProng_pt[j], fTwoProng_eta[j], fTwoProng_phi[j], fTwoProng_mass[j]);
-            double dr = PassedCandidate.DeltaR(GenParticle);
-            if (dr < passedCandDR) passedCandDR = dr;
-          }
-          for (unsigned int i = 0; i < ak4jets->size(); i++) {
-            const pat::Jet &jet = (*ak4jets)[i];
-            TLorentzVector Jet;
-            Jet.SetPtEtaPhiM(jet.pt(), jet.eta(), jet.phi(), jet.mass());
-            double dr = Jet.DeltaR(GenParticle);
-            if (dr < jetDR) jetDR = dr;
-          }
-          for (unsigned int i = 0; i < taus->size(); i++) {
-            const pat::Tau &tau = (*taus)[i];
-            TLorentzVector Pattau;
-            Pattau.SetPtEtaPhiM(tau.pt(), tau.eta(), tau.phi(), tau.mass());
-            if (tau.pt() <= 20) continue;
-            if (fabs(tau.eta()) >= 2.3) continue;
-            if (tau.tauID("byMediumIsolationMVArun2v1DBoldDMwLT") >= 0.5) {
-              if (Pattau.DeltaR(GenParticle) < pattauDR) pattauDR = Pattau.DeltaR(GenParticle);
-              if ((tau.decayMode() == 0 || tau.decayMode() == 1 || tau.decayMode() == 2) && Pattau.DeltaR(GenParticle) < pattau1DR) pattau1DR = Pattau.DeltaR(GenParticle);
-              if ((tau.decayMode() == 5 || tau.decayMode() == 6 || tau.decayMode() == 7) && Pattau.DeltaR(GenParticle) < pattau2DR) pattau2DR = Pattau.DeltaR(GenParticle);
-              if ((tau.decayMode() == 10 || tau.decayMode() == 11) && Pattau.DeltaR(GenParticle) < pattau3DR) pattau3DR = Pattau.DeltaR(GenParticle);
-            }
-          }
-          fGenOmega_objDR.push_back(passedCandDR);
-          fGenOmega_candobjDR.push_back(candDR);
-          fGenOmega_jetDR.push_back(jetDR);
-          fGenOmega_pattauDR.push_back(pattauDR);
-          fGenOmega_pattau1DR.push_back(pattau1DR);
-          fGenOmega_pattau2DR.push_back(pattau2DR);
-          fGenOmega_pattau3DR.push_back(pattau3DR);
+        if (foldSignal && !(genparticle2->pdgId() == 221 || genparticle2->pdgId() == 331)) continue;
+        if (!foldSignal && !(genparticle2->pdgId() == 90000054 || genparticle2->pdgId() == 90000055)) continue;
+        double candDR = 99.9;
+        double passedCandDR = 99.9;
+        double jetDR = 99.9;
+        double pattauDR = 99.9;
+        double pattau1DR = 99.9;
+        double pattau2DR = 99.9;
+        double pattau3DR = 99.9;
+        for (unsigned int j = 0; j < fTwoProngCand_pt.size(); j++) {
+          TLorentzVector Candidate;
+          Candidate.SetPtEtaPhiM(fTwoProngCand_pt[j], fTwoProngCand_eta[j], fTwoProngCand_phi[j], fTwoProngCand_mass[j]);
+          double dr = Candidate.DeltaR(GenParticle);
+          if (dr < candDR) candDR = dr;
         }
-      }
-    }
+        for (unsigned int j = 0; j < fTwoProng_pt.size(); j++) {
+          if (!fTwoProngCand_tight[j]) continue;
+          TLorentzVector PassedCandidate;
+          PassedCandidate.SetPtEtaPhiM(fTwoProng_pt[j], fTwoProng_eta[j], fTwoProng_phi[j], fTwoProng_mass[j]);
+          double dr = PassedCandidate.DeltaR(GenParticle);
+          if (dr < passedCandDR) passedCandDR = dr;
+        }
+        for (unsigned int i = 0; i < ak4jets->size(); i++) {
+          const pat::Jet &jet = (*ak4jets)[i];
+          TLorentzVector Jet;
+          Jet.SetPtEtaPhiM(jet.pt(), jet.eta(), jet.phi(), jet.mass());
+          double dr = Jet.DeltaR(GenParticle);
+          if (dr < jetDR) jetDR = dr;
+        }
+        for (unsigned int i = 0; i < taus->size(); i++) {
+          const pat::Tau &tau = (*taus)[i];
+          TLorentzVector Pattau;
+          Pattau.SetPtEtaPhiM(tau.pt(), tau.eta(), tau.phi(), tau.mass());
+          if (tau.pt() <= 20) continue;
+          if (fabs(tau.eta()) >= 2.3) continue;
+          if (tau.tauID("byMediumIsolationMVArun2v1DBoldDMwLT") >= 0.5) {
+            if (Pattau.DeltaR(GenParticle) < pattauDR) pattauDR = Pattau.DeltaR(GenParticle);
+            if ((tau.decayMode() == 0 || tau.decayMode() == 1 || tau.decayMode() == 2) && Pattau.DeltaR(GenParticle) < pattau1DR) pattau1DR = Pattau.DeltaR(GenParticle);
+            if ((tau.decayMode() == 5 || tau.decayMode() == 6 || tau.decayMode() == 7) && Pattau.DeltaR(GenParticle) < pattau2DR) pattau2DR = Pattau.DeltaR(GenParticle);
+            if ((tau.decayMode() == 10 || tau.decayMode() == 11) && Pattau.DeltaR(GenParticle) < pattau3DR) pattau3DR = Pattau.DeltaR(GenParticle);
+          }
+        }
+        fGenOmega_objDR.push_back(passedCandDR);
+        fGenOmega_candobjDR.push_back(candDR);
+        fGenOmega_jetDR.push_back(jetDR);
+        fGenOmega_pattauDR.push_back(pattauDR);
+        fGenOmega_pattau1DR.push_back(pattau1DR);
+        fGenOmega_pattau2DR.push_back(pattau2DR);
+        fGenOmega_pattau3DR.push_back(pattau3DR);
+      } // end loop on daughters of Phi gen particle
+    } // end loop on all gen particles
     if (fDebug) cout << ". done phi signal gen particles" << endl;
-  }
+  } // end conditional for signal mc branches
 
   // High-pT Photon id  
   if (fDebug) cout << ". high-pt-id" << endl;
@@ -3414,6 +3453,7 @@ TwoProngAnalyzer::beginJob()
   cout << "filterOnTwoProng " << fFilterOnTwoProng << endl;
   cout << "filterForABCDStudy " << fFilterForABCDStudy << endl;
   cout << "stackedDalitzHistos " << fincludeDalitzHistos << endl;
+  cout << "oldSignal " << foldSignal << endl;
   cout << "===========================" << endl;
   cout << "noTwoProng " << fdontIncludeTwoProngs << endl;
   cout << "includeAllLooseObjects " << fincludeLooseTwoProngs << endl;

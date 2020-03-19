@@ -30,6 +30,7 @@ twoprongModNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
                                   includeLoosePhotons = cms.untracked.bool(False),
                                   # MC options
                                   includeSignalGenParticles = cms.untracked.bool(False),
+                                  oldSignal = cms.untracked.bool(False),
                                   includeMCInfo = cms.untracked.bool(False),
                                   mcXS = cms.untracked.double(1.0),
                                   mcN = cms.untracked.double(1.0),

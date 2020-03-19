@@ -7,6 +7,7 @@ options.register("sample", "", VarParsing.multiplicity.singleton, VarParsing.var
 options.register("globalTag", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "global tag to use when running")
 # mc related
 options.register("includeSignalMCBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify singal MC for looking for Phi and omega gen particles")
+options.register("oldSignal", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Running on old style signal MC")
 options.register("includeDYMCBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify Z->ll MC")
 options.register("includeMCInfoBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "include mc weight in Ttree")
 options.register("mcXS", 1.0, VarParsing.multiplicity.singleton, VarParsing.varType.float, "mc cross section, if desired to be filled in trees")
@@ -136,7 +137,7 @@ process = cms.Process("TwoProngAnalysis")
 
 # Log messages
 process.load("FWCore.MessageService.MessageLogger_cfi")
-process.MessageLogger.cerr.FwkReport.reportEvery = 1
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(options.debug) )
 
 # Source
@@ -209,6 +210,7 @@ if not options.doLumis=="":
 process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_standard_cfi')
 # settings always overwritten by command line
 process.twoprongNtuplizer.includeSignalGenParticles = options.includeSignalMCBranches
+process.twoprongNtuplizer.oldSignal = options.oldSignal
 process.twoprongNtuplizer.includeZDecayGenParticles = options.includeDYMCBranches
 process.twoprongNtuplizer.includeConeHEPhotons = options.includeConeHEPhotons
 process.twoprongNtuplizer.includeBasePhotons = options.includeBasePhotons
@@ -254,6 +256,7 @@ if options.tauModifiedTwoProng:
   process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_taumodified_cfi')
   # settings always overwritten by command line
   process.twoprongModNtuplizer.includeSignalGenParticles = options.includeSignalMCBranches
+  process.twoprongModNtuplizer.oldSignal = options.oldSignal
   process.twoprongModNtuplizer.includeZDecayGenParticles = options.includeDYMCBranches
   process.twoprongModNtuplizer.includeConeHEPhotons = options.includeConeHEPhotons
   process.twoprongModNtuplizer.includeBasePhotons = options.includeBasePhotons
