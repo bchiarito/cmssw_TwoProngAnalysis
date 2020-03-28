@@ -258,6 +258,8 @@ private:
   vector<Double_t> fGenPhi_vx;
   vector<Double_t> fGenPhi_vy;
   vector<Double_t> fGenPhi_vz;
+  vector<Double_t> fGenPhi_vdiff_beamspot;
+  vector<Double_t> fGenPhi_vdiff_PV;
   vector<Double_t> fGenOmega_pt;
   vector<Double_t> fGenOmega_eta;
   vector<Double_t> fGenOmega_phi;
@@ -265,6 +267,8 @@ private:
   vector<Double_t> fGenOmega_vx;
   vector<Double_t> fGenOmega_vy;
   vector<Double_t> fGenOmega_vz;
+  vector<Double_t> fGenOmega_vdiff_beamspot;
+  vector<Double_t> fGenOmega_vdiff_PV;
   vector<Double_t> fGenOmega_decayMode;
   vector<Double_t> fGenOmega_neutral_pt;
   vector<Double_t> fGenOmega_neutral_eta;
@@ -286,7 +290,6 @@ private:
   vector<Double_t> fGenOmega_pattau1DR;
   vector<Double_t> fGenOmega_pattau2DR;
   vector<Double_t> fGenOmega_pattau3DR;
-  vector<Double_t> fGenOmega_vdiff_PV;
 
   int fHLT_Photon175;
   int fHLT_Photon200;
@@ -306,6 +309,12 @@ private:
   int fNumPVs;
   double fRho;
   int fNumPF;
+  double fPV_x;
+  double fPV_y;
+  double fPV_z;
+  double fBeamspot_x;
+  double fBeamspot_y;
+  double fBeamspot_z;
   double fHT;         // rejects jets from muon/electron/photon
   double fHT_bare;    // naive, includes all jets
   double fHT_pf;
@@ -861,6 +870,8 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("GenPhi_vx",&fGenPhi_vx);
   fTree->Branch("GenPhi_vy",&fGenPhi_vy);
   fTree->Branch("GenPhi_vz",&fGenPhi_vz);
+  fTree->Branch("GenPhi_vdiff_beamspot",&fGenPhi_vdiff_beamspot);
+  fTree->Branch("GenPhi_vdiff_PV",&fGenPhi_vdiff_PV);
   fTree->Branch("GenOmega_pt",&fGenOmega_pt);
   fTree->Branch("GenOmega_eta",&fGenOmega_eta);
   fTree->Branch("GenOmega_phi",&fGenOmega_phi);
@@ -868,6 +879,8 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("GenOmega_vx",&fGenOmega_vx);
   fTree->Branch("GenOmega_vy",&fGenOmega_vy);
   fTree->Branch("GenOmega_vz",&fGenOmega_vz);
+  fTree->Branch("GenOmega_vdiff_beamspot",&fGenOmega_vdiff_beamspot);
+  fTree->Branch("GenOmega_vdiff_PV",&fGenOmega_vdiff_PV);
   fTree->Branch("GenOmega_decayMode",&fGenOmega_decayMode);
   fTree->Branch("GenOmega_neutral_pt",&fGenOmega_neutral_pt); 
   fTree->Branch("GenOmega_neutral_eta",&fGenOmega_neutral_eta); 
@@ -888,7 +901,6 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("GenOmega_pattau1DR",&fGenOmega_pattau1DR); 
   fTree->Branch("GenOmega_pattau2DR",&fGenOmega_pattau2DR); 
   fTree->Branch("GenOmega_pattau3DR",&fGenOmega_pattau3DR); 
-  fTree->Branch("GenOmega_vdiff_PV",&fGenOmega_vdiff_PV);
   }
   // Trigger
   fTree->Branch("HLT_Photon175",&fHLT_Photon175,"HLT_Photon175/I");
@@ -907,6 +919,12 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("eventNum",&fEventNum,"eventNum/I");
   fTree->Branch("runNum",&fRunNum,"runNum/I");
   fTree->Branch("lumiNum",&fLumiNum,"lumiNum/I");
+  fTree->Branch("PV_x",&fPV_x,"PV_x/D");
+  fTree->Branch("PV_y",&fPV_y,"PV_y/D");
+  fTree->Branch("PV_z",&fPV_z,"PV_z/D");
+  fTree->Branch("beamspot_x",&fBeamspot_x,"beamspot_x/D");
+  fTree->Branch("beamspot_y",&fBeamspot_y,"beamspot_y/D");
+  fTree->Branch("beamspot_z",&fBeamspot_z,"beamspot_z/D");
   fTree->Branch("mcXS",&fMcXS,"mcXS/D");
   fTree->Branch("mcN",&fMcN,"mcN/D");
   fTree->Branch("nPV",&fNumPVs,"nPV/I");
@@ -1786,6 +1804,8 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fGenPhi_vx.clear();
   fGenPhi_vy.clear();
   fGenPhi_vz.clear();
+  fGenPhi_vdiff_beamspot.clear();
+  fGenPhi_vdiff_PV.clear();
   fGenOmega_pt.clear();
   fGenOmega_eta.clear();
   fGenOmega_phi.clear();
@@ -1793,6 +1813,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fGenOmega_vx.clear();
   fGenOmega_vy.clear();
   fGenOmega_vz.clear();
+  fGenOmega_vdiff_beamspot.clear();
   fGenOmega_vdiff_PV.clear();
   fGenOmega_decayMode.clear();
   fGenOmega_neutral_pt.clear();
@@ -1954,6 +1975,13 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   edm::Handle<reco::BeamSpot> beamspot;
   iEvent.getByToken(beamToken_, beamspot);
 
+  fPV_x = PV.position().X();
+  fPV_y = PV.position().Y();
+  fPV_z = PV.position().Z();
+  fBeamspot_x = beamspot->position().X();
+  fBeamspot_y = beamspot->position().Y();
+  fBeamspot_z = beamspot->position().Z();
+
   edm::Handle<std::vector<pat::Jet>> ak4jets;
   iEvent.getByToken(ak4Token_, ak4jets);
 
@@ -2046,9 +2074,22 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       else fGenPhi_eta.push_back(resonance.Eta());
       fGenPhi_phi.push_back(resonance.Phi());
       fGenPhi_mass.push_back(resonance.M());
-      fGenPhi_vx.push_back(genparticle.vx());
-      fGenPhi_vy.push_back(genparticle.vy());
-      fGenPhi_vz.push_back(genparticle.vz());
+      double vx = genparticle.vx();
+      double vy = genparticle.vy();
+      double vz = genparticle.vz();
+      double pvx = PV.position().X();
+      double pvy = PV.position().Y();
+      double pvz = PV.position().Z();
+      double bvx = beamspot->position().X();
+      double bvy = beamspot->position().Y();
+      double bvz = beamspot->position().Z();
+      double vdiff_beamspot = std::sqrt((vx-bvx)*(vx-bvx) + (vy-bvy)*(vy-bvy));
+      double vdiff_PV = std::sqrt((vx-pvx)*(vx-pvx) + (vy-pvy)*(vy-pvy));
+      fGenPhi_vx.push_back(vx);
+      fGenPhi_vy.push_back(vy);
+      fGenPhi_vz.push_back(vz);
+      fGenPhi_vdiff_beamspot.push_back(vdiff_beamspot);
+      fGenPhi_vdiff_PV.push_back(vdiff_PV);
       for (unsigned int j = 0; j < genparticle.numberOfDaughters(); j++) {
         const reco::GenParticle* genparticle2 = (const reco::GenParticle*) genparticle.daughter(j);
         if (!foldSignal && genparticle2->pdgId() != 90000054 && genparticle2->pdgId() != 90000055) continue;
@@ -2131,16 +2172,15 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         fGenOmega_eta.push_back(pseudoscalar.Eta());
         fGenOmega_phi.push_back(pseudoscalar.Phi());
         fGenOmega_mass.push_back(pseudoscalar.M());
-        double vx = genparticle2->vx();
-        double vy = genparticle2->vy();
-        double vz = genparticle2->vz();
-        double pvx = PV.position().X();
-        double pvy = PV.position().Y();
-        double pvz = PV.position().Z();
-        double vdiff_PV = std::sqrt((vx-pvx)*(vx-pvx) + (vy-pvy)*(vy-pvy) + (vz-pvz)*(vz-pvz));
-        fGenOmega_vx.push_back(genparticle2->vx());
-        fGenOmega_vy.push_back(genparticle2->vy());
-        fGenOmega_vz.push_back(genparticle2->vz());
+        vx = genparticle2->vx();
+        vy = genparticle2->vy();
+        vz = genparticle2->vz();
+        vdiff_beamspot = std::sqrt((vx-bvx)*(vx-bvx) + (vy-bvy)*(vy-bvy));
+        vdiff_PV = std::sqrt((vx-pvx)*(vx-pvx) + (vy-pvy)*(vy-pvy));
+        fGenOmega_vx.push_back(vx);
+        fGenOmega_vy.push_back(vy);
+        fGenOmega_vz.push_back(vz);
+        fGenOmega_vdiff_beamspot.push_back(vdiff_beamspot);
         fGenOmega_vdiff_PV.push_back(vdiff_PV);
         fGenOmega_decayMode.push_back(decayMode);
         fGenOmega_neutral_pt.push_back(neutralContent.Pt());
