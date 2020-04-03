@@ -27,10 +27,12 @@ options.register("usePatTauInPreselection", False, VarParsing.multiplicity.singl
 # two-prong related
 options.register("includeBaseTwoProngs", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include all cand twoprongs in ntuple")
 options.register("includeLooseTwoProngs", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include Loose twoprongs in ntuple")
+options.register("includeAsymTwoProngs", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include Asym sideband (tight and loose) twoprongs in ntuple")
 options.register("standardTwoProng", True, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("tauModifiedTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("commandLineTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("optionalExtraTrack", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
+options.register("flipAsymReq", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("trackDR", 0.05, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
 options.register("minPt", 20.0, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
 options.register("maxEta", 2.5, VarParsing.multiplicity.singleton, VarParsing.varType.float, "")
@@ -228,6 +230,7 @@ process.twoprongNtuplizer.usePatTauForZPreBranches = options.usePatTauInPreselec
 process.twoprongNtuplizer.dontIncludeTwoProngs = not (options.commandLineTwoProng or options.tauModifiedTwoProng or options.standardTwoProng)
 process.twoprongNtuplizer.includeCandTwoProngs = options.includeBaseTwoProngs
 process.twoprongNtuplizer.includeLooseTwoProngs = options.includeLooseTwoProngs
+process.twoprongNtuplizer.includeAsymTwoProngs = options.includeAsymTwoProngs
 # histo includes
 process.twoprongNtuplizer.includeDalitzHistos = options.stackedDalitzHistos
 # override if using command line
@@ -237,6 +240,7 @@ if options.commandLineTwoProng:
     process.twoprongNtuplizer.twoprong_MinTrackAsymmetry = options.trackAsym
     process.twoprongNtuplizer.twoprong_MinPhotonAsymmetry = options.photonAsym
     process.twoprongNtuplizer.twoprong_optionalExtraTrack = options.optionalExtraTrack
+    process.twoprongNtuplizer.twoprong_flipAsymReq = options.flipAsymReq
     process.twoprongNtuplizer.twoprong_chargedHadronPairMinDR = options.trackDR
     process.twoprongNtuplizer.twoprong_chargedHadronMinPt = options.constituentMinPt
     process.twoprongNtuplizer.twoprong_photonPtCut = options.constituentMinPt
@@ -272,6 +276,7 @@ if options.tauModifiedTwoProng:
   process.twoprongModNtuplizer.dontIncludeTwoProngs = not (options.commandLineTwoProng or options.tauModifiedTwoProng or options.standardTwoProng)
   process.twoprongModNtuplizer.includeCandTwoProngs = options.includeBaseTwoProngs
   process.twoprongModNtuplizer.includeLooseTwoProngs = options.includeLooseTwoProngs
+  process.twoprongModNtuplizer.includeAsymTwoProngs = options.includeAsymTwoProngs
   # histo includes
   process.twoprongModNtuplizer.includeDalitzHistos = options.stackedDalitzHistos
 

@@ -149,6 +149,7 @@ private:
   bool               fdontIncludeTwoProngs;        // don't include twoprong object branches
   bool               fincludeLooseTwoProngs;       // include loose twoprong branches, smaller isolation window
   bool               fincludeCandTwoProngs;        // include candidate twoprong branches, no isolation or asymmtery cuts
+  bool               fincludeAsymTwoProngs;        // include asym sideband and loose asym sideband twoprong branches
   bool               fincludeMCInfo;               // include MC weight, pthat, and gen PU branches
   bool               fincludeSignalGenParticles;   // include gen particle branches for Phi and omega
   bool               fincludeOldPhotons;           // include old high-pt-id photon object branches, kept because they store more variables
@@ -183,6 +184,7 @@ private:
   double             ftwoprong_TrackAsymmetryCut;
   double             ftwoprong_PhotonAsymmetryCut;
   bool               ftwoprong_OptionalExtraTrack;
+  bool               ftwoprong_FlipAsymReq;
   bool               fincludeDalitzVariables;
 
   // counters for cutflow
@@ -538,6 +540,8 @@ private:
   vector<Int_t> fTwoProngCand_nEGammaIsoCone;
   vector<Bool_t> fTwoProngCand_tight;
   vector<Bool_t> fTwoProngCand_loose;
+  vector<Bool_t> fTwoProngCand_asym;
+  vector<Bool_t> fTwoProngCand_asym_loose;
   vector<Double_t> fTwoProngCand_mPosPho;
   vector<Double_t> fTwoProngCand_mPosPho_l;
   vector<Double_t> fTwoProngCand_mPosPho_pi0;
@@ -663,8 +667,127 @@ private:
   vector<Double_t> fTwoProngLoose_genOmega_dR;
   vector<Double_t> fTwoProngLoose_genTau_dR;
 
+  int fnTwoProngsAsym;
+  vector<Double_t> fTwoProngAsym_pt;
+  vector<Double_t> fTwoProngAsym_eta;
+  vector<Double_t> fTwoProngAsym_phi;
+  vector<Double_t> fTwoProngAsym_mass;
+  vector<Double_t> fTwoProngAsym_mass_l;
+  vector<Double_t> fTwoProngAsym_Mass0;
+  vector<Double_t> fTwoProngAsym_MassPi0;
+  vector<Double_t> fTwoProngAsym_MassEta;
+  vector<Double_t> fTwoProngAsym_Mass300;
+  vector<Int_t> fTwoProngAsym_nExtraTracks;
+  vector<Double_t> fTwoProngAsym_CHpos_pt;
+  vector<Double_t> fTwoProngAsym_CHpos_eta;
+  vector<Double_t> fTwoProngAsym_CHpos_phi;
+  vector<Double_t> fTwoProngAsym_CHpos_mass;
+  vector<Double_t> fTwoProngAsym_CHpos_dz;
+  vector<Double_t> fTwoProngAsym_CHpos_dxy;
+  vector<Double_t> fTwoProngAsym_CHneg_pt;
+  vector<Double_t> fTwoProngAsym_CHneg_eta;
+  vector<Double_t> fTwoProngAsym_CHneg_phi;
+  vector<Double_t> fTwoProngAsym_CHneg_mass;
+  vector<Double_t> fTwoProngAsym_CHneg_dz;
+  vector<Double_t> fTwoProngAsym_CHneg_dxy;
+  vector<Double_t> fTwoProngAsym_photon_pt;
+  vector<Double_t> fTwoProngAsym_photon_eta;
+  vector<Double_t> fTwoProngAsym_photon_phi;
+  vector<Double_t> fTwoProngAsym_photon_mass;
+  vector<Double_t> fTwoProngAsym_photon_pt_l;
+  vector<Double_t> fTwoProngAsym_photon_eta_l;
+  vector<Double_t> fTwoProngAsym_photon_phi_l;
+  vector<Double_t> fTwoProngAsym_photon_mass_l;
+  vector<Double_t> fTwoProngAsym_photon_nGamma;
+  vector<Double_t> fTwoProngAsym_photon_nElectron;
+  vector<Double_t> fTwoProngAsym_chargedIso;
+  vector<Double_t> fTwoProngAsym_neutralIso;
+  vector<Double_t> fTwoProngAsym_egammaIso;
+  vector<Double_t> fTwoProngAsym_trackAsym;
+  vector<Double_t> fTwoProngAsym_photonAsym;
+  vector<Int_t> fTwoProngAsym_nChargedIsoCone;
+  vector<Int_t> fTwoProngAsym_nNeutralIsoCone;
+  vector<Int_t> fTwoProngAsym_nEGammaIsoCone;
+  vector<Bool_t> fTwoProngAsym_tight;
+  vector<Bool_t> fTwoProngAsym_loose;
+  vector<Double_t> fTwoProngAsym_mPosPho;
+  vector<Double_t> fTwoProngAsym_mPosPho_l;
+  vector<Double_t> fTwoProngAsym_mPosPho_pi0;
+  vector<Double_t> fTwoProngAsym_mNegPho;
+  vector<Double_t> fTwoProngAsym_mNegPho_l;
+  vector<Double_t> fTwoProngAsym_mNegPho_pi0;
+  vector<Double_t> fTwoProngAsym_mPosNeg;
+  vector<Double_t> fTwoProngAsym_CHpos_p3;
+  vector<Double_t> fTwoProngAsym_CHneg_p3;
+  vector<Double_t> fTwoProngAsym_photon_p3;
+  vector<Double_t> fTwoProngAsym_genOmega_dR;
+  vector<Double_t> fTwoProngAsym_genTau_dR;
+
+  int fnTwoProngsAsymLoose;
+  vector<Double_t> fTwoProngAsymLoose_pt;
+  vector<Double_t> fTwoProngAsymLoose_eta;
+  vector<Double_t> fTwoProngAsymLoose_phi;
+  vector<Double_t> fTwoProngAsymLoose_mass;
+  vector<Double_t> fTwoProngAsymLoose_mass_l;
+  vector<Double_t> fTwoProngAsymLoose_Mass0;
+  vector<Double_t> fTwoProngAsymLoose_MassPi0;
+  vector<Double_t> fTwoProngAsymLoose_MassEta;
+  vector<Double_t> fTwoProngAsymLoose_Mass300;
+  vector<Int_t> fTwoProngAsymLoose_nExtraTracks;
+  vector<Double_t> fTwoProngAsymLoose_CHpos_pt;
+  vector<Double_t> fTwoProngAsymLoose_CHpos_eta;
+  vector<Double_t> fTwoProngAsymLoose_CHpos_phi;
+  vector<Double_t> fTwoProngAsymLoose_CHpos_mass;
+  vector<Double_t> fTwoProngAsymLoose_CHpos_dz;
+  vector<Double_t> fTwoProngAsymLoose_CHpos_dxy;
+  vector<Double_t> fTwoProngAsymLoose_CHneg_pt;
+  vector<Double_t> fTwoProngAsymLoose_CHneg_eta;
+  vector<Double_t> fTwoProngAsymLoose_CHneg_phi;
+  vector<Double_t> fTwoProngAsymLoose_CHneg_mass;
+  vector<Double_t> fTwoProngAsymLoose_CHneg_dz;
+  vector<Double_t> fTwoProngAsymLoose_CHneg_dxy;
+  vector<Double_t> fTwoProngAsymLoose_photon_pt;
+  vector<Double_t> fTwoProngAsymLoose_photon_eta;
+  vector<Double_t> fTwoProngAsymLoose_photon_phi;
+  vector<Double_t> fTwoProngAsymLoose_photon_mass;
+  vector<Double_t> fTwoProngAsymLoose_photon_pt_l;
+  vector<Double_t> fTwoProngAsymLoose_photon_eta_l;
+  vector<Double_t> fTwoProngAsymLoose_photon_phi_l;
+  vector<Double_t> fTwoProngAsymLoose_photon_mass_l;
+  vector<Double_t> fTwoProngAsymLoose_photon_nGamma;
+  vector<Double_t> fTwoProngAsymLoose_photon_nElectron;
+  vector<Double_t> fTwoProngAsymLoose_chargedIso;
+  vector<Double_t> fTwoProngAsymLoose_neutralIso;
+  vector<Double_t> fTwoProngAsymLoose_egammaIso;
+  vector<Double_t> fTwoProngAsymLoose_trackAsym;
+  vector<Double_t> fTwoProngAsymLoose_photonAsym;
+  vector<Int_t> fTwoProngAsymLoose_nChargedIsoCone;
+  vector<Int_t> fTwoProngAsymLoose_nNeutralIsoCone;
+  vector<Int_t> fTwoProngAsymLoose_nEGammaIsoCone;
+  vector<Bool_t> fTwoProngAsymLoose_tight;
+  vector<Bool_t> fTwoProngAsymLoose_loose;
+  vector<Double_t> fTwoProngAsymLoose_mPosPho;
+  vector<Double_t> fTwoProngAsymLoose_mPosPho_l;
+  vector<Double_t> fTwoProngAsymLoose_mPosPho_pi0;
+  vector<Double_t> fTwoProngAsymLoose_mNegPho;
+  vector<Double_t> fTwoProngAsymLoose_mNegPho_l;
+  vector<Double_t> fTwoProngAsymLoose_mNegPho_pi0;
+  vector<Double_t> fTwoProngAsymLoose_mPosNeg;
+  vector<Double_t> fTwoProngAsymLoose_CHpos_p3;
+  vector<Double_t> fTwoProngAsymLoose_CHneg_p3;
+  vector<Double_t> fTwoProngAsymLoose_photon_p3;
+  vector<Double_t> fTwoProngAsymLoose_genOmega_dR;
+  vector<Double_t> fTwoProngAsymLoose_genTau_dR;
+
+  Int_t fSCat;
+  Int_t fTwoProngChoice_1;
+  Int_t fTwoProngChoice_2;
+  Int_t fTwoProngChoice_3;
   TwoProngAnalysis::recoDiObjectInfo_t fRecoPhiDiTwoProng;
   TwoProngAnalysis::recoDiObjectInfo_t fRecoPhiPhotonTwoProng;
+  TwoProngAnalysis::recoDiObjectInfo_t fRecoPhiPhotonTwoProng_1;
+  TwoProngAnalysis::recoDiObjectInfo_t fRecoPhiPhotonTwoProng_2;
+  TwoProngAnalysis::recoDiObjectInfo_t fRecoPhiPhotonTwoProng_3;
   TwoProngAnalysis::recoDiObjectInfo_t fRecoPhiInclusive;
 
   Bool_t fpassMuonTrigger;
@@ -748,6 +871,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
     fdontIncludeTwoProngs(iConfig.getUntrackedParameter<bool>("dontIncludeTwoProngs")),
     fincludeLooseTwoProngs(iConfig.getUntrackedParameter<bool>("includeLooseTwoProngs")),
     fincludeCandTwoProngs(iConfig.getUntrackedParameter<bool>("includeCandTwoProngs")),
+    fincludeAsymTwoProngs(iConfig.getUntrackedParameter<bool>("includeAsymTwoProngs")),
     fincludeMCInfo(iConfig.getUntrackedParameter<bool>("includeMCInfo")),
     fincludeSignalGenParticles(iConfig.getUntrackedParameter<bool>("includeSignalGenParticles")),
     fincludeOldPhotons(iConfig.getUntrackedParameter<bool>("includeOldPhotons")),
@@ -778,6 +902,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
     ftwoprong_TrackAsymmetryCut(iConfig.getUntrackedParameter<double>("twoprong_MinTrackAsymmetry")),
     ftwoprong_PhotonAsymmetryCut(iConfig.getUntrackedParameter<double>("twoprong_MinPhotonAsymmetry")),
     ftwoprong_OptionalExtraTrack(iConfig.getUntrackedParameter<bool>("twoprong_optionalExtraTrack")),
+    ftwoprong_FlipAsymReq(iConfig.getUntrackedParameter<bool>("twoprong_flipAsymReq")),
     fincludeDalitzVariables(iConfig.getUntrackedParameter<bool>("twoprong_includeDalitzVariables")),
     rhoToken_(consumes<double> (iConfig.getParameter<edm::InputTag>("rho")))
 {
@@ -1206,6 +1331,8 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("TwoProngCand_nEGammaIsoCone",&fTwoProngCand_nEGammaIsoCone);
   fTree->Branch("TwoProngCand_tight",&fTwoProngCand_tight);
   fTree->Branch("TwoProngCand_loose",&fTwoProngCand_loose);
+  fTree->Branch("TwoProngCand_asym",&fTwoProngCand_asym);
+  fTree->Branch("TwoProngCand_asym_loose",&fTwoProngCand_asym_loose);
   // matching
   fTree->Branch("TwoProngCand_genOmega_dR",&fTwoProngCand_genOmega_dR);
   fTree->Branch("TwoProngCand_genTau_dR",&fTwoProngCand_genTau_dR);
@@ -1290,9 +1417,148 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("TwoProngLoose_photon_p3",&fTwoProngLoose_photon_p3);
   }
   }
+  if(fincludeAsymTwoProngs) {
+    // Asym TwoProng information
+  fTree->Branch("nTwoProngsAsym",&fnTwoProngsAsym,"nTwoProngsAsym/I");
+  // kinematics
+  fTree->Branch("TwoProngAsym_pt",&fTwoProngAsym_pt);
+  fTree->Branch("TwoProngAsym_eta",&fTwoProngAsym_eta);
+  fTree->Branch("TwoProngAsym_phi",&fTwoProngAsym_phi);
+  // mass
+  fTree->Branch("TwoProngAsym_mass",&fTwoProngAsym_mass);
+  fTree->Branch("TwoProngAsym_mass_l",&fTwoProngAsym_mass_l);
+  fTree->Branch("TwoProngAsym_Mass0",&fTwoProngAsym_Mass0);
+  fTree->Branch("TwoProngAsym_MassPi0",&fTwoProngAsym_MassPi0);
+  fTree->Branch("TwoProngAsym_MassEta",&fTwoProngAsym_MassEta);
+  fTree->Branch("TwoProngAsym_Mass300",&fTwoProngAsym_Mass300);
+  // extra optional track 
+  fTree->Branch("TwoProngAsym_nExtraTracks",&fTwoProngAsym_nExtraTracks);
+  // CHpos constituent
+  fTree->Branch("TwoProngAsym_CHpos_pt",&fTwoProngAsym_CHpos_pt);
+  fTree->Branch("TwoProngAsym_CHpos_eta",&fTwoProngAsym_CHpos_eta);
+  fTree->Branch("TwoProngAsym_CHpos_phi",&fTwoProngAsym_CHpos_phi);
+  fTree->Branch("TwoProngAsym_CHpos_mass",&fTwoProngAsym_CHpos_mass);
+  fTree->Branch("TwoProngAsym_CHpos_dz",&fTwoProngAsym_CHpos_dz);
+  fTree->Branch("TwoProngAsym_CHpos_dxy",&fTwoProngAsym_CHpos_dxy);
+  // CHneg constituent
+  fTree->Branch("TwoProngAsym_CHneg_pt",&fTwoProngAsym_CHneg_pt);
+  fTree->Branch("TwoProngAsym_CHneg_eta",&fTwoProngAsym_CHneg_eta);
+  fTree->Branch("TwoProngAsym_CHneg_phi",&fTwoProngAsym_CHneg_phi);
+  fTree->Branch("TwoProngAsym_CHneg_mass",&fTwoProngAsym_CHneg_mass);
+  fTree->Branch("TwoProngAsym_CHneg_dz",&fTwoProngAsym_CHneg_dz);
+  fTree->Branch("TwoProngAsym_CHneg_dxy",&fTwoProngAsym_CHneg_dxy);
+  // photon constituent
+  fTree->Branch("TwoProngAsym_photon_pt",&fTwoProngAsym_photon_pt);
+  fTree->Branch("TwoProngAsym_photon_eta",&fTwoProngAsym_photon_eta);
+  fTree->Branch("TwoProngAsym_photon_phi",&fTwoProngAsym_photon_phi);
+  fTree->Branch("TwoProngAsym_photon_mass",&fTwoProngAsym_photon_mass);
+  fTree->Branch("TwoProngAsym_photon_pt_l",&fTwoProngAsym_photon_pt_l);
+  fTree->Branch("TwoProngAsym_photon_eta_l",&fTwoProngAsym_photon_eta_l);
+  fTree->Branch("TwoProngAsym_photon_phi_l",&fTwoProngAsym_photon_phi_l);
+  fTree->Branch("TwoProngAsym_photon_mass_l",&fTwoProngAsym_photon_mass_l);
+  fTree->Branch("TwoProngAsym_photon_nGamma",&fTwoProngAsym_photon_nGamma);
+  fTree->Branch("TwoProngAsym_photon_nElectron",&fTwoProngAsym_photon_nElectron);
+  // cut variables
+  fTree->Branch("TwoProngAsym_chargedIso",&fTwoProngAsym_chargedIso);
+  fTree->Branch("TwoProngAsym_neutralIso",&fTwoProngAsym_neutralIso);
+  fTree->Branch("TwoProngAsym_egammaIso",&fTwoProngAsym_egammaIso);
+  fTree->Branch("TwoProngAsym_trackAsym",&fTwoProngAsym_trackAsym);
+  fTree->Branch("TwoProngAsym_photonAsym",&fTwoProngAsym_photonAsym);
+  fTree->Branch("TwoProngAsym_nChargedIsoCone",&fTwoProngAsym_nChargedIsoCone);
+  fTree->Branch("TwoProngAsym_nNeutralIsoCone",&fTwoProngAsym_nNeutralIsoCone);
+  fTree->Branch("TwoProngAsym_nEGammaIsoCone",&fTwoProngAsym_nEGammaIsoCone);
+  // matching
+  fTree->Branch("TwoProngAsym_genOmega_dR",&fTwoProngAsym_genOmega_dR);
+  fTree->Branch("TwoProngAsym_genTau_dR",&fTwoProngAsym_genTau_dR);
+  // dalitz
+  if (fincludeDalitzVariables) {
+  fTree->Branch("TwoProngAsym_mPosPho",&fTwoProngAsym_mPosPho);
+  fTree->Branch("TwoProngAsym_mPosPho_l",&fTwoProngAsym_mPosPho_l);
+  fTree->Branch("TwoProngAsym_mPosPho_pi0",&fTwoProngAsym_mPosPho_pi0);
+  fTree->Branch("TwoProngAsym_mNegPho",&fTwoProngAsym_mNegPho);
+  fTree->Branch("TwoProngAsym_mNegPho_l",&fTwoProngAsym_mNegPho_l);
+  fTree->Branch("TwoProngAsym_mNegPho_pi0",&fTwoProngAsym_mNegPho_pi0);
+  fTree->Branch("TwoProngAsym_mPosNeg",&fTwoProngAsym_mPosNeg);
+  fTree->Branch("TwoProngAsym_CHpos_p3",&fTwoProngAsym_CHpos_p3);
+  fTree->Branch("TwoProngAsym_CHneg_p3",&fTwoProngAsym_CHneg_p3);
+  fTree->Branch("TwoProngAsym_photon_p3",&fTwoProngAsym_photon_p3);
+  }
+    // Asym Loose TwoProng information
+  fTree->Branch("nTwoProngsAsymLoose",&fnTwoProngsAsymLoose,"nTwoProngsAsymLoose/I");
+  // kinematics
+  fTree->Branch("TwoProngAsymLoose_pt",&fTwoProngAsymLoose_pt);
+  fTree->Branch("TwoProngAsymLoose_eta",&fTwoProngAsymLoose_eta);
+  fTree->Branch("TwoProngAsymLoose_phi",&fTwoProngAsymLoose_phi);
+  // mass
+  fTree->Branch("TwoProngAsymLoose_mass",&fTwoProngAsymLoose_mass);
+  fTree->Branch("TwoProngAsymLoose_mass_l",&fTwoProngAsymLoose_mass_l);
+  fTree->Branch("TwoProngAsymLoose_Mass0",&fTwoProngAsymLoose_Mass0);
+  fTree->Branch("TwoProngAsymLoose_MassPi0",&fTwoProngAsymLoose_MassPi0);
+  fTree->Branch("TwoProngAsymLoose_MassEta",&fTwoProngAsymLoose_MassEta);
+  fTree->Branch("TwoProngAsymLoose_Mass300",&fTwoProngAsymLoose_Mass300);
+  // extra optional track 
+  fTree->Branch("TwoProngAsymLoose_nExtraTracks",&fTwoProngAsymLoose_nExtraTracks);
+  // CHpos constituent
+  fTree->Branch("TwoProngAsymLoose_CHpos_pt",&fTwoProngAsymLoose_CHpos_pt);
+  fTree->Branch("TwoProngAsymLoose_CHpos_eta",&fTwoProngAsymLoose_CHpos_eta);
+  fTree->Branch("TwoProngAsymLoose_CHpos_phi",&fTwoProngAsymLoose_CHpos_phi);
+  fTree->Branch("TwoProngAsymLoose_CHpos_mass",&fTwoProngAsymLoose_CHpos_mass);
+  fTree->Branch("TwoProngAsymLoose_CHpos_dz",&fTwoProngAsymLoose_CHpos_dz);
+  fTree->Branch("TwoProngAsymLoose_CHpos_dxy",&fTwoProngAsymLoose_CHpos_dxy);
+  // CHneg constituent
+  fTree->Branch("TwoProngAsymLoose_CHneg_pt",&fTwoProngAsymLoose_CHneg_pt);
+  fTree->Branch("TwoProngAsymLoose_CHneg_eta",&fTwoProngAsymLoose_CHneg_eta);
+  fTree->Branch("TwoProngAsymLoose_CHneg_phi",&fTwoProngAsymLoose_CHneg_phi);
+  fTree->Branch("TwoProngAsymLoose_CHneg_mass",&fTwoProngAsymLoose_CHneg_mass);
+  fTree->Branch("TwoProngAsymLoose_CHneg_dz",&fTwoProngAsymLoose_CHneg_dz);
+  fTree->Branch("TwoProngAsymLoose_CHneg_dxy",&fTwoProngAsymLoose_CHneg_dxy);
+  // photon constituent
+  fTree->Branch("TwoProngAsymLoose_photon_pt",&fTwoProngAsymLoose_photon_pt);
+  fTree->Branch("TwoProngAsymLoose_photon_eta",&fTwoProngAsymLoose_photon_eta);
+  fTree->Branch("TwoProngAsymLoose_photon_phi",&fTwoProngAsymLoose_photon_phi);
+  fTree->Branch("TwoProngAsymLoose_photon_mass",&fTwoProngAsymLoose_photon_mass);
+  fTree->Branch("TwoProngAsymLoose_photon_pt_l",&fTwoProngAsymLoose_photon_pt_l);
+  fTree->Branch("TwoProngAsymLoose_photon_eta_l",&fTwoProngAsymLoose_photon_eta_l);
+  fTree->Branch("TwoProngAsymLoose_photon_phi_l",&fTwoProngAsymLoose_photon_phi_l);
+  fTree->Branch("TwoProngAsymLoose_photon_mass_l",&fTwoProngAsymLoose_photon_mass_l);
+  fTree->Branch("TwoProngAsymLoose_photon_nGamma",&fTwoProngAsymLoose_photon_nGamma);
+  fTree->Branch("TwoProngAsymLoose_photon_nElectron",&fTwoProngAsymLoose_photon_nElectron);
+  // cut variables
+  fTree->Branch("TwoProngAsymLoose_chargedIso",&fTwoProngAsymLoose_chargedIso);
+  fTree->Branch("TwoProngAsymLoose_neutralIso",&fTwoProngAsymLoose_neutralIso);
+  fTree->Branch("TwoProngAsymLoose_egammaIso",&fTwoProngAsymLoose_egammaIso);
+  fTree->Branch("TwoProngAsymLoose_trackAsym",&fTwoProngAsymLoose_trackAsym);
+  fTree->Branch("TwoProngAsymLoose_photonAsym",&fTwoProngAsymLoose_photonAsym);
+  fTree->Branch("TwoProngAsymLoose_nChargedIsoCone",&fTwoProngAsymLoose_nChargedIsoCone);
+  fTree->Branch("TwoProngAsymLoose_nNeutralIsoCone",&fTwoProngAsymLoose_nNeutralIsoCone);
+  fTree->Branch("TwoProngAsymLoose_nEGammaIsoCone",&fTwoProngAsymLoose_nEGammaIsoCone);
+  // matching
+  fTree->Branch("TwoProngAsymLoose_genOmega_dR",&fTwoProngAsymLoose_genOmega_dR);
+  fTree->Branch("TwoProngAsymLoose_genTau_dR",&fTwoProngAsymLoose_genTau_dR);
+  // dalitz
+  if (fincludeDalitzVariables) {
+  fTree->Branch("TwoProngAsymLoose_mPosPho",&fTwoProngAsymLoose_mPosPho);
+  fTree->Branch("TwoProngAsymLoose_mPosPho_l",&fTwoProngAsymLoose_mPosPho_l);
+  fTree->Branch("TwoProngAsymLoose_mPosPho_pi0",&fTwoProngAsymLoose_mPosPho_pi0);
+  fTree->Branch("TwoProngAsymLoose_mNegPho",&fTwoProngAsymLoose_mNegPho);
+  fTree->Branch("TwoProngAsymLoose_mNegPho_l",&fTwoProngAsymLoose_mNegPho_l);
+  fTree->Branch("TwoProngAsymLoose_mNegPho_pi0",&fTwoProngAsymLoose_mNegPho_pi0);
+  fTree->Branch("TwoProngAsymLoose_mPosNeg",&fTwoProngAsymLoose_mPosNeg);
+  fTree->Branch("TwoProngAsymLoose_CHpos_p3",&fTwoProngAsymLoose_CHpos_p3);
+  fTree->Branch("TwoProngAsymLoose_CHneg_p3",&fTwoProngAsymLoose_CHneg_p3);
+  fTree->Branch("TwoProngAsymLoose_photon_p3",&fTwoProngAsymLoose_photon_p3);
+  }
+  }
   // Combined Objects
+  fTree->Branch("sCat",&fSCat,"sCat/I");
+  fTree->Branch("twoProngChoice_1",&fTwoProngChoice_1,"twoProngChoice_1/I");
+  fTree->Branch("twoProngChoice_2",&fTwoProngChoice_2,"twoProngChoice_2/I");
+  fTree->Branch("twoProngChoice_3",&fTwoProngChoice_3,"twoProngChoice_3/I");
   fTree->Branch("Obj_DiTwoProng",&fRecoPhiDiTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree->Branch("Obj_PhotonTwoProng",&fRecoPhiPhotonTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  fTree->Branch("Obj_PhotonTwoProng_1",&fRecoPhiPhotonTwoProng_1,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  fTree->Branch("Obj_PhotonTwoProng_2",&fRecoPhiPhotonTwoProng_2,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
+  fTree->Branch("Obj_PhotonTwoProng_3",&fRecoPhiPhotonTwoProng_3,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree->Branch("Obj_RecoPhiInclusive",&fRecoPhiInclusive,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   }
   // Tau preseletion branches
@@ -1458,6 +1724,8 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fTwoProngCand_nEGammaIsoCone.clear();
   fTwoProngCand_tight.clear();
   fTwoProngCand_loose.clear();
+  fTwoProngCand_asym.clear();
+  fTwoProngCand_asym_loose.clear();
   fTwoProngCand_genOmega_dR.clear();
   fTwoProngCand_genTau_dR.clear();
   fTwoProngCand_mPosPho.clear();
@@ -1525,6 +1793,116 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fTwoProngLoose_CHpos_p3.clear();
   fTwoProngLoose_CHneg_p3.clear();
   fTwoProngLoose_photon_p3.clear();
+
+  fTwoProngAsym_pt.clear();
+  fTwoProngAsym_eta.clear();
+  fTwoProngAsym_phi.clear();
+  fTwoProngAsym_mass.clear();
+  fTwoProngAsym_mass_l.clear();
+  fTwoProngAsym_Mass0.clear();
+  fTwoProngAsym_MassPi0.clear();
+  fTwoProngAsym_MassEta.clear();
+  fTwoProngAsym_Mass300.clear();
+  fTwoProngAsym_nExtraTracks.clear();
+  fTwoProngAsym_CHpos_pt.clear();
+  fTwoProngAsym_CHpos_eta.clear();
+  fTwoProngAsym_CHpos_phi.clear();
+  fTwoProngAsym_CHpos_mass.clear();
+  fTwoProngAsym_CHpos_dz.clear();
+  fTwoProngAsym_CHpos_dxy.clear();
+  fTwoProngAsym_CHneg_pt.clear();
+  fTwoProngAsym_CHneg_eta.clear();
+  fTwoProngAsym_CHneg_phi.clear();
+  fTwoProngAsym_CHneg_mass.clear();
+  fTwoProngAsym_CHneg_dz.clear();
+  fTwoProngAsym_CHneg_dxy.clear();
+  fTwoProngAsym_photon_pt.clear();
+  fTwoProngAsym_photon_eta.clear();
+  fTwoProngAsym_photon_phi.clear();
+  fTwoProngAsym_photon_mass.clear();
+  fTwoProngAsym_photon_pt_l.clear();
+  fTwoProngAsym_photon_eta_l.clear();
+  fTwoProngAsym_photon_phi_l.clear();
+  fTwoProngAsym_photon_mass_l.clear();
+  fTwoProngAsym_photon_nGamma.clear();
+  fTwoProngAsym_photon_nElectron.clear();
+  fTwoProngAsym_chargedIso.clear();
+  fTwoProngAsym_neutralIso.clear();
+  fTwoProngAsym_egammaIso.clear();
+  fTwoProngAsym_trackAsym.clear();
+  fTwoProngAsym_photonAsym.clear();
+  fTwoProngAsym_nChargedIsoCone.clear();
+  fTwoProngAsym_nNeutralIsoCone.clear();
+  fTwoProngAsym_nEGammaIsoCone.clear();
+  fTwoProngAsym_tight.clear();
+  fTwoProngAsym_loose.clear();
+  fTwoProngAsym_genOmega_dR.clear();
+  fTwoProngAsym_genTau_dR.clear();
+  fTwoProngAsym_mPosPho.clear();
+  fTwoProngAsym_mPosPho_l.clear();
+  fTwoProngAsym_mPosPho_pi0.clear();
+  fTwoProngAsym_mNegPho.clear();
+  fTwoProngAsym_mNegPho_l.clear();
+  fTwoProngAsym_mNegPho_pi0.clear();
+  fTwoProngAsym_mPosNeg.clear();
+  fTwoProngAsym_CHpos_p3.clear();
+  fTwoProngAsym_CHneg_p3.clear();
+  fTwoProngAsym_photon_p3.clear();
+
+  fTwoProngAsymLoose_pt.clear();
+  fTwoProngAsymLoose_eta.clear();
+  fTwoProngAsymLoose_phi.clear();
+  fTwoProngAsymLoose_mass.clear();
+  fTwoProngAsymLoose_mass_l.clear();
+  fTwoProngAsymLoose_Mass0.clear();
+  fTwoProngAsymLoose_MassPi0.clear();
+  fTwoProngAsymLoose_MassEta.clear();
+  fTwoProngAsymLoose_Mass300.clear();
+  fTwoProngAsymLoose_nExtraTracks.clear();
+  fTwoProngAsymLoose_CHpos_pt.clear();
+  fTwoProngAsymLoose_CHpos_eta.clear();
+  fTwoProngAsymLoose_CHpos_phi.clear();
+  fTwoProngAsymLoose_CHpos_mass.clear();
+  fTwoProngAsymLoose_CHpos_dz.clear();
+  fTwoProngAsymLoose_CHpos_dxy.clear();
+  fTwoProngAsymLoose_CHneg_pt.clear();
+  fTwoProngAsymLoose_CHneg_eta.clear();
+  fTwoProngAsymLoose_CHneg_phi.clear();
+  fTwoProngAsymLoose_CHneg_mass.clear();
+  fTwoProngAsymLoose_CHneg_dz.clear();
+  fTwoProngAsymLoose_CHneg_dxy.clear();
+  fTwoProngAsymLoose_photon_pt.clear();
+  fTwoProngAsymLoose_photon_eta.clear();
+  fTwoProngAsymLoose_photon_phi.clear();
+  fTwoProngAsymLoose_photon_mass.clear();
+  fTwoProngAsymLoose_photon_pt_l.clear();
+  fTwoProngAsymLoose_photon_eta_l.clear();
+  fTwoProngAsymLoose_photon_phi_l.clear();
+  fTwoProngAsymLoose_photon_mass_l.clear();
+  fTwoProngAsymLoose_photon_nGamma.clear();
+  fTwoProngAsymLoose_photon_nElectron.clear();
+  fTwoProngAsymLoose_chargedIso.clear();
+  fTwoProngAsymLoose_neutralIso.clear();
+  fTwoProngAsymLoose_egammaIso.clear();
+  fTwoProngAsymLoose_trackAsym.clear();
+  fTwoProngAsymLoose_photonAsym.clear();
+  fTwoProngAsymLoose_nChargedIsoCone.clear();
+  fTwoProngAsymLoose_nNeutralIsoCone.clear();
+  fTwoProngAsymLoose_nEGammaIsoCone.clear();
+  fTwoProngAsymLoose_tight.clear();
+  fTwoProngAsymLoose_loose.clear();
+  fTwoProngAsymLoose_genOmega_dR.clear();
+  fTwoProngAsymLoose_genTau_dR.clear();
+  fTwoProngAsymLoose_mPosPho.clear();
+  fTwoProngAsymLoose_mPosPho_l.clear();
+  fTwoProngAsymLoose_mPosPho_pi0.clear();
+  fTwoProngAsymLoose_mNegPho.clear();
+  fTwoProngAsymLoose_mNegPho_l.clear();
+  fTwoProngAsymLoose_mNegPho_pi0.clear();
+  fTwoProngAsymLoose_mPosNeg.clear();
+  fTwoProngAsymLoose_CHpos_p3.clear();
+  fTwoProngAsymLoose_CHneg_p3.clear();
+  fTwoProngAsymLoose_photon_p3.clear();
 
   fTwoProng_pt.clear();
   fTwoProng_eta.clear();
@@ -2218,8 +2596,6 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   // Two prongs
   if (fDebug) cout << ". starting two prong code" << endl;
   // Find all pairs of one CH pos and one CH neg within specified DR of each other
-  int nLoose = 0;
-  TLorentzVector LeadingFakeTwoProng; 
   for (unsigned int i = 0; i < pfcands->size(); i++) {
     const pat::PackedCandidate &pf1 = (*pfcands)[i];
     if (pf1.pt() < ftwoprong_tracksMinPt) continue;
@@ -2462,19 +2838,29 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
           bool passPhotonAsymmetry = (photon_asymmetry > ftwoprong_PhotonAsymmetryCut);
           fTwoProngCand_trackAsym.push_back(track_asymmetry);
           fTwoProngCand_photonAsym.push_back(photon_asymmetry);
+          if(ftwoprong_FlipAsymReq) {
+            passTrackAsymmetry = !passTrackAsymmetry;
+            passPhotonAsymmetry = !passPhotonAsymmetry;
+          }
 
           // Selection on Candidates
           bool passCharged = relchargedIso < ftwoprong_ChargedIsoCut;
           bool passNeutral = relneutralIso < ftwoprong_NeutralIsoCut;
-          bool passEGamma = relegammaIso < ftwoprong_EGammaIsoCut;
+          bool passEGamma =  relegammaIso < ftwoprong_EGammaIsoCut;
+          bool looseCharged = relchargedIso < ftwoprong_ChargedIsoFakeCut;
+          bool looseNeutral = relneutralIso < ftwoprong_NeutralIsoFakeCut;
+          bool looseEGamma =  relegammaIso  < ftwoprong_EGammaIsoFakeCut;
           bool passPhotonPt = photon.Pt() > ftwoprong_PhotonPtCut;
+
           bool tight = passCharged && passNeutral && passEGamma && passPhotonPt && passTrackAsymmetry && passPhotonAsymmetry;
-          bool loose = !tight && passPhotonPt && passTrackAsymmetry && passPhotonAsymmetry &&
-                       relchargedIso < ftwoprong_ChargedIsoFakeCut &&
-                       relneutralIso < ftwoprong_NeutralIsoFakeCut &&
-                       relegammaIso < ftwoprong_EGammaIsoFakeCut;
+          bool loose = !tight && looseCharged && looseNeutral && looseEGamma && passPhotonPt && passTrackAsymmetry && passPhotonAsymmetry;
+          bool asym = passCharged && passNeutral && passEGamma && passPhotonPt && !(passTrackAsymmetry && passPhotonAsymmetry);
+          bool asym_loose = !asym && looseCharged && looseNeutral && looseEGamma && passPhotonPt && !(passTrackAsymmetry && passPhotonAsymmetry);
+
           fTwoProngCand_tight.push_back(tight);
           fTwoProngCand_loose.push_back(loose);
+          fTwoProngCand_asym.push_back(asym);
+          fTwoProngCand_asym_loose.push_back(asym_loose);
 
           if (fDebug) cout << ". doing gen matching" << endl;
           // Generator matching to signal
@@ -2505,13 +2891,10 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
             }
           }
           fTwoProngCand_genTau_dR.push_back(genTau_dR);
-          if (loose) nLoose++;
-          if (loose) { if (TwoProngObject.Pt() > LeadingFakeTwoProng.Pt()) LeadingFakeTwoProng = TwoProngObject; }
         }
       } // end conditionals on CH pair
     }
   } // end making candidates
-  fnTwoProngsLoose = nLoose;
   // Create sorted-by-pt lists
   if (fDebug) cout << ". sorting" << endl;
   vector<unsigned int> sorted_indecies;
@@ -2532,6 +2915,108 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   }
   for (unsigned int i = 0; i < sorted_indecies.size(); i++) {
     unsigned int index = sorted_indecies[i];
+    if (fTwoProngCand_asym[index])
+    {
+      fTwoProngAsym_pt.push_back(fTwoProngCand_pt[index]);
+      fTwoProngAsym_eta.push_back(fTwoProngCand_eta[index]);
+      fTwoProngAsym_phi.push_back(fTwoProngCand_phi[index]);
+      fTwoProngAsym_mass.push_back(fTwoProngCand_mass[index]);
+      fTwoProngAsym_mass_l.push_back(fTwoProngCand_mass_l[index]);
+      fTwoProngAsym_Mass0.push_back(fTwoProngCand_Mass0[index]);
+      fTwoProngAsym_MassPi0.push_back(fTwoProngCand_MassPi0[index]);
+      fTwoProngAsym_MassEta.push_back(fTwoProngCand_MassEta[index]);
+      fTwoProngAsym_Mass300.push_back(fTwoProngCand_Mass300[index]);
+      fTwoProngAsym_nExtraTracks.push_back(fTwoProngCand_nExtraTracks[index]);
+      fTwoProngAsym_CHpos_pt.push_back(fTwoProngCand_CHpos_pt[index]);
+      fTwoProngAsym_CHpos_eta.push_back(fTwoProngCand_CHpos_eta[index]);
+      fTwoProngAsym_CHpos_phi.push_back(fTwoProngCand_CHpos_phi[index]);
+      fTwoProngAsym_CHpos_mass.push_back(fTwoProngCand_CHpos_mass[index]);
+      fTwoProngAsym_CHpos_dz.push_back(fTwoProngCand_CHpos_dz[index]);
+      fTwoProngAsym_CHpos_dxy.push_back(fTwoProngCand_CHpos_dxy[index]);
+      fTwoProngAsym_CHneg_pt.push_back(fTwoProngCand_CHneg_pt[index]);
+      fTwoProngAsym_CHneg_eta.push_back(fTwoProngCand_CHneg_eta[index]);
+      fTwoProngAsym_CHneg_phi.push_back(fTwoProngCand_CHneg_phi[index]);
+      fTwoProngAsym_CHneg_mass.push_back(fTwoProngCand_CHneg_mass[index]);
+      fTwoProngAsym_CHneg_dz.push_back(fTwoProngCand_CHneg_dz[index]);
+      fTwoProngAsym_CHneg_dxy.push_back(fTwoProngCand_CHneg_dxy[index]);
+      fTwoProngAsym_photon_pt.push_back(fTwoProngCand_photon_pt[index]);
+      fTwoProngAsym_photon_eta.push_back(fTwoProngCand_photon_eta[index]);
+      fTwoProngAsym_photon_phi.push_back(fTwoProngCand_photon_phi[index]);
+      fTwoProngAsym_photon_mass.push_back(fTwoProngCand_photon_mass[index]);
+      fTwoProngAsym_photon_pt_l.push_back(fTwoProngCand_photon_pt_l[index]);
+      fTwoProngAsym_photon_eta_l.push_back(fTwoProngCand_photon_eta_l[index]);
+      fTwoProngAsym_photon_phi_l.push_back(fTwoProngCand_photon_phi_l[index]);
+      fTwoProngAsym_photon_mass_l.push_back(fTwoProngCand_photon_mass_l[index]);
+      fTwoProngAsym_photon_nGamma.push_back(fTwoProngCand_photon_nGamma[index]);
+      fTwoProngAsym_photon_nElectron.push_back(fTwoProngCand_photon_nElectron[index]);
+      fTwoProngAsym_chargedIso.push_back(fTwoProngCand_chargedIso[index]);
+      fTwoProngAsym_neutralIso.push_back(fTwoProngCand_neutralIso[index]);
+      fTwoProngAsym_egammaIso.push_back(fTwoProngCand_egammaIso[index]);
+      fTwoProngAsym_nChargedIsoCone.push_back(fTwoProngCand_nChargedIsoCone[index]);
+      fTwoProngAsym_nNeutralIsoCone.push_back(fTwoProngCand_nNeutralIsoCone[index]);
+      fTwoProngAsym_nEGammaIsoCone.push_back(fTwoProngCand_nChargedIsoCone[index]);
+      fTwoProngAsym_genOmega_dR.push_back(fTwoProngCand_genOmega_dR[index]);
+      fTwoProngAsym_genTau_dR.push_back(fTwoProngCand_genTau_dR[index]);
+      fTwoProngAsym_trackAsym.push_back(fTwoProngCand_trackAsym[index]);
+      fTwoProngAsym_photonAsym.push_back(fTwoProngCand_photonAsym[index]);
+      fTwoProngAsym_mPosPho_l.push_back(fTwoProngCand_mPosPho_l[index]);
+      fTwoProngAsym_mPosPho_pi0.push_back(fTwoProngCand_mPosPho_pi0[index]);
+      fTwoProngAsym_mNegPho.push_back(fTwoProngCand_mNegPho[index]);
+      fTwoProngAsym_mNegPho_l.push_back(fTwoProngCand_mNegPho_l[index]);
+      fTwoProngAsym_mNegPho_pi0.push_back(fTwoProngCand_mNegPho_pi0[index]);
+      fTwoProngAsym_mPosNeg.push_back(fTwoProngCand_mPosNeg[index]);
+    }
+    if (fTwoProngCand_asym_loose[index])
+    {
+      fTwoProngAsymLoose_pt.push_back(fTwoProngCand_pt[index]);
+      fTwoProngAsymLoose_eta.push_back(fTwoProngCand_eta[index]);
+      fTwoProngAsymLoose_phi.push_back(fTwoProngCand_phi[index]);
+      fTwoProngAsymLoose_mass.push_back(fTwoProngCand_mass[index]);
+      fTwoProngAsymLoose_mass_l.push_back(fTwoProngCand_mass_l[index]);
+      fTwoProngAsymLoose_Mass0.push_back(fTwoProngCand_Mass0[index]);
+      fTwoProngAsymLoose_MassPi0.push_back(fTwoProngCand_MassPi0[index]);
+      fTwoProngAsymLoose_MassEta.push_back(fTwoProngCand_MassEta[index]);
+      fTwoProngAsymLoose_Mass300.push_back(fTwoProngCand_Mass300[index]);
+      fTwoProngAsymLoose_nExtraTracks.push_back(fTwoProngCand_nExtraTracks[index]);
+      fTwoProngAsymLoose_CHpos_pt.push_back(fTwoProngCand_CHpos_pt[index]);
+      fTwoProngAsymLoose_CHpos_eta.push_back(fTwoProngCand_CHpos_eta[index]);
+      fTwoProngAsymLoose_CHpos_phi.push_back(fTwoProngCand_CHpos_phi[index]);
+      fTwoProngAsymLoose_CHpos_mass.push_back(fTwoProngCand_CHpos_mass[index]);
+      fTwoProngAsymLoose_CHpos_dz.push_back(fTwoProngCand_CHpos_dz[index]);
+      fTwoProngAsymLoose_CHpos_dxy.push_back(fTwoProngCand_CHpos_dxy[index]);
+      fTwoProngAsymLoose_CHneg_pt.push_back(fTwoProngCand_CHneg_pt[index]);
+      fTwoProngAsymLoose_CHneg_eta.push_back(fTwoProngCand_CHneg_eta[index]);
+      fTwoProngAsymLoose_CHneg_phi.push_back(fTwoProngCand_CHneg_phi[index]);
+      fTwoProngAsymLoose_CHneg_mass.push_back(fTwoProngCand_CHneg_mass[index]);
+      fTwoProngAsymLoose_CHneg_dz.push_back(fTwoProngCand_CHneg_dz[index]);
+      fTwoProngAsymLoose_CHneg_dxy.push_back(fTwoProngCand_CHneg_dxy[index]);
+      fTwoProngAsymLoose_photon_pt.push_back(fTwoProngCand_photon_pt[index]);
+      fTwoProngAsymLoose_photon_eta.push_back(fTwoProngCand_photon_eta[index]);
+      fTwoProngAsymLoose_photon_phi.push_back(fTwoProngCand_photon_phi[index]);
+      fTwoProngAsymLoose_photon_mass.push_back(fTwoProngCand_photon_mass[index]);
+      fTwoProngAsymLoose_photon_pt_l.push_back(fTwoProngCand_photon_pt_l[index]);
+      fTwoProngAsymLoose_photon_eta_l.push_back(fTwoProngCand_photon_eta_l[index]);
+      fTwoProngAsymLoose_photon_phi_l.push_back(fTwoProngCand_photon_phi_l[index]);
+      fTwoProngAsymLoose_photon_mass_l.push_back(fTwoProngCand_photon_mass_l[index]);
+      fTwoProngAsymLoose_photon_nGamma.push_back(fTwoProngCand_photon_nGamma[index]);
+      fTwoProngAsymLoose_photon_nElectron.push_back(fTwoProngCand_photon_nElectron[index]);
+      fTwoProngAsymLoose_chargedIso.push_back(fTwoProngCand_chargedIso[index]);
+      fTwoProngAsymLoose_neutralIso.push_back(fTwoProngCand_neutralIso[index]);
+      fTwoProngAsymLoose_egammaIso.push_back(fTwoProngCand_egammaIso[index]);
+      fTwoProngAsymLoose_nChargedIsoCone.push_back(fTwoProngCand_nChargedIsoCone[index]);
+      fTwoProngAsymLoose_nNeutralIsoCone.push_back(fTwoProngCand_nNeutralIsoCone[index]);
+      fTwoProngAsymLoose_nEGammaIsoCone.push_back(fTwoProngCand_nChargedIsoCone[index]);
+      fTwoProngAsymLoose_genOmega_dR.push_back(fTwoProngCand_genOmega_dR[index]);
+      fTwoProngAsymLoose_genTau_dR.push_back(fTwoProngCand_genTau_dR[index]);
+      fTwoProngAsymLoose_trackAsym.push_back(fTwoProngCand_trackAsym[index]);
+      fTwoProngAsymLoose_photonAsym.push_back(fTwoProngCand_photonAsym[index]);
+      fTwoProngAsymLoose_mPosPho_l.push_back(fTwoProngCand_mPosPho_l[index]);
+      fTwoProngAsymLoose_mPosPho_pi0.push_back(fTwoProngCand_mPosPho_pi0[index]);
+      fTwoProngAsymLoose_mNegPho.push_back(fTwoProngCand_mNegPho[index]);
+      fTwoProngAsymLoose_mNegPho_l.push_back(fTwoProngCand_mNegPho_l[index]);
+      fTwoProngAsymLoose_mNegPho_pi0.push_back(fTwoProngCand_mNegPho_pi0[index]);
+      fTwoProngAsymLoose_mPosNeg.push_back(fTwoProngCand_mPosNeg[index]);
+    }
     if (fTwoProngCand_loose[index])
     {
       // Candidate is loose and is next leading, fill all loose candidate collections
@@ -2643,6 +3128,9 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   }
   fnTwoProngCands = fTwoProngCand_pt.size();
   fnTwoProngs = fTwoProng_pt.size();
+  fnTwoProngsLoose = fTwoProngLoose_pt.size();
+  fnTwoProngsAsym = fTwoProngAsym_pt.size();
+  fnTwoProngsAsymLoose = fTwoProngAsymLoose_pt.size();
   if (fDebug) cout << ". finished twoprong collections" << endl;
 
   // Z decay type
@@ -3016,9 +3504,32 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     TwoProngAnalysis::FillRecoPhotonInfo(fRecoTightPhotonInfo3,&(*goodPhotons[2]),lazyTools_.get(),recHitsEB,recHitsEE,ch_status,iEvent,iSetup); 
   if (fDebug) cout << ". done high-pt-id photons" << endl;
 
+  // Sideband Category
+  fSCat = 0;
+  int T = fnTwoProngs;
+  int L = fnTwoProngsLoose;
+  int A = fnTwoProngsAsym;
+  int B = fnTwoProngsAsymLoose;
+  if (T==0 && L>=1 && A==0 && B==0) fSCat = 1; // Le
+  if (T==0 && L==0 && A>=1 && B==0) fSCat = 2; // Ae
+  if (T==0 && L==0 && A==0 && B>=1) fSCat = 3; // Be
+  if (T==0 && L>=1 && A>=1 && B==0) fSCat = 4; // LAe
+  if (T==0 && L==0 && A>=1 && B>=1) fSCat = 5; // ABe
+  if (T==0 && L>=1 && A==0 && B>=1) fSCat = 6; // LBe
+  if (T==0 && L>=1 && A>=1 && B>=1) fSCat = 7; // All three
+  // as above plus has tight
+  if (T>=1 && L==0 && A==0 && B==0) fSCat = 10; // T
+  if (T>=1 && L>=1 && A==0 && B==0) fSCat = 11; // Le
+  if (T>=1 && L==0 && A>=1 && B==0) fSCat = 12; // Ae
+  if (T>=1 && L==0 && A==0 && B>=1) fSCat = 13; // Be
+  if (T>=1 && L>=1 && A>=1 && B==0) fSCat = 14; // LAe
+  if (T>=1 && L==0 && A>=1 && B>=1) fSCat = 15; // ABe
+  if (T>=1 && L>=1 && A==0 && B>=1) fSCat = 16; // LBe
+  if (T>=1 && L>=1 && A>=1 && B>=1) fSCat = 17; // All three
+
   // Construct Di-Objects
-  InitRecoDiObjectInfo(fRecoPhiDiTwoProng);
   // Di-TwoProng
+  InitRecoDiObjectInfo(fRecoPhiDiTwoProng);
   if (fnTwoProngs >= 2)
   {
     TLorentzVector Eta1;
@@ -3027,8 +3538,9 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     Eta2.SetPtEtaPhiM(fTwoProng_pt[1], fTwoProng_eta[1], fTwoProng_phi[1], fTwoProng_mass[1]);
     FillRecoDiObjectInfo(fRecoPhiDiTwoProng, Eta1, Eta2);
   }
-  InitRecoDiObjectInfo(fRecoPhiPhotonTwoProng);
+
   // photon plus TwoProng
+  InitRecoDiObjectInfo(fRecoPhiPhotonTwoProng);
   if (fnTwoProngs >= 1 && fNumIDPhotons >= 1)
   {
     TLorentzVector LeadingTwoProng;
@@ -3037,8 +3549,226 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     LeadingPhoton.SetPtEtaPhiM(fIDPhoton_pt[0], fIDPhoton_eta[0], fIDPhoton_phi[0], fIDPhoton_mass[0]);
     FillRecoDiObjectInfo(fRecoPhiPhotonTwoProng, LeadingTwoProng, LeadingPhoton);
   }
-  InitRecoDiObjectInfo(fRecoPhiInclusive);
+
+  // photon plus TwoProng in various sidebands
+  InitRecoDiObjectInfo(fRecoPhiPhotonTwoProng_1);
+  InitRecoDiObjectInfo(fRecoPhiPhotonTwoProng_2);
+  InitRecoDiObjectInfo(fRecoPhiPhotonTwoProng_3);
+  if (fSCat>0 && fNumIDPhotons >= 1)
+  {
+    TLorentzVector LeadingTwoProng_1;
+    TLorentzVector LeadingTwoProng_2;
+    TLorentzVector LeadingTwoProng_3;
+    switch(fSCat)
+    {
+      case 1:
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProngLoose_pt[0], fTwoProngLoose_eta[0], fTwoProngLoose_phi[0], fTwoProngLoose_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProngLoose_pt[0], fTwoProngLoose_eta[0], fTwoProngLoose_phi[0], fTwoProngLoose_mass[0]);
+        LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngLoose_pt[0], fTwoProngLoose_eta[0], fTwoProngLoose_phi[0], fTwoProngLoose_mass[0]);
+        fTwoProngChoice_1 = 1;
+        fTwoProngChoice_2 = 1;
+        fTwoProngChoice_3 = 1;
+        break;
+      case 2:
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+        LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+        fTwoProngChoice_1 = 2;
+        fTwoProngChoice_2 = 2;
+        fTwoProngChoice_3 = 2;
+        break;
+      case 3:
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProngAsymLoose_pt[0], fTwoProngAsymLoose_eta[0], fTwoProngAsymLoose_phi[0], fTwoProngAsymLoose_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProngAsymLoose_pt[0], fTwoProngAsymLoose_eta[0], fTwoProngAsymLoose_phi[0], fTwoProngAsymLoose_mass[0]);
+        LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsymLoose_pt[0], fTwoProngAsymLoose_eta[0], fTwoProngAsymLoose_phi[0], fTwoProngAsymLoose_mass[0]);
+        fTwoProngChoice_1 = 3;
+        fTwoProngChoice_2 = 3;
+        fTwoProngChoice_3 = 3;
+        break;
+      case 4: // LAe
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProngLoose_pt[0], fTwoProngLoose_eta[0], fTwoProngLoose_phi[0], fTwoProngLoose_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+        fTwoProngChoice_1 = 1;
+        fTwoProngChoice_2 = 2;
+        if (fTwoProngLoose_pt[0] > fTwoProngAsym_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngLoose_pt[0], fTwoProngLoose_eta[0], fTwoProngLoose_phi[0], fTwoProngLoose_mass[0]);
+          fTwoProngChoice_3 = 1;
+        } else {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+          fTwoProngChoice_3 = 2;
+        }
+        break;
+      case 5: // ABe
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+        fTwoProngChoice_1 = 1;
+        fTwoProngChoice_2 = 1;
+        if (fTwoProngAsym_pt[0] > fTwoProngAsymLoose_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+          fTwoProngChoice_3 = 2;
+        } else {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsymLoose_pt[0], fTwoProngAsymLoose_eta[0], fTwoProngAsymLoose_phi[0], fTwoProngAsymLoose_mass[0]);
+          fTwoProngChoice_3 = 3;
+        }
+        break;
+      case 6: // LBe
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProngLoose_pt[0], fTwoProngLoose_eta[0], fTwoProngLoose_phi[0], fTwoProngLoose_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProngAsymLoose_pt[0], fTwoProngAsymLoose_eta[0], fTwoProngAsymLoose_phi[0], fTwoProngAsymLoose_mass[0]);
+        fTwoProngChoice_1 = 1;
+        fTwoProngChoice_2 = 1;
+        if (fTwoProngLoose_pt[0] > fTwoProngAsymLoose_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngLoose_pt[0], fTwoProngLoose_eta[0], fTwoProngLoose_phi[0], fTwoProngLoose_mass[0]);
+          fTwoProngChoice_3 = 1;
+        } else {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsymLoose_pt[0], fTwoProngAsymLoose_eta[0], fTwoProngAsymLoose_phi[0], fTwoProngAsymLoose_mass[0]);
+          fTwoProngChoice_3 = 3;
+        }
+        break;
+      case 7: // all
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProngLoose_pt[0], fTwoProngLoose_eta[0], fTwoProngLoose_phi[0], fTwoProngLoose_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+        fTwoProngChoice_1 = 1;
+        fTwoProngChoice_2 = 1;
+        if (fTwoProngLoose_pt[0] > fTwoProngAsym_pt[0] && fTwoProngLoose_pt[0] > fTwoProngAsymLoose_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngLoose_pt[0], fTwoProngLoose_eta[0], fTwoProngLoose_phi[0], fTwoProngLoose_mass[0]);
+          fTwoProngChoice_3 = 1;
+        } else if (fTwoProngAsym_pt[0] > fTwoProngLoose_pt[0] && fTwoProngAsym_pt[0] > fTwoProngAsymLoose_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+          fTwoProngChoice_3 = 2;
+        } else { 
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsymLoose_pt[0], fTwoProngAsymLoose_eta[0], fTwoProngAsymLoose_phi[0], fTwoProngAsymLoose_mass[0]);
+          fTwoProngChoice_3 = 3;
+        }
+        break;
+      case 10:
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        LeadingTwoProng_3.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        fTwoProngChoice_1 = 0;
+        fTwoProngChoice_2 = 0;
+        fTwoProngChoice_3 = 0;
+      case 11:
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        fTwoProngChoice_1 = 0;
+        fTwoProngChoice_2 = 0;
+        if (fTwoProng_pt[0] > fTwoProngLoose_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+          fTwoProngChoice_3 = 0;
+        } else {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngLoose_pt[0], fTwoProngLoose_eta[0], fTwoProngLoose_phi[0], fTwoProngLoose_mass[0]);
+          fTwoProngChoice_3 = 1;
+        }
+        break;
+      case 12:
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        fTwoProngChoice_1 = 0;
+        fTwoProngChoice_2 = 0;
+        if (fTwoProng_pt[0] > fTwoProngAsym_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+          fTwoProngChoice_3 = 0;
+        } else {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+          fTwoProngChoice_3 = 2;
+        }
+        break;
+      case 13:
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        fTwoProngChoice_1 = 0;
+        fTwoProngChoice_2 = 0;
+        if (fTwoProng_pt[0] > fTwoProngAsymLoose_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+          fTwoProngChoice_3 = 0;
+        } else {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsymLoose_pt[0], fTwoProngAsymLoose_eta[0], fTwoProngAsymLoose_phi[0], fTwoProngAsymLoose_mass[0]);
+          fTwoProngChoice_3 = 3;
+        }
+        break;
+      case 14: // LAe
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        fTwoProngChoice_1 = 0;
+        fTwoProngChoice_2 = 0;
+        if (fTwoProng_pt[0] > fTwoProngLoose_pt[0] && fTwoProng_pt[0] > fTwoProngAsym_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+          fTwoProngChoice_3 = 0;
+        } else if (fTwoProngAsym_pt[0] > fTwoProng_pt[0] && fTwoProngAsym_pt[0] > fTwoProngLoose_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+          fTwoProngChoice_3 = 2;
+        } else { 
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngLoose_pt[0], fTwoProngLoose_eta[0], fTwoProngLoose_phi[0], fTwoProngLoose_mass[0]);
+          fTwoProngChoice_3 = 1;
+        }
+        break;
+      case 15: // ABe
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        fTwoProngChoice_1 = 0;
+        fTwoProngChoice_2 = 0;
+        if (fTwoProng_pt[0] > fTwoProngAsymLoose_pt[0] && fTwoProng_pt[0] > fTwoProngAsym_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+          fTwoProngChoice_3 = 0;
+        } else if (fTwoProngAsym_pt[0] > fTwoProng_pt[0] && fTwoProngAsym_pt[0] > fTwoProngAsymLoose_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+          fTwoProngChoice_3 = 2;
+        } else { 
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsymLoose_pt[0], fTwoProngAsymLoose_eta[0], fTwoProngAsymLoose_phi[0], fTwoProngAsymLoose_mass[0]);
+          fTwoProngChoice_3 = 3;
+        }
+        break;
+      case 16: // LBe
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        fTwoProngChoice_1 = 0;
+        fTwoProngChoice_2 = 0;
+        if (fTwoProng_pt[0] > fTwoProngLoose_pt[0] && fTwoProng_pt[0] > fTwoProngAsymLoose_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+          fTwoProngChoice_3 = 0;
+        } else if (fTwoProngLoose_pt[0] > fTwoProng_pt[0] && fTwoProngLoose_pt[0] > fTwoProngAsymLoose_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngLoose_pt[0], fTwoProngLoose_eta[0], fTwoProngLoose_phi[0], fTwoProngLoose_mass[0]);
+          fTwoProngChoice_3 = 1;
+        } else { 
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsymLoose_pt[0], fTwoProngAsymLoose_eta[0], fTwoProngAsymLoose_phi[0], fTwoProngAsymLoose_mass[0]);
+          fTwoProngChoice_3 = 3;
+        }
+        break;
+      case 17: // all
+        LeadingTwoProng_1.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        LeadingTwoProng_2.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+        fTwoProngChoice_1 = 0;
+        fTwoProngChoice_2 = 0;
+        if (fTwoProng_pt[0] > fTwoProngLoose_pt[0] && fTwoProng_pt[0] > fTwoProngAsym_pt[0] && fTwoProng_pt[0] > fTwoProngAsymLoose_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+          fTwoProngChoice_3 = 0;
+        } else if (fTwoProngLoose_pt[0] > fTwoProng_pt[0] && fTwoProngLoose_pt[0] > fTwoProngAsym_pt[0] && fTwoProngLoose_pt[0] > fTwoProngAsymLoose_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngLoose_pt[0], fTwoProngLoose_eta[0], fTwoProngLoose_phi[0], fTwoProngLoose_mass[0]);
+          fTwoProngChoice_3 = 1;
+        } else if (fTwoProngAsym_pt[0] > fTwoProng_pt[0] && fTwoProngAsym_pt[0] > fTwoProngLoose_pt[0] && fTwoProngAsym_pt[0] > fTwoProngAsymLoose_pt[0]) {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsym_pt[0], fTwoProngAsym_eta[0], fTwoProngAsym_phi[0], fTwoProngAsym_mass[0]);
+          fTwoProngChoice_3 = 2;
+        } else {
+          LeadingTwoProng_3.SetPtEtaPhiM(fTwoProngAsymLoose_pt[0], fTwoProngAsymLoose_eta[0], fTwoProngAsymLoose_phi[0], fTwoProngAsymLoose_mass[0]);
+          fTwoProngChoice_3 = 3;
+        }
+        break;
+      default:
+        fTwoProngChoice_1 = -1;
+        fTwoProngChoice_2 = -1;
+        fTwoProngChoice_3 = -1;
+      
+    }
+    TLorentzVector LeadingPhoton;
+    LeadingPhoton.SetPtEtaPhiM(fIDPhoton_pt[0], fIDPhoton_eta[0], fIDPhoton_phi[0], fIDPhoton_mass[0]);
+
+    FillRecoDiObjectInfo(fRecoPhiPhotonTwoProng_1, LeadingTwoProng_1, LeadingPhoton);
+    FillRecoDiObjectInfo(fRecoPhiPhotonTwoProng_2, LeadingTwoProng_2, LeadingPhoton);
+    FillRecoDiObjectInfo(fRecoPhiPhotonTwoProng_3, LeadingTwoProng_3, LeadingPhoton);
+  }
+
   // TwoProng plus (photon or TwoProng) inclusive, use higher pt
+  InitRecoDiObjectInfo(fRecoPhiInclusive);
   if (fnTwoProngs >=1 && (fnTwoProngs + fNumIDPhotons >= 2))
   {
     TLorentzVector LeadingTwoProng;
@@ -3413,6 +4143,7 @@ TwoProngAnalyzer::beginJob()
   cout << "noTwoProng " << fdontIncludeTwoProngs << endl;
   cout << "includeAllLooseObjects " << fincludeLooseTwoProngs << endl;
   cout << "includeAllCandObjects " << fincludeCandTwoProngs << endl;
+  cout << "includeAsymTwoProngs " << fincludeAsymTwoProngs << endl;
   cout << "includeMCInfo " << fincludeMCInfo << endl;
   cout << "includeSignalGenParticles " << fincludeSignalGenParticles << endl;
   cout << "includeOldPhotons " << fincludeOldPhotons << endl;
@@ -3444,6 +4175,7 @@ TwoProngAnalyzer::beginJob()
   cout << "twoprong_TrackAsymmetryCut " << ftwoprong_TrackAsymmetryCut << endl;
   cout << "twoprong_PhotonAsymmetryCut " << ftwoprong_PhotonAsymmetryCut << endl;
   cout << "twoprong_OptionalExtraTrack " << ftwoprong_OptionalExtraTrack << endl;
+  cout << "twoprong_FlipAsymReq " << ftwoprong_FlipAsymReq << endl;
   cout << "includeDalitzVariables " << fincludeDalitzVariables << endl;
   cout << "===========================" << endl;
   }
