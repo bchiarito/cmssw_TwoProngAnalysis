@@ -1,23 +1,37 @@
 from WMCore.Configuration import Configuration
+from CRABClient.UserUtilities import config, getUsernameFromSiteDB
+from multiprocessing import Process
+###############
+import crab_multi_helper
+import sys
+testfile = "/cms/chiarito/samples/miniaod/mc/DYJetsToLL_M50_RunIISumer16_MINIAOD_numEvent10000.root"
+###############
 config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_twoprongntuplizer_DY'
+config.General.workArea = 'crab_multi_DY_2016'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=mc2016', 'includeMCInfoBranches=True', 'includeBaseTwoProngs=False', 'includeLooseTwoProngs=True']
+config.JobType.pyCfgParams = ['globalTag=mc2016', 'includeMCInfoBranches=True', 'includeLooseTwoProngs=True']
 config.JobType.pluginName = 'Analysis'
+config.JobType.allowUndistributedCMSSW = True
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/trees/DY/date/'
-config.Data.outputDatasetTag = ""
-config.Data.splitting = 'EventAwareLumiBased'
-config.Data.unitsPerJob = 200000
-config.Data.totalUnits =  -1
+config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/no_filter/dy2016/' % (getUsernameFromSiteDB())
 config.Data.publication = False
+config.Data.unitsPerJob = 250000
+config.Data.totalUnits = -1
+config.Data.splitting = 'EventAwareLumiBased'
+config.Data.lumiMask = ''
 config.section_('User')
 config.section_('Site')
 config.Site.storageSite = 'T3_US_Rutgers'
+###############
+crab_multi_helper.modify_config(config)
+if crab_multi_helper.options.command:
+  crab_multi_helper.print_command(config.JobType.psetName, config.JobType.pyCfgParams, testfile)
+  sys.exit()
+###############
 
 if __name__ == '__main__':
 
@@ -43,41 +57,26 @@ if __name__ == '__main__':
     config.General.requestName = 'DY_10to50'
     config.Data.inputDataset = '/DYJetsToLL_M-10to50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=35291566','mcXS=18610'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'DY_50_ext1'
     config.Data.inputDataset = '/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v2/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=49144274','mcXS=5765.4'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
     config.General.requestName = 'DY_50_ext2'
     config.Data.inputDataset = '/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext2-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=96658943','mcXS=5765.4'])
-    submit(config)
-    config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
-
-    config.General.requestName = 'DY1_50'
-    config.Data.inputDataset = '/DY1JetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['mcN=62627174','mcXS=1012.5'])
-    submit(config)
-    config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
-
-    config.General.requestName = 'DY2_50'
-    config.Data.inputDataset = '/DY2JetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['mcN=19970551','mcXS=332.8'])
-    submit(config)
-    config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
-
-    config.General.requestName = 'DY3_50'
-    config.Data.inputDataset = '/DY3JetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['mcN=5856110','mcXS=101.8'])
-    submit(config)
-    config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
-
-    config.General.requestName = 'DY4_50'
-    config.Data.inputDataset = '/DY4JetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
-    config.JobType.pyCfgParams.extend(['mcN=4197868','mcXS=54.8'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]

@@ -2,23 +2,23 @@ from WMCore.Configuration import Configuration
 from CRABClient.UserUtilities import config, getUsernameFromSiteDB
 from multiprocessing import Process
 ###############
-import crab_helper
+import crab_multi_helper
 import sys
-testfile = "/cms/chiarito/samples/miniaod/mc/QCD_15to30_RunIISummer16_10k_events_MINIAOD_numEvent10000.root"
+testfile = "/cms/chiarito/samples/miniaod/mc/QCD_15to30_RunIISummer16_MINIAOD_numEvent10000.root"
 ###############
-
 config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_QCD_2016'+crab_helper.tag
+config.General.workArea = 'crab_multi_QCD_2016'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
 config.JobType.pyCfgParams = ['globalTag=mc2016', 'includeMCInfoBranches=True', 'includeLooseTwoProngs=True']
 config.JobType.pluginName = 'Analysis'
 config.JobType.allowUndistributedCMSSW = True
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/photon_filter/qcd2016/Feb6/' % (getUsernameFromSiteDB()) + crab_helper.path
+#config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/no_filter/qcd2016/' % (getUsernameFromSiteDB())
+config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/trees/no_filter/qcd2016/'
 config.Data.publication = False
 config.Data.unitsPerJob = 250000
 config.Data.totalUnits = -1
@@ -27,12 +27,10 @@ config.Data.lumiMask = ''
 config.section_('User')
 config.section_('Site')
 config.Site.storageSite = 'T3_US_Rutgers'
-
 ###############
-if crab_helper.options.test:
-  config.Data.totalUnits = 1
-if crab_helper.options.command:
-  crab_helper.print_command(config.JobType.psetName, config.JobType.pyCfgParams, testfile)
+crab_multi_helper.modify_config(config)
+if crab_multi_helper.options.command:
+  crab_multi_helper.print_command(config.JobType.psetName, config.JobType.pyCfgParams, testfile)
   sys.exit()
 ###############
 
@@ -58,24 +56,14 @@ if __name__ == '__main__':
     ## From now on that's what users should modify: this is the a-la-CRAB2 configuration part. ##
     #############################################################################################
 
-    print 'now i can submit'
-
     config.General.requestName = 'QCD_Pt_15to30'
-    print '1'
     config.Data.inputDataset = '/QCD_Pt_15to30_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
-    print '2'
     config.JobType.pyCfgParams.extend(['mcXS=1820000000','mcN=39898460'])
-    print '3'
     #submit(config)
-    print '4'
     p = Process(target=submit, args=(config,))
-    print '5'
     p.start()
-    print '6'
     p.join()
-    print '7'
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
-    print '8!'
 
     config.General.requestName = 'QCD_Pt_30to50'
     config.Data.inputDataset = '/QCD_Pt_30to50_TuneCUETP8M1_13TeV_pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'

@@ -1,23 +1,37 @@
 from WMCore.Configuration import Configuration
+from CRABClient.UserUtilities import config, getUsernameFromSiteDB
+from multiprocessing import Process
+###############
+import crab_multi_helper
+import sys
+testfile = "/cms/chiarito/samples/miniaod/data/JetHT_2016_RunG_03Feb2017_MINIAOD_numEvent10000.root"
+###############
 config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'jet_fullrun_crab3jobs'
+config.General.workArea = 'crab_multi_JetHT_2016'
 config.section_('JobType')
-config.JobType.psetName = 'exodiphotonanalyzer_minimal_cfg.py'
-config.JobType.pyCfgParams = ['local=False','globalTag=80X_dataRun2_2016SeptRepro_v7']
+config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
+config.JobType.pyCfgParams = ['globalTag=data2016', 'includeLooseTwoProngs=True']
 config.JobType.pluginName = 'Analysis'
+config.JobType.allowUndistributedCMSSW = True
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/noreplica/diphotonProject/scratch/photon_eff_calc/Jun7_effHistosOnly'
+config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/no_filter/jet2016/' % (getUsernameFromSiteDB())
 config.Data.publication = False
-config.Data.unitsPerJob = 200
+config.Data.unitsPerJob = 100
 config.Data.totalUnits = -1
 config.Data.splitting = 'LumiBased'
-config.Data.lumiMask = 'Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt'
+config.Data.lumiMask = 'json/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt'
 config.section_('User')
 config.section_('Site')
-config.Site.storageSite = 'T3_US_FNALLPC'
+config.Site.storageSite = 'T3_US_Rutgers'
+###############
+crab_multi_helper.modify_config(config)
+if crab_multi_helper.options.command:
+  crab_multi_helper.print_command(config.JobType.psetName, config.JobType.pyCfgParams, testfile)
+  sys.exit()
+###############
 
 
 if __name__ == '__main__':

@@ -1,23 +1,37 @@
 from WMCore.Configuration import Configuration
+from CRABClient.UserUtilities import config, getUsernameFromSiteDB
+from multiprocessing import Process
+###############
+import crab_multi_helper
+import sys
+testfile = "/cms/chiarito/samples/miniaod/mc/TTJets_RunIISummer16_MINIAOD_numEvent10000.root"
+###############
 config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_twoprongntuplizer_Top'
+config.General.workArea = 'crab_multi_TT_2016'
 config.section_('JobType')
-config.JobType.psetName = '../cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=mc2016', 'includeMCInfoBranches=True', 'includeBaseTwoProngs=False' ,'includeLooseTwoProngs=True']
+config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
+config.JobType.pyCfgParams = ['globalTag=mc2016', 'includeMCInfoBranches=True', 'includeLooseTwoProngs=True']
 config.JobType.pluginName = 'Analysis'
+config.JobType.allowUndistributedCMSSW = True
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/trees/Top/date'
-config.Data.outputDatasetTag = "twoprongntuplizer"
-config.Data.splitting = 'EventAwareLumiBased'
-config.Data.unitsPerJob = 200000
-config.Data.totalUnits =  -1
+config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/no_filter/ttbar2016/' % (getUsernameFromSiteDB())
 config.Data.publication = False
+config.Data.unitsPerJob = 200000
+config.Data.totalUnits = -1
+config.Data.splitting = 'EventAwareLumiBased'
+config.Data.lumiMask = ''
 config.section_('User')
 config.section_('Site')
 config.Site.storageSite = 'T3_US_Rutgers'
+###############
+crab_multi_helper.modify_config(config)
+if crab_multi_helper.options.command:
+  crab_multi_helper.print_command(config.JobType.psetName, config.JobType.pyCfgParams, testfile)
+  sys.exit()
+###############
 
 
 if __name__ == '__main__':
@@ -42,10 +56,12 @@ if __name__ == '__main__':
     #############################################################################################
 
     config.General.requestName = 'TT'
-    config.Data.outputDatasetTag = "twoprongntuplizer"
     config.Data.inputDataset = '/TTJets_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcN=10139950','mcXS=509.4'])
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
 #    config.General.requestName = 'ST_t_top'

@@ -1,16 +1,23 @@
 from WMCore.Configuration import Configuration
 from CRABClient.UserUtilities import config, getUsernameFromSiteDB
+from multiprocessing import Process
+###############
+import crab_multi_helper
+import sys
+testfile = "/cms/chiarito/samples/miniaod/data/SinglePhoton_2015_25ns_RunC_15Dec2015_MINIAOD_numEvent10000.root"
+###############
 config = Configuration()
 config.section_('General')
 config.General.transferOutputs = True
 config.General.transferLogs = True
-config.General.workArea = 'crab_multi_SinglePhoton_2015_25ns_feb15'
+config.General.workArea = 'crab_multi_SinglePhoton_2015_25ns'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=data2015', 'includeLooseTwoProngs=True', 'includeLoosePhotons=True', 'filterForABCDStudy=True']
+config.JobType.pyCfgParams = ['globalTag=data2015', 'includeLooseTwoProngs=True']
 config.JobType.pluginName = 'Analysis'
+config.JobType.allowUndistributedCMSSW = True
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/ABCD_filter/photon2015_25ns/Feb15/' % (getUsernameFromSiteDB())
+config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/no_filter/photon2015_25ns/' % (getUsernameFromSiteDB())
 config.Data.publication = False
 config.Data.unitsPerJob = 100
 config.Data.totalUnits = -1
@@ -19,6 +26,12 @@ config.Data.lumiMask = 'json/Cert_13TeV_16Dec2015ReReco_Collisions15_25ns_JSON_v
 config.section_('User')
 config.section_('Site')
 config.Site.storageSite = 'T3_US_Rutgers'
+###############
+crab_multi_helper.modify_config(config)
+if crab_multi_helper.options.command:
+  crab_multi_helper.print_command(config.JobType.psetName, config.JobType.pyCfgParams, testfile)
+  sys.exit()
+###############
 
 
 if __name__ == '__main__':
@@ -44,8 +57,14 @@ if __name__ == '__main__':
 
     config.General.requestName = 'SinglePhoton_Run2015C'
     config.Data.inputDataset = '/SinglePhoton/Run2015C_25ns-16Dec2015-v1/MINIAOD'
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
 
     config.General.requestName = 'SinglePhoton_Run2015D'
     config.Data.inputDataset = '/SinglePhoton/Run2015D-16Dec2015-v1/MINIAOD'
-    submit(config)
+    #submit(config)
+    p = Process(target=submit, args=(config,))
+    p.start()
+    p.join()
