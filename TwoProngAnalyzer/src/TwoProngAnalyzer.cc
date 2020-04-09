@@ -144,7 +144,7 @@ private:
   bool               fFilterOnTwoProng;            // save only events with one or more twoprongs
   bool               fFilterForABCDStudy;          // save only events with at least one of: tight/loose twoprong, tight/loose photon
   bool               fincludeDalitzHistos;         // include dalitz plot histograms
-  bool               foldSignal;                    // running on old style signal
+  bool               fOldData;                     // runniing on miniAODv2 instead of miniAODv3 (80X vs 94X)
   
   // cmssw config file options, optional branches
   bool               fdontIncludeTwoProngs;        // don't include twoprong object branches
@@ -160,6 +160,7 @@ private:
   // cmsssw config file options, Z study related
   bool               fincludeZDecayGenParticles;   // include gen particle branches for Z and its products
   bool               fincludeZTauHadBranches;      // include Z->tau_mu tau_had branches
+  bool               fincludeLeptonBranches;       // include branches for lepton+jets control region for bkg estimate
   bool               fincludeZMuMuBranches;        // include Z->mu mu branches
   bool               fusePatTauForZPreBranches;    // use pat::tau instead of tau jet in preselection
   int                fmuonIDtype;                  // muon ID to use, 0, 1, 2 = loose, medium, tight
@@ -750,6 +751,23 @@ private:
   Double_t fTagMuon2_dz;
   Double_t fTagMuon2_iso;
   TwoProngAnalysis::recoDiObjectInfo_t fMuonMuon;
+
+  Int_t fNTightMuons;
+  vector<Double_t> fTightMuon_pt;
+  vector<Double_t> fTightMuon_eta;
+  vector<Double_t> fTightMuon_phi;
+  vector<Double_t> fTightMuon_mass;
+  Int_t fMuon_veto;
+  Int_t fbtag_veto;
+  Int_t fImag_W;
+  vector<Double_t> fW_pt;
+  vector<Double_t> fW_eta;
+  vector<Double_t> fW_phi;
+  vector<Double_t> fW_mass;
+  vector<Double_t> fW_mT;
+  Double_t fmT;
+  Int_t fNum_Muons;
+
 };
 
 TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
@@ -762,7 +780,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
     fFilterOnTwoProng(iConfig.getUntrackedParameter<bool>("filterOnTwoProng")),
     fFilterForABCDStudy(iConfig.getUntrackedParameter<bool>("filterForABCDStudy")),
     fincludeDalitzHistos(iConfig.getUntrackedParameter<bool>("includeDalitzHistos")),
-    foldSignal(iConfig.getUntrackedParameter<bool>("oldSignal")),
+    fOldData(iConfig.getUntrackedParameter<bool>("oldData")),
     fdontIncludeTwoProngs(iConfig.getUntrackedParameter<bool>("dontIncludeTwoProngs")),
     fincludeLooseTwoProngs(iConfig.getUntrackedParameter<bool>("includeLooseTwoProngs")),
     fincludeCandTwoProngs(iConfig.getUntrackedParameter<bool>("includeCandTwoProngs")),
@@ -774,6 +792,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
     fincludeLoosePhotons(iConfig.getUntrackedParameter<bool>("includeLoosePhotons")),
     fincludeZDecayGenParticles(iConfig.getUntrackedParameter<bool>("includeZDecayGenParticles")),
     fincludeZTauHadBranches(iConfig.getUntrackedParameter<bool>("includeZTauHadBranches")),
+    fincludeLeptonBranches(iConfig.getUntrackedParameter<bool>("includeLeptonBranches")),
     fincludeZMuMuBranches(iConfig.getUntrackedParameter<bool>("includeZMuMuBranches")),
     fusePatTauForZPreBranches(iConfig.getUntrackedParameter<bool>("usePatTauForZPreBranches")),
     fmuonIDtype(iConfig.getUntrackedParameter<int>("muonIDtype")),
@@ -807,7 +826,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
 
   // MiniAOD event content
   triggerBits_ = consumes<edm::TriggerResults>(edm::InputTag("TriggerResults","","HLT"));
-  if (foldSignal) {
+  if (fOldData) {
     triggerObjects_ = consumes<pat::TriggerObjectStandAloneCollection>(edm::InputTag("selectedPatTrigger"));
   } else {
     triggerObjects_ = consumes<pat::TriggerObjectStandAloneCollection>(edm::InputTag("slimmedPatTrigger"));
@@ -1415,6 +1434,23 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("Obj_MuonMuon",&fMuonMuon,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   }
   }
+  if (fincludeLeptonBranches) {
+   fTree->Branch("nTightMuons",&fNTightMuons,"nTightMuons/I");
+   fTree->Branch("TightMuon_pt",&fTightMuon_pt);
+   fTree->Branch("TightMuon_eta",&fTightMuon_eta);
+   fTree->Branch("TightMuon_phi",&fTightMuon_phi);
+   fTree->Branch("TightMuon_mass",&fTightMuon_mass);
+   fTree->Branch("Muon_veto", &fMuon_veto, "Muon_veto/I");
+   fTree->Branch("btag_veto",&fbtag_veto,"btag_veto/I");
+   fTree->Branch("Imag_W", &fImag_W, "Imag_W/I");
+   fTree->Branch("W_pt",&fW_pt);
+   fTree->Branch("W_eta",&fW_eta);
+   fTree->Branch("W_phi",&fW_phi);
+   fTree->Branch("W_mass",&fW_mass);
+   fTree->Branch("W_mT",&fW_mT);
+   fTree->Branch("mT",&fmT,"mT/D");
+   fTree->Branch("Num_Muons",&fNum_Muons,"Num_Muons/I"); // counts muons that pass pt and eta cuts, but not rest of muon ID, keeping in case stephen needs this
+  }
 
   if(fincludeDalitzHistos) {
   fHighvsMid = fs->make<TH2D>("highvsmid","highvsmid",40,0,1,40,0,1);
@@ -1837,6 +1873,21 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fGenOmega_pattau2DR.clear();
   fGenOmega_pattau3DR.clear();
 
+  fTightMuon_pt.clear();
+  fTightMuon_eta.clear();
+  fTightMuon_phi.clear();
+  fTightMuon_mass.clear();
+  fW_pt.clear();
+  fW_eta.clear();
+  fW_phi.clear();
+  fW_mass.clear();
+  fW_mT.clear();
+  fMuon_veto = -1;
+  fbtag_veto = -1;
+  fImag_W = -1;
+  fmT = -1.0;
+  fNum_Muons = -1;
+
   edm::Handle<reco::VertexCollection> vertices;
   iEvent.getByToken(vtxToken_, vertices);
 
@@ -2079,10 +2130,8 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       double vz = genparticle.vz();
       double pvx = PV.position().X();
       double pvy = PV.position().Y();
-      double pvz = PV.position().Z();
       double bvx = beamspot->position().X();
       double bvy = beamspot->position().Y();
-      double bvz = beamspot->position().Z();
       double vdiff_beamspot = std::sqrt((vx-bvx)*(vx-bvx) + (vy-bvy)*(vy-bvy));
       double vdiff_PV = std::sqrt((vx-pvx)*(vx-pvx) + (vy-pvy)*(vy-pvy));
       fGenPhi_vx.push_back(vx);
@@ -2092,7 +2141,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       fGenPhi_vdiff_PV.push_back(vdiff_PV);
       for (unsigned int j = 0; j < genparticle.numberOfDaughters(); j++) {
         const reco::GenParticle* genparticle2 = (const reco::GenParticle*) genparticle.daughter(j);
-        if (!foldSignal && genparticle2->pdgId() != 90000054 && genparticle2->pdgId() != 90000055) continue;
+        if (!fOldData && genparticle2->pdgId() != 90000054 && genparticle2->pdgId() != 90000055) continue;
         TLorentzVector pseudoscalar;
         pseudoscalar.SetPtEtaPhiE(genparticle2->pt(),genparticle2->eta(),genparticle2->phi(),genparticle2->energy());
         TLorentzVector positivePion;
@@ -2798,8 +2847,8 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         const reco::Candidate* genparticle2 = genparticle.daughter(j);
         TLorentzVector GenParticle;
         GenParticle.SetPtEtaPhiM(genparticle2->pt(), genparticle2->eta(), genparticle2->phi(), genparticle2->mass());
-        if (foldSignal && !(genparticle2->pdgId() == 221 || genparticle2->pdgId() == 331)) continue;
-        if (!foldSignal && !(genparticle2->pdgId() == 90000054 || genparticle2->pdgId() == 90000055)) continue;
+        if (fOldData && !(genparticle2->pdgId() == 221 || genparticle2->pdgId() == 331)) continue;
+        if (!fOldData && !(genparticle2->pdgId() == 90000054 || genparticle2->pdgId() == 90000055)) continue;
         double candDR = 99.9;
         double passedCandDR = 99.9;
         double jetDR = 99.9;
@@ -3429,6 +3478,105 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     fTagMuon2_iso = -999.9;
   }
 
+  if (fincludeLeptonBranches) {
+    const double MUON_MIN_PT = 26;
+    const double MUON_MAX_ETA = 2.1;
+    const double MUON_MAX_DZ = 0.2;
+    const double MUON_MAX_DXY = 0.045;
+
+    const double MUON_VLOOSE_RELISO = 0.4;
+    const double MUON_LOOSE_RELISO = 0.25;
+    const double MUON_MEDIUM_RELISO = 0.20;
+    const double MUON_TIGHT_RELISO = 0.15;
+    const double MUON_VTIGHT_RELISO = 0.10;
+    const double MUON_VVTIGHT_RELISO = 0.05;
+
+    // Tight Muons
+    fNum_Muons = 0;
+    TLorentzVector fMuon_vector;
+    std::vector<const pat::Muon *> passedMuons;
+    for (const pat::Muon &mu : *muons) {
+
+      if (mu.pt() > MUON_MIN_PT && fabs(mu.eta()) < MUON_MAX_ETA){
+        fNum_Muons++;
+      }
+
+      if (mu.pt() > MUON_MIN_PT &&
+        fabs(mu.eta()) < MUON_MAX_ETA &&
+        TauHadFilters::computeMuonIsolation(&mu) < MUON_TIGHT_RELISO &&
+        fabs(mu.muonBestTrack()->dz(PV.position())) < MUON_MAX_DZ &&
+        fabs(mu.muonBestTrack()->dxy(PV.position())) < MUON_MAX_DXY) {
+          if (!mu.isTightMuon(PV)) continue;
+          passedMuons.push_back(&mu);
+          fTightMuon_pt.push_back(mu.pt());
+          fTightMuon_eta.push_back(mu.eta());
+          fTightMuon_phi.push_back(mu.phi());
+          fTightMuon_mass.push_back(mu.mass());
+        }
+    }
+    fMuon_veto = 1;
+    if (fTightMuon_pt.size() > 1) fMuon_veto = 0;
+    fNTightMuons = fTightMuon_pt.size();
+
+    // B Veto
+    fbtag_veto = 0;
+    for (const pat::Jet &j : *ak4jets) {
+        if (j.pt() < 20) continue;
+        if (fabs(j.eta()) > 2.5) continue;
+        if ( std::max(0.f,j.bDiscriminator("pfCombinedInclusiveSecondaryVertexV2BJetTags")) > 0.890) {
+          fbtag_veto = 1;
+          break;
+        }
+    }
+
+    //CONSTRUCTING W
+    fImag_W = 0;
+    fmT = -1.0;
+    double w_mass = 80.3790;
+    if (fTightMuon_pt.size() > 0) {
+      double v_pt, v_eta, v_phi;
+      double v_pz = 0;
+      double v_mass = 0.0;
+      v_pt = met.pt();
+      v_phi = met.phi();
+
+      const pat::Muon &mu = *(passedMuons[0]);
+      double u_pt, u_eta, u_phi, u_pz, u_mass;
+      u_pt = mu.pt();
+      u_eta = mu.eta();
+      u_phi = mu.phi();
+      u_mass = mu.mass();
+      u_pz = u_pt * TMath::SinH(u_eta);
+
+      double k = w_mass * w_mass / 2 + u_pt * v_pt * TMath::Cos(u_phi - v_phi);
+      double u_p2 = u_pt * u_pt + u_pz * u_pz;
+
+      //FROM TOP PAIR PRODUCTION ARTICLE
+      double discr = 4 * k * k * u_pz * u_pz - 4 * u_pt * u_pt * (v_pt * v_pt * u_p2 - k * k);
+      if (discr >= 0.0 && k * u_pz > 0) v_pz = (2 * k * u_pz - TMath::Sqrt(discr)) / (2 * u_pt * u_pt);
+      else if (discr >= 0.0 && k * u_pz < 0) v_pz = (2 * k * u_pz + TMath::Sqrt(discr)) / (2 * u_pt * u_pt);
+      else if (discr < 0.0) {        
+        fImag_W = 1;
+        v_pz = (2 * k * u_pz) / (2 * u_pt * u_pt);
+      }
+      double v_p2 = v_pz * v_pz + v_pt * v_pt;
+      v_eta = TMath::ATanH( v_pz / TMath::Sqrt(v_p2));
+
+      TLorentzVector w_vector, u_vector, v_vector;
+      u_vector.SetPtEtaPhiM(u_pt, u_eta, u_phi, u_mass);
+      v_vector.SetPtEtaPhiM(v_pt, v_eta, v_phi, v_mass);
+      w_vector = u_vector + v_vector;
+
+      fmT = TMath::Sqrt(2 * fMuon_pt[0] * met.pt() * (1 - TMath::Cos((*passedMuons[0]).phi() - met.phi())));
+      fW_mT.push_back(fmT);
+
+      fW_pt.push_back(w_vector.Pt());
+      fW_eta.push_back(w_vector.Eta());
+      fW_phi.push_back(w_vector.Phi());
+      fW_mass.push_back(w_vector.M());
+    } // end conditional on number of tight muons
+  } // end conditional to include lepton+jets branches
+
   // Now fill fTree
   cutflow_total++;
   if (fMakeTrees) {
@@ -3493,7 +3641,7 @@ TwoProngAnalyzer::beginJob()
   cout << "filterOnTwoProng " << fFilterOnTwoProng << endl;
   cout << "filterForABCDStudy " << fFilterForABCDStudy << endl;
   cout << "stackedDalitzHistos " << fincludeDalitzHistos << endl;
-  cout << "oldSignal " << foldSignal << endl;
+  cout << "oldData " << fOldData << endl;
   cout << "===========================" << endl;
   cout << "noTwoProng " << fdontIncludeTwoProngs << endl;
   cout << "includeAllLooseObjects " << fincludeLooseTwoProngs << endl;
@@ -3507,6 +3655,7 @@ TwoProngAnalyzer::beginJob()
   cout << "inlcudeZDecayGenParticles " << fincludeZDecayGenParticles << endl;
   cout << "includeTauTauBranches " << fincludeZTauHadBranches << endl;
   cout << "includeMuMuBranches " << fincludeZMuMuBranches << endl;
+  cout << "includeLeptonBranches " << fincludeLeptonBranches << endl;
   cout << "usePatTauInPreselection " << fusePatTauForZPreBranches << endl;
   cout << "muonIDtype " << fmuonIDtype << endl;
   cout << "muonISOtype " << fmuonISOtype << endl;

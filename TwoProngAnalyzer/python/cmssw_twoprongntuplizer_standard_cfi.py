@@ -30,7 +30,7 @@ twoprongNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
                                   includeLoosePhotons = cms.untracked.bool(False),
                                   # MC options
                                   includeSignalGenParticles = cms.untracked.bool(False),
-                                  oldSignal = cms.untracked.bool(False),
+                                  oldData = cms.untracked.bool(False),
                                   includeMCInfo = cms.untracked.bool(False),
                                   mcXS = cms.untracked.double(1.0),
                                   mcN = cms.untracked.double(1.0),
@@ -44,6 +44,8 @@ twoprongNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
                                   usePatTauForZPreBranches = cms.untracked.bool(False),
                                   muonIDtype = cms.untracked.int32(2), # 0, 1, 2 = loose, medium, tight
                                   muonISOtype = cms.untracked.int32(3), # 0, 1, 2, 3, 4, 5, = vloose, loose, medium, tight, vtight, vvtight
+                                  # lepton + jets control region
+                                  includeLeptonBranches = cms.untracked.bool(False),
                                   # filters
                                   filterOnPhoton = cms.untracked.bool(False),
                                   filterOnTwoProng = cms.untracked.bool(False),

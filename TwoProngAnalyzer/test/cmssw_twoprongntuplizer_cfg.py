@@ -7,7 +7,7 @@ options.register("sample", "", VarParsing.multiplicity.singleton, VarParsing.var
 options.register("globalTag", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "global tag to use when running")
 # mc related
 options.register("includeSignalMCBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify singal MC for looking for Phi and omega gen particles")
-options.register("oldSignal", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Running on old style signal MC")
+options.register("oldData", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Running on old style signal MC")
 options.register("includeDYMCBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify Z->ll MC")
 options.register("includeMCInfoBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "include mc weight in Ttree")
 options.register("mcXS", 1.0, VarParsing.multiplicity.singleton, VarParsing.varType.float, "mc cross section, if desired to be filled in trees")
@@ -55,6 +55,8 @@ options.register("includeTauTauBranches", False, VarParsing.multiplicity.singlet
 options.register("includeMuMuBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include mu mu reco branches")
 options.register("muonIDtype", 2, VarParsing.multiplicity.singleton, VarParsing.varType.int, "0, 1, 2 = loose, medium, tight")
 options.register("muonISOtype", 3, VarParsing.multiplicity.singleton, VarParsing.varType.int, "0, 1, 2, 3, 4, 5 = vloose, loose, medium, tight, vtight, vvtight")
+# lepton+jets control region
+options.register("includeLeptonBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include lepton+jets control region branches, tight muon and reco W")
 # other
 options.register("out", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "output file name")
 options.register("debug", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "True includes all output, False removes most of the per event output")
@@ -210,12 +212,13 @@ if not options.doLumis=="":
 process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_standard_cfi')
 # settings always overwritten by command line
 process.twoprongNtuplizer.includeSignalGenParticles = options.includeSignalMCBranches
-process.twoprongNtuplizer.oldSignal = options.oldSignal
+process.twoprongNtuplizer.oldData = options.oldData
 process.twoprongNtuplizer.includeZDecayGenParticles = options.includeDYMCBranches
 process.twoprongNtuplizer.includeConeHEPhotons = options.includeConeHEPhotons
 process.twoprongNtuplizer.includeBasePhotons = options.includeBasePhotons
 process.twoprongNtuplizer.includeLoosePhotons = options.includeLoosePhotons
 process.twoprongNtuplizer.includeZTauHadBranches = options.includeTauTauBranches
+process.twoprongNtuplizer.includeLeptonBranches = options.includeLeptonBranches
 process.twoprongNtuplizer.includeZMuMuBranches = options.includeMuMuBranches
 process.twoprongNtuplizer.muonIDtype = options.muonIDtype
 process.twoprongNtuplizer.muonISOtype = options.muonISOtype
@@ -256,12 +259,13 @@ if options.tauModifiedTwoProng:
   process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_taumodified_cfi')
   # settings always overwritten by command line
   process.twoprongModNtuplizer.includeSignalGenParticles = options.includeSignalMCBranches
-  process.twoprongModNtuplizer.oldSignal = options.oldSignal
+  process.twoprongModNtuplizer.oldData = options.oldData
   process.twoprongModNtuplizer.includeZDecayGenParticles = options.includeDYMCBranches
   process.twoprongModNtuplizer.includeConeHEPhotons = options.includeConeHEPhotons
   process.twoprongModNtuplizer.includeBasePhotons = options.includeBasePhotons
   process.twoprongModNtuplizer.includeLoosePhotons = options.includeLoosePhotons
   process.twoprongModNtuplizer.includeZTauHadBranches = options.includeTauTauBranches
+  process.twoprongModNtuplizer.includeLeptonBranches = options.includeLeptonBranches
   process.twoprongModNtuplizer.includeZMuMuBranches = options.includeMuMuBranches
   process.twoprongModNtuplizer.muonIDtype = options.muonIDtype
   process.twoprongModNtuplizer.muonISOtype = options.muonISOtype
