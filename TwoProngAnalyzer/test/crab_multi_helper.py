@@ -26,6 +26,7 @@ def print_command(pset, params, filename):
   print command
 
 def modify_config(config):
+  
   if options.test:
     config.Data.totalUnits = 1
 
@@ -38,7 +39,7 @@ def modify_config(config):
   config.Data.outLFNDirBase = config.Data.outLFNDirBase + path
 
   if options.asym:
-    config.JobType.pyCfgParams.extend(['flipAsymReq=True'])
+    config.JobType.pyCfgParams.extend(['includeAsymTwoProngs=True'])
 
   if options.filt == "photon":
     config.JobType.pyCfgParams.extend(['filterOnPhoton=True'])

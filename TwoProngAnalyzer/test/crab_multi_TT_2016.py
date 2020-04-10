@@ -17,7 +17,7 @@ config.JobType.pyCfgParams = ['globalTag=mc2016', 'includeMCInfoBranches=True', 
 config.JobType.pluginName = 'Analysis'
 config.JobType.allowUndistributedCMSSW = True
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/no_filter/ttbar2016/' % (getUsernameFromSiteDB())
+config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/trees/no_filter/ttbar2016/'
 config.Data.publication = False
 config.Data.unitsPerJob = 200000
 config.Data.totalUnits = -1
