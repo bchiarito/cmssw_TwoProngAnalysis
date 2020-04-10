@@ -7,6 +7,7 @@ options.register("sample", "", VarParsing.multiplicity.singleton, VarParsing.var
 options.register("globalTag", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "global tag to use when running")
 # mc related
 options.register("includeSignalMCBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify singal MC for looking for Phi and omega gen particles")
+options.register("oldData", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Running on old style signal MC")
 options.register("includeDYMCBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify Z->ll MC")
 options.register("includeMCInfoBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "include mc weight in Ttree")
 options.register("mcXS", 1.0, VarParsing.multiplicity.singleton, VarParsing.varType.float, "mc cross section, if desired to be filled in trees")
@@ -14,6 +15,7 @@ options.register("mcN", 1.0, VarParsing.multiplicity.singleton, VarParsing.varTy
 # filters
 options.register("filterOnPhoton", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 Photon")
 options.register("filterOnTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 TwoProng")
+options.register("filterOnLepton", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 tight muon")
 options.register("filterForABCDStudy", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 tight/loose twoprong or tight/loose photon")
 options.register("filterOnDYsig", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("filterOnDYbkg", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
@@ -56,6 +58,8 @@ options.register("includeTauTauBranches", False, VarParsing.multiplicity.singlet
 options.register("includeMuMuBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include mu mu reco branches")
 options.register("muonIDtype", 2, VarParsing.multiplicity.singleton, VarParsing.varType.int, "0, 1, 2 = loose, medium, tight")
 options.register("muonISOtype", 3, VarParsing.multiplicity.singleton, VarParsing.varType.int, "0, 1, 2, 3, 4, 5 = vloose, loose, medium, tight, vtight, vvtight")
+# lepton+jets control region
+options.register("includeLeptonBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Include lepton+jets control region branches, tight muon and reco W")
 # other
 options.register("out", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "output file name")
 options.register("debug", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "True includes all output, False removes most of the per event output")
@@ -157,7 +161,9 @@ process.TFileService = cms.Service( "TFileService", fileName = cms.string( pre +
 
 # Global Tag
 process.load('Configuration/StandardSequences/FrontierConditions_GlobalTag_cff')
-if options.globalTag == 'mc2016':
+if options.globalTag == 'mc2017':
+  process.GlobalTag.globaltag = '94X_mc2017_realistic_v14'
+elif options.globalTag == 'mc2016':
   process.GlobalTag.globaltag = '80X_mcRun2_asymptotic_2016_TrancheIV_v6'
 elif options.globalTag == 'mc2015':
   process.GlobalTag.globaltag = '76X_mcRun2_asymptotic_v12'
@@ -209,11 +215,13 @@ if not options.doLumis=="":
 process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_standard_cfi')
 # settings always overwritten by command line
 process.twoprongNtuplizer.includeSignalGenParticles = options.includeSignalMCBranches
+process.twoprongNtuplizer.oldData = options.oldData
 process.twoprongNtuplizer.includeZDecayGenParticles = options.includeDYMCBranches
 process.twoprongNtuplizer.includeConeHEPhotons = options.includeConeHEPhotons
 process.twoprongNtuplizer.includeBasePhotons = options.includeBasePhotons
 process.twoprongNtuplizer.includeLoosePhotons = options.includeLoosePhotons
 process.twoprongNtuplizer.includeZTauHadBranches = options.includeTauTauBranches
+process.twoprongNtuplizer.includeLeptonBranches = options.includeLeptonBranches
 process.twoprongNtuplizer.includeZMuMuBranches = options.includeMuMuBranches
 process.twoprongNtuplizer.muonIDtype = options.muonIDtype
 process.twoprongNtuplizer.muonISOtype = options.muonISOtype
@@ -224,6 +232,7 @@ process.twoprongNtuplizer.debug = options.debug
 # filters
 process.twoprongNtuplizer.filterOnPhoton = options.filterOnPhoton
 process.twoprongNtuplizer.filterOnTwoProng = options.filterOnTwoProng
+process.twoprongNtuplizer.filterOnLepton = options.filterOnLepton
 process.twoprongNtuplizer.filterForABCDStudy = options.filterForABCDStudy
 process.twoprongNtuplizer.usePatTauForZPreBranches = options.usePatTauInPreselection
 # object includes
@@ -256,11 +265,13 @@ if options.tauModifiedTwoProng:
   process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_taumodified_cfi')
   # settings always overwritten by command line
   process.twoprongModNtuplizer.includeSignalGenParticles = options.includeSignalMCBranches
+  process.twoprongModNtuplizer.oldData = options.oldData
   process.twoprongModNtuplizer.includeZDecayGenParticles = options.includeDYMCBranches
   process.twoprongModNtuplizer.includeConeHEPhotons = options.includeConeHEPhotons
   process.twoprongModNtuplizer.includeBasePhotons = options.includeBasePhotons
   process.twoprongModNtuplizer.includeLoosePhotons = options.includeLoosePhotons
   process.twoprongModNtuplizer.includeZTauHadBranches = options.includeTauTauBranches
+  process.twoprongModNtuplizer.includeLeptonBranches = options.includeLeptonBranches
   process.twoprongModNtuplizer.includeZMuMuBranches = options.includeMuMuBranches
   process.twoprongModNtuplizer.muonIDtype = options.muonIDtype
   process.twoprongModNtuplizer.muonISOtype = options.muonISOtype
@@ -271,6 +282,7 @@ if options.tauModifiedTwoProng:
   # filters
   process.twoprongModNtuplizer.filterOnPhoton = options.filterOnPhoton
   process.twoprongModNtuplizer.filterOnTwoProng = options.filterOnTwoProng
+  process.twoprongModNtuplizer.filterOnLepton = options.filterOnLepton
   process.twoprongModNtuplizer.usePatTauForZPreBranches = options.usePatTauInPreselection
   # object includes
   process.twoprongModNtuplizer.dontIncludeTwoProngs = not (options.commandLineTwoProng or options.tauModifiedTwoProng or options.standardTwoProng)
