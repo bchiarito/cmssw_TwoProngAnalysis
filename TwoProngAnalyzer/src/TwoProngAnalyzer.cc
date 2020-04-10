@@ -142,6 +142,7 @@ private:
   double             fMcN;                         // set the value of the mc number generated branch
   bool               fFilterOnPhoton;              // save only events with one or more photons
   bool               fFilterOnTwoProng;            // save only events with one or more twoprongs
+  bool               fFilterOnLepton;              // save only events with one or more tight muon (lepton+jets study)
   bool               fFilterForABCDStudy;          // save only events with at least one of: tight/loose twoprong, tight/loose photon
   bool               fincludeDalitzHistos;         // include dalitz plot histograms
   bool               fOldData;                     // runniing on miniAODv2 instead of miniAODv3 (80X vs 94X)
@@ -316,10 +317,12 @@ private:
   double fBeamspot_x;
   double fBeamspot_y;
   double fBeamspot_z;
-  double fHT;         // rejects jets from muon/electron/photon
-  double fHT_bare;    // naive, includes all jets
-  double fHT_pf;
-  double fST;         // HT + leading lepton pt
+  double fHT_naive;    // include all jets past pt/eta cut
+  double fHT_qcd;      // clean based on EnergyFraction(), try to only include QCD jets
+  double fHT;          // clean based on DR to twoprong and photon
+  double fST;          // add photon pt
+  double fHT_l;        // clean based on DR to twoprong and muon
+  double fST_l;        // add muon pt
   double fMET;
   double fMET_phi;
   double fMcW;
@@ -778,6 +781,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
     fMcN(iConfig.getUntrackedParameter<double>("mcN")),
     fFilterOnPhoton(iConfig.getUntrackedParameter<bool>("filterOnPhoton")),
     fFilterOnTwoProng(iConfig.getUntrackedParameter<bool>("filterOnTwoProng")),
+    fFilterOnLepton(iConfig.getUntrackedParameter<bool>("filterOnLepton")),
     fFilterForABCDStudy(iConfig.getUntrackedParameter<bool>("filterForABCDStudy")),
     fincludeDalitzHistos(iConfig.getUntrackedParameter<bool>("includeDalitzHistos")),
     fOldData(iConfig.getUntrackedParameter<bool>("oldData")),
@@ -949,10 +953,15 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("nPV",&fNumPVs,"nPV/I");
   fTree->Branch("rho",&fRho,"rho/D");
   fTree->Branch("nPF",&fNumPF,"nPF/I");
+
+  fTree->Branch("HT_naive",&fHT_naive,"HT_naive/D");
+  fTree->Branch("HT_qcd",&fHT_qcd,"HT_qcd/D");
   fTree->Branch("HT",&fHT,"HT/D");
   fTree->Branch("ST",&fST,"ST/D");
-  fTree->Branch("HT_bare",&fHT_bare,"HT_bare/D");
-  fTree->Branch("HT_pf",&fHT_pf,"HT_pf/D");
+  if (fincludeLeptonBranches) {
+    fTree->Branch("HT_l",&fHT_l,"HT_l/D");
+    fTree->Branch("ST_l",&fST_l,"ST_l/D");
+  }
   fTree->Branch("MET",&fMET,"MET/D");
   fTree->Branch("MET_phi",&fMET_phi,"MET_phi/D");
   // Electrons
@@ -2317,36 +2326,11 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fEventNum = iEvent.id().event();
   fRunNum = iEvent.id().run();
   fLumiNum = iEvent.id().luminosityBlock();
-  fHT = 0.0;
-  fST = 0.0;
-  fHT_bare = 0.0;
-  for (unsigned int i = 0; i < ak4jets->size(); i++) {
-    const pat::Jet &jet = (*ak4jets)[i];
-    if (jet.pt() < 30) continue;
-    if (fabs(jet.eta()) > 2.5) continue;
-    fHT_bare += jet.pt();
-    if (jet.muonEnergyFraction() > 0.7 || jet.electronEnergyFraction() > 0.6 || jet.photonEnergyFraction() > 0.6) continue; 
-    fHT += jet.pt();
-  }
-  fHT_pf = 0.0;
-  for (unsigned int i = 0; i < pfcands->size(); i++) {
-    const pat::PackedCandidate &pf = (*pfcands)[i];
-    fHT_pf += pf.pt();
-  }
   fMET = (*MET)[0].pt();
   fMET_phi = (*MET)[0].phi();
   fNumPVs = primaryvertecies->size();
   fRho = *rhoH;
   fNumPF = pfcands->size();
-  if (fNumMuons >= 1) fST = fHT + fMuon_pt[0];
-  else fST = fHT;
-
-  if (fNumMuons >= 1) {
-	fST = fHT + fMuon_pt[0];
-  } else {
-	
-	fST = fHT;
-  } 
 
   // Two prongs
   if (fDebug) cout << ". starting two prong code" << endl;
@@ -3515,7 +3499,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
         }
     }
     fMuon_veto = 1;
-    if (fTightMuon_pt.size() > 1) fMuon_veto = 0;
+    if (fTightMuon_pt.size() > 0) fMuon_veto = 0;
     fNTightMuons = fTightMuon_pt.size();
 
     // B Veto
@@ -3567,7 +3551,8 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       v_vector.SetPtEtaPhiM(v_pt, v_eta, v_phi, v_mass);
       w_vector = u_vector + v_vector;
 
-      fmT = TMath::Sqrt(2 * fMuon_pt[0] * met.pt() * (1 - TMath::Cos((*passedMuons[0]).phi() - met.phi())));
+      //fmT = TMath::Sqrt(2 * fMuon_pt[0] * met.pt() * (1 - TMath::Cos((*passedMuons[0]).phi() - met.phi())));
+      fmT = TMath::Sqrt(2 * u_pt * v_pt * (1 - TMath::Cos(u_phi - v_phi)));
       fW_mT.push_back(fmT);
 
       fW_pt.push_back(w_vector.Pt());
@@ -3577,16 +3562,65 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     } // end conditional on number of tight muons
   } // end conditional to include lepton+jets branches
 
+  // HT
+  fHT = 0.0;
+  fST = 0.0;
+  fHT_naive = 0.0;
+  fHT_qcd = 0.0;
+  fHT_l = 0.0;
+  fST_l = 0.0;
+  for (unsigned int i = 0; i < ak4jets->size(); i++) {
+    const pat::Jet &jet = (*ak4jets)[i];
+    if (jet.pt() < 30) continue;
+    if (fabs(jet.eta()) > 2.5) continue;
+    TLorentzVector jet_vector; jet_vector.SetPtEtaPhiE(jet.pt(), jet.eta(), jet.phi(), jet.energy());
+    TLorentzVector twoprong_vector;
+    TLorentzVector photon_vector;
+    if (fnTwoProngs>0) twoprong_vector.SetPtEtaPhiM(fTwoProng_pt[0], fTwoProng_eta[0], fTwoProng_phi[0], fTwoProng_mass[0]);
+    if (fNumIDPhotons>0) photon_vector.SetPtEtaPhiM(fIDPhoton_pt[0], fIDPhoton_eta[0], fIDPhoton_phi[0], fIDPhoton_mass[0]);
+
+    fHT_naive += jet.pt();
+    fHT_qcd += jet.pt();
+    fHT += jet.pt();
+    fHT_l += jet.pt();
+
+    // clean HT of twoprong and photon
+    if (fnTwoProngs>0 && jet_vector.DeltaR(twoprong_vector) < 0.3) fHT -= jet.pt();
+    else if (fNumIDPhotons>0 && jet_vector.DeltaR(photon_vector) < 0.3) fHT -= jet.pt();
+    
+    // clean old HT of all bad energyfraction() jets
+    if (jet.muonEnergyFraction() > 0.7 || jet.electronEnergyFraction() > 0.6 || jet.photonEnergyFraction() > 0.6) fHT_qcd -= jet.pt();
+
+    // add photon to ST
+    fST = fHT;
+    if (fNumIDPhotons>0) fST += fIDPhoton_pt[0];
+
+    if (fincludeLeptonBranches) {
+
+      TLorentzVector muon_vector;
+      if (fNTightMuons>0) muon_vector.SetPtEtaPhiM(fTightMuon_pt[0], fTightMuon_eta[0], fTightMuon_phi[0], fTightMuon_mass[0]);
+
+      // clean HT_l of twoprong and muon
+      if (fnTwoProngs>0 && jet_vector.DeltaR(twoprong_vector) < 0.3) fHT_l -= jet.pt();
+      else if (fNTightMuons>0 && jet_vector.DeltaR(muon_vector) < 0.3) fHT_l -= jet.pt();
+
+      // add muon to ST_l
+      fST_l = fHT_l;
+      if (fNTightMuons>0) fST_l += fTightMuon_pt[0];
+    }
+  }
+
   // Now fill fTree
   cutflow_total++;
   if (fMakeTrees) {
-    if (!fFilterForABCDStudy) {
-      if ( fFilterOnPhoton &&  fFilterOnTwoProng && fNumIDPhotons>=1 && fnTwoProngs>=1) { fTree->Fill(); cutflow_passFilter++; }
-      if ( fFilterOnPhoton && !fFilterOnTwoProng && fNumIDPhotons>=1) { fTree->Fill(); cutflow_passFilter++; }
-      if (!fFilterOnPhoton &&  fFilterOnTwoProng && fnTwoProngs>=1) { fTree->Fill(); cutflow_passFilter++; }
-      if (!fFilterOnPhoton && !fFilterOnTwoProng) { fTree->Fill(); cutflow_passFilter++; }
-    } else {
-      if (fNumIDPhotons + fNumLoose1IDPhotons + fNumLoose2IDPhotons + fnTwoProngs + fnTwoProngsLoose >= 1) { fTree->Fill(); cutflow_passFilter++; }
+    bool fill = true;
+    if (fFilterOnPhoton && fNumIDPhotons==0) fill = false;
+    if (fFilterOnTwoProng && fnTwoProngs==0) fill = false;
+    if (fFilterOnLepton && fNTightMuons==0) fill = false;
+    if (fFilterForABCDStudy && fNumIDPhotons + fNumLoose1IDPhotons + fNumLoose2IDPhotons + fnTwoProngs + fnTwoProngsLoose == 0) fill = false;
+    if (fill) {
+      cutflow_passFilter++;
+      fTree->Fill();
     }
   }
 
@@ -3639,6 +3673,7 @@ TwoProngAnalyzer::beginJob()
   cout << "mcN " << fMcN << endl;
   cout << "filterOnPhoton " << fFilterOnPhoton << endl;
   cout << "filterOnTwoProng " << fFilterOnTwoProng << endl;
+  cout << "filterOnLepton " << fFilterOnLepton << endl;
   cout << "filterForABCDStudy " << fFilterForABCDStudy << endl;
   cout << "stackedDalitzHistos " << fincludeDalitzHistos << endl;
   cout << "oldData " << fOldData << endl;
@@ -3687,7 +3722,7 @@ void
 TwoProngAnalyzer::endJob()
 {
   // print a cutflow if using a filter 
-  if ( fFilterOnPhoton || fFilterOnTwoProng || fFilterForABCDStudy) {
+  if ( fFilterOnPhoton || fFilterOnTwoProng || fFilterForABCDStudy || fFilterOnLepton) {
     cout << "\nCutflow report" << endl;
     cout << "==============" << endl;
     cout << "Total_Events " << cutflow_total << endl;

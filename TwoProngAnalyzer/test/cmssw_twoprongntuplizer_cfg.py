@@ -15,6 +15,7 @@ options.register("mcN", 1.0, VarParsing.multiplicity.singleton, VarParsing.varTy
 # filters
 options.register("filterOnPhoton", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 Photon")
 options.register("filterOnTwoProng", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 TwoProng")
+options.register("filterOnLepton", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 tight muon")
 options.register("filterForABCDStudy", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "filter on >=1 tight/loose twoprong or tight/loose photon")
 options.register("filterOnDYsig", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
 options.register("filterOnDYbkg", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "")
@@ -229,6 +230,7 @@ process.twoprongNtuplizer.debug = options.debug
 # filters
 process.twoprongNtuplizer.filterOnPhoton = options.filterOnPhoton
 process.twoprongNtuplizer.filterOnTwoProng = options.filterOnTwoProng
+process.twoprongNtuplizer.filterOnLepton = options.filterOnLepton
 process.twoprongNtuplizer.filterForABCDStudy = options.filterForABCDStudy
 process.twoprongNtuplizer.usePatTauForZPreBranches = options.usePatTauInPreselection
 # object includes
@@ -276,6 +278,7 @@ if options.tauModifiedTwoProng:
   # filters
   process.twoprongModNtuplizer.filterOnPhoton = options.filterOnPhoton
   process.twoprongModNtuplizer.filterOnTwoProng = options.filterOnTwoProng
+  process.twoprongModNtuplizer.filterOnLepton = options.filterOnLepton
   process.twoprongModNtuplizer.usePatTauForZPreBranches = options.usePatTauInPreselection
   # object includes
   process.twoprongModNtuplizer.dontIncludeTwoProngs = not (options.commandLineTwoProng or options.tauModifiedTwoProng or options.standardTwoProng)

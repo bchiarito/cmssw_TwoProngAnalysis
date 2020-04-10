@@ -49,6 +49,7 @@ twoprongNtuplizer = cms.EDAnalyzer('TwoProngAnalyzer',
                                   # filters
                                   filterOnPhoton = cms.untracked.bool(False),
                                   filterOnTwoProng = cms.untracked.bool(False),
+                                  filterOnLepton = cms.untracked.bool(False),
                                   filterForABCDStudy = cms.untracked.bool(False),
                                   # control output
                                   debug = cms.untracked.bool(False),
