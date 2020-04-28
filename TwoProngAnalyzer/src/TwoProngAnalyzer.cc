@@ -801,9 +801,6 @@ private:
   vector<Double_t> fTwoProngAsymLoose_genTau_dR;
 
   Int_t fSCat;
-  Int_t fTwoProngChoice_1;
-  Int_t fTwoProngChoice_2;
-  Int_t fTwoProngChoice_3;
   TwoProngAnalysis::recoDiObjectInfo_t fRecoPhiDiTwoProng;
   TwoProngAnalysis::recoDiObjectInfo_t fRecoPhiPhotonTwoProng;
   TwoProngAnalysis::recoDiObjectInfo_t fRecoPhiPhotonTwoProng_1;
@@ -1619,9 +1616,6 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   }
   // Combined Objects
   fTree->Branch("sCat",&fSCat,"sCat/I");
-  fTree->Branch("twoProngChoice_1",&fTwoProngChoice_1,"twoProngChoice_1/I");
-  fTree->Branch("twoProngChoice_2",&fTwoProngChoice_2,"twoProngChoice_2/I");
-  fTree->Branch("twoProngChoice_3",&fTwoProngChoice_3,"twoProngChoice_3/I");
   fTree->Branch("Obj_DiTwoProng",&fRecoPhiDiTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree->Branch("Obj_PhotonTwoProng",&fRecoPhiPhotonTwoProng,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
   fTree->Branch("Obj_RecoPhiInclusive",&fRecoPhiInclusive,TwoProngAnalysis::recoDiObjectBranchDefString.c_str());
