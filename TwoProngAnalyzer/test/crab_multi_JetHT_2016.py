@@ -13,13 +13,13 @@ config.General.transferLogs = True
 config.General.workArea = 'crab_multi_JetHT_2016'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=data2016', 'includeLooseTwoProngs=True']
+config.JobType.pyCfgParams = ['globalTag=data2016', 'oldData=True']
 config.JobType.pluginName = 'Analysis'
 config.JobType.allowUndistributedCMSSW = True
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/no_filter/jet2016/' % (getUsernameFromSiteDB())
+config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/jet2016/' % (getUsernameFromSiteDB())
 config.Data.publication = False
-config.Data.unitsPerJob = 100
+config.Data.unitsPerJob = 500
 config.Data.totalUnits = -1
 config.Data.splitting = 'LumiBased'
 config.Data.lumiMask = 'json/Cert_271036-284044_13TeV_23Sep2016ReReco_Collisions16_JSON.txt'

@@ -3,7 +3,6 @@ from CRABClient.UserUtilities import config, getUsernameFromSiteDB
 from multiprocessing import Process
 ###############
 import crab_multi_helper
-import sys
 testfile = "/cms/chiarito/samples/miniaod/data/SinglePhoton_2016_RunH_03Feb2017_MINIAOD_numEvent10000.root"
 ###############
 config = Configuration()
@@ -13,12 +12,11 @@ config.General.transferLogs = True
 config.General.workArea = 'crab_multi_SinglePhoton_2016'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=data2016', 'includeLooseTwoProngs=True']
+config.JobType.pyCfgParams = ['globalTag=data2016', 'oldData=True']
 config.JobType.pluginName = 'Analysis'
 config.JobType.allowUndistributedCMSSW = True
 config.section_('Data')
-#config.Data.outLFNDirBase = '/store/user/%s/cms_area/twoprong/trees/no_filter/photon2016/' % (getUsernameFromSiteDB())
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/trees/no_filter/photon2016/'
+config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/trees/photon2016/'
 config.Data.publication = False
 config.Data.unitsPerJob = 500
 config.Data.totalUnits = -1
@@ -28,10 +26,7 @@ config.section_('User')
 config.section_('Site')
 config.Site.storageSite = 'T3_US_Rutgers'
 ###############
-crab_multi_helper.modify_config(config)
-if crab_multi_helper.options.command:
-  crab_multi_helper.print_command(config.JobType.psetName, config.JobType.pyCfgParams, testfile)
-  sys.exit()
+crab_multi_helper.modify_config(config, testfile)
 ###############
 
 
