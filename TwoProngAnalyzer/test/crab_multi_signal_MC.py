@@ -1,5 +1,6 @@
+import CRABClient
 from WMCore.Configuration import Configuration
-from CRABClient.UserUtilities import config, getUsernameFromSiteDB
+from CRABClient.UserUtilities import config
 from multiprocessing import Process
 import sys
 import subprocess
@@ -11,8 +12,8 @@ parser.add_option("--loose", action="store_true", dest="loose", default=False, h
 parser.add_option("-f","--filter", action="store", dest="filt", default="none", help="")
 
 parser.add_option("-t","--tag", action="store", dest="tag", default="", help="tag for crab directory and output directory")
-parser.add_option("-i","--input", action="store", dest="input", default="", help="input .dat file of miniaod datasets")
-parser.add_option("-v","--version", action="store", dest="version", default="v3", help="v2 or v3 (default)")
+parser.add_option("-i","--input", action="store", dest="input", default="", help="input .dat file of miniaod datasets, one on each line")
+parser.add_option("-v","--version", action="store", dest="version", default="v2", help="v2 (default) or v3")
 parser.add_option("-p", "--print", action="store_true", dest="printOnly", default=False, help="will not run, only print summary of tasks to be created")
 parser.add_option("-c", "--command", action="store_true", dest="command", default=False, help="print command to test crab config, then exit")
 parser.add_option("-e", "--exec", action="store_true", dest="execute", default=False, help="print command to test crab config, run the command, then exit")
@@ -30,7 +31,7 @@ config.General.transferLogs = True
 config.General.workArea = 'crab_multi_signal_MC' + dir_tag
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['includeMCInfoBranches=True']
+config.JobType.pyCfgParams = ['includeMCInfoBranches=True', 'includeSignalMCBranches=True']
 config.JobType.pluginName = 'Analysis'
 config.JobType.allowUndistributedCMSSW = True
 config.section_('Data')
@@ -58,11 +59,11 @@ if options.filt == "muon":
   config.JobType.pyCfgParams.extend(['filterOnLepton=True'])    
 
 if options.version == "v2":
-  globalTagOptions = ['globalTag=mc2016', 'oldData=True']
-  testfile = "/cms/chiarito/samples/miniaod/signal/MINIAOD_v2.root"
+  globalTagOptions = ['globalTag=mc2016', 'miniAODv=2']
+  testfile = "/cms/chiarito/datafiles/signal/miniaod/MINIAOD_v2.root"
 if options.version == "v3":
-  globalTagOptions = ['globalTag=mc2016']
-  testfile = "/cms/chiarito/samples/miniaod/signal/MINIAOD_v3.root"
+  globalTagOptions = ['globalTag=mc2016', 'miniAODv=3']
+  testfile = "/cms/chiarito/datafiles/signal/miniaod/MINIAOD_v3.root"
 
 config.JobType.pyCfgParams.extend(globalTagOptions)
 

@@ -7,7 +7,7 @@ options.register("sample", "", VarParsing.multiplicity.singleton, VarParsing.var
 options.register("globalTag", "", VarParsing.multiplicity.singleton, VarParsing.varType.string, "global tag to use when running")
 # mc related
 options.register("includeSignalMCBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify singal MC for looking for Phi and omega gen particles")
-options.register("oldData", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Running on old style signal MC")
+options.register("miniAODv", 2, VarParsing.multiplicity.singleton, VarParsing.varType.int, "miniAODv2 vs miniAODv3")
 options.register("includeDYMCBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "Specify Z->ll MC")
 options.register("includeMCInfoBranches", False, VarParsing.multiplicity.singleton, VarParsing.varType.bool, "include mc weight in Ttree")
 options.register("mcXS", 1.0, VarParsing.multiplicity.singleton, VarParsing.varType.float, "mc cross section, if desired to be filled in trees")
@@ -69,6 +69,10 @@ options.register("stackedDalitzHistos", False, VarParsing.multiplicity.singleton
 options.setDefault("maxEvents", 10)
 options.parseArguments()
 
+if options.miniAODv == 2:
+  oldData = True
+if options.miniAODv == 3:
+  oldData = False
 
 # shortcut sample settings
 if options.sample == 'photon2015':
@@ -174,7 +178,7 @@ elif options.globalTag == 'data2016':
 else:
   process.GlobalTag.globaltag = options.globalTag
 if process.GlobalTag.globaltag == "":
-  print "Must choose a GlobalTag, GlobalTag left blank... exiting"
+  print "Must choose a GlobalTag, GlobalTag left blank... exiting\n"
   sys.exit()
 print "Using GlobalTag: ", process.GlobalTag.globaltag
 
@@ -215,7 +219,7 @@ if not options.doLumis=="":
 process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_standard_cfi')
 # settings always overwritten by command line
 process.twoprongNtuplizer.includeSignalGenParticles = options.includeSignalMCBranches
-process.twoprongNtuplizer.oldData = options.oldData
+process.twoprongNtuplizer.oldData = oldData
 process.twoprongNtuplizer.includeZDecayGenParticles = options.includeDYMCBranches
 process.twoprongNtuplizer.includeConeHEPhotons = options.includeConeHEPhotons
 process.twoprongNtuplizer.includeBasePhotons = options.includeBasePhotons
@@ -265,7 +269,7 @@ if options.tauModifiedTwoProng:
   process.load('TwoProngAnalysis.TwoProngAnalyzer.cmssw_twoprongntuplizer_taumodified_cfi')
   # settings always overwritten by command line
   process.twoprongModNtuplizer.includeSignalGenParticles = options.includeSignalMCBranches
-  process.twoprongModNtuplizer.oldData = options.oldData
+  process.twoprongModNtuplizer.oldData = oldData
   process.twoprongModNtuplizer.includeZDecayGenParticles = options.includeDYMCBranches
   process.twoprongModNtuplizer.includeConeHEPhotons = options.includeConeHEPhotons
   process.twoprongModNtuplizer.includeBasePhotons = options.includeBasePhotons
