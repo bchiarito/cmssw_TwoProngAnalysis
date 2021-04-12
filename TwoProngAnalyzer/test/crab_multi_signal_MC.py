@@ -7,16 +7,17 @@ import subprocess
 
 from optparse import OptionParser
 parser = OptionParser()
-parser.add_option("--asym", action="store_true", dest="asym", default=False, help="")
-parser.add_option("--loose", action="store_true", dest="loose", default=False, help="")
-parser.add_option("-f","--filter", action="store", dest="filt", default="none", help="")
-
 parser.add_option("-t","--tag", action="store", dest="tag", default="", help="tag for crab directory and output directory")
 parser.add_option("-i","--input", action="store", dest="input", default="", help="input .dat file of miniaod datasets, one on each line")
+parser.add_option("-d","--dataset", action="store", dest="dataset", default="", help="instead of a .dat file simply specify a dataset on the commandline")
 parser.add_option("-v","--version", action="store", dest="version", default="v2", help="v2 (default) or v3")
 parser.add_option("-p", "--print", action="store_true", dest="printOnly", default=False, help="will not run, only print summary of tasks to be created")
 parser.add_option("-c", "--command", action="store_true", dest="command", default=False, help="print command to test crab config, then exit")
 parser.add_option("-e", "--exec", action="store_true", dest="execute", default=False, help="print command to test crab config, run the command, then exit")
+
+parser.add_option("--asym", action="store_true", dest="asym", default=False, help="use asymmetry sideband twoprongs")
+parser.add_option("--loose", action="store_true", dest="loose", default=False, help="use isolation sideband twoprongs")
+parser.add_option("-f","--filter", action="store", dest="filt", default="none", help="apply a filter options:(photon, muon)")
 (options, args) = parser.parse_args()
 if options.tag == "":
   dir_tag = ""
@@ -80,13 +81,16 @@ if options.command or options.execute:
     subprocess.call(command.split())
     sys.exit()
 
-if options.input == "":
-  print "Must supply input file"
+if options.input == "" and options.dataset == "":
+  print "Must supply input file or dataset"
   sys.exit()
 datasets = []
-with open(options.input) as fi:
-  for line in fi:
-    datasets.append(line.strip())
+if not options.input == "":
+  with open(options.input) as fi:
+    for line in fi:
+      datasets.append(line.strip())
+if not options.dataset == "":
+  datasets.append(options.dataset)
 
 if __name__ == '__main__':
 
