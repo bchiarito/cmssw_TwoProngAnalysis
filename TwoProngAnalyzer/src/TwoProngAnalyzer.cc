@@ -78,7 +78,17 @@ using std::endl;
 using std::vector;
 using std::string;
 
+const double MUON_MIN_PT = 26;
+const double MUON_MAX_ETA = 2.1;
+const double MUON_MAX_DZ = 0.2;
+const double MUON_MAX_DXY = 0.045;
 
+const double MUON_VLOOSE_RELISO = 0.4;
+const double MUON_LOOSE_RELISO = 0.25;
+const double MUON_MEDIUM_RELISO = 0.20;
+const double MUON_TIGHT_RELISO = 0.15;
+const double MUON_VTIGHT_RELISO = 0.10;
+const double MUON_VVTIGHT_RELISO = 0.05;
 
 //
 // class declaration
@@ -248,12 +258,17 @@ private:
   double fpthat;
   double fHT_gen;
   double fnGenTaus;
+  double fnGenparticles;
   vector<Double_t> fGenTau_pt;
   vector<Double_t> fGenTau_eta;
   vector<Double_t> fGenTau_phi;
   vector<Double_t> fGenTau_mass;
   vector<Double_t> fGenTau_objDR;
   vector<Double_t> fGenTau_candobjDR;
+
+  vector<Double_t> fGenparticle_vx;
+  vector<Double_t> fGenparticle_vy;
+  vector<Double_t> fGenparticle_vz;
 
   vector<Double_t> fGenPhi_pt;
   vector<Double_t> fGenPhi_eta;
@@ -316,6 +331,17 @@ private:
   double fPV_x;
   double fPV_y;
   double fPV_z;
+  double fPV_isFake;
+  double fPV_isValid;
+  double fPV_ndof;
+  double fPV_rho;
+  vector<Double_t> fVertex_x;
+  vector<Double_t> fVertex_y;
+  vector<Double_t> fVertex_z;
+  vector<Double_t> fVertex_isFake;
+  vector<Double_t> fVertex_isValid;
+  vector<Double_t> fVertex_ndof;
+  vector<Double_t> fVertex_rho; // cylindrical coordiantes
   double fBeamspot_x;
   double fBeamspot_y;
   double fBeamspot_z;
@@ -992,6 +1018,10 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("mcWProd",&fMcWProd,"mcWProd/D");
   fTree->Branch("nPU_true",&ftrueNpu,"nPU_true/D");
   fTree->Branch("nPU_obs",&fobsNpu,"nPU_obs/I");
+  fTree->Branch("nGenparticles",&fnGenparticles,"nGenparticles/D");
+  fTree->Branch("Genparticle_vx",&fGenparticle_vx);
+  fTree->Branch("Genparticle_vy",&fGenparticle_vy);
+  fTree->Branch("Genparticle_vz",&fGenparticle_vz);
   }
   if (fincludeZDecayGenParticles) {
   fTree->Branch("zDecayType",&fzDecayType,"zDecayType/D");
@@ -1067,9 +1097,21 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("PV_x",&fPV_x,"PV_x/D");
   fTree->Branch("PV_y",&fPV_y,"PV_y/D");
   fTree->Branch("PV_z",&fPV_z,"PV_z/D");
+  fTree->Branch("PV_isFake",&fPV_isFake,"PV_isFake/D");
+  fTree->Branch("PV_isValid",&fPV_isValid,"PV_isValid/D");
+  fTree->Branch("PV_ndof",&fPV_ndof,"PV_ndof/D");
+  fTree->Branch("PV_rho",&fPV_rho,"PV_rho/D");
   fTree->Branch("beamspot_x",&fBeamspot_x,"beamspot_x/D");
   fTree->Branch("beamspot_y",&fBeamspot_y,"beamspot_y/D");
   fTree->Branch("beamspot_z",&fBeamspot_z,"beamspot_z/D");
+  fTree->Branch("Vertex_x",&fVertex_x);
+  fTree->Branch("Vertex_y",&fVertex_y);
+  fTree->Branch("Vertex_z",&fVertex_z);
+  fTree->Branch("Vertex_isFake",&fVertex_isFake);
+  fTree->Branch("Vertex_isValid",&fVertex_isValid);
+  fTree->Branch("Vertex_ndof",&fVertex_ndof);
+  fTree->Branch("Vertex_rho",&fVertex_rho);
+
   fTree->Branch("mcXS",&fMcXS,"mcXS/D");
   fTree->Branch("mcN",&fMcN,"mcN/D");
   fTree->Branch("nPV",&fNumPVs,"nPV/I");
@@ -2035,6 +2077,14 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fTwoProng_CHneg_p3.clear();
   fTwoProng_photon_p3.clear();
 
+  fVertex_x.clear();
+  fVertex_y.clear();
+  fVertex_z.clear();
+  fVertex_isFake.clear();
+  fVertex_isValid.clear();
+  fVertex_ndof.clear();
+  fVertex_rho.clear();
+
   fAK4jet_pt.clear();
   fAK4jet_eta.clear();
   fAK4jet_phi.clear();
@@ -2211,6 +2261,9 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fGenTau_mass.clear();
   fGenTau_objDR.clear();
   fGenTau_candobjDR.clear();
+  fGenparticle_vx.clear();
+  fGenparticle_vy.clear();
+  fGenparticle_vz.clear();
   fGenPhi_pt.clear();
   fGenPhi_eta.clear();
   fGenPhi_phi.clear();
@@ -2397,9 +2450,9 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
     iEvent.getByToken(genJetsToken_, genJets);
   }
 
-  edm::Handle<vector<reco::Vertex>> primaryvertecies;
-  iEvent.getByToken(pvToken_, primaryvertecies);
-  const reco::Vertex & PV = (*primaryvertecies)[0];
+  edm::Handle<vector<reco::Vertex>> primaryvertices;
+  iEvent.getByToken(pvToken_, primaryvertices);
+  const reco::Vertex & PV = (*primaryvertices)[0];
 
   edm::Handle<reco::BeamSpot> beamspot;
   iEvent.getByToken(beamToken_, beamspot);
@@ -2407,9 +2460,24 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fPV_x = PV.position().X();
   fPV_y = PV.position().Y();
   fPV_z = PV.position().Z();
+  fPV_isFake = PV.isFake();
+  fPV_isValid = PV.isValid();
+  fPV_ndof = PV.ndof();
+  fPV_rho = PV.position().rho();
   fBeamspot_x = beamspot->position().X();
   fBeamspot_y = beamspot->position().Y();
   fBeamspot_z = beamspot->position().Z();
+
+  for (auto vertex : *primaryvertices) {
+    fVertex_x.push_back(vertex.x());
+    fVertex_y.push_back(vertex.y());
+    fVertex_z.push_back(vertex.z());
+    fVertex_isFake.push_back(vertex.isFake());
+    fVertex_isValid.push_back(vertex.isValid());
+    fVertex_ndof.push_back(vertex.ndof());
+    fVertex_rho.push_back(vertex.position().rho());
+  }
+  fNumPVs = primaryvertices->size();
 
   edm::Handle<std::vector<pat::Jet>> ak4jets;
   iEvent.getByToken(ak4Token_, ak4jets);
@@ -2438,6 +2506,16 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
 
   if (fincludeMCInfo) {
     if (fDebug) cout << ". doing mc info" << endl;
+    // Gen vertex
+    for (unsigned int i = 0; i < genparticles->size(); i++) {
+      const reco::GenParticle &genparticle = (*genparticles)[i];
+      //if ((genparticle.pdgId() != 54 && genparticle.pdgId() != 9000006) || genparticle.status() != 62) continue;
+      fGenparticle_vx.push_back(genparticle.vx());
+      fGenparticle_vy.push_back(genparticle.vy());
+      fGenparticle_vz.push_back(genparticle.vz());
+    }
+    fnGenparticles = genparticles->size();
+
     // MC weights
     fMcW = genEventInfo->weight();
     fMcWProd = genEventInfo->weightProduct();
@@ -2697,7 +2775,6 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fLumiNum = iEvent.id().luminosityBlock();
   fMET = (*MET)[0].pt();
   fMET_phi = (*MET)[0].phi();
-  fNumPVs = primaryvertecies->size();
   fRho = *rhoH;
   fNumPF = pfcands->size();
 
@@ -3967,17 +4044,6 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   }
 
   if (fincludeLeptonBranches) {
-    const double MUON_MIN_PT = 26;
-    const double MUON_MAX_ETA = 2.1;
-    const double MUON_MAX_DZ = 0.2;
-    const double MUON_MAX_DXY = 0.045;
-
-    const double MUON_VLOOSE_RELISO = 0.4;
-    const double MUON_LOOSE_RELISO = 0.25;
-    const double MUON_MEDIUM_RELISO = 0.20;
-    const double MUON_TIGHT_RELISO = 0.15;
-    const double MUON_VTIGHT_RELISO = 0.10;
-    const double MUON_VVTIGHT_RELISO = 0.05;
 
     // Tight Muons
     fNum_Muons = 0;
