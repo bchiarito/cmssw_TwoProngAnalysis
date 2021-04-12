@@ -175,6 +175,8 @@ elif options.globalTag == 'data2015':
   process.GlobalTag.globaltag = '74X_dataRun2_HLT_v3'
 elif options.globalTag == 'data2016':
   process.GlobalTag.globaltag = '80X_dataRun2_2016SeptRepro_v7'
+elif options.globalTag == 'UL2016':
+  process.GlobalTag.globaltag = '106X_mcRun2_asymptotic_v13'
 else:
   process.GlobalTag.globaltag = options.globalTag
 if process.GlobalTag.globaltag == "":
