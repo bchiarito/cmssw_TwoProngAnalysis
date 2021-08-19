@@ -1,4 +1,5 @@
 import sys
+import os
 # Command line options
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ("python")
@@ -151,8 +152,15 @@ process.options = cms.untracked.PSet( wantSummary = cms.untracked.bool(options.d
 
 # Source
 readFiles = []
-readFiles.extend( [ options.sample ] )
+l = len(options.sample)
+if options.sample[l-1:l] == "/":
+  for fi in os.listdir(options.sample):
+      filepath = os.path.join(options.sample, fi)
+      readFiles.extend(["file:"+filepath])
+else:
+  readFiles.extend( [ options.sample ] )
 process.source = cms.Source("PoolSource", fileNames = cms.untracked.vstring( readFiles ))
+process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32( options.maxEvents ) )
 
 # Output files
