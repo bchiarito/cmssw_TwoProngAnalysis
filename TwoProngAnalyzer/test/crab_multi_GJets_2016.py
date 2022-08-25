@@ -1,5 +1,6 @@
+import CRABClient
 from WMCore.Configuration import Configuration
-from CRABClient.UserUtilities import config, getUsernameFromSiteDB
+from CRABClient.UserUtilities import config
 from multiprocessing import Process
 ###############
 import crab_multi_helper
@@ -12,11 +13,12 @@ config.General.transferLogs = True
 config.General.workArea = 'crab_multi_GJets_2016'
 config.section_('JobType')
 config.JobType.psetName = 'cmssw_twoprongntuplizer_cfg.py'
-config.JobType.pyCfgParams = ['globalTag=mc2016', 'includeMCInfoBranches=True', 'oldData=True']
+#config.JobType.pyCfgParams = ['globalTag=mc2016', 'includeMCInfoBranches=True', 'oldData=True']
+config.JobType.pyCfgParams = ['globalTag=mc2016', 'includeMCInfoBranches=True', 'includeLooseTwoProngs=True']
 config.JobType.pluginName = 'Analysis'
 config.JobType.allowUndistributedCMSSW = True
 config.section_('Data')
-config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/twoprong/trees/gjets2016/'
+config.Data.outLFNDirBase = '/store/user/bchiari1/cms_area/crab_old_code8XX/twoprong_wloose/trees/gjets2016/'
 config.Data.publication = False
 config.Data.unitsPerJob = 250000
 config.Data.totalUnits = -1
@@ -51,6 +53,7 @@ if __name__ == '__main__':
     ## From now on that's what users should modify: this is the a-la-CRAB2 configuration part. ##
     #############################################################################################
 
+    '''
     config.General.requestName = 'GJets_HT-40To100'
     config.Data.inputDataset = '/GJets_HT-40To100_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcXS=20810','mcN=4858154'])
@@ -59,6 +62,7 @@ if __name__ == '__main__':
     p.start()
     p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
+'''
 
     config.General.requestName = 'GJets_HT-100To200'
     config.Data.inputDataset = '/GJets_HT-100To200_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
@@ -69,6 +73,7 @@ if __name__ == '__main__':
     p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
 
+    '''
     config.General.requestName = 'GJets_HT-200To400'
     config.Data.inputDataset = '/GJets_HT-200To400_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16MiniAODv2-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/MINIAODSIM'
     config.JobType.pyCfgParams.extend(['mcXS=2303','mcN=10350849'])
@@ -140,3 +145,4 @@ if __name__ == '__main__':
     p.start()
     p.join()
     config.JobType.pyCfgParams = config.JobType.pyCfgParams[:-2]
+'''
