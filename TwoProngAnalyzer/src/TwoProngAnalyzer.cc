@@ -503,6 +503,7 @@ private:
   vector<Double_t> fIDPhoton_HE;
   vector<Double_t> fIDPhoton_coneHE;
   vector<Double_t> fIDPhoton_sigmaIetaIeta;
+  vector<Bool_t> fIDPhoton_isSat;
 
   int fNumIDPhotonsEndcap;
   vector<Double_t> fIDPhotonEndcap_pt;
@@ -1191,6 +1192,7 @@ TwoProngAnalyzer::TwoProngAnalyzer(const edm::ParameterSet& iConfig)
   fTree->Branch("IDPhoton_HE",&fIDPhoton_HE);
   fTree->Branch("IDPhoton_coneHE",&fIDPhoton_coneHE);
   fTree->Branch("IDPhoton_sigmaIetaIeta",&fIDPhoton_sigmaIetaIeta);
+  fTree->Branch("IDPhoton_isSat",&fIDPhoton_isSat);
   // High-pt-id Photons, Endcap region
   fTree->Branch("nIDPhotonsEndcap",&fNumIDPhotonsEndcap,"nIDPhotonsEndcap/I");
   fTree->Branch("IDPhotonEndcap_pt",&fIDPhotonEndcap_pt);
@@ -2216,6 +2218,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   fIDPhoton_HE.clear();
   fIDPhoton_coneHE.clear();
   fIDPhoton_sigmaIetaIeta.clear();
+  fIDPhoton_isSat.clear();
 
   fIDPhotonEndcap_pt.clear();
   fIDPhotonEndcap_eta.clear();
@@ -2342,6 +2345,8 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   string trigger_doublephoton85 = "HLT_DoublePhoton85_v"; // 2016, 2017, 2018
   string trigger_tau120 = "HLT_VLooseIsoPFTau120_Trk50_eta2p1_v"; // 2016
   string trigger_doubletau32 = "HLT_DoubleMediumIsoPFTau32_Trk1_eta2p1_Reg_v"; // 2016
+
+
   bool bit_photon175 = false;
   bool bit_photon200 = false;
   bool bit_photon22_iso = false;
@@ -2850,7 +2855,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
           if ((pf3.pdgId() != 22) && (abs(pf3.pdgId()) != 11)) continue; // only pf electron or pf photon contribute to definition of photon
           TLorentzVector pfcand3;
           pfcand3.SetPtEtaPhiE(pf3.pt(), pf3.eta(), pf3.phiAtVtx(), pf3.energy());
-          if (fabs(pf3.phiAtVtx() - center.Phi()) < ftwoprong_PhiBox/2.0 &&
+          if (fabs(center.DeltaPhi(pfcand3)) < ftwoprong_PhiBox/2.0 &&
               fabs(pf3.eta() - center.Eta()) < ftwoprong_EtaBox/2.0) {
             photon = photon + pfcand3;
             if (pf3.pdgId() == 22) {
@@ -2987,7 +2992,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
             // e gamma
             } else if (abs(pf4.pdgId()) == 11 || pf4.pdgId() == 22) {
               if ( (center.DeltaR(pfcand4) < ftwoprong_IsolationDR) &&
-                   !(fabs(pf4.phiAtVtx() - center.Phi()) < ftwoprong_PhiBox/2.0 && fabs(pf4.eta() - center.Eta()) < ftwoprong_EtaBox/2.0)) {
+                   !(fabs(center.DeltaPhi(pfcand4)) < ftwoprong_PhiBox/2.0 && fabs(pf4.eta() - center.Eta()) < ftwoprong_EtaBox/2.0)) {
                 egammaIso += pfcand4.Pt();
                   egammaIsoCount++;
               }
@@ -3046,6 +3051,23 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
           fTwoProngCand_loose.push_back(loose);
           fTwoProngCand_asym.push_back(asym);
           fTwoProngCand_asym_loose.push_back(asym_loose);
+
+          cout << "" << endl;
+          cout << "pt " << TwoProngObject.Pt() << endl;
+          cout << "eta" << TwoProngObject.Eta() << endl;
+          cout << "phi" << TwoProngObject.Phi() << endl;
+          cout << "mass" << TwoProngObject.M() << endl;
+          cout << "photon pt " << photon.Pt() << endl;
+          cout << "relegammaIso " << relegammaIso << endl;
+          cout << "egammaIso " << egammaIso << endl;
+          cout << "passPhotonPt " << passPhotonPt << endl;
+          cout << "passedCharged " << passCharged << endl;
+          cout << "passedNeutral " << passNeutral << endl;
+          cout << "passedEGamma " << passEGamma << endl;
+          cout << "passTrackAsymmetry " << passTrackAsymmetry << endl;
+          cout << "passPhotonAsymmetry " << passPhotonAsymmetry << endl;
+          cout << "tight " << tight << endl;
+          cout << "" << endl;
 
           if (fDebug) cout << ". doing gen matching" << endl;
           // Generator matching to signal
@@ -3461,6 +3483,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
   for (size_t i = 0; i < ged_photons->size(); ++i) {
     const auto pho = ged_photons->ptrAt(i);
     isSat = photon_isSaturated(&(*pho), &(*recHitsEB), &(*recHitsEE), &(*subDetTopologyEB_), &(*subDetTopologyEE_));
+    if (isSat == true) cout << "found isSat = True" << endl;
     bool passID = photon_passHighPtID(&(*pho), fRho, isSat);
     if(passID) {
       goodPhotons.push_back(pho);
@@ -3625,6 +3648,7 @@ TwoProngAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetu
       fIDPhoton_HE.push_back( photon_computeHE(&(*goodPhotons[i])) );
       fIDPhoton_coneHE.push_back( photon_computeHE_coneBased(&(*goodPhotons[i])) );
       fIDPhoton_sigmaIetaIeta.push_back( photon_computeSigmaIetaIeta(&(*goodPhotons[i])) );
+      fIDPhoton_isSat.push_back( photon_isSaturated(&(*goodPhotons[i]), &(*recHitsEB), &(*recHitsEE), &(*subDetTopologyEB_), &(*subDetTopologyEE_)) );
     } else if (photon_scEta(&(*goodPhotons[i])) > 1.566 && photon_scEta(&(*goodPhotons[i])) < 2.5) {
       fIDPhotonEndcap_pt.push_back( (*goodPhotons[i]).pt() );
       fIDPhotonEndcap_eta.push_back( (*goodPhotons[i]).eta() );
