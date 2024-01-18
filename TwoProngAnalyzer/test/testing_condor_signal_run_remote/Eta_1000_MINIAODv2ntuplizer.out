@@ -1,0 +1,207 @@
+Starting job on  Tue Apr 28 17:50:00 EDT 2020
+Running on: Linux node44.hexfarm.rutgers.edu 3.10.0-1062.9.1.el7.x86_64 #1 SMP Fri Dec 6 15:49:49 UTC 2019 x86_64 x86_64 x86_64 GNU/Linux
+Arguments: /cms/chiarito/datafiles/signal/miniaod/original_mass_points_jacob_run/Eta_1000_MINIAODv2.root True
+
+I am here:
+/HTClocal/execute/dir_11397
+
+This is the scratch dir:
+/HTClocal/execute/dir_11397
+
+making CMSSW project directory
+WARNING: In non-interactive mode release checks e.g. deprecated releases, production architectures are disabled.
+WARNING: Release CMSSW_9_4_0 is not available for architecture slc7_amd64_gcc820.
+         Developer's area is created for available architecture slc7_amd64_gcc630.
+
+cloning git repository
+Cloning into 'TwoProngAnalysis'...
+
+cmsenv...
+scram b...
+>> Local Products Rules ..... started
+gmake: *** [src/TwoProngAnalysis/ZMuMuFilters/src contains only BuildFile.xml without any sources. Better to remove BuildFile.xml too or do not tag this directory] Error 1
+>> Local Products Rules ..... done
+>> Building CMSSW version CMSSW_9_4_0 ----
+>> Subsystem BigProducts built
+>> Entering Package TwoProngAnalysis/ZMuMuFilters
+>> Entering Package TwoProngAnalysis/CommonClasses
+>> Entering Package TwoProngAnalysis/ZTauTauFilters
+>> Creating project symlinks
+>> Entering Package TwoProngAnalysis/TwoProngAnalyzer
+>> Leaving Package TwoProngAnalysis/ZMuMuFilters
+>> Package TwoProngAnalysis/ZMuMuFilters built
+>> Leaving Package TwoProngAnalysis/CommonClasses
+>> Package TwoProngAnalysis/CommonClasses built
+Entering library rule at TwoProngAnalysis/ZTauTauFilters
+Entering library rule at TwoProngAnalysis/TwoProngAnalyzer
+>> Compiling edm plugin /HTClocal/execute/dir_11397/CMSSW_9_4_0/src/TwoProngAnalysis/ZTauTauFilters/src/ZtoTauHadTruthSelector.cc 
+>> Compiling edm plugin /HTClocal/execute/dir_11397/CMSSW_9_4_0/src/TwoProngAnalysis/TwoProngAnalyzer/src/TwoProngAnalyzer.cc 
+/HTClocal/execute/dir_11397/CMSSW_9_4_0/src/TwoProngAnalysis/TwoProngAnalyzer/src/TwoProngAnalyzer.cc: In member function 'virtual void TwoProngAnalyzer::analyze(const edm::Event&, const edm::EventSetup&)':
+/HTClocal/execute/dir_11397/CMSSW_9_4_0/src/TwoProngAnalysis/TwoProngAnalyzer/src/TwoProngAnalyzer.cc:3975:18: warning: unused variable 'MUON_VLOOSE_RELISO' [-Wunused-variable]
+     const double MUON_VLOOSE_RELISO = 0.4;
+                  ^~~~~~~~~~~~~~~~~~
+/HTClocal/execute/dir_11397/CMSSW_9_4_0/src/TwoProngAnalysis/TwoProngAnalyzer/src/TwoProngAnalyzer.cc:3976:18: warning: unused variable 'MUON_LOOSE_RELISO' [-Wunused-variable]
+     const double MUON_LOOSE_RELISO = 0.25;
+                  ^~~~~~~~~~~~~~~~~
+/HTClocal/execute/dir_11397/CMSSW_9_4_0/src/TwoProngAnalysis/TwoProngAnalyzer/src/TwoProngAnalyzer.cc:3977:18: warning: unused variable 'MUON_MEDIUM_RELISO' [-Wunused-variable]
+     const double MUON_MEDIUM_RELISO = 0.20;
+                  ^~~~~~~~~~~~~~~~~~
+/HTClocal/execute/dir_11397/CMSSW_9_4_0/src/TwoProngAnalysis/TwoProngAnalyzer/src/TwoProngAnalyzer.cc:3979:18: warning: unused variable 'MUON_VTIGHT_RELISO' [-Wunused-variable]
+     const double MUON_VTIGHT_RELISO = 0.10;
+                  ^~~~~~~~~~~~~~~~~~
+/HTClocal/execute/dir_11397/CMSSW_9_4_0/src/TwoProngAnalysis/TwoProngAnalyzer/src/TwoProngAnalyzer.cc:3980:18: warning: unused variable 'MUON_VVTIGHT_RELISO' [-Wunused-variable]
+     const double MUON_VVTIGHT_RELISO = 0.05;
+                  ^~~~~~~~~~~~~~~~~~~
+>> Building edm plugin tmp/slc7_amd64_gcc630/src/TwoProngAnalysis/ZTauTauFilters/src/TwoProngAnalysisZTauTauFilters/libTwoProngAnalysisZTauTauFilters.so
+Leaving library rule at TwoProngAnalysis/ZTauTauFilters
+@@@@ Running edmWriteConfigs for TwoProngAnalysisZTauTauFilters
+ZtoTauHadTruthSelectorFilter
+--- Registered EDM Plugin: TwoProngAnalysisZTauTauFilters
+>> Leaving Package TwoProngAnalysis/ZTauTauFilters
+>> Package TwoProngAnalysis/ZTauTauFilters built
+>> Building edm plugin tmp/slc7_amd64_gcc630/src/TwoProngAnalysis/TwoProngAnalyzer/src/TwoProngAnalysisTwoProngAnalyzer/libTwoProngAnalysisTwoProngAnalyzer.so
+Leaving library rule at TwoProngAnalysis/TwoProngAnalyzer
+@@@@ Running edmWriteConfigs for TwoProngAnalysisTwoProngAnalyzer
+--- Registered EDM Plugin: TwoProngAnalysisTwoProngAnalyzer
+>> Leaving Package TwoProngAnalysis/TwoProngAnalyzer
+>> Package TwoProngAnalysis/TwoProngAnalyzer built
+>> Subsystem TwoProngAnalysis built
+gmake[1]: Entering directory '/HTClocal/execute/dir_11397/CMSSW_9_4_0'
+>> Local Products Rules ..... started
+gmake: *** [src/TwoProngAnalysis/ZMuMuFilters/src contains only BuildFile.xml without any sources. Better to remove BuildFile.xml too or do not tag this directory] Error 1
+>> Local Products Rules ..... done
+@@@@ Refreshing Plugins:edmPluginRefresh
+>> Creating project symlinks
+>> Done python_symlink
+>> Done generating edm plugin poisoned information
+>> Compiling python modules cfipython/slc7_amd64_gcc630
+>> Compiling python modules python
+>> Compiling python modules src/TwoProngAnalysis/TwoProngAnalyzer/python
+>> Plugins of all types refreshed.
+>> All python modules compiled
+gmake[1]: Leaving directory '/HTClocal/execute/dir_11397/CMSSW_9_4_0'
+
+moved to test dir, here is location and contents:
+/HTClocal/execute/dir_11397/CMSSW_9_4_0/src/TwoProngAnalysis/TwoProngAnalyzer/test
+total 144
+-rw-r--r-- 1 chiarito users 22068 Apr 28 17:50 cmssw_twoprongntuplizer_cfg.py
+-rw-r--r-- 1 chiarito users  5773 Apr 28 17:50 cmssw_twoprongntuplizer_minimal_cfg.py
+-rw-r--r-- 1 chiarito users  3565 Apr 28 17:50 crab_multi_DY_2016.py
+-rw-r--r-- 1 chiarito users  4220 Apr 28 17:50 crab_multi_GJets_2015.py
+-rw-r--r-- 1 chiarito users  6852 Apr 28 17:50 crab_multi_GJets_2016.py
+-rw-r--r-- 1 chiarito users  3530 Apr 28 17:50 crab_multi_JetHT_2016.py
+-rw-r--r-- 1 chiarito users  9321 Apr 28 17:50 crab_multi_QCD_2015.py
+-rw-r--r-- 1 chiarito users 12694 Apr 28 17:50 crab_multi_QCD_2016.py
+-rw-r--r-- 1 chiarito users  9535 Apr 28 17:50 crab_multi_QCD_HT_2016.py
+-rw-r--r-- 1 chiarito users  4390 Apr 28 17:50 crab_multi_SingleMuon_2016.py
+-rw-r--r-- 1 chiarito users  2906 Apr 28 17:50 crab_multi_SinglePhoton_2015_25ns.py
+-rw-r--r-- 1 chiarito users  2305 Apr 28 17:50 crab_multi_SinglePhoton_2015_50ns.py
+-rw-r--r-- 1 chiarito users  4096 Apr 28 17:50 crab_multi_SinglePhoton_2016.py
+-rw-r--r-- 1 chiarito users  4464 Apr 28 17:50 crab_multi_TT_2016.py
+-rw-r--r-- 1 chiarito users  3104 Apr 28 17:50 crab_multi_WJets_2016.py
+-rw-r--r-- 1 chiarito users  2066 Apr 28 17:50 crab_multi_helper.py
+-rw-r--r-- 1 chiarito users  5016 Apr 28 17:50 crab_multi_signal.py
+drwxr-xr-x 2 chiarito users  4096 Apr 28 17:50 json
+
+now do cmsRun...
+Using GlobalTag:  cms.string('80X_mcRun2_asymptotic_2016_TrancheIV_v6')
+28-Apr-2020 17:50:47 EDT  Initiating request to open file file:/cms/chiarito/datafiles/signal/miniaod/original_mass_points_jacob_run/Eta_1000_MINIAODv2.root
+28-Apr-2020 17:50:48 EDT  Successfully opened file file:/cms/chiarito/datafiles/signal/miniaod/original_mass_points_jacob_run/Eta_1000_MINIAODv2.root
+
+===========================
+= Ntuplizer Configuration =
+===========================
+makeTrees 1
+debug 0
+mcXS 1
+mcN 1
+filterOnPhoton 0
+filterOnTwoProng 0
+filterOnLepton 0
+filterForABCDStudy 0
+stackedDalitzHistos 0
+oldData 1
+===========================
+noTwoProng 0
+includeAllLooseObjects 0
+includeAllCandObjects 0
+includeAsymTwoProngs 0
+includeMCInfo 0
+includeSignalGenParticles 1
+includeOldPhotons 0
+includeBasePhotons 0
+includeConeHEPhotons 0
+includeLoosePhotons 0
+inlcudeZDecayGenParticles 0
+includeTauTauBranches 0
+includeMuMuBranches 0
+includeLeptonBranches 0
+usePatTauInPreselection 0
+muonIDtype 2
+muonISOtype 3
+===========================
+twoprong_DR 0.05
+twoprong_tracksMinPt 3
+twoprong_IsolationDR 0.3
+twoprong_PhiBox 0.2
+twoprong_EtaBox 0.05
+twoprong_PhotonPtCut 3
+twoprong_ChargedIsoCut 0.1
+twoprong_NeutralIsoCut 0.1
+twoprong_EGammaIsoCut 0.1
+twoprong_ChargedIsoFakeCut 1
+twoprong_NeutralIsoFakeCut 0.1
+twoprong_EGammaIsoFakeCut 1
+twoprong_GenMatchDR 0.1
+twoprong_AbsMaxEta 2.5
+twoprong_MinPt 20
+twoprong_TrackAsymmetryCut 0.2
+twoprong_PhotonAsymmetryCut 0.15
+twoprong_OptionalExtraTrack 0
+twoprong_FlipAsymReq 0
+includeDalitzVariables 0
+===========================
+Begin processing the 1st record. Run 1, Event 1, LumiSection 1 at 28-Apr-2020 17:51:40.834 EDT
+28-Apr-2020 17:51:50 EDT  Closed file file:/cms/chiarito/datafiles/signal/miniaod/original_mass_points_jacob_run/Eta_1000_MINIAODv2.root
+
+=============================================
+
+MessageLogger Summary
+
+ type     category        sev    module        subroutine        count    total
+ ---- -------------------- -- ---------------- ----------------  -----    -----
+    1 fileAction           -s file_close                             1        1
+    2 fileAction           -s file_open                              2        2
+
+ type    category    Examples: run/evt        run/evt          run/evt
+ ---- -------------------- ---------------- ---------------- ----------------
+    1 fileAction           PostGlobalEndRun                  
+    2 fileAction           pre-events       pre-events       
+
+Severity    # Occurrences   Total Occurrences
+--------    -------------   -----------------
+System                  3                   3
+
+dropped waiting message count 0
+
+done job, contents now:
+total 196
+-rw-r--r-- 1 chiarito users 51038 Apr 28 17:51 TwoProngNtuplizer.root
+-rw-r--r-- 1 chiarito users 22068 Apr 28 17:50 cmssw_twoprongntuplizer_cfg.py
+-rw-r--r-- 1 chiarito users  5773 Apr 28 17:50 cmssw_twoprongntuplizer_minimal_cfg.py
+-rw-r--r-- 1 chiarito users  3565 Apr 28 17:50 crab_multi_DY_2016.py
+-rw-r--r-- 1 chiarito users  4220 Apr 28 17:50 crab_multi_GJets_2015.py
+-rw-r--r-- 1 chiarito users  6852 Apr 28 17:50 crab_multi_GJets_2016.py
+-rw-r--r-- 1 chiarito users  3530 Apr 28 17:50 crab_multi_JetHT_2016.py
+-rw-r--r-- 1 chiarito users  9321 Apr 28 17:50 crab_multi_QCD_2015.py
+-rw-r--r-- 1 chiarito users 12694 Apr 28 17:50 crab_multi_QCD_2016.py
+-rw-r--r-- 1 chiarito users  9535 Apr 28 17:50 crab_multi_QCD_HT_2016.py
+-rw-r--r-- 1 chiarito users  4390 Apr 28 17:50 crab_multi_SingleMuon_2016.py
+-rw-r--r-- 1 chiarito users  2906 Apr 28 17:50 crab_multi_SinglePhoton_2015_25ns.py
+-rw-r--r-- 1 chiarito users  2305 Apr 28 17:50 crab_multi_SinglePhoton_2015_50ns.py
+-rw-r--r-- 1 chiarito users  4096 Apr 28 17:50 crab_multi_SinglePhoton_2016.py
+-rw-r--r-- 1 chiarito users  4464 Apr 28 17:50 crab_multi_TT_2016.py
+-rw-r--r-- 1 chiarito users  3104 Apr 28 17:50 crab_multi_WJets_2016.py
+-rw-r--r-- 1 chiarito users  2066 Apr 28 17:50 crab_multi_helper.py
+-rw-r--r-- 1 chiarito users  5016 Apr 28 17:50 crab_multi_signal.py
+drwxr-xr-x 2 chiarito users  4096 Apr 28 17:50 json

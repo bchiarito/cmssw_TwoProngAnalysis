@@ -1,5 +1,6 @@
+import CRABClient
 from WMCore.Configuration import Configuration
-from CRABClient.UserUtilities import config, getUsernameFromSiteDB
+from CRABClient.UserUtilities import config#, getUsernameFromSiteDB
 from multiprocessing import Process
 ###############
 import crab_multi_helper
